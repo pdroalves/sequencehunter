@@ -17,19 +17,28 @@ struct vertice_grafo{
 		struct vertice_grafo* t;
 		int psenso;
 		int pasenso;
-}typedef struct vertice_grafo vgrafo;
+};
+typedef struct vertice_grafo vgrafo;
 
 struct pilha{
 	//Implementação usando listas ligadas
 	char *seq;
 	struct pilha *prox;
-}typedef struct pilha pilha;
+};
+typedef struct pilha pilha;
 
 struct lista_ligada{
 	char *senso;
 	int qsenso;
 	int qasenso;
 	struct lista_ligada* prox;
-}typedef struct lista_ligada lista_ligada;
+};
+typedef struct lista_ligada lista_ligada;
+
+struct buffer{
+	char **seq;
+	int capacidade;
+};
+typedef struct buffer Buffer;
 
 #endif
