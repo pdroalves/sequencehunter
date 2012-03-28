@@ -2,15 +2,18 @@
 //      
 //      Copyright 2012 Pedro Alves <pdroalves@gmail.com>
 //      
-//		Implementação do algoritmo de busca por grafos utilizando CUDA.
+//		Implementação do algoritmo de busca por grafos.
 //
 //		27/03/2012
 
-
+#include <stdio.h>
 #include <cuda.h>
 #includa "estruturas.h"
 
 __host__ __device__ void caminhar(vgrafo*, vgrafo*, int*,int*);
+__host__ __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+__host__ __device__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+
 
 __global__ void k_busca(int *matchs,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	
@@ -79,4 +82,73 @@ __host__ __device__ void caminhar(vgrafo *atual, vgrafo *prox, int *s_match,int 
 		as_match=0;
 		
 	return;	
+}
+
+__host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+		
+	//Define cada vértice
+	a->vertice = "A";
+	c->vertice = "C";
+	g->vertice = "G";
+	t->vertice = "T";
+	
+	//Inicializa as marcações
+	a->psenso = 0;
+	a->pasenso = 0;
+	c->psenso = 0;
+	c->pasenso = 0;
+	g->psenso = 0;
+	g->pasenso = 0;
+	t->psenso = 0;
+	t->pasenso = 0;
+	
+	//Conecta os vértices
+	a->a = a;
+	a->c = c;
+	a->g = g;
+	a->t = t;
+	
+	c->a = a;
+	c->c = c;
+	c->g = g;
+	c->t = t;
+	
+	g->a = a;
+	g->c = c;
+	g->g = g;
+	g->t = t;
+	
+	t->a = a;
+	t->c = c;
+	t->g = g;
+	t->t = t;
+	
+	return;
+}
+
+__host__ __device__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *a,vgrafo *a, vgrafo *a){
+	
+	//Configura grafo
+	int i;
+	vgrafo *atual;
+	vgrafo *prox;
+	
+	i=0;
+	//Configura sequência senso
+	while(seq[i] != '\0'){
+		i++;
+		atual = busca_vertice(senso[i],a,c,g,t);
+		atual->psenso=i;
+	}
+	
+	i=0;
+	//Configura sequência antisenso
+	while(seq[i] != '\0'){
+		i++;
+		atual = busca_vertice(antisenso[i],a,c,g,t);
+		atual->asenso=i;
+	}
+		
+	
+	return;
 }
