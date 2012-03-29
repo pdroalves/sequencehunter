@@ -8,29 +8,33 @@
 
 #include <stdio.h>
 #include <cuda.h>
-#includa "estruturas.h"
+#include "estruturas.h"
+
+
+__global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 
 __host__ __device__ void caminhar(vgrafo*, vgrafo*, int*,int*);
-__host__ __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
-__host__ __device__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+__device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+__host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
-
-__global__ void k_busca(int *matchs,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_busca(int *matchs,char **data,int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	
 	int posicao = blockIdx.x*blockDim.x + threadIdx.x;
-	char *seq = data[posicao];
-	int i;
+	char *seq;
+	int i=0;
 	int found = 0;//1 se encontrar uma seq
 	int s_match = 0;
 	int as_match = 0;
 	vgrafo *atual;
 	vgrafo *prox;
 	
+	seq =  data[posicao];
 	#pragma unroll 1
-	while(seq[i+1] != \0 && s_match < size-1 && as_match < size-1){
+	while(seq[i+1] != '\0' && s_match < (size-1) && as_match < (size-1)){
 		atual = busca_vertice(seq[i],a,c,g,t);
 		prox = busca_vertice(seq[i+1],a,c,g,t);
 		caminhar(atual,prox,&s_match,&as_match);
+		i++;
 	}
 	
 	//Marca o que foi encontrado
@@ -43,23 +47,20 @@ __global__ void k_busca(int *matchs,char **data,vgrafo *a,vgrafo *c,vgrafo *g, v
 	return;
 }
 
-__host__ __device__ vgrafo* busca_vertice(char c,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	//Funcao temporária. Ficará aqui até eu pensar em algo melhor
-	
-	switch(c){
-		case "A":
+	switch(base){
+		case 'A':
 			return a;
-			break;
-		case "C":
+		case 'C':
 			return c;
-			break;
-		case "G":
+		case 'G':
 			return g;
-			break;
-		case "T":
+		case 'T':
 			return t;
-			break;
 	}
+	
+	return NULL;
 }
 
 __host__ __device__ void caminhar(vgrafo *atual, vgrafo *prox, int *s_match,int *as_match){ 
@@ -87,10 +88,10 @@ __host__ __device__ void caminhar(vgrafo *atual, vgrafo *prox, int *s_match,int 
 __host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 		
 	//Define cada vértice
-	a->vertice = "A";
-	c->vertice = "C";
-	g->vertice = "G";
-	t->vertice = "T";
+	a->vertice = 'A';
+	c->vertice = 'C';
+	g->vertice = 'G';
+	t->vertice = 'T';
 	
 	//Inicializa as marcações
 	a->psenso = 0;
@@ -126,16 +127,17 @@ __host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	return;
 }
 
-__host__ __device__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *a,vgrafo *a, vgrafo *a){
+__global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	
 	//Configura grafo
 	int i;
 	vgrafo *atual;
-	vgrafo *prox;
+	
+	build_grafo(a,c,g,t);
 	
 	i=0;
 	//Configura sequência senso
-	while(seq[i] != '\0'){
+	while(senso[i] != '\0'){
 		i++;
 		atual = busca_vertice(senso[i],a,c,g,t);
 		atual->psenso=i;
@@ -143,10 +145,10 @@ __host__ __device__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo 
 	
 	i=0;
 	//Configura sequência antisenso
-	while(seq[i] != '\0'){
+	while(antisenso[i] != '\0'){
 		i++;
 		atual = busca_vertice(antisenso[i],a,c,g,t);
-		atual->asenso=i;
+		atual->pasenso=i;
 	}
 		
 	

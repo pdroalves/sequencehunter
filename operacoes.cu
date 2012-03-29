@@ -8,16 +8,13 @@
 
 	#include <stdio.h>
 	#include <glib.h>
-	int conta_posicoes(char *seq){
-		return strlen(seq);
-	}
 
 	char* get_antisenso(char *s){
 		int i;
 		char *antisenso;
 		int a_size;
 		
-		a_size = conta_posicoes(s);
+		a_size = strlen(s);
 		antisenso = (char*)malloc(a_size*sizeof(char));
 		
 		for(i=0;i<a_size;i++){

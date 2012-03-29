@@ -26,7 +26,7 @@ void adicionar_elemento(lista_ligada *final,char *seq){
 		
 	//Cria novo elemento para a lista ligada
 	novo = (lista_ligada*)malloc(sizeof(lista_ligada));	
-	seq_size = conta_posicoes(seq);
+	seq_size = strlen(seq);
 	novo->senso = (char*)malloc(seq_size*sizeof(char));
 	memcpy(novo->senso,seq,seq_size);
 	novo->qsenso = 1;

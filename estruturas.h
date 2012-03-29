@@ -10,7 +10,7 @@
 #define ESTRUTURAS_H
 
 struct vertice_grafo{
-		const char vertice;
+		char vertice;
 		struct vertice_grafo* a;
 		struct vertice_grafo* c;
 		struct vertice_grafo* g;

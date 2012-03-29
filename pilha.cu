@@ -25,7 +25,7 @@ void empilha (char *seq, pilha *tp) {
    int seq_size;//A sequência seq possui pelo menos o elemento \0
    
    //Encontra o tamanho da sequência
-   seq_size = conta_posicoes(seq);
+   seq_size = strlen(seq);
    
    nova = (pilha*) malloc (sizeof (pilha));
    nova->seq = (char*) malloc(seq_size*sizeof(char));
@@ -47,7 +47,7 @@ void desempilha (char *seq,pilha *tp) {
    p = tp->prox;
    
    //Encontra o tamanho da sequência
-   seq_size = conta_posicoes(seq);
+   seq_size = strlen(seq);
    
    seq = (char*)malloc(seq_size*sizeof(char));
    memcpy(seq,p->seq[i],seq_size);
