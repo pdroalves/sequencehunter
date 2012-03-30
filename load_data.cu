@@ -35,8 +35,8 @@ void fill_buffer(Buffer *b,int n){
 
 	for(i=0;i<b->capacidade && feof(f) == 0;i++){
 		b->seq[i] = (char*)malloc((n+1)*sizeof(char));
-		//fgets(b->seq[i],n,f);
 		fscanf(f,"%s",b->seq[i]);
+		strcat(b->seq[i],"\0");
 	}	
 	
 }

@@ -11,29 +11,35 @@
 #include "estruturas.h"
 
 
-__global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)
+#define printf(f, ...) ((void)(f, __VA_ARGS__),0)
+#endif
 
-__host__ __device__ void caminhar(vgrafo*, vgrafo*, int*,int*);
+
+__global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+__host__ __device__ void caminhar(vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
-__global__ void k_busca(int *matchs,char **data,int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_busca(int *matchs,char **data,const int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	
-	int posicao = blockIdx.x*blockDim.x + threadIdx.x;
-	char *seq;
-	int i=0;
-	int found = 0;//1 se encontrar uma seq
-	int s_match = 0;
-	int as_match = 0;
-	vgrafo *atual;
-	vgrafo *prox;
+	//int posicao = blockIdx.x*blockDim.x + threadIdx.x;
+	int posicao = threadIdx.x;
+	const char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
+	int i;
+	//int found = 0;//1 se encontrar uma seq
+	int s_match;
+	int as_match;
+	vgrafo *vertice;
 	
-	seq =  data[posicao];
+	s_match = as_match = 0;
+	i=0;
+	
 	#pragma unroll 1
-	while(seq[i+1] != '\0' && s_match < (size-1) && as_match < (size-1)){
-		atual = busca_vertice(seq[i],a,c,g,t);
-		prox = busca_vertice(seq[i+1],a,c,g,t);
-		caminhar(atual,prox,&s_match,&as_match);
+	while( seq[i] != '\0' && s_match < (size) && as_match < (size)){
+		vertice = busca_vertice(seq[i],a,c,g,t);
+		if(vertice != NULL)
+		caminhar(vertice,&s_match,&as_match);
 		i++;
 	}
 	
@@ -41,8 +47,8 @@ __global__ void k_busca(int *matchs,char **data,int size,vgrafo *a,vgrafo *c,vgr
 	//1 se for senso
 	//2 se for antisenso
 	//0 se não for nada
-	matchs[posicao] = s_match / (size-1);
-	matchs[posicao] = 2*(as_match / (size-1));
+	matchs[posicao] = s_match / (size);
+	//matchs[posicao] = 2*(as_match / (size-1));
 	
 	return;
 }
@@ -51,42 +57,50 @@ __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *
 	//Funcao temporária. Ficará aqui até eu pensar em algo melhor
 	switch(base){
 		case 'A':
+		//	printf("Retornei A\n");
 			return a;
 		case 'C':
+		//	printf("Retornei C\n");
 			return c;
 		case 'G':
+		//	printf("Retornei G\n");
 			return g;
 		case 'T':
+		//	printf("Retornei T\n");
 			return t;
 	}
 	
 	return NULL;
 }
 
-__host__ __device__ void caminhar(vgrafo *atual, vgrafo *prox, int *s_match,int *as_match){ 
+__host__ __device__ void caminhar(vgrafo *posicao, int *s_match,int *as_match){ 
 	//Recebe o vertice atual
-	//Recebe o próximo vertice
 	//Recebe um contador de bases acertadas para a sequencia senso s_match
 	//Recebe um contador de bases acertadas para a sequencia antisenso as_match
 	
 	//OTIMIZAR! Tem muitos IFs
 	
-	
-	if(prox->psenso == atual->psenso+1)//A sequencia confere com o senso
-		s_match++;
-	else//A sequencia nao confere com o senso
-		s_match=0;
+//	printf("Analisando base %c. %d -> %d\n",posicao->vertice,*s_match,posicao->s_marcas[(*s_match)]);
+	if(posicao->s_marcas[(*s_match)] == 1){//Elemento e posição batem com o que queremos
+		(*s_match)++;
+		//printf("Match: %c\n",posicao->vertice);
+	}
+	else//Não bate
+		(*s_match)=0;
 		
-	if(prox->pasenso == atual->pasenso+1)//A sequencia confere com o antisenso
-		as_match++;
-	else//A sequencia nao confere com o antisenso
-		as_match=0;
+	if(posicao->as_marcas[(*as_match)] == 1)//Elemento e posição batem com o que queremos
+		(*as_match)++;
+	else//Não bate
+		(*as_match)=0;
 		
+	//printf("s_match: %d\n",*s_match);
 	return;	
 }
 
-__host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__host__ __device__ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 		
+	int i;
+	
 	//Define cada vértice
 	a->vertice = 'A';
 	c->vertice = 'C';
@@ -94,14 +108,27 @@ __host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	t->vertice = 'T';
 	
 	//Inicializa as marcações
-	a->psenso = 0;
-	a->pasenso = 0;
-	c->psenso = 0;
-	c->pasenso = 0;
-	g->psenso = 0;
-	g->pasenso = 0;
-	t->psenso = 0;
-	t->pasenso = 0;
+	a->s_marcas = (int*)malloc(size*sizeof(int));
+	c->s_marcas = (int*)malloc(size*sizeof(int));
+	g->s_marcas = (int*)malloc(size*sizeof(int));
+	t->s_marcas = (int*)malloc(size*sizeof(int));
+			
+	a->as_marcas = (int*)malloc(size*sizeof(int));
+	c->as_marcas = (int*)malloc(size*sizeof(int));
+	g->as_marcas = (int*)malloc(size*sizeof(int));
+	t->as_marcas = (int*)malloc(size*sizeof(int));
+	
+	for(i=0;i<size;i++){
+		a->s_marcas[i] = 0;
+		c->s_marcas[i] = 0;
+		g->s_marcas[i] = 0;
+		t->s_marcas[i] = 0;
+		
+		a->as_marcas[i] = 0;
+		c->as_marcas[i] = 0;
+		g->as_marcas[i] = 0;
+		t->as_marcas[i] = 0;
+	}
 	
 	//Conecta os vértices
 	a->a = a;
@@ -123,7 +150,7 @@ __host__ __device__ void build_grafo(vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	t->c = c;
 	t->g = g;
 	t->t = t;
-	
+		
 	return;
 }
 
@@ -131,26 +158,40 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
 	
 	//Configura grafo
 	int i;
+	int size;
 	vgrafo *atual;
 	
-	build_grafo(a,c,g,t);
+	for(size=0;senso[size] != '\0';size++);
+	
+	build_grafo(size,a,c,g,t);
 	
 	i=0;
 	//Configura sequência senso
 	while(senso[i] != '\0'){
-		i++;
 		atual = busca_vertice(senso[i],a,c,g,t);
-		atual->psenso=i;
+		atual->s_marcas[i]=1;
+		printf("%c marcado na posicao %d.\n",atual->vertice,i);
+		i++;
 	}
 	
 	i=0;
 	//Configura sequência antisenso
 	while(antisenso[i] != '\0'){
-		i++;
 		atual = busca_vertice(antisenso[i],a,c,g,t);
-		atual->pasenso=i;
+		atual->as_marcas[i]=1;
+		i++;
 	}
 		
+	for(i=0;i<size;i++){
+		printf("%c: %d -> %d\n",'A',i,a->s_marcas[i]);
+		printf("%c: %d -> %d\n",'C',i,c->s_marcas[i]);
+		printf("%c: %d -> %d\n",'G',i,g->s_marcas[i]);
+		printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
+	}
+	return;
+}
+
+void send_buffer(Buffer *b,int n){
 	
 	return;
 }

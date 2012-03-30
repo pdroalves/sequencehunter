@@ -5,7 +5,7 @@ OPENMP = -fopenmp
 INSTALL = ../bin
 
 shunter-cmd:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o
-	$(CC) -G shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o $(CFLAGS) -o shunter-cmd
+	$(CC) -arch=sm_20 -G shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o $(CFLAGS) -o shunter-cmd
 	
 shunter-cmd.o:shunter-cmd.cu
 	$(CC) $(CFLAGS) -G -g -c shunter-cmd.cu	
@@ -23,7 +23,7 @@ operacoes.o:operacoes.cu
 	$(CC) $(CFLAGS) -G -g -c operacoes.cu
 
 busca.o:busca.cu
-	$(CC) -G -g -c busca.cu
+	$(CC) -arch=sm_20 -G -g -c busca.cu
 	
 clean:
 	rm -f *.o *.{c,h}~ shunter-cmd
