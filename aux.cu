@@ -19,34 +19,55 @@ void aux(int CUDA,char *c){
 	int m;//Quantidade sequências
 	int n;//Elementos por sequência
 	int buffer_size = 2;
-	Buffer b;
-	char *tmp;
+	int *matchs;
+	int *d_matchs;
+	int i;
+	Buffer buffer;
+	char **d_buffer;
+	char **tmp;
+	char *check;
 	vgrafo *d_a;
 	vgrafo *d_c;
 	vgrafo *d_g;
 	vgrafo *d_t;
 	
+	get_setup(&m,&n);
+	
+	check = (char*)malloc(n*sizeof(char));
 	cudaMalloc((void**)&d_a,sizeof(vgrafo));
     cudaMalloc((void**)&d_c,sizeof(vgrafo));
     cudaMalloc((void**)&d_g,sizeof(vgrafo));
     cudaMalloc((void**)&d_t,sizeof(vgrafo));
-	
+	cudaMalloc((void**)&d_matchs,buffer_size*sizeof(int));
+	matchs = (int*)calloc(0,buffer_size*sizeof(int));
+	cudaMemcpy(d_matchs,matchs,buffer_size*sizeof(int),cudaMemcpyHostToDevice);
+	d_buffer = (char**)malloc(buffer_size*sizeof(char*));
+	for(i=0;i<buffer_size;i++)
+		cudaMalloc((void**)&(d_buffer[i]),n*sizeof(char));	
+		
 	//Inicializa
-	get_setup(&m,&n);
-	prepare_buffer(&b,buffer_size);
+	prepare_buffer(&buffer,buffer_size);
+	//cudaMemset(d_matchs,9,buffer_size*sizeof(int));
 	
 	setup_for_cuda(c,d_a,d_c,d_g,d_t);
 	
 	while( check_file_end()== 0){
 		//Realiza loop enquanto existirem sequências para encher o buffer
-		fill_buffer(&b,n);
-		 tmp = get_antisenso(b.seq[0]);
+		fill_buffer(&buffer,n);
+		for(i=0;i<buffer_size;i++)
+			cudaMemcpy(d_buffer[i],buffer.seq[i],n*sizeof(char), cudaMemcpyHostToDevice);
+		k_busca<<<1,buffer_size>>>(d_matchs,d_buffer,n,d_a,d_c,d_g,d_t);
+		
+		cudaMemcpy(check,d_buffer[0],n*sizeof(char),cudaMemcpyDeviceToHost);
+		cudaMemcpy(matchs,d_matchs,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 	}
 	
 	cudaFree(d_a);
 	cudaFree(d_c);
 	cudaFree(d_g);
 	cudaFree(d_t);
+	cudaFree(d_matchs);
+	free(matchs);
 	
 	return;
 

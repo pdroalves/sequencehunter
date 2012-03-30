@@ -17,20 +17,22 @@ __host__ __device__ void caminhar(vgrafo*, vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
-__global__ void k_busca(int *matchs,char **data,int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_busca(int *matchs,char **data,const int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 	
 	int posicao = blockIdx.x*blockDim.x + threadIdx.x;
 	char *seq;
 	int i=0;
-	int found = 0;//1 se encontrar uma seq
+	//int found = 0;//1 se encontrar uma seq
 	int s_match = 0;
 	int as_match = 0;
 	vgrafo *atual;
 	vgrafo *prox;
 	
+	//Seto ponteiro para a sequência que será analisada
 	seq =  data[posicao];
-	#pragma unroll 1
-	while(seq[i+1] != '\0' && s_match < (size-1) && as_match < (size-1)){
+	
+	//#pragma unroll 1
+	while( i < size && s_match < (size-1) && as_match < (size-1)){
 		atual = busca_vertice(seq[i],a,c,g,t);
 		prox = busca_vertice(seq[i+1],a,c,g,t);
 		caminhar(atual,prox,&s_match,&as_match);
@@ -41,9 +43,9 @@ __global__ void k_busca(int *matchs,char **data,int size,vgrafo *a,vgrafo *c,vgr
 	//1 se for senso
 	//2 se for antisenso
 	//0 se não for nada
-	matchs[posicao] = s_match / (size-1);
-	matchs[posicao] = 2*(as_match / (size-1));
-	
+	//matchs[posicao] = s_match / (size-1);
+	//matchs[posicao] = 2*(as_match / (size-1));
+	matchs[posicao] = 9;
 	return;
 }
 
@@ -151,6 +153,11 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
 		atual->pasenso=i;
 	}
 		
+	
+	return;
+}
+
+void send_buffer(Buffer *b,int n){
 	
 	return;
 }
