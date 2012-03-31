@@ -5,8 +5,7 @@
 int open_file(char*);
 void close_file();
 void prepare_buffer(Buffer*);
-void fill_buffer(Buffer*);
-int check_file_end_and_fill_buffer(Buffer*,int);
+void fill_buffer(Buffer*,int);
 
 FILE *f;
 
@@ -32,17 +31,16 @@ void prepare_buffer(Buffer *b,int c){
 
 void fill_buffer(Buffer *b,int n){
 	int i;
-
-	for(i=0;i<b->capacidade && feof(f) == 0;i++){
+	
+	for(i=0;i < b->capacidade && feof(f) == 0;i++){
 		b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 		fscanf(f,"%s",b->seq[i]);
 		strcat(b->seq[i],"\0");
-	}	
-	
-}
+	}
 
-int check_file_end_and_fill_buffer(Buffer *b,int n){
-	fill_buffer(b,n);
-	return feof(f);
+	if(feof(f) == 1 && i == 0) b->load = -1;//Arquivo acabou
+	else b->load = i;
+	
+	return;
 }
 

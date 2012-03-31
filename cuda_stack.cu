@@ -10,13 +10,13 @@
 #include <cuda.h>
 #include "estruturas.h"
 
-__global__ void k_recupera(char **data,char **senso,char **antisensos){
+__global__ void k_recupera(char **data,char **senso,char **antisenso){
 	
   ////////
   ////////	
-  ////////		Esse kernel deve deve ser executado por dois threads, um para o senso e o outro para o antisenso
-  ////////		Recebe endereços na memória global para que as sequências senso e antisenso sejam salvas
-  ////////		Recebe os endereços originais onde todas as sequências foram salvas
+  ////////		Esse kernel deve deve ser executado pela mesma quantidade de threads que processaram o kernel k_busca.
+  ////////		Recebe endereços na memória global para que as sequências senso e antisenso sejam salvas.
+  ////////		Recebe os endereços originais onde todas as sequências foram salvas.
   ////////
   ////////
   ////////
@@ -24,14 +24,21 @@ __global__ void k_recupera(char **data,char **senso,char **antisensos){
   
   const int posicao = blockIdx.x*blockDim.x + threadIdx.x;
   
+  //printf("%s\n",data[posicao]);
   switch(data[posicao][0]){
 	  case 'S':
 		//Senso
-		senso[posicao] = data[posicao][1];
+		senso[posicao] = data[posicao];
 		break;
 	  case 'N':
 		//Antisenso
-		antisenso[posicao] = data[posicao][1];
+		antisenso[posicao] = data[posicao];
 		break;
+		default:
+		senso[posicao][0] = '\0';
+		antisenso[posicao][0] = '\0';
+		break;
+	}
+	
 	return;
 }

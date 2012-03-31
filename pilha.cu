@@ -14,14 +14,13 @@
 
 pilha criar_pilha(){
 	pilha cabeca;
-	cabeca->prox = NULL;
+	cabeca.prox = NULL;
 	return cabeca;
 }
 
 // Insere um elemento y na pilha tp.
 void empilha (char *seq, pilha *tp) { 
    pilha *nova;
-   int i = 0;
    int seq_size;//A sequência seq possui pelo menos o elemento \0
    
    //Encontra o tamanho da sequência
@@ -39,20 +38,35 @@ void empilha (char *seq, pilha *tp) {
 // Remove um elemento da pilha tp.
 // Supõe que a pilha não está vazia. 
 // Devolve o elemento removido.
-void desempilha (char *seq,pilha *tp) {
+char* desempilha (pilha *tp) {
    pilha *p;
+   char *seq;
    int seq_size;
-   int i;
    
    p = tp->prox;
    
    //Encontra o tamanho da sequência
-   seq_size = strlen(seq);
+   seq_size = strlen(p->seq);
    
    seq = (char*)malloc(seq_size*sizeof(char));
-   memcpy(seq,p->seq[i],seq_size);
+   memcpy(seq,p->seq,seq_size*sizeof(char));
    
    tp->prox = p->prox;
    free (p);
-   return; 
+   return seq; 
+}
+
+int tamanho_da_pilha(pilha *tp){
+	int p;
+	pilha *tmp;
+
+	p = 0;
+	tmp = tp;
+
+	while(tmp->prox != NULL){
+		tmp = tmp->prox;
+		p++;
+	}
+
+	return p;
 }

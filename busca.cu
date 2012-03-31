@@ -54,8 +54,6 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   s_match = as_match = 0;
   i=0;
   
-  printf("%s\n",seq);
-
   ////////////////////
   ////////////////////										
   //Iteração inicial//																			
@@ -78,7 +76,7 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   while( seq[i] != '\0' && s_match < size && as_match < size) {
 	//  printf("s_match: %d\n",s_match);
 	if(s_match == bloco1){
-		printf("Bloco 1 encontrado na posicao %d, %c-> Sequência senso.\n",i,seq[i]);
+		//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %c-> Sequência senso.\n",posicao,i,seq[i]);
 		tipo = 'S';//Senso
 		x0 = i;//Marca primeiro elemento 
 		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
@@ -104,16 +102,28 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   
   //printf("s_match: %d - as_match: %d\n",s_match,as_match);
 
-	if(s_match == size || as_match == size){
+	if(s_match == size){
 	  seq[0] = tipo;
 	  #pragma unroll 50
 	  for(i=1;i<=blocoZ;i++){
 		  seq[i] = seq[x0 + i-1];
 		}
 		seq[i] = '\0';
-		printf("%s\n\n",seq);
+		//printf("%s\n",seq);
+		//printf("%s\n\n",seq);
 		return;
 	}	
+	
+	if(as_match == size){
+	  seq[0] = tipo;
+	  #pragma unroll 50
+	  for(i=1;i<=blocoZ;i++){
+		  seq[i] = seq[x0 + i-1];
+		}
+		seq[i] = '\0';
+		//printf("%s\n\n",seq);
+		return;
+	}
 	
 	seq[0] = '\0';
 											
@@ -243,15 +253,15 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
 											
   i=0;
   j=0;
-  printf("Configurando senso:\n");
+  printf("Configurando senso.\n");
   //Configura sequência senso
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
     if(atual != NULL){
 		atual->s_marcas[i-j]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+		//printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
 	}else{
-		printf("Elemento variável encontrado.\n");
+		//printf("Elemento variável encontrado.\n");
 		j++;
 	}
     i++;
@@ -259,15 +269,15 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
 											
   i=0;
   j=0;
-  printf("\nConfigurando antisenso:\n");
+  printf("\nConfigurando antisenso.\n");
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
       if(atual != NULL){
 		atual->as_marcas[i-j]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+		//printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
 	}else{
-		printf("Elemento variável encontrado.\n");
+		//printf("Elemento variável encontrado.\n");
 		j++;
 	}
     i++;
@@ -279,10 +289,5 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
     printf("%c: %d -> %d\n",'G',i,g->s_marcas[i]);
     printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
     }*/
-  return;
-}
-
-void send_buffer(Buffer *b,int n){
-											
   return;
 }

@@ -38,6 +38,7 @@ typedef struct lista_ligada lista_ligada;
 struct buffer{
 	char **seq;
 	int capacidade;
+	int load;//Guarda a quantidade de sequências carregadas;
 };
 typedef struct buffer Buffer;
 
