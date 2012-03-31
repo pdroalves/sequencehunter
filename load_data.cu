@@ -6,7 +6,7 @@ int open_file(char*);
 void close_file();
 void prepare_buffer(Buffer*);
 void fill_buffer(Buffer*);
-int check_file_end();
+int check_file_end_and_fill_buffer(Buffer*,int);
 
 FILE *f;
 
@@ -41,7 +41,8 @@ void fill_buffer(Buffer *b,int n){
 	
 }
 
-int check_file_end(){
+int check_file_end_and_fill_buffer(Buffer *b,int n){
+	fill_buffer(b,n);
 	return feof(f);
 }
 

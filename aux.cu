@@ -26,8 +26,6 @@ void aux(int CUDA,char *c){
 	int *d_matchs;
 	int i;
 	Buffer buffer;
-	char **tmp;
-	char *check;
 	vgrafo *d_a;
 	vgrafo *d_c;
 	vgrafo *d_g;
@@ -36,7 +34,6 @@ void aux(int CUDA,char *c){
 	
 	get_setup(&m,&n);
 	
-	check = (char*)malloc((n+1)*sizeof(char));
 	cudaMalloc((void**)&d_a,sizeof(vgrafo));
     cudaMalloc((void**)&d_c,sizeof(vgrafo));
     cudaMalloc((void**)&d_g,sizeof(vgrafo));
@@ -51,9 +48,8 @@ void aux(int CUDA,char *c){
 	prepare_buffer(&buffer,buffer_size);
 	setup_for_cuda(c,d_a,d_c,d_g,d_t);
 	
-	while( check_file_end()== 0){
+	while( check_file_end_and_fill_buffer(&buffer,n)== 0){
 		//Realiza loop enquanto existirem sequências para encher o buffer
-		fill_buffer(&buffer,n);
 		for(i=0;i<buffer_size;i++){
 			cudaMalloc((void**)&d_buffer[i],(n+1)*sizeof(char));
 			cudaMemcpy(d_buffer[i],buffer.seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);

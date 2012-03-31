@@ -111,7 +111,7 @@
 	  cudaGetDeviceCount(&deviceCount);
 	  
 			// Função que verifica se existe um dispositivo que suporte CUDA.
-		/*	if(deviceCount == 0){
+			if(deviceCount == 0){
 			  printf("Nao existe um dispositivo instalado na maquina que suporte CUDA\n");
 			  CUDA = 0;//Sem suporte a CUDA
 			}else{
@@ -129,11 +129,11 @@
 					}
 				}else
 					getDevice(device,deviceProp);
-					*/
-			/*    cudaGetDeviceProperties(&deviceProp,device);
+					
+			   cudaGetDeviceProperties(&deviceProp,device);
 				if(!deviceProp.deviceOverlap){
 					printf("Placa gráfica não suporta overlaps. Não haverá ganho no uso de steams\n");
-				}*/
+				}
 		
 
 	  
@@ -153,7 +153,7 @@
 		  printf("Erro na leitura\n");
 		  exit(1);
 	  }
-	  if(strlen(c) != c_size) printf("Sequência inválida. Tamanho esperado: %d -> Tamanho recebido: %d\n",c_size,strlen(c));
+	  if(strlen(c) != c_size) printf("Sequência inválida. Tamanho esperado: %d -> Tamanho recebido: %d\n",c_size,(int)strlen(c));
   }
 	  
 	  printString("Sequência de busca: ",c);
