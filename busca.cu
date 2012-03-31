@@ -21,46 +21,103 @@ __host__ __device__ void caminhar(vgrafo*,vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
-__global__ void k_busca(int *matchs,char **data,const int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-											
-  //int posicao = blockIdx.x*blockDim.x + threadIdx.x;
-  int posicao = threadIdx.x;
-  const char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
+
+////////////////////////////////////////////////////////////////////////////////////////
+//////////////////					Kernel Principal 				////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+__global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+ 
+  ////////
+  ////////
+  ////////
+  ////////		Recebe o tamanho dos blocos 1 e 2
+  ////////		Recebe o tamanho total da sequência
+  ////////		Recebe o endereço com todo o buffer
+  ////////		Recebe ponteiros para cada vertice do grafo
+  ////////
+  ////////
+  ////////
+  ////////
+  											
+  const int posicao = blockIdx.x*blockDim.x + threadIdx.x;
+  char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
   int i;
-  //int found = 0;//1 se encontrar uma seq
   int s_match;
   int as_match;
   vgrafo *atual;
   vgrafo *anterior;
-												
+  int x0;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
+  int xn;/////
+  int size = bloco1 + bloco2;
+  int blocoZ = blocos - size;//Total de bases que queremos encontrar
+  char tipo;						
   s_match = as_match = 0;
   i=0;
-											
-												
+
+  ////////////////////
+  ////////////////////										
+  //Iteração inicial//																			
+  ////////////////////
+  ////////////////////
   atual = busca_vertice(seq[0],a,c,g,t);
   if(atual != NULL)
     caminhar(NULL,atual,&s_match,&as_match);
   i++;
   anterior = atual;
-											
+
+  																			
+  ///////////////////////
+  ///////////////////////					
+  //Iterações seguintes//																			
+  ///////////////////////
+  ///////////////////////
+  										
 #pragma unroll 1
-  while( seq[i] != '\0' && s_match < (size) && as_match < (size)){
+  while( seq[i] != '\0' && s_match < (bloco1+bloco2) && as_match < (bloco1+bloco2)) {
+	if(s_match == bloco1){
+		printf("Bloco 1 encontrado\n");
+		tipo = 'S';//Senso
+		x0 = i+1;//Marca primeiro elemento 
+		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+		i = xn;  //Salta o bloco variável
+	}
+	if(as_match == bloco2){
+		tipo = 'N';//Não-Senso
+		x0 = i+1;//Marca primeiro elemento 
+		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+		i = xn;  //Salta o bloco variável
+	}
     atual = busca_vertice(seq[i],a,c,g,t);
     if(atual != NULL)
       caminhar(anterior,atual,&s_match,&as_match);
     i++;
     anterior = atual;
   }
-											
-  //Marca o que foi encontrado
-  //1 se for senso
-  //2 se for antisenso
-  //0 se não for nada
-  matchs[posicao] = s_match / (size);
-  //matchs[posicao] = 2*(as_match / (size-1));
+
+  ///////////////////////////////											
+  //Guarda o que foi encontrado//
+  ///////////////////////////////
+  
+  printf("s_match: %d - as_match: %d\n",s_match,as_match);
+
+	if(s_match == size || as_match == size){
+	  seq[0] = tipo;
+	  #pragma unroll 50
+	  for(i=1;i<blocoZ;i++){
+		  seq[i] = seq[x0 + i];
+		}
+		seq[i] = '\0';
+		printf("%s\n",seq[x0]);
+		return;
+	}	
+	
+	seq[0] = '\0';
 											
   return;
 }
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 
 __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   //Funcao temporária. Ficará aqui até eu pensar em algo melhor
@@ -180,19 +237,30 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
   build_grafo(size,a,c,g,t);
 											
   i=0;
+  printf("Configurando senso:\n");
   //Configura sequência senso
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
-    atual->s_marcas[i]=1;
-    printf("%c marcado na posicao %d.\n",atual->vertice,i);
+    if(atual != NULL){
+		atual->s_marcas[i]=1;
+		printf("%c marcado na posicao %d.\n",atual->vertice,i);
+	}else{
+		printf("Elemento variável encontrado.\n");
+	}
     i++;
   }
 											
   i=0;
+  printf("\nConfigurando antisenso:\n");
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
-    atual->as_marcas[i]=1;
+      if(atual != NULL){
+		atual->as_marcas[i]=1;
+		printf("%c marcado na posicao %d.\n",atual->vertice,i);
+	}else{
+		printf("Elemento variável encontrado.\n");
+	}
     i++;
   }
   /*

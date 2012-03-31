@@ -18,7 +18,7 @@ __constant__ char *d_buffer[buffer_size];
 
 void setup_for_cuda(char*,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 
-void aux(int CUDA,char *c){
+void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 	
 	int m;//Quantidade sequências
 	int n;//Elementos por sequência
@@ -51,17 +51,12 @@ void aux(int CUDA,char *c){
 	while( check_file_end_and_fill_buffer(&buffer,n)== 0){
 		//Realiza loop enquanto existirem sequências para encher o buffer
 		for(i=0;i<buffer_size;i++){
-			cudaMalloc((void**)&d_buffer[i],(n+1)*sizeof(char));
+			cudaMalloc((void**)&d_buffer[i],(n+2)*sizeof(char));//Aloco n+1 posicoes para as bases e +1 para processamento interno no arquivo cuda_stack.cu
 			cudaMemcpy(d_buffer[i],buffer.seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);
 		}
 		cudaMemcpy(s,d_buffer,buffer_size*sizeof(char*),cudaMemcpyHostToDevice);
-		k_busca<<<1,buffer_size>>>(d_matchs,s,strlen(c),d_a,d_c,d_g,d_t);
-		//k_teste<<<1,buffer_size>>>(d_matchs,d_buffer,n,d_a,d_c,d_g,d_t);
-		//k_printf<<<1,1>>>(s);
-		
-		cudaMemcpy(matchs,d_matchs,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
-		for(i=0;i<buffer_size;i++)
-			printf("%s:-> %d\n",buffer.seq[i],matchs[i]);
+		k_busca<<<1,buffer_size>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);
+
 	}
 	
 	cudaFree(d_a);

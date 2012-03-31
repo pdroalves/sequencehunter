@@ -204,14 +204,23 @@ int findCudaDevice()
 	  char *c;
 	  int c_size;
 	  int err;
+	  int b1_size;
+	  int b2_size;
+	  int bv_size;
 	  
 	  gpuDeviceInit(findCudaDevice());
 	  
 	  //Inicializa
 	  prepareLog();
 	 
-	  printf("Qual o tamanho da sequência?\n");
-	  scanf("%d",&c_size);
+	 printf("Qual o tamanho do bloco 1 constante?\n");
+	 scanf("%d",&b1_size);
+	 printf("Qual o tamanho do bloco variável?\n");
+	 scanf("%d",&bv_size);
+	 printf("Qual o tamanho do bloco 2 constante?\n");
+	 scanf("%d",&b2_size);
+	 
+	 c_size = b1_size+b2_size+bv_size;
 	  
 	  c = (char*)malloc((c_size+1)*sizeof(char));
 	  if(c == NULL){
@@ -237,7 +246,7 @@ int findCudaDevice()
 		  exit(1);
 	  }
 	  
-	  aux(CUDA,c);
+	  aux(CUDA,c,b1_size,b2_size,c_size);
 	  
 	 // close_file();
 	return 0;

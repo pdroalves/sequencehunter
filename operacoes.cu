@@ -31,6 +31,9 @@
 				case 'G':
 					strcat(antisenso, "C");
 				break;
+				default:
+					strcat(antisenso,"N");
+				break;
 			}	
 		}
 		return antisenso;
