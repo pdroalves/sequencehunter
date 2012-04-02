@@ -4,8 +4,8 @@ OPENMP = -Xcompiler -fopenmp
 
 INSTALL = ../bin
 
-shunter-cmd:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o cuda_stack.o pilha.o
-	$(CC) -arch=sm_20 -G shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o cuda_stack.o pilha.o $(CFLAGS) -o shunter-cmd $(OPENMP)
+shunter-cmd:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o
+	$(CC) -arch=sm_20 -G shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o $(CFLAGS) -o shunter-cmd $(OPENMP)
 	
 shunter-cmd.o:shunter-cmd.cu
 	$(CC) $(CFLAGS) -G -g -c shunter-cmd.cu	
@@ -24,9 +24,6 @@ operacoes.o:operacoes.cu
 
 busca.o:busca.cu
 	$(CC) -arch=sm_20 -G -g -c busca.cu
-	
-cuda_stack.o:cuda_stack.cu
-	$(CC) -arch=sm_20 -G -g -c cuda_stack.cu
 	
 pilha.o:pilha.cu
 	$(CC) -arch=sm_20 -G -g -c pilha.cu

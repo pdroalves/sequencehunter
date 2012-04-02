@@ -13,7 +13,6 @@
 #include "load_data.h"
 #include "operacoes.h"
 #include "busca.h"
-#include "cuda_stack.h"
 #include "log.h"
 #include "pilha.h"
 
@@ -108,21 +107,24 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 		dim3 dimGrid(1);
 		k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);
 		
-		k_recupera<<<dimGrid,dimBlock>>>(s,d_sensos,d_antisensos);
 		for(i=0;i<buffer_size;i++){//Copia sequências senso e antisenso encontradas
-			cudaMemcpy(tmp,d_sensos_hold[i],sizeof(char),cudaMemcpyDeviceToHost);
-			if(tmp[0] != '\0'){//Antes de copiar, verifica se existe alguma sequência útil
-				cudaMemcpy(tmp,d_buffer[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
-				//printf("%s\n",tmp);
-				empilha(tmp,&p_sensos);
+			cudaMemcpy(tmp,d_buffer[i],sizeof(char),cudaMemcpyDeviceToHost);
+			
+			switch(tmp[0]){
+				case 'S':
+					cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
+					printf("S: %s\n",tmp);
+					empilha(tmp,&p_sensos);
+				break;
+				case 'N':
+					cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
+					printf("N: %s\n",tmp);
+					empilha(tmp,&p_antisensos);
+				break;
+				default:
+				break;
 			}
 			
-			cudaMemcpy(tmp,d_antisensos_hold[i],sizeof(char),cudaMemcpyDeviceToHost);
-			if(tmp[0] != '\0'){//Antes de copiar, verifica se existe alguma sequência útil
-				cudaMemcpy(tmp,d_buffer[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
-				//printf("%s\n",tmp);
-				empilha(tmp,&p_antisensos);
-			}
 		}
 		buffer.load = 0;//Avisando sobre buffer vazio
 	}
@@ -132,6 +134,7 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 	}
 	
 	}
+	printf("OMP end.\n");
 	p_sensos_size = tamanho_da_pilha(&p_sensos);
 	p_antisensos_size = tamanho_da_pilha(&p_antisensos);
 	printf("Sensos: %d.\nAntisensos: %d.\n",p_sensos_size,p_antisensos_size);
