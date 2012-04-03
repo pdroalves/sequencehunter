@@ -12,10 +12,25 @@
 #include "estruturas.h"
 #include "operacoes.h"
 
+
+char* desempilha(pilha *tp);
+int conta_posicoes(char *seq);
+void empilha(char *seq,pilha *tp);
+pilha criar_pilha();
+int tamanho_da_pilha(pilha*);
+void destroy(pilha *tp);
+
+
 pilha criar_pilha(){
 	pilha cabeca;
 	cabeca.prox = NULL;
 	return cabeca;
+}
+
+void destroy(pilha *tp){
+	while(tamanho_da_pilha(tp) > 0)
+		desempilha(tp);
+	return;
 }
 
 // Insere um elemento y na pilha tp.

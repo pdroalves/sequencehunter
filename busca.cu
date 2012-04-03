@@ -102,6 +102,17 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   
   //printf("s_match: %d - as_match: %d\n",s_match,as_match);
 
+	if(as_match == size){
+	  seq[0] = tipo;
+	  #pragma unroll 50
+	  for(i=1;i<=blocoZ;i++){
+		  seq[i] = seq[x0 + i-1];
+		}
+		seq[i] = '\0';
+		//printf("%s\n\n",seq);
+		return;
+	}
+	
 	if(s_match == size){
 	  seq[0] = tipo;
 	  #pragma unroll 50
@@ -114,16 +125,6 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
 		return;
 	}	
 	
-	if(as_match == size){
-	  seq[0] = tipo;
-	  #pragma unroll 50
-	  for(i=1;i<=blocoZ;i++){
-		  seq[i] = seq[x0 + i-1];
-		}
-		seq[i] = '\0';
-		//printf("%s\n\n",seq);
-		return;
-	}
 	
 	seq[0] = '\0';
 											
@@ -247,8 +248,8 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
   int size;
   vgrafo *atual;
 											
-  for(size=0;senso[size] != '\0';size++);
-											
+  for(size=0;senso[size] != '\0';size++);//Pega tamanho das sequências
+  size++;
   build_grafo(size,a,c,g,t);
 											
   i=0;

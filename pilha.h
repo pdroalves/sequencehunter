@@ -16,3 +16,4 @@ int conta_posicoes(char *seq);
 void empilha(char *seq,pilha *tp);
 pilha criar_pilha();
 int tamanho_da_pilha(pilha*);
+void destroy(pilha *tp);
