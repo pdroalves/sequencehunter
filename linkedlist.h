@@ -15,4 +15,4 @@ int busca_lista_as(lista_ligada *l,char *seq);
 int busca_lista_s(lista_ligada *l,char *seq);
 int conta_posicoes(char *seq);
 void adicionar_elemento(lista_ligada *final,char *seq);
-lista_ligada criar_lista();
+lista_ligada* criar_lista();

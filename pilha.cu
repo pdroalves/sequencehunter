@@ -60,6 +60,8 @@ char* desempilha (pilha *tp) {
    
    p = tp->prox;
    
+   if(p == NULL) return NULL;
+   
    //Encontra o tamanho da sequência
    seq_size = strlen(p->seq);
    

@@ -18,6 +18,8 @@
 	#include "log.h"
 	#include <glib.h>
 	#include "load_data.h"
+	#include "pilha.h"
+	#include "processing_data.h"
 
 	//###############
 	//Parametros de entrada
@@ -207,11 +209,15 @@ int findCudaDevice()
 	  int b1_size;
 	  int b2_size;
 	  int bv_size;
+		pilha p_sensos;
+		pilha p_antisensos;
 	  
 	  gpuDeviceInit(findCudaDevice());
 	  
 	  //Inicializa
 	  prepareLog();
+	p_sensos = criar_pilha();
+	p_antisensos = criar_pilha();
 	 
 	 printf("Qual o tamanho do bloco 1 constante?\n");
 	 scanf("%d",&b1_size);
@@ -246,8 +252,12 @@ int findCudaDevice()
 		  exit(1);
 	  }
 	  
-	  aux(CUDA,c,b1_size,b2_size,c_size);
+	  aux(CUDA,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  processar(&p_sensos,&p_antisensos);
 	  
-	 // close_file();
+	 close_file();
+	 free(c);
+	destroy(&p_sensos);
+	destroy(&p_antisensos);
 	return 0;
 	}

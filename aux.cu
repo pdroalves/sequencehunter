@@ -25,7 +25,7 @@ void setup_for_cuda(char*,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 void load_buffer(Buffer *b,char** s,int n);
 void cudaIteracoes(int bloco1,int bloco2,int blocoV,int m,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
 	
-void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
+void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	
 	int m;//Quantidade sequências
 	int n;//Elementos por sequência
@@ -37,10 +37,6 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 	cudaEvent_t stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
-	pilha p_sensos;
-	pilha p_antisensos;
-	int p_sensos_size;
-	int p_antisensos_size;
 	float tempo;
 	
 	get_setup(&m,&n);
@@ -49,9 +45,6 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
     cudaMalloc((void**)&d_c,sizeof(vgrafo));
     cudaMalloc((void**)&d_g,sizeof(vgrafo));
     cudaMalloc((void**)&d_t,sizeof(vgrafo));
-    	
-	p_sensos = criar_pilha();
-	p_antisensos = criar_pilha();
 		
 	//Inicializa
 	setup_for_cuda(c,d_a,d_c,d_g,d_t);
@@ -61,7 +54,7 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 	printString("Iniciando iterações:\n",NULL);
 	
     cudaEventRecord(start,0);
-	cudaIteracoes(bloco1,bloco2,blocos,m,n,d_a,d_c,d_g,d_t,&p_sensos,&p_antisensos);
+	cudaIteracoes(bloco1,bloco2,blocos,m,n,d_a,d_c,d_g,d_t,p_sensos,p_antisensos);
     cudaEventRecord(stop,0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&tempo,start,stop);
@@ -69,18 +62,6 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos){
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
 	
-	p_sensos_size = tamanho_da_pilha(&p_sensos);
-	p_antisensos_size = tamanho_da_pilha(&p_antisensos);
-	printf("Sensos: %d.\nAntisensos: %d.\n",p_sensos_size,p_antisensos_size);
-	
-	//for(i=0;i<p_antisensos_size;i++){
-	//	printf("%s\n",desempilha(&p_antisensos));
-	//}
-	
-	print_matchs(p_sensos_size,p_antisensos_size);
-	
-	destroy(&p_sensos);
-	destroy(&p_antisensos);
 	cudaFree(d_a);
 	cudaFree(d_c);
 	cudaFree(d_g);
@@ -152,7 +133,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 	tmp = (char*)malloc(blocoV*sizeof(char));
     
 			
-	#pragma omp parallel num_threads(2) shared(buffer) shared(buffer_flag)
+	#pragma omp parallel num_threads(2) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos)
 	{	
 		#pragma omp master
 		{
@@ -192,7 +173,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 						switch(tmp[0]){
 							case 'S':
 								cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
-								//printf("S: %s\n",tmp);
+								printf("S: %s\n",tmp);
 								empilha(tmp,p_sensos);
 							break;
 							case 'N':
