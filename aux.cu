@@ -16,7 +16,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 512//Capacidade máxima do buffer
+#define buffer_size 520//Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
@@ -169,8 +169,8 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 		#pragma omp single			
 		{
 			int num_threads;
-			int num_blocks;
-			int hold;
+			int num_blocks=1;
+			const char *error;
 			while( buffer_flag == 1){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
@@ -178,18 +178,14 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 				//Realiza loop enquanto existirem sequências para encher o buffer		
 		
 				if(buffer.load != -1){
-					hold = buffer_size>=buffer.load?buffer.load:buffer_size;
-					if(hold > 512){
-						num_threads = hold/32;
-						num_blocks = hold/num_threads;
-					}else{
-						num_threads = hold;
-						num_blocks = 1;
-					}
+					num_threads = buffer_size>=buffer.load?buffer.load:buffer_size;
+					
 					dim3 dimBlock(num_threads);
 					dim3 dimGrid(num_blocks);
 					k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
-					
+					error = cudaGetErrorString(cudaGetLastError());
+					if(strcmp(error,"no error") != 0)
+					printf("%s\n",error);
 					for(i=0;i<buffer_size;i++){//Copia sequências senso e antisenso encontradas
 						cudaMemcpy(tmp,d_buffer[i],sizeof(char),cudaMemcpyDeviceToHost);
 						
