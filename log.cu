@@ -12,6 +12,7 @@ void printToLog_Runtime(float t);
 void printString(char*,char*);
 void printSet(int,int);
 void print_matchs(int,int);
+void print_tempo(float);
 void closeLog();
 
 void prepareLog(){
@@ -20,12 +21,12 @@ void prepareLog(){
   logfile = fopen("log.dat","a");
   //logfileDetalhado = fopen("logDetalhado.dat","a");
   
-  //if(ferror(logfile) != 0 || ferror(logfileDetalhado) != 0){
-//  	printf("Erro! Impossível salvar log\n");
- // 	exit(1);
- // }
+	if(ferror(logfile) != 0){
+		printf("Erro! Impossível salvar log\n");
+		exit(1);
+	}
    
-  fprintf(logfile,"-------------------------\n");
+  fprintf(logfile,"\n\n-------------------------\n");
  // fprintf(logfileDetalhado,"-------------------------\n");
   print_time();
 }
@@ -39,7 +40,7 @@ void print_time()
  t = time(NULL);
  local = localtime(&t);
  
- fprintf(logfile,"%s\n\n",asctime(local));
+ fprintf(logfile,"%s\n",asctime(local));
  //fprintf(logfileDetalhado,"%s\n\n",asctime(local));
 
   return;
@@ -47,7 +48,11 @@ void print_time()
 
 //Métodos específicos#######
 void printString(char *c,char *s){
-	fprintf(logfile,"%s %s\n",c,s);
+	if(s != NULL)
+		fprintf(logfile,"%s %s\n",c,s);
+	else
+		fprintf(logfile,"%s\n",c);
+	
 }
 
 void printSet(int m,int n){
@@ -61,6 +66,15 @@ void print_seqs_carregadas(int n){
 void print_matchs(int sensos,int antisensos){
 	fprintf(logfile,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.",sensos,antisensos);
 }
+
+void print_tempo(float tempo){
+	if(tempo > 0.5)
+		fprintf(logfile,"Tempo decorrido: %fs\n",tempo/1000.0);
+	else
+		fprintf(logfile,"Tempo decorrido: %fms\n",tempo);
+	
+}
+
 //##########################
 
 void printToLog_Runtime(float t){
@@ -69,6 +83,9 @@ void printToLog_Runtime(float t){
 }
 
 void closeLog(){
+	
+  fprintf(logfile,"\n-------------------------\n");
+  
    if(logfile != NULL)
       fclose(logfile);
   // if(logfileDetalhado != NULL)

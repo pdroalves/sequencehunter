@@ -8,4 +8,5 @@ void printString(char*,char*);
 void printSet(int,int);
 void print_matchs(int,int);
 void print_seqs_carregadas(int);
+void print_tempo(float tempo);
 void closeLog();

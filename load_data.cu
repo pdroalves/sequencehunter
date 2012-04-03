@@ -26,6 +26,7 @@ void get_setup(int *m,int *n){
 void prepare_buffer(Buffer *b,int c){
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
+	b->load = 0;
 	printString("Buffer configurado para: ","2");
 }
 
@@ -38,7 +39,7 @@ void fill_buffer(Buffer *b,int n){
 		strcat(b->seq[i],"\0");
 	}
 
-	if(feof(f) == 1 && i == 0) b->load = -1;//Arquivo acabou
+	if(feof(f) == 1) b->load = -1;//Arquivo acabou
 	else b->load = i;
 	
 	return;
