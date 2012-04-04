@@ -10,7 +10,12 @@ struct pilha {
 	struct pilha *prox;
 };
 #endif
-void desempilha(char *seq,pilha *tp);
+
+char* desempilha(pilha *tp);
 int conta_posicoes(char *seq);
-void empilha(char *seq,pilha *tp);
+pilha* criar_elemento_pilha(char*);
+void empilha(pilha*,pilha*);
 pilha criar_pilha();
+int tamanho_da_pilha(pilha*);
+void destroy(pilha *tp);
+int pilha_vazia(pilha *tp);

@@ -12,47 +12,90 @@
 #include "estruturas.h"
 #include "operacoes.h"
 
+
+char* desempilha(pilha *tp);
+int conta_posicoes(char *seq);
+pilha* criar_elemento_pilha(char*);
+void empilha(pilha*,pilha*);
+pilha criar_pilha();
+int tamanho_da_pilha(pilha*);
+void destroy(pilha *tp);
+int pilha_vazia(pilha *tp);
+
+
 pilha criar_pilha(){
 	pilha cabeca;
-	cabeca->prox = NULL;
+	cabeca.prox = NULL;
 	return cabeca;
 }
 
-// Insere um elemento y na pilha tp.
-void empilha (char *seq, pilha *tp) { 
-   pilha *nova;
-   int i = 0;
-   int seq_size;//A sequência seq possui pelo menos o elemento \0
-   
-   //Encontra o tamanho da sequência
+pilha* criar_elemento_pilha(char *seq){
+	pilha *elemento;
+	int seq_size;
+	
    seq_size = strlen(seq);
-   
-   nova = (pilha*) malloc (sizeof (pilha));
-   nova->seq = (char*) malloc(seq_size*sizeof(char));
-   
-   memcpy(nova->seq,seq,seq_size);
-   nova->prox  = tp->prox;
-   tp->prox = nova; 
+   elemento = (pilha*) malloc (sizeof (pilha));
+   elemento->seq = (char*) calloc('\0',(seq_size+1)*sizeof(char));
+   memcpy(elemento->seq,seq,seq_size);
+	
+	return elemento;
+}
+
+void destroy(pilha *tp){
+	while(tamanho_da_pilha(tp) > 0)
+		desempilha(tp);
+	return;
+}
+
+// Insere um elemento y na pilha tp.
+void empilha (pilha *tp,pilha *novo) { 
+   novo->prox  = tp->prox;
+   tp->prox = novo; 
+   //printf("Elemento %s empilhado.\n",novo->seq);
    return;
 }
 
 // Remove um elemento da pilha tp.
 // Supõe que a pilha não está vazia. 
 // Devolve o elemento removido.
-void desempilha (char *seq,pilha *tp) {
+char* desempilha (pilha *tp) {
    pilha *p;
+   char *seq;
    int seq_size;
-   int i;
    
    p = tp->prox;
    
+   if(p == NULL){
+		printf("Pilha vazia.\n");
+	    return NULL;
+   }
    //Encontra o tamanho da sequência
-   seq_size = strlen(seq);
+   seq_size = strlen(p->seq);
    
    seq = (char*)malloc(seq_size*sizeof(char));
-   memcpy(seq,p->seq[i],seq_size);
+   memcpy(seq,p->seq,seq_size+1);
    
    tp->prox = p->prox;
    free (p);
-   return; 
+   return seq; 
+}
+
+int tamanho_da_pilha(pilha *tp){
+	int p;
+	pilha *tmp;
+
+	p = 0;
+	tmp = tp;
+
+	while(tmp->prox != NULL){
+		tmp = tmp->prox;
+		p++;
+	}
+
+	return p;
+}
+
+int pilha_vazia(pilha *tp){
+	if(tp->prox == NULL) return 0;//Vazia
+	return 1;//Não vazia
 }

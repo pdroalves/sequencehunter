@@ -11,12 +11,12 @@
 
 struct vertice_grafo{
 		char vertice;
+		int *s_marcas;
+		int *as_marcas;
 		struct vertice_grafo* a;
 		struct vertice_grafo* c;
 		struct vertice_grafo* g;
 		struct vertice_grafo* t;
-		int psenso;
-		int pasenso;
 };
 typedef struct vertice_grafo vgrafo;
 
@@ -38,6 +38,7 @@ typedef struct lista_ligada lista_ligada;
 struct buffer{
 	char **seq;
 	int capacidade;
+	int load;//Guarda a quantidade de sequências carregadas;
 };
 typedef struct buffer Buffer;
 
