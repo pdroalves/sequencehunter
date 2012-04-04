@@ -37,10 +37,10 @@ void fill_buffer(Buffer *b,int n){
 		b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 		fscanf(f,"%s",b->seq[i]);
 		strcat(b->seq[i],"\0");
+		b->load++;
 	}
 
-	if(feof(f) == 1) b->load = -1;//Arquivo acabou
-	else b->load = i;
+	if(feof(f) == 1 && b->load == 0) b->load = -1;//Arquivo acabou
 	
 	return;
 }

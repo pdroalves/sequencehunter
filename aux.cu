@@ -16,7 +16,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 520//Capacidade máxima do buffer
+#define buffer_size 512 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
@@ -99,7 +99,7 @@ void load_buffer(Buffer *b,char** s,int n){
 		fill_buffer(b,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
 		if(b->load != -1){
 			print_seqs_carregadas(b->load);
-			
+			printf("%s\n",b->seq[0]);
 			for(i=0;i<buffer_size;i++)
 				cudaMemcpy(d_buffer[i],b->seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);
 			
@@ -166,7 +166,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 					k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
 					error = cudaGetErrorString(cudaGetLastError());
 					if(strcmp(error,"no error") != 0)
-					printf("%s\n",error);
+						printf("%s\n",error);
 					for(i=0;i<buffer_size;i++){//Copia sequências senso e antisenso encontradas
 						cudaMemcpy(tmp,d_buffer[i],sizeof(char),cudaMemcpyDeviceToHost);
 						
