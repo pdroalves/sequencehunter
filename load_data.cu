@@ -18,8 +18,8 @@ void close_file(){
 	fclose(f);
 }
 
-void get_setup(int *m,int *n){
-	fscanf(f,"%d %d",m,n);
+void get_setup(int *n){
+	fscanf(f,"%d",n);
 	fgets(NULL,0,f);
 }
 
@@ -39,6 +39,7 @@ void fill_buffer(Buffer *b,int n){
 		strcat(b->seq[i],"\0");
 		b->load++;
 	}
+	b->load--;
 
 	if(feof(f) == 1 && b->load == 0) b->load = -1;//Arquivo acabou
 	

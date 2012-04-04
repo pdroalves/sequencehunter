@@ -13,7 +13,7 @@
 void prepareLog();
 void print_time();
 void printString(char*,char*);
-void printSet(int,int);
+void printSet(int);
 void print_matchs(int,int);
 void print_tempo(float);
 void closeLog();
@@ -63,9 +63,9 @@ void printString(char *c,char *s){
 	
 }
 
-void printSet(int m,int n){
-	fprintf(logfile,"Sequências: %d.\nBases por sequência: %d.\n",m,n);
-	fprintf(logfileDetalhado,"Sequências: %d.\nBases por sequência: %d.\n",m,n);
+void printSet(int n){
+	fprintf(logfile,"Bases por sequência: %d.\n",n);
+	fprintf(logfileDetalhado,"Bases por sequência: %d.\n",n);
 }
 
 void print_seqs_carregadas(int n){

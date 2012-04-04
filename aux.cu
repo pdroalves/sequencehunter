@@ -23,11 +23,10 @@ int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
 void setup_for_cuda(char*,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 void load_buffer(Buffer *b,char** s,int n);
-void cudaIteracoes(int bloco1,int bloco2,int blocoV,int m,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
+void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
 	
 void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	
-	int m;//Quantidade sequências
 	int n;//Elementos por sequência
 	vgrafo *d_a;
 	vgrafo *d_c;
@@ -39,7 +38,7 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pil
 	cudaEventCreate(&stop);
 	float tempo;
 	
-	get_setup(&m,&n);
+	get_setup(&n);
 	
 	cudaMalloc((void**)&d_a,sizeof(vgrafo));
     cudaMalloc((void**)&d_c,sizeof(vgrafo));
@@ -50,11 +49,11 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pil
 	setup_for_cuda(c,d_a,d_c,d_g,d_t);
 	
 	printString("Dados inicializados.\n",NULL);
-	printSet(m,n);
+	printSet(n);
 	printString("Iniciando iterações:\n",NULL);
 	
     cudaEventRecord(start,0);
-	cudaIteracoes(bloco1,bloco2,blocos,m,n,d_a,d_c,d_g,d_t,p_sensos,p_antisensos);
+	cudaIteracoes(bloco1,bloco2,blocos,n,d_a,d_c,d_g,d_t,p_sensos,p_antisensos);
     cudaEventRecord(stop,0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&tempo,start,stop);
@@ -99,7 +98,7 @@ void load_buffer(Buffer *b,char** s,int n){
 		fill_buffer(b,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
 		if(b->load != -1){
 			print_seqs_carregadas(b->load);
-			printf("%s\n",b->seq[0]);
+			//printf("%s\n",b->seq[0]);
 			for(i=0;i<buffer_size;i++)
 				cudaMemcpy(d_buffer[i],b->seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);
 			
@@ -115,7 +114,7 @@ void load_buffer(Buffer *b,char** s,int n){
 	return;
 }
 
-void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
+void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
 	
 	Buffer buffer;
 	char **s;
@@ -138,6 +137,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 		#pragma omp master
 		{
 			while(buffer.load != -1){//Looping até o final do buffer
+				//printf("%d.\n",buffer.load);
 				///////////////////////////////////
 				buffer_flag = 1;//Sinal fechado////
 				///////////////////////////////////	
@@ -145,9 +145,13 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 				while(buffer.load > 0){
 				}
 			}
+			///////////////////////////////////
+			buffer_flag = 0;//Sinal Aberto////
+			///////////////////////////////////	
+			
 		}
 		
-		#pragma omp single			
+		#pragma omp single		
 		{
 			int num_threads;
 			int num_blocks=1;
@@ -158,7 +162,6 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 			while( buffer.load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer		
 		
-				if(buffer.load != -1){
 					num_threads = buffer_size>=buffer.load?buffer.load:buffer_size;
 					
 					dim3 dimBlock(num_threads);
@@ -167,19 +170,19 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 					error = cudaGetErrorString(cudaGetLastError());
 					if(strcmp(error,"no error") != 0)
 						printf("%s\n",error);
-					for(i=0;i<buffer_size;i++){//Copia sequências senso e antisenso encontradas
+					for(i=0;i<num_threads;i++){//Copia sequências senso e antisenso encontradas
 						cudaMemcpy(tmp,d_buffer[i],sizeof(char),cudaMemcpyDeviceToHost);
 						
 						switch(tmp[0]){
 							case 'S':
 								cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
-								printf("S: %s\n",tmp);
-								empilha(tmp,p_sensos);
+								//printf("S: %s\n",tmp);
+								empilha(p_sensos,criar_elemento_pilha(tmp));
 							break;
 							case 'N':
 								cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
 								//printf("N: %s\n",tmp);
-								empilha(tmp,p_antisensos);
+								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp)));
 							break;
 							default:
 							break;
@@ -189,12 +192,10 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int m,int n,vgrafo *d_a,vgra
 		
 					while(buffer_flag == 1 || buffer.load == 0){
 					}//Espera o buffer ser carregado
-				}
+				
 			}
 		}
 	}
-	//}
-	
 	return;
 }
 

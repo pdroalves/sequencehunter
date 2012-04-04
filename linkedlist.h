@@ -14,5 +14,8 @@ struct lista_ligada {
 int busca_lista_as(lista_ligada *l,char *seq);
 int busca_lista_s(lista_ligada *l,char *seq);
 int conta_posicoes(char *seq);
-void adicionar_elemento(lista_ligada *final,char *seq);
+void adicionar_elemento(lista_ligada *lista, lista_ligada *novo);
 lista_ligada* criar_lista();
+void remover_elemento(lista_ligada *atual, lista_ligada *anterior);
+int limpando_sensos(lista_ligada *l);
+void imprimir_sensos(lista_ligada *l);

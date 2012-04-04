@@ -15,10 +15,10 @@
 		int a_size;
 		
 		a_size = strlen(s);
-		antisenso = (char*)malloc(a_size*sizeof(char));
+		antisenso = (char*)calloc('\0',(a_size+1)*sizeof(char));
 		
 		for(i=0;i<a_size;i++){
-			switch(s[a_size - i -1]){
+			switch(s[a_size - i-1]){
 				case 'A':
 					strcat(antisenso, "T");
 				break;
@@ -36,6 +36,7 @@
 				break;
 			}	
 		}
+		
 		return antisenso;
 	}
 
