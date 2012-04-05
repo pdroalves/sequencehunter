@@ -21,29 +21,6 @@ __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
-<<<<<<< HEAD
-__global__ void k_busca(int *matchs,char **data,const int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-	
-	int posicao = blockIdx.x*blockDim.x + threadIdx.x;
-	char *seq;
-	int i=0;
-	//int found = 0;//1 se encontrar uma seq
-	int s_match = 0;
-	int as_match = 0;
-	vgrafo *atual;
-	vgrafo *prox;
-	
-	//Seto ponteiro para a sequência que será analisada
-	seq =  data[posicao];
-	
-	//#pragma unroll 1
-	while( i < size && s_match < (size-1) && as_match < (size-1)){
-		atual = busca_vertice(seq[i],a,c,g,t);
-		prox = busca_vertice(seq[i+1],a,c,g,t);
-		caminhar(atual,prox,&s_match,&as_match);
-		i++;
-=======
-
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Kernel Principal 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -138,16 +115,11 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
 		}
 		seq[i] = '\0';
 		return;
->>>>>>> Recuperando_Sequencias
 	}
 	seq[0] = '\0';
 	
-<<<<<<< HEAD
-
-=======
 	
   return;
->>>>>>> Recuperando_Sequencias
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////

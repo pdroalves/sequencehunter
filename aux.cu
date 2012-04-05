@@ -28,9 +28,6 @@ void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_
 void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	
 	int n;//Elementos por sequência
-<<<<<<< HEAD
-=======
->>>>>>> Recuperando_Sequencias
 	vgrafo *d_a;
 	vgrafo *d_c;
 	vgrafo *d_g;
@@ -43,16 +40,11 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pil
 	
 	get_setup(&n);
 	
-	get_setup(&m,&n);
-	
-	check = (char*)malloc(n*sizeof(char));
 	cudaMalloc((void**)&d_a,sizeof(vgrafo));
     cudaMalloc((void**)&d_c,sizeof(vgrafo));
     cudaMalloc((void**)&d_g,sizeof(vgrafo));
     cudaMalloc((void**)&d_t,sizeof(vgrafo));
-<<<<<<< HEAD
-=======
-		
+    
 	//Inicializa
 	setup_for_cuda(c,d_a,d_c,d_g,d_t);
 	
@@ -68,16 +60,11 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pil
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
->>>>>>> Recuperando_Sequencias
-	
 	cudaFree(d_a);
 	cudaFree(d_c);
 	cudaFree(d_g);
 	cudaFree(d_t);
-<<<<<<< HEAD
-=======
 	cudaThreadExit();
->>>>>>> Recuperando_Sequencias
 	return;
 
 }
