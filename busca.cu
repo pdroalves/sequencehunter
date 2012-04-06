@@ -75,11 +75,11 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   										
 #pragma unroll 1
   while( seq[i] != '\0' && s_match < size && as_match < size) {
-	  printf("s_match: %d\n",s_match);
-	  printf("as_match: %d\n",as_match);
+	 // printf("s_match: %d\n",s_match);
+	  //printf("as_match: %d\n",as_match);
 	  
 	if(s_match == bloco1){
-		printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+		//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
 		tipo = 'S';//Senso
 		x0 = i;//Marca primeiro elemento 
 		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
@@ -108,7 +108,7 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
 	
 	
     if(s_match == size || as_match == size){
-		printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 		seq[0] = tipo;
 		for(i=1;i<=blocoZ;i++){
 		  seq[i] = seq[x0 + i-1];

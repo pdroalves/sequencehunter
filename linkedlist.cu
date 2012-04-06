@@ -12,6 +12,8 @@
 #include "estruturas.h"
 #include "operacoes.h"
 
+#define MIN(a,b) a>=b?b:a
+
 lista_ligada* criar_lista(){
 	lista_ligada *l;
 	l = (lista_ligada*)malloc(sizeof(lista_ligada));
@@ -139,8 +141,8 @@ int limpando_sensos(lista_ligada *l){
 		atual = anterior->prox;
 		while(atual != NULL){
 			if(atual->qsenso != atual->qasenso){
-				 printf("%s\n",atual->senso);
-				 remover_elemento(atual,anterior);
+				 printf("%s x%d\n",atual->senso,abs(atual->qsenso - atual->qasenso));
+				 //remover_elemento(atual,anterior);
 				 sensos_solitarios++; 
 			}
 			anterior = atual;
@@ -158,7 +160,7 @@ void imprimir_sensos(lista_ligada *l){
 	p = l->prox;
 	
 	while(p !=NULL){
-		printf("	%s x%d\n",p->senso,p->qsenso);
+		printf("	%s x%d\n",p->senso,MIN(p->qsenso,p->qasenso));
 		p = p->prox;
 	}
 }
