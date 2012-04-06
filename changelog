@@ -1,0 +1,10 @@
+-- Sequence Hunter --
+Pedro Alves
+
+05/04/2012 ---> Versão 0.1
+- Programa funcional.
+- Lida apenas com a situação onde existem 3 blocos na sequência, 2 constantes e 1 variável no meio. Recebe o tamanho desses blocos e o padrão da sequência que deve encontrar.
+- Realiza a busca utilizando processamento em paralelo com CUDA e OpenMP (o processamento por enquanto só é suportado com CUDA. OpenMP só é usado como auxilio).
+
+* Bugs conhecidos:
+- As vezes perde sequências durante a caçada.
