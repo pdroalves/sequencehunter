@@ -2,7 +2,7 @@ CC = nvcc
 CFLAGS = -O0 -lm `pkg-config glib-2.0 --cflags --libs`
 OPENMP = -Xcompiler -fopenmp
 
-INSTALL = ../bin
+INSTALL = ../../bin
 
 shunter-cmd:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o
 	$(CC) -arch=sm_20 -G shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o $(CFLAGS) -o shunter-cmd $(OPENMP)

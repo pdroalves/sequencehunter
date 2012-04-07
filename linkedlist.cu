@@ -129,7 +129,7 @@ int busca_lista_as(lista_ligada *l, char *seq){
 		return 1;
 	}
 	
-	return 0;	
+	return 1;	
 }
 
 int limpando_sensos(lista_ligada *l){

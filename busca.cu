@@ -40,6 +40,7 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   											
   const int posicao = blockIdx.x*blockDim.x + threadIdx.x;
   char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
+  //printf("%d: Peguei: %s\n",posicao,seq);
   int i;
   int s_match;
   int as_match;

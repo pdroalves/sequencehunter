@@ -21,6 +21,9 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	while( pilha_vazia(p_antisensos)== 1){
 		retorno = busca_lista_as(l,desempilha(p_antisensos));
+		if(retorno == 1){
+			printf("Não encontrei!\n");
+		}
 	}
 	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);

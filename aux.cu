@@ -16,7 +16,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 512 //Capacidade máxima do buffer
+#define buffer_size 10 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
@@ -98,10 +98,10 @@ void load_buffer(Buffer *b,char** s,int n){
 		if(b->load != -1){
 			print_seqs_carregadas(b->load);
 			//printf("%s\n",b->seq[0]);
-			for(i=0;i<buffer_size;i++)
+			for(i=0;i<b->load;i++)
 				cudaMemcpy(d_buffer[i],b->seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);
 			
-			cudaMemcpy(s,d_buffer,buffer_size*sizeof(char*),cudaMemcpyHostToDevice);
+			cudaMemcpy(s,d_buffer,b->load*sizeof(char*),cudaMemcpyHostToDevice);
 		}
 		//////////////////////////////////
 		buffer_flag = 0;//Sinal aberto////
