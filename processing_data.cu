@@ -34,3 +34,15 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	return l;
 }
+
+float qnt_relativa(){
+	//Retorna a porcentagem de exemplares de determinada sequência dentro do total
+}
+
+void gerar_relatorio(){
+		//		Deve criar arquivo data-hora.txt com a sequência buscada, a quantidade de sequências lidas na biblioteca, tamanho do buffer,
+		//	tempo de processamento, tipos e quantidade de sensos e antisensos encontrados (inclusive sua quantidade relativa) e quantidade de
+		//	sensos e antisensos encontrados mas que foram descartados por não possuirem pares.
+	
+	
+}

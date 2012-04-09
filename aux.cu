@@ -16,7 +16,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 10 //Capacidade máxima do buffer
+#define buffer_size 512 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
