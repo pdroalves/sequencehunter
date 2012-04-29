@@ -21,12 +21,58 @@ __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
 
+void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
 void setup_for_cuda(char*,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t);
 void load_buffer(Buffer *b,char** s,int n);
 void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos);
 	
 void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
+if(CUDA)
+	auxCUDA(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
+else
+	auxNONcuda(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
+return;
+}
+
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	
+	int n;//Elementos por sequência
+	vgrafo g_a;
+	vgrafo g_c;
+	vgrafo g_g;
+	vgrafo g_t;
+	cudaEvent_t start;
+	cudaEvent_t stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	float tempo;
+	
+	get_setup(&n);
+	
+	setup_without_cuda(c,&g_a,&g_c,&g_g,&g_t);
+	
+	printString("Dados inicializados.\n",NULL);
+	printSet(n);
+	printString("Iniciando iterações:\n",NULL);
+	
+    cudaEventRecord(start,0);
+	NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t,p_sensos,p_antisensos);
+    cudaEventRecord(stop,0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&tempo,start,stop);
+    
+	printString("Iterações terminadas. Tempo: ",NULL);
+	print_tempo(tempo);
+	
+return;	
+}
+
+	
+void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
+	printf("CUDA Mode.\n");
 	int n;//Elementos por sequência
 	vgrafo *d_a;
 	vgrafo *d_c;
@@ -90,6 +136,25 @@ void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 	return;
 }
 
+void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
+	//Recebe um vetor de caracteres com o padrão a ser procurado
+	//Recebe ponteiros para os quatro vértices do grafo já na memória da GPU
+	char *senso;
+	char *antisenso;
+	int size = strlen(seq)+1;
+	
+	//Aloca memória na GPU
+    senso = (char*)malloc(size*sizeof(char));
+    antisenso = (char*)malloc(size*sizeof(char));
+    
+    //Configura grafos direto na memória da GPU
+	set_grafo<<<1,1>>>(senso,antisenso,d_a,d_c,d_g,d_t);
+	printString("Grafo de busca contigurado.",NULL);
+	free(senso);
+	free(antisenso);
+	return;
+}
+
 void load_buffer(Buffer *b,char** s,int n){
 	int i;
 	
@@ -109,6 +174,113 @@ void load_buffer(Buffer *b,char** s,int n){
 			
 	}
 		
+	
+	return;
+}
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
+	
+	Buffer buffer;
+	char **s;
+	char *tmp;
+	int blocoV = blocos - bloco1 - bloco2+1;
+	int iter;
+	int buffer_size_NC = 512;
+	
+	//Inicializa buffer
+	prepare_buffer(&buffer,buffer_size_NC);
+
+	tmp = (char*)malloc(blocoV*sizeof(char));
+    
+			
+	#pragma omp parallel shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
+	{	
+		#pragma omp master
+		{
+			while(buffer.load != -1){//Looping até o final do buffer
+				//printf("%d.\n",buffer.load);
+				///////////////////////////////////
+				buffer_flag = 1;//Sinal fechado////
+				///////////////////////////////////	
+				load_buffer(&buffer,s,n);
+				while(buffer.load > 0){
+				}
+			}
+			///////////////////////////////////
+			buffer_flag = 0;//Sinal Aberto////
+			///////////////////////////////////	
+			
+		}
+		
+			int i;
+			int tam;
+			const int th_id = omp_get_thread_num();
+			const int nthreads = omp_get_num_threads();
+	
+			while( buffer_flag == 1 || buffer.load == -1){
+			}//Aguarda para que o buffer seja enchido pela primeira vez
+			
+			while(buffer.load != -1){
+				//Realiza loop enquanto existirem sequências para encher o buffer		
+					
+					
+					busca(bloco1,bloco2,blocos,buffer,th_id,nthreads,d_a,d_c,d_g,d_t);//Kernel de busca
+					
+					tam = buffer.load;
+					for(i=th_id;i< th_id + (tam / nthreads);i++){//Copia sequências senso e antisenso encontradas
+						tmp = buffer.seq[i];
+						switch(tmp[0]){
+							case 'S':
+								//printf("S: %s\n",tmp);
+								empilha(p_sensos,criar_elemento_pilha(tmp+1));
+								buffer.load--;
+							break;
+							case 'N':
+								//printf("N: %s\n",tmp);
+								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
+								buffer.load--;
+							break;
+							default:
+							break;
+						}
+					}
+					if(tam % nthreads != 0)
+					#pragma omp single
+					{
+						//Processa possíveis sequências restantes
+						for(i=tam-tam%nthreads;i<tam;i++){
+							tmp = buffer.seq[i];
+							switch(tmp[0]){
+							case 'S':
+								//printf("S: %s\n",tmp);
+								empilha(p_sensos,criar_elemento_pilha(tmp+1));
+								buffer.load--;
+							break;
+							case 'N':
+								//printf("N: %s\n",tmp);
+								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
+								buffer.load--;
+							break;
+							default:
+							break;
+						}
+				
+					  }
+					}
+					
+					if(buffer.load != 0)
+					{
+						printf("Erro! Buffer não foi totalmente esvaziado.\n");
+						buffer.load = 0;
+					}
+		
+					while(buffer_flag == 1 || buffer.load == 0){
+					}//Espera o buffer ser carregado
+				
+			}
+		
+	}
+	
+	printf("Iterações executadas: %d.\n",iter);
 	
 	return;
 }

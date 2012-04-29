@@ -122,6 +122,108 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
 	
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+//////////////////					Versão sem CUDA 				////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+ 
+  ////////
+  ////////
+  ////////
+  ////////		Recebe o tamanho dos blocos 1 e 2
+  ////////		Recebe o tamanho total da sequência
+  ////////		Recebe o endereço com todo o buffer
+  ////////		Recebe ponteiros para cada vertice do grafo
+  ////////
+  ////////
+  ////////
+  ////////
+  int posicao;
+  int tam = buffer.load;
+  int razao = tam / nthreads;
+  for(posicao=th_id;posicao < th_id + razao;posicao++){
+	  char *seq = buffer.seq[posicao];//Seto ponteiro para a sequência que será analisada
+	  //printf("%d: Peguei: %s\n",posicao,seq);
+	  int i;
+	  int s_match;
+	  int as_match;
+	  vgrafo *atual;
+	  vgrafo *anterior;
+	  vgrafo *ant_anterior;
+	  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
+	  int xn;/////
+	  int size = bloco1 + bloco2;
+	  int blocoZ = blocos - size;//Total de bases que queremos encontrar
+	  char tipo = '\0';						
+	  s_match = as_match = 0;
+	  i=0;
+	  
+	  ////////////////////
+	  ////////////////////										
+	  //Iteração inicial//																			
+	  ////////////////////
+	  ////////////////////
+	  ant_anterior = busca_vertice(seq[i],a,c,g,t);
+	  caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
+	  i++;
+	  anterior = busca_vertice(seq[i],a,c,g,t);
+	  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
+	  i++;
+	  
+																				
+	  ///////////////////////
+	  ///////////////////////					
+	  //Iterações seguintes//																			
+	  ///////////////////////
+	  ///////////////////////
+						
+	  while( seq[i] != '\0' && s_match < size && as_match < size) {
+		 // printf("s_match: %d\n",s_match);
+		  //printf("as_match: %d\n",as_match);
+		  
+		if(s_match == bloco1){
+			//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+			tipo = 'S';//Senso
+			x0 = i;//Marca primeiro elemento 
+			xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+			i = xn;  //Salta o bloco variável
+		}
+		if(as_match == bloco2){
+			//printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+			tipo = 'N';//Não-Senso
+			x0 = i;//Marca primeiro elemento 
+			xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+			i = xn;  //Salta o bloco variável
+		}
+		atual = busca_vertice(seq[i],a,c,g,t);
+		if(atual != NULL)
+		  caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
+		i++;
+		ant_anterior = anterior;
+		anterior = atual;
+	  }
+
+	  ///////////////////////////////											
+	  //Guarda o que foi encontrado//
+	  ///////////////////////////////
+	  
+	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
+
+		if(s_match == size || as_match == size){
+			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+			buffer.seq[posicao][0] = tipo;
+			for(i=1;i<=blocoZ;i++){
+			  buffer.seq[posicao][i] = seq[x0 + i-1];
+			}
+			buffer.seq[posicao][i] = '\0';
+			return;
+		}
+		buffer.seq[posicao][0] = '\0';
+	}
+	
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
