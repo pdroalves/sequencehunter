@@ -140,20 +140,11 @@ void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 
 void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 	//Recebe um vetor de caracteres com o padrão a ser procurado
-	//Recebe ponteiros para os quatro vértices do grafo já na memória da GPU
-	char *senso;
-	char *antisenso;
-	int size = strlen(seq)+1;
-	
-	//Aloca memória na GPU
-    senso = (char*)malloc(size*sizeof(char));
-    antisenso = (char*)malloc(size*sizeof(char));
-    
-    //Configura grafos direto na memória da GPU
-	set_grafo<<<1,1>>>(senso,antisenso,d_a,d_c,d_g,d_t);
+	//Recebe ponteiros para os quatro vértices do grafo
+
+    //Configura grafo
+	set_grafo_NONCuda(seq,get_antisenso(seq),d_a,d_c,d_g,d_t);
 	printString("Grafo de busca contigurado.",NULL);
-	free(senso);
-	free(antisenso);
 	return;
 }
 
@@ -213,7 +204,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	tmp = (char*)malloc(blocoV*sizeof(char));
     
 			
-	#pragma omp parallel shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
+	#pragma omp parallel num_threads(2) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
 	{	
 		#pragma omp master
 		{
@@ -234,28 +225,30 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 		
 			int i;
 			int tam;
-			const int th_id = omp_get_thread_num();
-			const int nthreads = omp_get_num_threads();
+			int razao;
+			const int th_id = omp_get_thread_num()-1;
+			const int nthreads = omp_get_num_threads()-1;
 	
-			while( buffer_flag == 1 || buffer.load == -1){
+			while( buffer_flag == 1 && th_id != -1){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
-			while(buffer.load != -1){
+			while(buffer.load != -1 && th_id != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer		
 						
 					busca(bloco1,bloco2,blocos,buffer,th_id,nthreads,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer.load;
-					for(i = th_id; i < th_id + (tam / nthreads);i++){//Copia sequências senso e antisenso encontradas
+					razao = tam / nthreads;
+					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
 						tmp = buffer.seq[i];
 						switch(tmp[0]){
 							case 'S':
-								//printf("S: %s\n",tmp);
+								printf("S: %s\n",tmp);
 								empilha(p_sensos,criar_elemento_pilha(tmp+1));
 								buffer.load--;
 							break;
 							case 'N':
-								//printf("N: %s\n",tmp);
+								printf("N: %s\n",tmp);
 								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
 								buffer.load--;
 							break;
@@ -265,9 +258,9 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					}
 					
 					
+					if(tam % nthreads != 0)
 					#pragma omp single
 					{
-						if(tam % nthreads != 0)
 						//Processa possíveis sequências restantes
 						for(i=tam-tam%nthreads;i<tam;i++){
 							tmp = buffer.seq[i];
@@ -289,11 +282,11 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					  }
 					}
 					
-					if(buffer.load != 0)
-					{
-						printf("Erro! Buffer não foi totalmente esvaziado.\n");
-						buffer.load = 0;
-					}
+					//if(buffer.load != 0)
+					//{
+					//	printf("Erro! Buffer não foi totalmente esvaziado.\n");
+					//	buffer.load = 0;
+					//}
 		
 					while(buffer_flag == 1 || buffer.load == 0){
 					}//Espera o buffer ser carregado

@@ -17,6 +17,7 @@
 
 
 __global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+void set_grafo_NONCuda(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
@@ -142,7 +143,7 @@ void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,cons
   int posicao;
   int tam = buffer.load;
   int razao = tam / nthreads;
-  for(posicao=th_id;posicao < th_id + razao;posicao++){
+  for(posicao=th_id*razao;posicao < th_id + razao;posicao++){
 	  char *seq = buffer.seq[posicao];//Seto ponteiro para a sequência que será analisada
 	  //printf("%d: Peguei: %s\n",posicao,seq);
 	  int i;
@@ -179,8 +180,8 @@ void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,cons
 	  ///////////////////////
 						
 	  while( seq[i] != '\0' && s_match < size && as_match < size) {
-		 // printf("s_match: %d\n",s_match);
-		  //printf("as_match: %d\n",as_match);
+		  //printf("s_match: %d\n",s_match);
+		 //printf("as_match: %d\n",as_match);
 		  
 		if(s_match == bloco1){
 			//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
@@ -211,15 +212,14 @@ void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,cons
 	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
 
 		if(s_match == size || as_match == size){
-			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+			printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 			buffer.seq[posicao][0] = tipo;
 			for(i=1;i<=blocoZ;i++){
 			  buffer.seq[posicao][i] = seq[x0 + i-1];
 			}
 			buffer.seq[posicao][i] = '\0';
-			return;
-		}
-		buffer.seq[posicao][0] = '\0';
+		}else
+			buffer.seq[posicao][0] = '\0';
 	}
 	
   return;
@@ -385,7 +385,54 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
   return;
 }
 
-void send_buffer(Buffer *b,int n){
-	
-	return;
+void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+											
+  //Configura grafo
+  int i;
+  int j;
+  int size;
+  vgrafo *atual;
+											
+  size = strlen(senso);//Pega tamanho das sequências
+  build_grafo(size,a,c,g,t);
+											
+  i=0;
+  j=0;
+  printf("Configurando senso. -> %s.\n",senso);
+  //Configura sequência senso
+  while(senso[i] != '\0'){
+    atual = busca_vertice(senso[i],a,c,g,t);
+    if(atual != NULL){
+		atual->s_marcas[i-j]=1;
+		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+	}else{
+		//printf("Elemento variável encontrado.\n");
+		j++;
+	}
+    i++;
+  }
+											
+  i=0;
+  j=0;
+  printf("\nConfigurando antisenso. -> %s.\n",antisenso);
+  //Configura sequência antisenso
+  while(antisenso[i] != '\0'){
+    atual = busca_vertice(antisenso[i],a,c,g,t);
+      if(atual != NULL){
+		atual->as_marcas[i-j]=1;
+		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+	}else{
+		//printf("Elemento variável encontrado.\n");
+		j++;
+	}
+    i++;
+  }
+  /*
+    for(i=0;i<size;i++){
+    printf("%c: %d -> %d\n",'A',i,a->s_marcas[i]);
+    printf("%c: %d -> %d\n",'C',i,c->s_marcas[i]);
+    printf("%c: %d -> %d\n",'G',i,g->s_marcas[i]);
+    printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
+    }*/
+  return;
 }
