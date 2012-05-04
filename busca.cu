@@ -76,7 +76,7 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   										
 #pragma unroll 1
   while( seq[i] != '\0' && s_match < size && as_match < size) {
-	 // printf("s_match: %d\n",s_match);
+	  //printf("s_match: %d\n",s_match);
 	  //printf("as_match: %d\n",as_match);
 	  
 	if(s_match == bloco1){
