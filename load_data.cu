@@ -4,7 +4,7 @@
 
 int open_file(char*);
 void close_file();
-void prepare_buffer(Buffer*);
+void prepare_buffer(Buffer*,int c);
 void fill_buffer(Buffer*,int);
 
 FILE *f;

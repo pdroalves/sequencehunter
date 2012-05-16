@@ -252,7 +252,7 @@ int findCudaDevice()
 		  exit(1);
 	  }
 	  
-	  aux(1,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	  processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();

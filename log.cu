@@ -39,8 +39,7 @@ void prepareLog(){
   print_time();
 }
 
-void print_time()
-{
+void print_time(){
  
  struct tm *local;
  time_t t;

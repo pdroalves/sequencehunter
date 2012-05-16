@@ -71,7 +71,6 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 	
 return;	
 }
-
 	
 void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	printf("CUDA Mode.\n");
