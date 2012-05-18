@@ -14,6 +14,8 @@ CUDA = -L/usr/local/cuda/lib64 -lcudart -lcuda
 
 INSTALL = ../../bin
 
+all:windows linux
+
 linux:cmd_linux gui_linux
 
 windows:cmd_win gui_win
@@ -34,10 +36,10 @@ gui_linux:shunter-gui.o_linux log.o load_data.o aux.o operacoes.o busca.o pilha.
 #Windows#################################
 #########################################
 cmd_win:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o
-	$(CC_WIN64) -g shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o $(GLIB_CFLAGS) $(GLIB_LIBS) -o shunter-cmd $(OPENMP) $(CUDA)
+	$(CC_WIN64) -g shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o $(GLIB_CFLAGS) $(GLIB_LIBS) -o shunter-cmd.exe $(OPENMP) $(CUDA)
 	
 gui_win:shunter-gui.o_win log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o
-	$(CC_WIN64) -g shunter-gui.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA)
+	$(CC_WIN64) -g shunter-gui.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui.exe $(OPENMP) $(CUDA)
 
 #########################################
 #Mac#####################################
