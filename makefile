@@ -53,7 +53,7 @@ shunter-gui.o_linux:shunter-gui.c
 	$(CC_LINUX) -Wall -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS) 
 	
 shunter-gui.o_win:shunter-gui.c
-	$(CC_WIN64) -Wall -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS) 
+	$(CC_WIN64) -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS) 
 	
 #########################################
 ############ NVCC #######################

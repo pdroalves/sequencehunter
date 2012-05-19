@@ -18,6 +18,8 @@ const gchar *authors[] = {
 };
 static GtkWidget *spinner_sensitive = NULL;
 GtkWidget *status;
+gint start_pos;
+gint end_pos;
 
 static void log_update(GtkWidget *widget,char *text);
 void show_about(GtkWidget *widget, gpointer data);
@@ -80,6 +82,7 @@ void insert_text_handler (GtkEntry *entry,
 static void
 on_hunt_clicked (GtkButton *button, gpointer user_data)
 {
+  gtk_widget_show(spinner_sensitive);
   gtk_spinner_start (GTK_SPINNER (spinner_sensitive));
 }
 
@@ -91,8 +94,6 @@ on_hunt_end (GtkButton *button, gpointer user_data)
 
 void set_hunt(GtkWidget *widget, gpointer data){
 	gchar *text;
-	gint start_pos;
-	gint end_pos;
 	
 	printf("Seleção detectada!\n");
 	
@@ -106,6 +107,22 @@ void set_hunt(GtkWidget *widget, gpointer data){
 		log_update(NULL,log_seq);
 	}
 	return;
+}
+
+static void do_highlight(GtkWidget *widget,gpointer data){
+	printf("Highlight!");
+	gtk_editable_select_region(hunt_entry,start_pos,end_pos);
+	
+	return;
+}
+
+static void do_resize(GtkExpander *expander,GtkWindow *window){
+	printf("Expander!");
+	if(gtk_expander_get_expanded(expander)){
+		gtk_window_set_default_size(window,800,200);
+	}else{
+		gtk_window_set_default_size(window,500,200);
+	}
 }
 
 void hunt_seq_set(GtkWidget *widget,GtkWidget *hunt_seq){
@@ -231,7 +248,7 @@ int main (int argc, char *argv[]){
 	hunt = gtk_entry_new();
 	gtk_entry_set_editable(hunt,FALSE);
 	hunt_button = gtk_button_new_with_mnemonic("_Hunt");
-	gtk_widget_set_sensitive(hunt_button, FALSE);
+	//gtk_widget_set_sensitive(hunt_button, FALSE);
 	set_button = gtk_button_new_with_mnemonic("_Set");
 	hbox = gtk_hbox_new(FALSE,2);
 	vbox = gtk_vbox_new(FALSE,2);
@@ -240,7 +257,7 @@ int main (int argc, char *argv[]){
 	strcat(ver,itoa_(MAJORV));
 	strcat(ver,".");
 	strcat(ver,itoa_(MINORV));
-	
+	start_pos = end_pos = -1;
 	
 	//Configura texto de status
 	status = gtk_text_view_new ();
@@ -292,7 +309,7 @@ int main (int argc, char *argv[]){
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window),title);
 	gtk_window_set_resizable(GTK_WINDOW(window),TRUE);
-	gtk_window_set_default_size(GTK_WINDOW(window),600,200);
+	gtk_window_set_default_size(GTK_WINDOW(window),500,200);
 	gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
 
 	//Filemenu
@@ -318,13 +335,12 @@ int main (int argc, char *argv[]){
 	
 	//Configura botões file menu
 	g_signal_connect(window,"delete-event",G_CALLBACK(gtk_main_quit),NULL);
-	//g_signal_connect(hunt,"clicked",G_CALLBACK(start_hunt),NULL);
+	g_signal_connect(hunt,"changed",G_CALLBACK(hunt_seq_set),hunt_seq);
 	g_signal_connect(hunt_entry,"insert_text",G_CALLBACK(insert_text_handler),NULL);
 	g_signal_connect(set_button,"clicked",G_CALLBACK(set_hunt),NULL);
-	g_signal_connect(hunt,"changed",G_CALLBACK(hunt_seq_set),hunt_seq);
 	g_signal_connect(status,"preedit-changed",G_CALLBACK(set_hunt_ready),hunt_button);
     g_signal_connect (G_OBJECT (hunt_button), "clicked",G_CALLBACK (on_hunt_clicked), spinner);
-    
+    g_signal_connect (hunt,"activate",G_CALLBACK(do_highlight),NULL);
 	//Desenha a janela
 	
 	hbox = gtk_hbox_new(FALSE,2);
@@ -366,10 +382,11 @@ int main (int argc, char *argv[]){
 	gtk_box_pack_start(GTK_BOX(hbox),status,FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
 	
-	hbox = gtk_hbox_new(TRUE,2);
-	gtk_box_pack_start(GTK_BOX(hbox),hunt_button,FALSE,FALSE,2);
+	hbox = gtk_hbox_new(FALSE,1);
+	gtk_box_pack_start(GTK_BOX(hbox),gtk_hbox_new(TRUE,2), FALSE, FALSE,150);
+	gtk_box_pack_start(GTK_BOX(hbox),hunt_button,TRUE,TRUE,10);
 	gtk_box_pack_start(GTK_BOX(hbox),spinner,FALSE,FALSE,2);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,20);
 	
 	expander = gtk_expander_new ("Mais detalhes:");
     gtk_box_pack_start (GTK_BOX(vbox), expander, TRUE, TRUE, 10);
@@ -378,6 +395,7 @@ int main (int argc, char *argv[]){
 	gtk_container_add(GTK_CONTAINER(window),vbox);
 	gtk_rc_parse("gtkrc");
 	gtk_widget_show_all(window);
+	gtk_widget_hide(spinner);
 	gtk_main();
 	return 0;
 }
