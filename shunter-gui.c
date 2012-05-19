@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #define MAJORV 0
 #define MINORV 0
 
@@ -10,7 +14,7 @@ GtkEntry *hunt_entry;
 GtkEntry *hunt;
 
 /* converts integer into string */
-char* itoa(unsigned long num) {
+char* itoa_(unsigned long num) {
         char* retstr = calloc(12, sizeof(char));
         if (sprintf(retstr, "%ld", num) > 0) {
                 return retstr;
@@ -90,9 +94,9 @@ void show_about(GtkWidget *widget, gpointer data)
 
   char ver[10];
 
-  strcpy(ver,itoa(MAJORV));
+  strcpy(ver,itoa_(MAJORV));
   strcat(ver,".");
-  strcat(ver,itoa(MINORV));
+  strcat(ver,itoa_(MINORV));
 
   GtkWidget *dialog = gtk_about_dialog_new();
   gtk_about_dialog_set_name(GTK_ABOUT_DIALOG(dialog), "Sequence Hunter");
