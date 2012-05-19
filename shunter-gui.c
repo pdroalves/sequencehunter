@@ -178,7 +178,6 @@ void log_init(){
 	return;
 }
 
-<<<<<<< HEAD
 static void log_update(GtkWidget *widget,char *text){
 	
 	GtkTextBuffer *buffer;
@@ -187,7 +186,6 @@ static void log_update(GtkWidget *widget,char *text){
 	gtk_text_buffer_set_text (buffer, log, -1);
 	return;
 }
->>>>>>> 53af1146b85e6143b361bc77feb46f5fd13405d6
 
 void show_about(GtkWidget *widget, gpointer data)
 {
