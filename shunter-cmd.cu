@@ -21,6 +21,8 @@
 	#include "pilha.h"
 	#include "processing_data.h"
 
+	#define SEQ_BUSCA_TAM 1000
+
 	//###############
 	//Parametros de entrada
 	static gint tiros = 1;
@@ -219,40 +221,34 @@ int findCudaDevice()
 	p_sensos = criar_pilha();
 	p_antisensos = criar_pilha();
 	 
-	 printf("Qual o tamanho do bloco 1 constante?\n");
-	 scanf("%d",&b1_size);
-	 printf("Qual o tamanho do bloco variável?\n");
-	 scanf("%d",&bv_size);
-	 printf("Qual o tamanho do bloco 2 constante?\n");
-	 scanf("%d",&b2_size);
-	 
-	 c_size = b1_size+b2_size+bv_size;
 	  
-	  c = (char*)malloc((c_size+1)*sizeof(char));
+	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
 	  if(c == NULL){
 		  printf("Erro na leitura\n");
 		  exit(1);
 	  }
 	  
-	  while(strlen(c) != c_size){
 	  printf("Entre a sequência: ");
 	  scanf("%s",c);
 	  if(c == NULL){
 		  printf("Erro na leitura\n");
 		  exit(1);
 	  }
-	  if(strlen(c) != c_size) printf("Sequência inválida. Tamanho esperado: %d -> Tamanho recebido: %d\n",c_size,(int)strlen(c));
-  }
 	  
+	 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
+		 printf("Sequência de busca inválida\n");
+		 exit(1);
+	}  
 	  printString("Sequência de busca: ",c);
 	  
-	  err = open_file("sequências.dat");
+	 c_size = b1_size+b2_size+bv_size;
+	  err = open_file(argv[1]);
 	  if(err == 0){
 		  printf("Erro de arquivo.\n");
 		  exit(1);
 	  }
 	  
-	  aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  aux(1,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	  processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();
