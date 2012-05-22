@@ -4,13 +4,14 @@
 
 #define TAM_MAX 10000
 
-int open_file(char*);
+int open_file(char**,int);
 void close_file();
 int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV);
 void prepare_buffer(Buffer*,int c);
 void fill_buffer(Buffer*,int);
 
-FILE *f;
+FILE **f;
+int files = 0;
 /* converts integer into string */
 
 char* itoa(unsigned long num) {
@@ -56,20 +57,27 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 	return 1;
 }
 
-int open_file(char *entrada){
-	f = fopen(entrada,"r+");
-	return f!=NULL;
+int open_file(char **entrada,int qnt){
+	f = (FILE**)malloc(qnt*sizeof(FILE*));
+	while(files + 1 < qnt){
+		f[files] = fopen(entrada[files+1],"r+");
+		files++;
+	}
+	return f[files]!=NULL;
 }
 
 void close_file(){
-	fclose(f);
+	int i;
+	for(i=0;i<files;i++)
+		fclose(f[i]);
+	return;
 }
 
 void get_setup(int *n){
 	char *tmp;
-	
+	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
-	fscanf(f,"%s",tmp);
+	fscanf(f[0],"%s",tmp);
 	*n = (int)(strlen(tmp));
 	free(tmp);
 	return;
@@ -83,19 +91,21 @@ void prepare_buffer(Buffer *b,int c){
 }
 
 void fill_buffer(Buffer *b,int n){
-	int i;
+	int i = 0;
+	int j = 0;
 	
-	for(i=0;i < b->capacidade && feof(f) == 0;i++){
-			b->seq[i] = (char*)malloc((n+1)*sizeof(char));
-			fscanf(f,"%s",b->seq[i]);
-			strcat(b->seq[i],"\0");
-	}
+	for(j=0;j < files && i < b->capacidade;j++){
+		for(i=0;i < b->capacidade && feof(f[j]) == 0;i++){
+				b->seq[i] = (char*)malloc((n+1)*sizeof(char));
+				fscanf(f[j],"%s",b->seq[i]);
+				strcat(b->seq[i],"\0");
+		}
 	
-	b->load = i;
-	if(feof(f) == 1) b->load--;
+		b->load = i;
+		if(feof(f[j]) == 1) b->load--;
 
-	if(feof(f) == 1 && b->load ==0) b->load = -1;//Arquivo acabou
-	
+		if(feof(f[j]) == 1 && b->load ==0) b->load = -1;//Arquivo acabou
+	}
 	return;
 }
 

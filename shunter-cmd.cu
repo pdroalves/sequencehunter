@@ -224,9 +224,20 @@ int findCudaDevice()
 	  
 	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
 	  if(c == NULL){
-		  printf("Erro na leitura\n");
+		  printf("Erro alocando memória.\n");
 		  exit(1);
 	  }
+	 
+	////////////////////////////////////////////////////////
+	////////////////// Abre arquivos de bibliotecas/////////
+	////////////////////////////////////////////////////////
+	  err = open_file(argv,argc);
+	  if(err == 0){
+		  printf("Arquivo inválido: $s.\n",argv[1]);
+		  exit(1);
+	  }
+	////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////
 	  
 	  printf("Entre a sequência: ");
 	  scanf("%s",c);
@@ -242,11 +253,6 @@ int findCudaDevice()
 	  printString("Sequência de busca: ",c);
 	  
 	 c_size = b1_size+b2_size+bv_size;
-	  err = open_file(argv[1]);
-	  if(err == 0){
-		  printf("Erro de arquivo.\n");
-		  exit(1);
-	  }
 	  
 	  aux(1,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	  processar(&p_sensos,&p_antisensos);

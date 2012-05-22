@@ -10,7 +10,7 @@ GTK_LIBS = `pkg-config --libs gtk+-2.0`
 OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
-CUDA = -L/usr/local/cuda/lib64 -lcudart -lcuda
+CUDA = -L/usr/local/cuda/lib64 -lcudart
 
 INSTALL = ../../bin
 
@@ -60,7 +60,7 @@ shunter-gui.o_win:shunter-gui.c
 #########################################
 
 shunter-cmd.o:shunter-cmd.cu
-	$(CUDA_CC) $(GLIB_CFLAGS) -arch=sm_20 -G -g -c shunter-cmd.cu	$(CUDA)
+	$(CUDA_CC) $(GLIB_CFLAGS) -arch=sm_20 -G -g -c shunter-cmd.cu
 	
 log.o:log.cu
 	$(CUDA_CC) -G -g -c log.cu
