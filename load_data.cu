@@ -79,6 +79,7 @@ void get_setup(int *n){
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
+	rewind(f[0]);
 	*n = (int)(strlen(tmp));
 	free(tmp);
 	return;
