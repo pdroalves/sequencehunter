@@ -58,12 +58,13 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 }
 
 int open_file(char **entrada,int qnt){
+
 	f = (FILE**)malloc(qnt*sizeof(FILE*));
 	while(files + 1 < qnt){
 		f[files] = fopen(entrada[files+1],"r+");
 		files++;
 	}
-	return f[files]!=NULL;
+	return f[files-1]!=NULL;
 }
 
 void close_file(){
