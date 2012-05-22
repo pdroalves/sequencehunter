@@ -81,6 +81,7 @@ void insert_text_handler (GtkEntry *entry,
 	g_signal_stop_emission_by_name (G_OBJECT (editable), "insert_text");
 
 	g_free (result);
+	return;
 }
 
 static void
