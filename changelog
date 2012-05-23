@@ -1,6 +1,12 @@
 -- Sequence Hunter --
 Pedro Alves
 
+23/05/2012 ---> Versão 0.2
+- shunter-cmd funcional.
+- Algoritmo OpenMP bugado.
+- Algoritmo CUDA suporta apenas arquiteturas a partir de 2.0.
+- shunter-gui implementado parcialmente. Não funcional.
+
 05/04/2012 ---> Versão 0.1
 - Programa funcional.
 - Lida apenas com a situação onde existem 3 blocos na sequência, 2 constantes e 1 variável no meio. Recebe o tamanho desses blocos e o padrão da sequência que deve encontrar.

@@ -10,7 +10,8 @@ GTK_LIBS = `pkg-config --libs gtk+-2.0`
 OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
-CUDA = -L/usr/local/cuda/lib64 -lcudart
+CUDA = -L/usr/local/cuda/lib64 -lcudart 
+CUDA_ARCH = -arch=sm_20
 
 INSTALL = ../../bin
 
@@ -60,7 +61,7 @@ shunter-gui.o_win:shunter-gui.c
 #########################################
 
 shunter-cmd.o:shunter-cmd.cu
-	$(CUDA_CC) $(GLIB_CFLAGS) -arch=sm_20 -G -g -c shunter-cmd.cu
+	$(CUDA_CC) $(GLIB_CFLAGS) -G -g -c shunter-cmd.cu
 	
 log.o:log.cu
 	$(CUDA_CC) -G -g -c log.cu
@@ -69,16 +70,16 @@ load_data.o:load_data.cu
 	$(CUDA_CC) -G -g -c load_data.cu
 
 aux.o:aux.cu
-	$(CUDA_CC) -arch=sm_20 $(OPENMP_CUDA) -G -g -c aux.cu
+	$(CUDA_CC)  $(OPENMP_CUDA) -G -g -c aux.cu
 
 operacoes.o:operacoes.cu
-	$(CUDA_CC) -arch=sm_20 $(GLIB_CFLAGS) -g -G -c operacoes.cu
+	$(CUDA_CC) $(GLIB_CFLAGS) -g -G -c operacoes.cu
 
 busca.o:busca.cu
-	$(CUDA_CC) -arch=sm_20 -G -g -c busca.cu
+	$(CUDA_CC) $(CUDA_ARCH) -G -g -c busca.cu
 	
 pilha.o:pilha.cu
-	$(CUDA_CC) -arch=sm_20 -G -g -c pilha.cu
+	$(CUDA_CC) -G -g -c pilha.cu
 	
 linkedlist.o:linkedlist.cu
 	$(CUDA_CC) -G -g -c linkedlist.cu

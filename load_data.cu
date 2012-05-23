@@ -58,13 +58,26 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 }
 
 int open_file(char **entrada,int qnt){
-
+	int checks[qnt];
+	int i;
+	int abertos = 0;
+	int tmp = 0;
 	f = (FILE**)malloc(qnt*sizeof(FILE*));
-	while(files + 1 < qnt){
-		f[files] = fopen(entrada[files+1],"r+");
-		files++;
+	while(files < qnt && abertos+1 < qnt){
+		f[files] = fopen(entrada[abertos+1],"r+");
+		checks[files] = f[files]!=NULL;
+		if(checks[files] == 0){
+			printf("Arquivo %s não pode ser aberto.\n",entrada[files+1]);
+			abertos++;
+		}else{
+			printf("Arquivo %s aberto.\n",entrada[abertos+1]);
+			print_open_file(entrada[abertos+1]);
+			files++;
+			abertos++;
+		}
 	}
-	return f[files-1]!=NULL;
+	for(i=0;i<qnt;i++) tmp += checks[files];
+	return tmp==qnt;
 }
 
 void close_file(){
@@ -90,23 +103,25 @@ void prepare_buffer(Buffer *b,int c){
 	b->seq = (char**)malloc(c*sizeof(char*));
 	b->load = 0;
 	printString("Buffer configurado para: ",itoa(c));
+	return;
 }
 
 void fill_buffer(Buffer *b,int n){
 	int i = 0;
 	int j = 0;
-	
-	for(j=0;j < files && i < b->capacidade;j++){
-		for(i=0;i < b->capacidade && feof(f[j]) == 0;i++){
+	for(j=0;j < files && i < b->capacidade;j++){		
+		while(i < b->capacidade && feof(f[j]) == 0){
 				b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 				fscanf(f[j],"%s",b->seq[i]);
 				strcat(b->seq[i],"\0");
+				i++;
 		}
-	
-		b->load = i;
-		if(feof(f[j]) == 1) b->load--;
-
-		if(feof(f[j]) == 1 && b->load ==0) b->load = -1;//Arquivo acabou
+		b->load = i;	
+		if(i < b->capacidade && i!=0){ 
+			b->load--;
+			i = b->load;
+		}
+		if(feof(f[files-1]) == 1 && b->load ==0) b->load = -1;//Não há mais arquivos
 	}
 	return;
 }

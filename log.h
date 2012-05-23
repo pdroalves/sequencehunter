@@ -6,6 +6,7 @@ void printToLog_Mem(float MemUsada,float MemPorIter);
 void printToLog_Runtime(float t);
 void printString(char*,char*);
 void printSet(int);
+void print_open_file(char *c);
 void print_matchs(int,int);
 void print_seqs_carregadas(int);
 void print_tempo(float tempo);

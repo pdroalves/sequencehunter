@@ -232,15 +232,11 @@ int findCudaDevice()
 	////////////////// Abre arquivos de bibliotecas/////////
 	////////////////////////////////////////////////////////
 	if(argc == 1){
-		printf("Por favor, entre uma biblioteca válida");
+		printf("Por favor, entre uma biblioteca válida.\n");
 		exit(1);
 	}
-	  err = open_file(argv,argc);
-	  if(err == 0){
-		  printf("Arquivo inválido: $s.\n",argv[1]);
-		  exit(1);
-	  }
-	////////////////////////////////////////////////////////
+	  open_file(argv,argc);
+	 //////////////////////////////////
 	////////////////////////////////////////////////////////
 	  
 	  printf("Entre a sequência: ");

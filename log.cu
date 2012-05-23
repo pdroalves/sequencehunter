@@ -54,6 +54,12 @@ void print_time(){
 }
 
 //Métodos específicos#######
+
+void print_open_file(char *c){
+	fprintf(logfile,"Arquivo %s aberto.",c);
+	fprintf(logfileDetalhado,"Arquivo %s aberto.",c);
+	return;
+}
 void printString(char *c,char *s){
 	if(s != NULL)
 		fprintf(logfile,"%s %s\n",c,s);
