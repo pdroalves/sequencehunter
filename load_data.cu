@@ -121,7 +121,7 @@ void fill_buffer(Buffer *b,int n){
 			b->load--;
 			i = b->load;
 		}
-		if(feof(f[files-1]) == 1 && b->load ==0) b->load = -1;//Não há mais arquivos
+		if(feof(f[files-1]) == 1 && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
 	return;
 }

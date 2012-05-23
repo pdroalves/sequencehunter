@@ -54,34 +54,26 @@ int gpuDeviceInit(int devID)
     if (deviceCount == 0)
     {
         fprintf(stderr, "gpuDeviceInit() CUDA error: no devices supporting CUDA.\n");
-        exit(-1);
+        return 0;
     }
 
     if (devID < 0)
        devID = 0;
         
-    if (devID > deviceCount-1)
-    {
-        fprintf(stderr, "\n");
-        fprintf(stderr, ">> %d CUDA capable GPU device(s) detected. <<\n", deviceCount);
-        fprintf(stderr, ">> gpuDeviceInit (-device=%d) is not a valid GPU device. <<\n", devID);
-        fprintf(stderr, "\n");
-        return -devID;
-    }
 
     cudaDeviceProp deviceProp;
    cudaGetDeviceProperties(&deviceProp, devID);
 
-    if (deviceProp.major < 1)
+    if (deviceProp.major < 2)
     {
-        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA.\n");
-        exit(-1);                                                  
+        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 2.0.\n");
+        return 0;                                                  
     }
     
     cudaSetDevice(devID);
     printf("gpuDeviceInit() CUDA Device [%d]: \"%s\n", devID, deviceProp.name);
 
-    return devID;
+    return 1;
 }
 
 inline int _ConvertSMVer2Cores(int major, int minor)
@@ -214,7 +206,7 @@ int findCudaDevice()
 		pilha p_sensos;
 		pilha p_antisensos;
 	  
-	  gpuDeviceInit(findCudaDevice());
+	  CUDA = gpuDeviceInit(findCudaDevice());
 	  
 	  //Inicializa
 	  prepareLog();
@@ -254,7 +246,7 @@ int findCudaDevice()
 	  
 	 c_size = b1_size+b2_size+bv_size;
 	  
-	  aux(1,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  aux(CUDA,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	  processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();

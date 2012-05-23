@@ -51,7 +51,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	float tempo;
-	
+	printf("OpenMP Mode.\n");
 	get_setup(&n);
 	
 	setup_without_cuda(c,&g_a,&g_c,&g_g,&g_t);
@@ -225,6 +225,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			int i;
 			int tam;
 			int razao;
+			int p=0;
 			const int th_id = omp_get_thread_num()-1;
 			const int nthreads = omp_get_num_threads()-1;
 	
@@ -232,22 +233,23 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 			while(buffer.load != -1 && th_id != -1){
-				//Realiza loop enquanto existirem sequências para encher o buffer		
-						
+				//Realiza loop enquanto existirem sequências para encher o buffer	
 					busca(bloco1,bloco2,blocos,buffer,th_id,nthreads,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer.load;
+					p += tam;
+					printf("%d\n",p);
 					razao = tam / nthreads;
 					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
 						tmp = buffer.seq[i];
 						switch(tmp[0]){
 							case 'S':
-								printf("S: %s\n",tmp);
+								//printf("S: %s\n",tmp);
 								empilha(p_sensos,criar_elemento_pilha(tmp+1));
 								buffer.load--;
 							break;
 							case 'N':
-								printf("N: %s\n",tmp);
+								//printf("N: %s\n",tmp);
 								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
 								buffer.load--;
 							break;
@@ -281,11 +283,11 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					  }
 					}
 					
-					//if(buffer.load != 0)
-					//{
-					//	printf("Erro! Buffer não foi totalmente esvaziado.\n");
-					//	buffer.load = 0;
-					//}
+					if(buffer.load != 0)
+					{
+						printf("Erro! Buffer não foi totalmente esvaziado.\n");
+						buffer.load = 0;
+					}
 		
 					while(buffer_flag == 1 || buffer.load == 0){
 					}//Espera o buffer ser carregado

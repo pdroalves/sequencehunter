@@ -212,7 +212,7 @@ void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,cons
 	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
 
 		if(s_match == size || as_match == size){
-			printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 			buffer.seq[posicao][0] = tipo;
 			for(i=1;i<=blocoZ;i++){
 			  buffer.seq[posicao][i] = seq[x0 + i-1];
