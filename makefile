@@ -51,7 +51,7 @@ gui_win:shunter-gui.o_win log.o load_data.o aux.o operacoes.o busca.o pilha.o pr
 #########################################
 
 shunter-gui.o_linux:shunter-gui.c
-	$(CC_LINUX) -Wall -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS) 
+	$(CC_LINUX) -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS)  -L/usr/local/cuda/lib64
 	
 shunter-gui.o_win:shunter-gui.c
 	$(CC_WIN64) -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS) 
@@ -67,7 +67,7 @@ log.o:log.cu
 	$(CUDA_CC) -G -g -c log.cu
 	
 load_data.o:load_data.cu
-	$(CUDA_CC) -G -g -c load_data.cu
+	$(CUDA_CC) $(GLIB_CFLAGS) -G -g -c load_data.cu
 
 aux.o:aux.cu
 	$(CUDA_CC)  $(OPENMP_CUDA) -G -g -c aux.cu

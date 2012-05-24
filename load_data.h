@@ -1,7 +1,10 @@
 /* This file was automatically generated.  Do not edit! */
-void get_setup(int *n);
-void fill_buffer(Buffer *b,int n);
-int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV);
-void prepare_buffer(Buffer *b,int c);
+char *itoa(unsigned long num);
+int cuda_supported();
+int open_file(char **entrada,int qnt);
 void close_file();
-int open_file(char **entrada,int);
+void prepare_buffer(struct buffer *,int);
+int check_seq(char *,int *,int *,int *);
+void fill_buffer(struct buffer *,int);
+void get_setup(int *);
+int check_gpu_mode();

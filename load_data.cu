@@ -1,18 +1,33 @@
 #include <stdio.h>
+#include <glib.h>
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 #include "estruturas.h"
 #include "log.h"
 
 #define TAM_MAX 10000
 
-int open_file(char**,int);
+void get_setup(int*);	
+void fill_buffer(struct buffer*,int);
+int check_seq(char*,int*,int*,int*);
+void prepare_buffer(struct buffer*,int);
 void close_file();
-int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV);
-void prepare_buffer(Buffer*,int c);
-void fill_buffer(Buffer*,int);
+int open_file(char **entrada,int);
+int gpuDeviceInit(int devID);
+inline int _ConvertSMVer2Cores(int major, int minor);
+int gpuGetMaxGflopsDeviceId();
+int findCudaDevice();
+int check_gpu_mode();
 
 FILE **f;
 int files = 0;
 /* converts integer into string */
+
+int check_gpu_mode(){
+	
+	return gpuDeviceInit(findCudaDevice());
+}
+
 
 char* itoa(unsigned long num) {
         char* retstr = (char*)calloc(12, sizeof(char));
@@ -126,3 +141,140 @@ void fill_buffer(Buffer *b,int n){
 	return;
 }
 
+	//#######################
+	
+	// General GPU Device CUDA Initialization
+int gpuDeviceInit(int devID)
+{
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+
+    if (deviceCount == 0)
+    {
+        fprintf(stderr, "gpuDeviceInit() CUDA error: no devices supporting CUDA.\n");
+        return 0;
+    }
+
+    if (devID < 0)
+       devID = 0;
+        
+
+    cudaDeviceProp deviceProp;
+   cudaGetDeviceProperties(&deviceProp, devID);
+
+    if (deviceProp.major < 2)
+    {
+        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 2.0.\n");
+        return 0;                                                  
+    }
+    
+    cudaSetDevice(devID);
+    printf("gpuDeviceInit() CUDA Device [%d]: \"%s\n", devID, deviceProp.name);
+
+    return 1;
+}
+
+inline int _ConvertSMVer2Cores(int major, int minor)
+{
+	// Defines for GPU Architecture types (using the SM version to determine the # of cores per SM
+	typedef struct {
+		int SM; // 0xMm (hexidecimal notation), M = SM Major version, and m = SM minor version
+		int Cores;
+	} sSMtoCores;
+
+	sSMtoCores nGpuArchCoresPerSM[] = 
+	{ { 0x10,  8 },
+	  { 0x11,  8 },
+	  { 0x12,  8 },
+	  { 0x13,  8 },
+	  { 0x20, 32 },
+	  { 0x21, 48 },
+	  {   -1, -1 } 
+	};
+
+	int index = 0;
+	while (nGpuArchCoresPerSM[index].SM != -1) {
+		if (nGpuArchCoresPerSM[index].SM == ((major << 4) + minor) ) {
+			return nGpuArchCoresPerSM[index].Cores;
+		}
+		index++;
+	}
+	printf("MapSMtoCores undefined SMversion %d.%d!\n", major, minor);
+	return -1;
+}
+
+// This function returns the best GPU (with maximum GFLOPS)
+int gpuGetMaxGflopsDeviceId()
+{
+    int current_device     = 0, sm_per_multiproc  = 0;
+    int max_compute_perf   = 0, max_perf_device   = 0;
+    int device_count       = 0, best_SM_arch      = 0;
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceCount( &device_count );
+    
+    // Find the best major SM Architecture GPU device
+    while (current_device < device_count)
+    {
+        cudaGetDeviceProperties( &deviceProp, current_device );
+        if (deviceProp.major > 0 && deviceProp.major < 9999)
+        {
+            best_SM_arch = MAX(best_SM_arch, deviceProp.major);
+        }
+        current_device++;
+    }
+
+    // Find the best CUDA capable GPU device
+    current_device = 0;
+    while( current_device < device_count )
+    {
+        cudaGetDeviceProperties( &deviceProp, current_device );
+        if (deviceProp.major == 9999 && deviceProp.minor == 9999)
+        {
+            sm_per_multiproc = 1;
+        }
+        else
+        {
+            sm_per_multiproc = _ConvertSMVer2Cores(deviceProp.major, deviceProp.minor);
+        }
+        
+        int compute_perf  = deviceProp.multiProcessorCount * sm_per_multiproc * deviceProp.clockRate;
+        
+    if( compute_perf  > max_compute_perf )
+    {
+            // If we find GPU with SM major > 2, search only these
+            if ( best_SM_arch > 2 )
+            {
+                // If our device==dest_SM_arch, choose this, or else pass
+                if (deviceProp.major == best_SM_arch)
+                {
+                    max_compute_perf  = compute_perf;
+                    max_perf_device   = current_device;
+                 }
+            }
+            else
+            {
+                max_compute_perf  = compute_perf;
+                max_perf_device   = current_device;
+             }
+        }
+        ++current_device;
+    }
+    return max_perf_device;
+}
+
+
+// Initialization code to find the best CUDA Device
+int findCudaDevice()
+{
+    cudaDeviceProp deviceProp;
+    int devID = 0;
+    
+    // Escolhe o device com maior taxa de Gflops/s
+    devID = gpuGetMaxGflopsDeviceId();
+    cudaSetDevice( devID );
+    cudaGetDeviceProperties(&deviceProp, devID);
+    printf("GPU Device %d: \"%s\" with compute capability %d.%d\n\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+    
+    return devID;
+}
+// end of CUDA Helper Functions
