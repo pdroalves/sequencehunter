@@ -21,6 +21,7 @@ lista_ligada* criar_lista(){
 	l->qasenso = 0;
 	l->senso = (char*)calloc('\0',5*sizeof(char));
 	strcat(l->senso,"Head");
+	l->prox = NULL;
 	return l;
 }
 

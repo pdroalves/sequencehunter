@@ -25,20 +25,16 @@
 
 	//###############
 	//Parametros de entrada
-	static gint tiros = 1;
-	static gdouble inttiros_ = 100;
+	static gboolean disable_cuda = FALSE;
 	static gboolean silent = FALSE;
 	static gboolean verbose = FALSE;
-	static gint placa = FALSE;
-	static int CUDA;
+	
 
 	static GOptionEntry entries[] = 
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
-		{ "tiros", 't', 0, G_OPTION_ARG_INT, &tiros, "Quantidade de Tiros - Default: 1", NULL },
-		{ "escolherplaca", 'e', 0, G_OPTION_ARG_NONE, &placa, "Permite que o usuário escolha qual placa de vídeo deve ser usada", NULL },
-		{ "intervalodetiros", 'i', 0, G_OPTION_ARG_DOUBLE, &inttiros_, "Distancia entre cada tiro - Default: 100", NULL },
+		{ "disable_cuda",'d',0,G_OPTION_ARG_NONE,&disable_cuda,"Impede o uso de CUDA para processamento",NULL},
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
 		{ NULL }
@@ -246,7 +242,12 @@ int findCudaDevice()
 	  
 	 c_size = b1_size+b2_size+bv_size;
 	  
-	  aux(CUDA,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  if(disable_cuda){
+		  printf("Forçando OpenMP mode.\n");
+		  printString(NULL,"Forçando OpenMP mode,");
+		  aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	  }else
+		aux(CUDA,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	  processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();
