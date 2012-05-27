@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <omp.h> 
+#include <glib.h>
 #include "estruturas.h"
 #include "load_data.h"
 #include "operacoes.h"

@@ -70,7 +70,7 @@ load_data.o:load_data.cu
 	$(CUDA_CC) $(GLIB_CFLAGS) -G -g -c load_data.cu
 
 aux.o:aux.cu
-	$(CUDA_CC)  $(OPENMP_CUDA) -G -g -c aux.cu
+	$(CUDA_CC)  $(GLIB_CFLAGS) $(OPENMP_CUDA) -G -g -c aux.cu
 
 operacoes.o:operacoes.cu
 	$(CUDA_CC) $(GLIB_CFLAGS) -g -G -c operacoes.cu
