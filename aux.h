@@ -3,3 +3,4 @@ void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pil
 extern gboolean silent;
 extern gboolean disable_cuda;
 extern gboolean verbose;
+extern gboolean check_seqs;

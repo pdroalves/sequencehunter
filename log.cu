@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "linkedlist.h"
 
 void prepareLog();
 void print_time();
@@ -80,6 +81,26 @@ void print_seqs_carregadas(int n){
 void print_matchs(int sensos,int antisensos){
 	fprintf(logfile,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.",sensos,antisensos);
 	fprintf(logfileDetalhado,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.",sensos,antisensos);
+}
+
+void print_resultados(lista_ligada** resultados){
+	int i;
+	i = 0;
+	
+	fprintf(logfile,"Pares encontrados:\n\n");
+	while(resultados[i]->pares != -1){
+			fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			fprintf(logfileDetalhado,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			i++;
+	}
+	
+	i=0;
+	fprintf(logfile,"Sensos despareados:\n\n");
+	while(resultados[i]->pares != -1){
+			///fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			fprintf(logfileDetalhado,"	%s S:%d - AS:%d\n",resultados[i]->senso,resultados[i]->qsenso,resultados[i]->qasenso);
+			i++;
+	}
 }
 
 void print_tempo(float tempo){

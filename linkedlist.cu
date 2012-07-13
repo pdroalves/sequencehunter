@@ -10,8 +10,10 @@
 
 #include<stdio.h>
 #include "estruturas.h"
+#include "log.h"
 #include "operacoes.h"
-
+#include "processing_data.h"
+#include <omp.h>
 #define MIN(a,b) a>=b?b:a
 
 lista_ligada* criar_lista(){
@@ -133,6 +135,70 @@ int busca_lista_as(lista_ligada *l, char *seq){
 	return 1;	
 }
 
+void qnt_relativa(lista_ligada* l){
+	//Retorna a quantidade relativa de exemplares de cada sequência
+	float total = 0;
+	
+	lista_ligada *p;
+	
+	//Contabiliza a quantidade total de pares encontrados
+	p = l->prox;
+	while(p !=NULL){
+		p->pares = MIN(p->qsenso,p->qasenso);
+		total += p->pares;
+		p = p->prox;
+	}
+	
+	//Grava quantidade relativa de cada tipo de pares encontrados
+	p = l->prox;
+	while(p != NULL){
+		p->qnt_relativa = p->pares / total;
+		p = p->prox;
+	}
+	
+	return;
+}
+
+lista_ligada** ordena_pares(lista_ligada* l){
+	//Recebe lista com resultados encontrados, ordena e retorna vetor com os elementos de maior e menor frequencia
+	lista_ligada* p;
+	lista_ligada** vetor;
+	int tam = 0;
+	int i;
+	int th_id;
+	int nthreads;
+	
+	//Calcula tamanho da lista ligada e adiciona elemento no vetor
+	p = l->prox;
+	while(p != NULL){
+		tam++;
+		p = p->prox;
+	}
+	
+	vetor = (lista_ligada**)malloc((tam+1)*sizeof(lista_ligada*));
+	
+	//Adiciona ponteiro para cada elemento em um vetor
+	p = l->prox;
+	for(i=0;i<tam;i++){
+		vetor[i] = p;
+		p = p->prox;
+	}
+	
+	//Ordena
+	#pragma omp parallel shared{vetor} shared{tam}
+	{
+		int razao;
+		th_id = omp_get_thread_num();
+		nthreads = omp_get_num_threads();
+		razao = tam/nthreads;
+		
+		quicksort(vetor,th_id*razao,(th_id+1)*razao-1);
+	}
+	vetor[tam] = (lista_ligada*)malloc(sizeof(lista_ligada));
+	vetor[tam]->pares = -1;
+	return vetor;
+}
+	
 int limpando_sensos(lista_ligada *l){
 	lista_ligada *atual,*anterior;
 	int sensos_solitarios = 0;
@@ -154,14 +220,17 @@ int limpando_sensos(lista_ligada *l){
 	return sensos_solitarios;
 }
 
-void imprimir_sensos(lista_ligada *l){
+void imprimir_sensos(lista_ligada **resultados){
+	int i;
+	char string_fim[4] = "FIM";
+	i=0;
 	
-	lista_ligada *p;
-	
-	p = l->prox;
-	
-	while(p !=NULL){
-		printf("	%s x%d\n",p->senso,MIN(p->qsenso,p->qasenso));
-		p = p->prox;
+	if(resultados[0]->senso != NULL){
+		print_resultados(resultados);
+		while(resultados[i]->pares != -1){
+			printf("	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			i++;
+		}
 	}
+	return;
 }

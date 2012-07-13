@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "estruturas.h"
+#include <cuda.h>
 #include "load_data.h"
+#include "estruturas.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -19,8 +20,8 @@ gchar ver[10];
 GtkWidget *log_window;
 char *log;
 const gchar *authors[] = {
-	"Marcio Chaim Bajgelman",
-	"Pedro Alves"
+	"Pedro Alves",
+	"Marcio Chaim Bajgelman"
 };
 static GtkWidget *spinner_sensitive = NULL;
 GtkWidget *status;
@@ -241,7 +242,10 @@ int main (int argc, char *argv[]){
 	GtkWidget *scrolled;
 	GtkWidget *expander;
   
+	GtkTextIter start, end;
+	PangoFontDescription *font_desc;
 	GdkColor color;
+	GtkTextTag *tag;
 	char *title;
 	gtk_init(&argc,&argv);
 
@@ -263,9 +267,6 @@ int main (int argc, char *argv[]){
 	strcat(ver,itoa_(MINORV));
 	start_pos = end_pos = -1;
 	
-	spinner = gtk_spinner_new ();
-	spinner_sensitive = spinner;
-	
 	//Configura texto de status
 	status = gtk_text_view_new ();
 	load_data = gtk_text_view_new ();
@@ -274,7 +275,6 @@ int main (int argc, char *argv[]){
 	cuda_support = gtk_text_view_new ();
 	log_window = gtk_text_view_new();
 	
-	log_init();
 	
 	gtk_text_view_set_editable(status,FALSE);
 	gtk_text_view_set_editable(load_data,FALSE);
@@ -291,17 +291,16 @@ int main (int argc, char *argv[]){
 	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (hunt_seq));
 	gtk_text_buffer_set_text (buffer, "Sequência não configurada.", -1);
 	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (cuda_support));
-	if( check_gpu_mode ){
-		gdk_color_parse ("green", &color);
+	if(gpuDeviceInit(findCudaDevice())){
 		gtk_text_buffer_set_text (buffer, "Suportado.", -1);
-		log_update(NULL,"\nCUDA Mode");		
+		gdk_color_parse ("green", &color);
 	}else{
 		gdk_color_parse ("red", &color);
-		gtk_text_buffer_set_text (buffer, "Sems suporte.", -1);
-		log_update(NULL,"\nOpenMP Mode");
+		gtk_text_buffer_set_text (buffer, "Sem suporte.", -1);
 	}	
-	gtk_widget_modify_text (cuda_support, GTK_STATE_NORMAL, &color);
-	
+	log_init();
+	spinner = gtk_spinner_new ();
+	spinner_sensitive = spinner;
 	
 	/* Change default color throughout the widget */
 	gdk_color_parse ("red", &color);
@@ -312,6 +311,7 @@ int main (int argc, char *argv[]){
 	gtk_widget_modify_text (data_integrity, GTK_STATE_NORMAL, &color);
 	gdk_color_parse ("red", &color);
 	gtk_widget_modify_text (hunt_seq, GTK_STATE_NORMAL, &color);
+	gtk_widget_modify_text (cuda_support, GTK_STATE_NORMAL, &color);
 	
 	
 	//Configura log_window	

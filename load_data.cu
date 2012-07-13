@@ -4,6 +4,7 @@
 #include <cuda_runtime_api.h>
 #include "estruturas.h"
 #include "log.h"
+#include "processing_data.h"
 
 #define TAM_MAX 10000
 
@@ -21,6 +22,7 @@ int check_gpu_mode();
 
 FILE **f;
 int files = 0;
+gboolean check_seqs = 0;
 /* converts integer into string */
 
 int check_gpu_mode(){
@@ -77,6 +79,8 @@ int open_file(char **entrada,int qnt){
 	int i;
 	int abertos = 0;
 	int tmp = 0;
+	int seqs_validas;
+	
 	f = (FILE**)malloc(qnt*sizeof(FILE*));
 	while(files < qnt && abertos+1 < qnt){
 		f[files] = fopen(entrada[abertos+1],"r+");
@@ -91,7 +95,18 @@ int open_file(char **entrada,int qnt){
 			abertos++;
 		}
 	}
+	
 	for(i=0;i<qnt;i++) tmp += checks[files];
+	if(check_seqs && files > 0){
+		seqs_validas = get_sequencias_validas(f,files);
+		if(seqs_validas < 0)
+			printf("Sequências válidas encontradas: %d.\nAVISO: Sequências de tamanho variável.",-seqs_validas);
+		else
+			printf("Sequências válidas encontradas: %d.\n",
+			
+			seqs_validas);
+		
+	}
 	return tmp==qnt;
 }
 
@@ -107,6 +122,7 @@ void get_setup(int *n){
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
+	while(check_seq_valida(tmp)==0) fscanf(f[0],"%s",tmp);		
 	rewind(f[0]);
 	*n = (int)(strlen(tmp));
 	free(tmp);
@@ -114,8 +130,13 @@ void get_setup(int *n){
 }
 
 void prepare_buffer(Buffer *b,int c){
+	int i;
+	int n;
+	get_setup(&n);
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
+	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
+	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
 	printString("Buffer configurado para: ",itoa(c));
 	return;
@@ -124,12 +145,17 @@ void prepare_buffer(Buffer *b,int c){
 void fill_buffer(Buffer *b,int n){
 	int i = 0;
 	int j = 0;
+	char *hold;
+	
+	hold = (char*)malloc(TAM_MAX*sizeof(char));
+	//Enche buffer
 	for(j=0;j < files && i < b->capacidade;j++){		
 		while(i < b->capacidade && feof(f[j]) == 0){
-				b->seq[i] = (char*)malloc((n+1)*sizeof(char));
-				fscanf(f[j],"%s",b->seq[i]);
-				strcat(b->seq[i],"\0");
-				i++;
+				fscanf(f[j],"%s",hold);
+				if(check_seq_valida(hold)){
+					strcpy(b->seq[i],hold);
+					i++;
+				}
 		}
 		b->load = i;	
 		if(i < b->capacidade && i!=0){ 
@@ -138,6 +164,8 @@ void fill_buffer(Buffer *b,int n){
 		}
 		if(feof(f[files-1]) == 1 && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
+	
+	free(hold);
 	return;
 }
 

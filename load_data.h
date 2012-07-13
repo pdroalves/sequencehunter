@@ -8,3 +8,4 @@ int check_seq(char *,int *,int *,int *);
 void fill_buffer(struct buffer *,int);
 void get_setup(int *);
 int check_gpu_mode();
+extern gboolean check_seqs;

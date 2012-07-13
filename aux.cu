@@ -243,7 +243,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					
 					tam = buffer.load;
 					p += tam;
-					printf("%d\n",p);
+					//printf("%d\n",p);
 					razao = tam / nthreads;
 					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
 						tmp = buffer.seq[i];
@@ -259,6 +259,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								buffer.load--;
 							break;
 							default:
+								buffer.load--;
 							break;
 						}
 					}

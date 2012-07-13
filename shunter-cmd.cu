@@ -28,6 +28,7 @@
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento através da arquitetura CUDA", NULL },
+		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
 		{ NULL }

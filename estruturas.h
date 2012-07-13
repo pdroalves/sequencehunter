@@ -29,8 +29,10 @@ typedef struct pilha pilha;
 
 struct lista_ligada{
 	char *senso;
+	int pares;
 	int qsenso;
 	int qasenso;
+	float qnt_relativa;
 	struct lista_ligada* prox;
 };
 typedef struct lista_ligada lista_ligada;
