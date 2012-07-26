@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "estruturas.h"
 #include "log.h"
 #include "linkedlist.h"
@@ -27,10 +29,11 @@ int get_sequencias_validas(FILE **f,int files){
 					if(m == 0) m = n;
 					else if(n!=m && notify_tamanho_variavel == 0) notify_tamanho_variavel == 1;
 				}
+				tmp[0] = '\0';
 		}
 	}
 	for(j=0;j<files;j++) rewind(f[j]);
-	return -seqs_validas;
+	return seqs_validas;
 }
 
 	int check_seq_valida(char *p){

@@ -1,4 +1,4 @@
-//      aux.cu
+//      aux.c
 //      
 //      Copyright 2012 Pedro Alves <pdroalves@gmail.com>
 //      
@@ -7,9 +7,11 @@
 //		27/03/2012
 
 #include <stdio.h>
-#include <cuda.h>
 #include <omp.h> 
 #include <glib.h>
+#include <string.h>
+#include "cuda.h"
+#include "cuda_runtime_api.h"
 #include "estruturas.h"
 #include "load_data.h"
 #include "operacoes.h"
@@ -21,10 +23,6 @@
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
-//Parametros de entrada
-gboolean disable_cuda = 0;
-gboolean silent = 0;
-gboolean verbose = 0;
 
 void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
@@ -65,11 +63,11 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 	printSet(n);
 	printString("Iniciando iterações:\n",NULL);
 	
-    cudaEventRecord(start,0);
+    //cudaEventRecord(start,0);
 	NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t,p_sensos,p_antisensos);
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&tempo,start,stop);
+    //cudaEventRecord(stop,0);
+    //cudaEventSynchronize(stop);
+    //cudaEventElapsedTime(&tempo,start,stop);
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
@@ -104,11 +102,11 @@ void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p
 	printSet(n);
 	printString("Iniciando iterações:\n",NULL);
 	
-    cudaEventRecord(start,0);
-	cudaIteracoes(bloco1,bloco2,blocos,n,d_a,d_c,d_g,d_t,p_sensos,p_antisensos);
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&tempo,start,stop);
+   // cudaEventRecord(start,0);
+    cudaIteracoes(bloco1,bloco2,blocos,n,d_a,d_c,d_g,d_t,p_sensos,p_antisensos);
+   // cudaEventRecord(stop,0);
+   // cudaEventSynchronize(stop);
+   // cudaEventElapsedTime(&tempo,start,stop);
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
@@ -132,10 +130,10 @@ void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
     cudaMalloc((void**)&d_antisenso,size*sizeof(char));
     
     cudaMemcpy(d_senso,seq,size*sizeof(char),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_antisenso,get_antisenso(seq),size*sizeof(char),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_antisenso,(const void*)get_antisenso(seq),size*sizeof(char),cudaMemcpyHostToDevice);
     
     //Configura grafos direto na memória da GPU
-	set_grafo<<<1,1>>>(d_senso,d_antisenso,d_a,d_c,d_g,d_t);
+	set_grafo_helper(d_senso,d_antisenso,d_a,d_c,d_g,d_t);
 	printString("Grafo de busca contigurado.",NULL);
 	cudaFree(d_senso);
 	cudaFree(d_antisenso);
@@ -147,7 +145,7 @@ void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d
 	//Recebe ponteiros para os quatro vértices do grafo
 
     //Configura grafo
-	set_grafo_NONCuda(seq,get_antisenso(seq),d_a,d_c,d_g,d_t);
+	set_grafo_NONCuda(seq,(char*)get_antisenso(seq),d_a,d_c,d_g,d_t);
 	printString("Grafo de busca contigurado.",NULL);
 	return;
 }
@@ -243,7 +241,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					
 					tam = buffer.load;
 					p += tam;
-					//printf("%d\n",p);
+					printf("%d\n",p);
 					razao = tam / nthreads;
 					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
 						tmp = buffer.seq[i];
@@ -255,7 +253,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 							break;
 							case 'N':
 								//printf("N: %s\n",tmp);
-								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
+								empilha(p_antisensos,criar_elemento_pilha((char*)get_antisenso(tmp+1)));
 								buffer.load--;
 							break;
 							default:
@@ -302,7 +300,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 		
 	}
 	
-	printf("Iterações executadas: %d.\n",iter);
+	//printf("Iterações executadas: %d.\n",iter);
 	
 	return;
 }
@@ -357,9 +355,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 		
 					num_threads = buffer_size>=buffer.load?buffer.load:buffer_size;
 					
-					dim3 dimBlock(num_threads);
-					dim3 dimGrid(num_blocks);
-					k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
+					k_busca_helper(num_blocks,num_threads,bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
 					error = cudaGetErrorString(cudaGetLastError());
 					if(strcmp(error,"no error") != 0)
 						printf("%s\n",error);
@@ -375,7 +371,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 							case 'N':
 								cudaMemcpy(tmp,d_buffer[i]+1,blocoV*sizeof(char),cudaMemcpyDeviceToHost);
 								//printf("N: %s\n",tmp);
-								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp)));
+								empilha(p_antisensos,criar_elemento_pilha((char*)get_antisenso(tmp)));
 							break;
 							default:
 							break;

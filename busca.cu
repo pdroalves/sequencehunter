@@ -15,17 +15,18 @@
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
 
-
-__global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
-void set_grafo_NONCuda(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
-__host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
+extern "C" void set_grafo_helper(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
+extern "C" void k_busca_helper(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **s,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t);
+extern "C" __global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+extern "C" void set_grafo_NONCuda(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 __device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
-__host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
+extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Kernel Principal 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-__global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -124,10 +125,16 @@ __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char 
   return;
 }
 
+extern "C" void k_busca_helper(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **s,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+	dim3 dimBlock(num_threads);
+	dim3 dimGrid(num_blocks);
+	k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Versão sem CUDA 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -228,7 +235,7 @@ void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,cons
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   //Funcao temporária. Ficará aqui até eu pensar em algo melhor
   switch(base){
   case 'A':
@@ -248,7 +255,7 @@ __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *
   return NULL;
 }
 
-__host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anterior,vgrafo *atual, int *s_match,int *as_match){ 
+extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anterior,vgrafo *atual, int *s_match,int *as_match){ 
   //Recebe o vertice atual e o anterior
   //Recebe um contador de bases acertadas para a sequencia senso s_match
   //Recebe um contador de bases acertadas para a sequencia antisenso as_match
@@ -332,7 +339,7 @@ __host__ __device__ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgr
   return;
 }
 
-__global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 											
   //Configura grafo
   int i;
@@ -385,7 +392,12 @@ __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo
   return;
 }
 
-void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+
+extern "C" void set_grafo_helper(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+set_grafo<<<1,1>>>(senso,antisenso,a,c,g,t);
+}
+
+extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 											
   //Configura grafo
   int i;

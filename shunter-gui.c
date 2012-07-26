@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "estruturas.h"
 #include "load_data.h"
 
@@ -190,6 +191,27 @@ static void log_update(GtkWidget *widget,char *text){
 	return;
 }
 
+
+void open_library(GtkWidget *widget, gpointer data)
+{	
+	
+	GtkWidget *dialog;
+	char **filename;
+
+	filename = (char**)malloc(sizeof(char*));
+
+	dialog = gtk_file_chooser_dialog_new ("Open File",
+				      GTK_WINDOW(widget),
+				      GTK_FILE_CHOOSER_ACTION_OPEN,
+				      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+				      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+				      NULL);
+	gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(dialog),TRUE);
+	filename[0] = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+	open_file(filename,1);
+	
+}
+
 void show_about(GtkWidget *widget, gpointer data)
 {
   GtkWidget *dialog = gtk_about_dialog_new();
@@ -212,16 +234,12 @@ void show_about(GtkWidget *widget, gpointer data)
 int main (int argc, char *argv[]){
 	
 	GtkWidget *window;
-	GtkWidget *menubar;
-	GtkWidget *file;
-	GtkWidget *about;
-	GtkWidget *filemenu;
-	
-	GtkWidget *new;
-	GtkWidget *load;
-	GtkWidget *save;
-	GtkWidget *sep;
-	GtkWidget *exit;
+
+	GtkWidget *toolbar;
+	GtkToolItem *open;
+	GtkToolItem *about;
+	GtkToolItem *sep;
+	GtkToolItem *exit;
 	
 	GtkWidget *hbox,*vbox;
 	GtkWidget *hunt_label;
@@ -291,7 +309,7 @@ int main (int argc, char *argv[]){
 	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (hunt_seq));
 	gtk_text_buffer_set_text (buffer, "Sequência não configurada.", -1);
 	buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (cuda_support));
-	if( check_gpu_mode ){
+	if( check_gpu_mode() ){
 		gdk_color_parse ("green", &color);
 		gtk_text_buffer_set_text (buffer, "Suportado.", -1);
 		log_update(NULL,"\nCUDA Mode");		
@@ -326,27 +344,28 @@ int main (int argc, char *argv[]){
 	gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
 
 	//Filemenu
-	group = gtk_accel_group_new();
-	menubar = gtk_menu_bar_new();
-	file = gtk_menu_item_new_with_mnemonic("_Arquivo");
-	filemenu = gtk_menu_new();
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM (file), filemenu);
-	gtk_menu_shell_append (GTK_MENU_SHELL (menubar), file);
+	toolbar = gtk_toolbar_new();
+	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 
-	//Configurando menu
-	group = gtk_action_group_new("MainActionGroup");
-	gtk_action_group_add_actions (group, entries, NUM_ENTRIES,NULL);
-	
-	uimanager = gtk_ui_manager_new();
-	gtk_ui_manager_insert_action_group(uimanager,group,0);
-	gtk_ui_manager_add_ui_from_file(uimanager,"menu.ui",NULL);
-	
-	menubar = gtk_ui_manager_get_widget(uimanager,"/MenuBar");
+	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
 
-	gtk_box_pack_start(GTK_BOX(vbox), menubar,FALSE,FALSE,1);
-	gtk_window_add_accel_group (GTK_WINDOW (window),gtk_ui_manager_get_accel_group(uimanager));
+	open = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), open, -1);
+	
+	sep = gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), sep, -1);
+
+	about = gtk_tool_button_new_from_stock(GTK_STOCK_ABOUT);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), about,-1);
+
+	exit = gtk_tool_button_new_from_stock(GTK_STOCK_QUIT);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), exit, -1);
 	
 	//Configura botões file menu
+	g_signal_connect(open,"clicked",G_CALLBACK(open_library),window);
+	g_signal_connect(about,"clicked",G_CALLBACK(show_about),window);
+	g_signal_connect(exit,"clicked",G_CALLBACK(gtk_main_quit),NULL);
+	
 	g_signal_connect(window,"delete-event",G_CALLBACK(gtk_main_quit),NULL);
 	g_signal_connect(hunt,"changed",G_CALLBACK(hunt_seq_set),hunt_seq);
 	g_signal_connect(hunt_entry,"insert_text",G_CALLBACK(insert_text_handler),NULL);
@@ -355,6 +374,8 @@ int main (int argc, char *argv[]){
     g_signal_connect (G_OBJECT (hunt_button), "clicked",G_CALLBACK (on_hunt_clicked), spinner);
     g_signal_connect (hunt,"activate",G_CALLBACK(do_highlight),NULL);
 	//Desenha a janela
+	
+	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 5);
 	
 	hbox = gtk_hbox_new(FALSE,2);
 	gtk_box_pack_start(GTK_BOX(hbox), hunt_label, FALSE,TRUE,4);

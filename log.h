@@ -11,4 +11,5 @@ void print_matchs(int,int);
 void print_seqs_carregadas(int);
 void print_resultados(lista_ligada** resultados);
 void print_tempo(float tempo);
+void print_sequencias_validas(int seqs_validas);
 void closeLog();

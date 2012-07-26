@@ -11,6 +11,7 @@ struct lista_ligada{
 	struct lista_ligada* prox;
 };
 #endif
+
 int busca_lista_as(lista_ligada *l,char *seq);
 int busca_lista_s(lista_ligada *l,char *seq);
 int conta_posicoes(char *seq);

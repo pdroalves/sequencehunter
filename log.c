@@ -1,4 +1,4 @@
-//      log.cu
+//      log.c
 //      
 //      Copyright 2012 Pedro Alves <pdroalves@gmail.com>
 //      
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "linkedlist.h"
+#include "estruturas.h"
 
 void prepareLog();
 void print_time();
@@ -89,8 +89,8 @@ void print_resultados(lista_ligada** resultados){
 	
 	fprintf(logfile,"Pares encontrados:\n\n");
 	while(resultados[i]->pares != -1){
-			fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
-			fprintf(logfileDetalhado,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			fprintf(logfile,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			fprintf(logfileDetalhado,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
 			i++;
 	}
 	
@@ -113,11 +113,21 @@ void print_tempo(float tempo){
 	
 }
 
+void print_sequencias_validas(int seqs_validas){
+	if(seqs_validas >= 0){
+		printf("Sequências válidas encontradas: %d.\nAVISO: Sequências de tamanho variável.",-seqs_validas);
+	}else{	
+		printf("Sequências válidas encontradas: %d.\n",seqs_validas);
+	}
+}
+
 //##########################
 
 void closeLog(){
-	
+
+  print_time();
   fprintf(logfile,"\n-------------------------\n");
+  
   
    if(logfile != NULL)
       fclose(logfile);

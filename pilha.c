@@ -7,8 +7,9 @@
 //
 //		27/03/2012
 
-#include<stdio.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "estruturas.h"
 #include "operacoes.h"
 
@@ -32,8 +33,15 @@ pilha criar_pilha(){
 pilha* criar_elemento_pilha(char *seq){
 	pilha *elemento;
 	int seq_size;
-	
+    int i;
+    
    seq_size = strlen(seq);
+   
+   for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
+   if(i != seq_size){
+	    seq_size = strlen(seq);
+	    seq[i] = '\0';
+   }
    elemento = (pilha*) malloc (sizeof (pilha));
    elemento->seq = (char*) calloc('\0',(seq_size+1)*sizeof(char));
    memcpy(elemento->seq,seq,seq_size);

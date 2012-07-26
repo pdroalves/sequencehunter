@@ -12,7 +12,8 @@
 	#include <cuda.h>
 	#include <cuda_runtime_api.h>
 	#include <glib.h>
-	//#include "operacoes.h"
+	#include "operacoes.h"
+	#include "cuda_functions.h"
 	//#include "linkedlist.h"
 	#include "estruturas.h"
 	#include "aux.h"
@@ -35,6 +36,7 @@
 	  };
 
 
+
 	//####################
 	int main (int argc,char *argv[]) {
 		
@@ -54,17 +56,19 @@
 	  char *c;
 	  int c_size;
 	  int err;
+	  int seqs_validas;
 	  int b1_size;
 	  int b2_size;
 	  int bv_size;
+	  int is_cuda_available = 0;
 	  pilha p_sensos;
 	  pilha p_antisensos;
 	  
 	  
 	  //Inicializa
 	  prepareLog();
-	p_sensos = criar_pilha();
-	p_antisensos = criar_pilha();
+	  p_sensos = criar_pilha();
+	  p_antisensos = criar_pilha();
 	 
 	  
 	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
@@ -81,6 +85,7 @@
 		exit(1);
 	}
 	  open_file(argv,argc);
+	  seqs_validas = check_sequencias_validas();
 	 //////////////////////////////////
 	////////////////////////////////////////////////////////
 	  
@@ -104,7 +109,7 @@
 		printString(NULL,"Forçando modo OpenMP.");
 		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos); 
 	}
-	else aux(check_gpu_mode(),c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
 	processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();

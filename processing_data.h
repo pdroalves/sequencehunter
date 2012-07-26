@@ -11,8 +11,8 @@ struct lista_ligada {
 	struct lista_ligada* prox;
 };
 #endif
+
 void gerar_relatorio();
-float qnt_relativa();
 lista_ligada *processar(pilha *p_sensos,pilha *p_antisensos);
 int get_sequencias_validas(FILE**,int);
 int check_seq_valida(char *p);

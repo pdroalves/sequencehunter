@@ -8,12 +8,14 @@
 //
 //		27/03/2012
 
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <omp.h>
 #include "estruturas.h"
 #include "log.h"
 #include "operacoes.h"
 #include "processing_data.h"
-#include <omp.h>
 #define MIN(a,b) a>=b?b:a
 
 lista_ligada* criar_lista(){
@@ -185,7 +187,7 @@ lista_ligada** ordena_pares(lista_ligada* l){
 	}
 	
 	//Ordena
-	#pragma omp parallel shared{vetor} shared{tam}
+	#pragma omp parallel shared(vetor) shared(tam)
 	{
 		int razao;
 		th_id = omp_get_thread_num();
