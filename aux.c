@@ -19,7 +19,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 512 //Capacidade máxima do buffer
+#define buffer_size 204800 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 
@@ -49,11 +49,11 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 	vgrafo g_g;
 	vgrafo g_t;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
-	cudaEvent_t start;
-	cudaEvent_t stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	float tempo;
+	//cudaEvent_t start;
+	//cudaEvent_t stop;
+	//cudaEventCreate(&start);
+	//cudaEventCreate(&stop);
+	float tempo = 0;
 	printf("OpenMP Mode.\n");
 	get_setup(&n);
 	
@@ -71,6 +71,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
+	destroy_grafo(&g_a,&g_c,&g_g,&g_t);
 	
 return;	
 }
@@ -145,8 +146,10 @@ void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d
 	//Recebe ponteiros para os quatro vértices do grafo
 
     //Configura grafo
-	set_grafo_NONCuda(seq,(char*)get_antisenso(seq),d_a,d_c,d_g,d_t);
+    char* hold = get_antisenso(seq);
+	set_grafo_NONCuda(seq,hold,d_a,d_c,d_g,d_t);
 	printString("Grafo de busca contigurado.",NULL);
+	free(hold);
 	return;
 }
 
@@ -198,12 +201,12 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	char *tmp;
 	int blocoV = blocos - bloco1 - bloco2+1;
 	int iter;
-	int buffer_size_NC = 512;
+	int buffer_size_NC = 5120*2;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
 
-	tmp = (char*)malloc(blocoV*sizeof(char));
+	//tmp = (char*)malloc(blocoV*sizeof(char));
     
 			
 	#pragma omp parallel num_threads(2) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
@@ -301,7 +304,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	}
 	
 	//printf("Iterações executadas: %d.\n",iter);
-	
+	//free(tmp);
 	return;
 }
 

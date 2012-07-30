@@ -23,8 +23,8 @@ lista_ligada* criar_lista(){
 	l = (lista_ligada*)malloc(sizeof(lista_ligada));
 	l->qsenso = 0;
 	l->qasenso = 0;
-	l->senso = (char*)calloc('\0',5*sizeof(char));
-	strcat(l->senso,"Head");
+	l->senso = (char*)malloc(5*sizeof(char));
+	strcpy(l->senso,"Head");
 	l->prox = NULL;
 	return l;
 }
@@ -37,8 +37,8 @@ lista_ligada* criar_elemento_lista(char *seq){
 	novo = (lista_ligada*)malloc(sizeof(lista_ligada));
 	novo->qsenso = 1;
 	novo->qasenso = 0;
-	novo->senso = (char*)calloc('\0',(seq_size+1)*sizeof(char));
-	memcpy(novo->senso,seq,seq_size+1);
+	novo->senso = (char*)malloc((seq_size+1)*sizeof(char));
+	strcpy(novo->senso,seq);
 	novo->prox = NULL;
 	return novo;
 }
@@ -81,6 +81,7 @@ int busca_lista_s(lista_ligada *l, char *seq){
 			if(cmp == 0){
 					//Encontrou
 					p->qsenso++;
+					//free(seq);
 					return 0;
 			}
 			
@@ -89,6 +90,7 @@ int busca_lista_s(lista_ligada *l, char *seq){
 				if(cmp == 0){
 						//Encontrou
 						p->qsenso++;
+						//free(seq);
 						return 0;
 				}
 				p = p->prox;
@@ -154,7 +156,11 @@ void qnt_relativa(lista_ligada* l){
 	//Grava quantidade relativa de cada tipo de pares encontrados
 	p = l->prox;
 	while(p != NULL){
-		p->qnt_relativa = p->pares / total;
+		if(total > 0){
+			p->qnt_relativa = p->pares / total;
+		}else{
+			p->qnt_relativa = 0;
+		}		
 		p = p->prox;
 	}
 	

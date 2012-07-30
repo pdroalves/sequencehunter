@@ -15,7 +15,8 @@
 		int a_size;
 		
 		a_size = strlen(s);
-		antisenso = (char*)calloc('\0',(a_size+1)*sizeof(char));
+		antisenso = (char*)malloc((a_size+1)*sizeof(char));
+		strcpy(antisenso,"");
 		
 		for(i=0;i<a_size;i++){
 			switch(s[a_size - i-1]){
@@ -36,6 +37,7 @@
 				break;
 			}	
 		}
+		//strcat(antisenso,'\0');
 		
 		return antisenso;
 	}

@@ -114,7 +114,6 @@
 	  
 	 close_file();
 	 free(c);
-	destroy(&p_sensos);
-	destroy(&p_antisensos);
+	 
 	return 0;
 	}

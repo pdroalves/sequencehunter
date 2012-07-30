@@ -26,6 +26,8 @@ int pilha_vazia(pilha *tp);
 
 pilha criar_pilha(){
 	pilha cabeca;
+	cabeca.seq = (char*)malloc(5*sizeof(char));
+	strcpy(cabeca.seq,"Head");
 	cabeca.prox = NULL;
 	return cabeca;
 }
@@ -39,12 +41,12 @@ pilha* criar_elemento_pilha(char *seq){
    
    for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
    if(i != seq_size){
-	    seq_size = strlen(seq);
 	    seq[i] = '\0';
+	    seq_size = strlen(seq);
    }
    elemento = (pilha*) malloc (sizeof (pilha));
-   elemento->seq = (char*) calloc('\0',(seq_size+1)*sizeof(char));
-   memcpy(elemento->seq,seq,seq_size);
+   elemento->seq = (char*) malloc((seq_size+1)*sizeof(char));
+   strcpy(elemento->seq,seq);
 	
 	return elemento;
 }
@@ -75,17 +77,21 @@ char* desempilha (pilha *tp) {
    
    if(p == NULL){
 		printf("Pilha vazia.\n");
+		free(tp);
 	    return NULL;
-   }
-   //Encontra o tamanho da sequência
-   seq_size = strlen(p->seq);
-   
-   seq = (char*)malloc(seq_size*sizeof(char));
-   memcpy(seq,p->seq,seq_size+1);
-   
-   tp->prox = p->prox;
-   free (p);
-   return seq; 
+   }else{
+	   //Encontra o tamanho da sequência
+	   seq_size = strlen(p->seq);
+	   if(seq_size + 1 > 0){
+		   seq = (char*)malloc((seq_size+1)*sizeof(char));
+		   strcpy(seq,p->seq);
+		   tp->prox = p->prox;
+		   free (p);
+		   return seq; 
+		}else{
+			return NULL;
+		}	
+	}
 }
 
 int tamanho_da_pilha(pilha *tp){

@@ -173,8 +173,10 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 	  ////////////////////
 	  ////////////////////
 	  ant_anterior = busca_vertice(seq[i],a,c,g,t);
-	  caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
-	  i++;
+	  if(ant_anterior != NULL){
+		  caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
+		  i++;
+		}
 	  anterior = busca_vertice(seq[i],a,c,g,t);
 	  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
 	  i++;
@@ -447,4 +449,29 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
     printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
     }*/
   return;
+}
+
+
+extern "C" void destroy_grafo(vgrafo *a,vgrafo *c,vgrafo *g,vgrafo *t){
+	free(a->s_marcas);
+	free(a->as_marcas);
+	//free(a);
+	free(c->s_marcas);
+	free(c->as_marcas);
+	//free(c);
+	free(g->s_marcas);
+	free(g->as_marcas);
+	//free(g);
+	free(t->s_marcas);
+	free(t->as_marcas);
+	//free(t);
+	return;
+}
+
+extern "C" void destroy_grafo_CUDA(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+	cudaFree(a);
+	cudaFree(c);
+	cudaFree(g);
+	cudaFree(t);
+	return;
 }

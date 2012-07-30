@@ -73,21 +73,26 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	int s_tipos = 0;
 	int retorno;
 	l = criar_lista();
+	char *hold;
 	
 	//Processa sensos
 	while(pilha_vazia(p_sensos) == 1){
-		retorno = busca_lista_s(l,desempilha(p_sensos));
+		hold = desempilha(p_sensos);
+		retorno = busca_lista_s(l,hold);
 		if(retorno == 1)
 			s_tipos++;
+		free(hold);
 	}
 	
-	
 	while( pilha_vazia(p_antisensos)== 1){
-		retorno = busca_lista_as(l,desempilha(p_antisensos));
+		hold = desempilha(p_antisensos);
+		retorno = busca_lista_as(l,hold);
 		if(retorno == 1){
 			printf("Não encontrei!\n");
 		}
+		free(hold);
 	}
+	
 	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
 	printf("Procurando sensos sem antisensos.\n");
@@ -99,6 +104,16 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	printf("Frequencias estimadas.\n");
 	imprimir_sensos(resultados);
 	
+	
+	int i = 0;
+	while(resultados[i]->pares != -1){
+		free(resultados[i]);
+		i++;
+	}
+	free(resultados[i]);
+	free(resultados);	
+	destroy(p_sensos);
+	destroy(p_antisensos);
 	return l;
 }
 
