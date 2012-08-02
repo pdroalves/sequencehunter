@@ -44,4 +44,9 @@ struct buffer{
 };
 typedef struct buffer Buffer;
 
+struct despareados{
+	int sensos;
+	int antisensos;
+};
+typedef struct despareados Despareados;
 #endif

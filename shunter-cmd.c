@@ -12,6 +12,7 @@
 	#include <cuda.h>
 	#include <cuda_runtime_api.h>
 	#include <glib.h>
+	#include <string.h>
 	#include "operacoes.h"
 	#include "cuda_functions.h"
 	//#include "linkedlist.h"
@@ -21,13 +22,20 @@
 	#include "load_data.h"
 	#include "pilha.h"
 	#include "processing_data.h"
-	#define SEQ_BUSCA_TAM 1000
+	#define SEQ_BUSCA_TAM 10000
 
 	//###############
+	static gboolean disable_cuda = 0;
+	static gboolean silent = 0;
+	static gboolean verbose = 0;
+	static gchar *seqname = NULL;
+	static gchar *seq = NULL;
 	static GOptionEntry entries[] = 
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
+		{ "seqname", 'n', 0, G_OPTION_ARG_STRING, &seqname, "Define nome da sequencia", NULL },
+		{ "seq", 'q', 0, G_OPTION_ARG_STRING, &seq, "Define sequencia", NULL },
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento através da arquitetura CUDA", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
@@ -53,13 +61,13 @@
 		}  
 	  //##########################
 	  
-	  char *c;
 	  int c_size;
 	  int err;
 	  int seqs_validas;
 	  int b1_size;
 	  int b2_size;
 	  int bv_size;
+	  char *c;
 	  int is_cuda_available = 0;
 	  pilha p_sensos;
 	  pilha p_antisensos;
@@ -86,32 +94,34 @@
 	}
 	  open_file(argv,argc);
 	  seqs_validas = check_sequencias_validas();
+	   
 	 //////////////////////////////////
 	////////////////////////////////////////////////////////
-	  
-	  printf("Entre a sequência: ");
-	  scanf("%s",c);
-	  if(c == NULL){
-		  printf("Erro na leitura\n");
-		  exit(1);
-	  }
-	  
+	  if(strlen(c) == 0){
+		  printf("Entre a sequência: ");
+		  scanf("%s",c);
+		  if(c == NULL){
+			  printf("Erro na leitura\n");
+			  exit(1);
+		  }
+		}
 	 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
 		 printf("Sequência de busca inválida\n");
 		 exit(1);
 	}  
 	  printString("Sequência de busca: ",c);
 	  
-	 c_size = b1_size+b2_size+bv_size;
+	 c_size = strlen(c);
 	  
 	if(disable_cuda){
 		printf("Forçando modo OpenMP.\n");
 		printString(NULL,"Forçando modo OpenMP.");
-		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos); 
+		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose);
 	processar(&p_sensos,&p_antisensos);
-	  
+	 
+	 closeLog(); 
 	 close_file();
 	 free(c);
 	 

@@ -70,7 +70,9 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	lista_ligada *l;
 	lista_ligada **resultados;
+	Despareados *desp;
 	int s_tipos = 0;
+	int as_tipos = 0;
 	int retorno;
 	l = criar_lista();
 	char *hold;
@@ -88,15 +90,18 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 		hold = desempilha(p_antisensos);
 		retorno = busca_lista_as(l,hold);
 		if(retorno == 1){
-			printf("Não encontrei!\n");
+			as_tipos++;
 		}
 		free(hold);
 	}
 	
 	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
-	printf("Procurando sensos sem antisensos.\n");
-	printf("Sensos solitários: %d.\n",limpando_sensos(l));
+	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
+	printf("Procurando sensos despareados.\n");
+	desp = recupera_despareados(l);
+	printf("Sensos despareados: %d.\n",desp->sensos);
+	printf("Antisensos despareados: %d.\n",desp->antisensos);
 	
 	printf("Processando.\n");
 	qnt_relativa(l);

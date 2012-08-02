@@ -62,10 +62,13 @@ void print_open_file(char *c){
 	return;
 }
 void printString(char *c,char *s){
-	if(s != NULL)
+	if(s != NULL){
 		fprintf(logfile,"%s %s\n",c,s);
-	else
+		fprintf(logfileDetalhado,"%s %s\n",c,s);
+	}else{
 		fprintf(logfile,"%s\n",c);
+		fprintf(logfileDetalhado,"%s %s\n",c,s);
+	}
 	
 }
 
@@ -125,8 +128,9 @@ void print_sequencias_validas(int seqs_validas){
 
 void closeLog(){
 
+  printString("Termino.",NULL);
   print_time();
-  fprintf(logfile,"\n-------------------------\n");
+  fprintf(logfile,"-------------------------\n");
   
   
    if(logfile != NULL)

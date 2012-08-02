@@ -47,20 +47,14 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 			*bloco1 = i;
 		i++;	
 	}
-	while(i < tam && tmp == -1){
+	while(i <= tam && *blocoV == -1){
 		if(seq[i] != 'N')
-			tmp = i;
+			*blocoV = i - *bloco1;
 		i++;	
 	}
-	*bloco2 = tam - tmp;
-	*blocoV = tam - *bloco1 - *bloco2;
-	while(i < tam && tmp != -1){
-		if(seq[i] == 'N')
-			inv = i;
-		i++;
-	}			
-	
-	if(*bloco1 == -1 || *bloco2 == -1 || inv != -1)
+	*bloco2 = tam - *bloco1 - *blocoV;
+		
+	if(*bloco1 == -1 || *bloco2 == -1 || *blocoV == -1)
 		return 0;
 	return 1;
 }
@@ -158,8 +152,18 @@ void fill_buffer(Buffer *b,int n){
 		}
 		if(feof(f[files-1]) == 1 && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
-	//if(hold != NULL)
-	//free(hold);
+	if(hold != NULL)
+	free(hold);
 	return;
+}
+
+void release_buffer(Buffer *b,int c){
+	int i;
+	printf("%d\n",c);
+	/*for(i = 0;i < c;i++){
+		free(b->seq[i]);
+	}*/
+	free(b->seq);
+	free(b);
 }
 

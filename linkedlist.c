@@ -29,7 +29,7 @@ lista_ligada* criar_lista(){
 	return l;
 }
 
-lista_ligada* criar_elemento_lista(char *seq){
+lista_ligada* criar_elemento_senso(char *seq){
 	lista_ligada *novo;
 	int seq_size;
 	
@@ -43,7 +43,21 @@ lista_ligada* criar_elemento_lista(char *seq){
 	return novo;
 }
 
-void adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
+lista_ligada* criar_elemento_antisenso(char *seq){
+	lista_ligada *novo;
+	int seq_size;
+	
+	seq_size = strlen(seq);
+	novo = (lista_ligada*)malloc(sizeof(lista_ligada));
+	novo->qsenso = 0;
+	novo->qasenso = 1;
+	novo->senso = (char*)malloc((seq_size+1)*sizeof(char));
+	strcpy(novo->senso,get_antisenso(seq));
+	novo->prox = NULL;
+	return novo;
+}
+
+lista_ligada* adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 	//Recebe ultimo elemento da lista ligada
 	lista_ligada *tmp;
 	
@@ -53,7 +67,7 @@ void adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 	}
 	tmp->prox = novo;
 
-	return;
+	return tmp;
 }
 
 void remover_elemento(lista_ligada *atual, lista_ligada *anterior){
@@ -98,7 +112,7 @@ int busca_lista_s(lista_ligada *l, char *seq){
 		}
 		//Não encontrou e chegou ao fim da lista ligada
 		
-		adicionar_elemento(l,criar_elemento_lista(seq));
+		adicionar_elemento(l,criar_elemento_senso(seq));
 		return 1;
 	}
 	
@@ -106,9 +120,9 @@ int busca_lista_s(lista_ligada *l, char *seq){
 }
 
 int busca_lista_as(lista_ligada *l, char *seq){
-	//Busca por determinada sequência antisenso nas listas ligadas
-	//Retorna 0 se encontrar
-	//Retorna 1 se não enccontrar
+	//Busca e adiciona determinada sequência antisenso nas listas ligadas
+	//Retorna 0 se encontrar ou adicionar a sequência com sucesso
+	//Retorna 1 se não encontrar ou não for possivel adicionar a sequência
 	lista_ligada *p;
 	int cmp;
 	
@@ -133,7 +147,8 @@ int busca_lista_as(lista_ligada *l, char *seq){
 			}
 		}
 		
-		return 1;
+		adicionar_elemento(l,criar_elemento_antisenso(seq));
+		return 0;
 	}
 	
 	return 1;	
@@ -207,25 +222,29 @@ lista_ligada** ordena_pares(lista_ligada* l){
 	return vetor;
 }
 	
-int limpando_sensos(lista_ligada *l){
+Despareados* recupera_despareados(lista_ligada *l){
 	lista_ligada *atual,*anterior;
-	int sensos_solitarios = 0;
+	Despareados *desp;
+	int diff;
+	
+	desp = (Despareados*)malloc(sizeof(Despareados));
 	
 	anterior = l;
 	if(anterior != NULL){
 		atual = anterior->prox;
 		while(atual != NULL){
-			if(atual->qsenso != atual->qasenso){
-				 printf("%s x%d\n",atual->senso,abs(atual->qsenso - atual->qasenso));
-				 //remover_elemento(atual,anterior);
-				 sensos_solitarios++; 
+			diff = atual->qsenso - atual->qasenso;	
+			if(diff != 0){
+				 printf("%s - S:%d - As:%d\n",atual->senso,atual->qsenso,atual->qasenso);
+				 if(diff > 0) desp->sensos+=diff;
+				 else desp->antisensos+=-diff;
 			}
 			anterior = atual;
 			atual = atual->prox;
 		}
 	}
 	
-	return sensos_solitarios;
+	return desp;
 }
 
 void imprimir_sensos(lista_ligada **resultados){
