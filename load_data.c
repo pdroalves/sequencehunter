@@ -47,20 +47,15 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 			*bloco1 = i;
 		i++;	
 	}
-	while(i < tam && tmp == -1){
+	while(i <= tam && *blocoV == -1){
 		if(seq[i] != 'N')
-			tmp = i;
+			*blocoV = i - *bloco1;
 		i++;	
 	}
-	*bloco2 = tam - tmp;
-	*blocoV = tam - *bloco1 - *bloco2;
-	while(i < tam && tmp != -1){
-		if(seq[i] == 'N')
-			inv = i;
-		i++;
-	}			
+	*bloco2 = tam - *bloco1 - *blocoV;
+		
 	
-	if(*bloco1 == -1 || *bloco2 == -1 || inv != -1)
+	if(*bloco1 == -1 || *bloco2 == -1 || *blocoV == -1)
 		return 0;
 	return 1;
 }
@@ -129,6 +124,8 @@ void prepare_buffer(Buffer *b,int c){
 	get_setup(&n);
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
+	b->resultado = (int*)malloc(c*sizeof(int));
+	
 	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;

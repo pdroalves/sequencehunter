@@ -181,7 +181,7 @@ void load_buffer_NONCuda(Buffer *b,int n){
 	if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
 		fill_buffer(b,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
 		if(b->load != -1){
-			print_seqs_carregadas(b->load);
+			//print_seqs_carregadas(b->load);
 			//printf("%s\n",b->seq[0]);	
 		}
 		//////////////////////////////////
@@ -232,6 +232,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			int tam;
 			int razao;
 			int p=0;
+			pilha *novo;
 			const int th_id = omp_get_thread_num()-1;
 			const int nthreads = omp_get_num_threads()-1;
 	
@@ -244,19 +245,22 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					
 					tam = buffer.load;
 					p += tam;
-					printf("%d\n",p);
+					//printf("%d\n",p);
 					razao = tam / nthreads;
 					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
-						tmp = buffer.seq[i];
-						switch(tmp[0]){
-							case 'S':
-								//printf("S: %s\n",tmp);
-								empilha(p_sensos,criar_elemento_pilha(tmp+1));
+						switch(buffer.resultado[i]){
+							case 1:
+								tmp = buffer.seq[i];
+								printf("S: %s\n",tmp);
+								novo = criar_elemento_pilha(tmp);
+								empilha(p_sensos,novo);
 								buffer.load--;
 							break;
-							case 'N':
-								//printf("N: %s\n",tmp);
-								empilha(p_antisensos,criar_elemento_pilha((char*)get_antisenso(tmp+1)));
+							case 2:
+								tmp = buffer.seq[i];
+								printf("N: %s\n",tmp);
+								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
+								empilha(p_antisensos,novo);
 								buffer.load--;
 							break;
 							default:
@@ -271,16 +275,19 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					{
 						//Processa possíveis sequências restantes
 						for(i=tam-tam%nthreads;i<tam;i++){
-							tmp = buffer.seq[i];
-							switch(tmp[0]){
-							case 'S':
-								//printf("S: %s\n",tmp);
-								empilha(p_sensos,criar_elemento_pilha(tmp+1));
+							switch(buffer.resultado[i]){
+							case 1:
+								tmp = buffer.seq[i];
+								printf("S: %s\n",tmp);
+								novo = criar_elemento_pilha(tmp);
+								empilha(p_sensos,novo);
 								buffer.load--;
 							break;
-							case 'N':
-								//printf("N: %s\n",tmp);
-								empilha(p_antisensos,criar_elemento_pilha(get_antisenso(tmp+1)));
+							case 2:
+								tmp = buffer.seq[i];
+								printf("N: %s\n",tmp);
+								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
+								empilha(p_antisensos,novo);
 								buffer.load--;
 							break;
 							default:

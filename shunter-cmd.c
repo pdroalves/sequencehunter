@@ -54,6 +54,7 @@
 	  //##########################
 	  
 	  char *c;
+	  char *nome;
 	  int c_size;
 	  int err;
 	  int seqs_validas;
@@ -72,6 +73,8 @@
 	 
 	  
 	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
+	  nome = (char*)malloc((100)*sizeof(char));
+	  
 	  if(c == NULL){
 		  printf("Erro alocando memória.\n");
 		  exit(1);
@@ -88,18 +91,22 @@
 	  seqs_validas = check_sequencias_validas();
 	 //////////////////////////////////
 	////////////////////////////////////////////////////////
-	  
+
 	  printf("Entre a sequência: ");
 	  scanf("%s",c);
 	  if(c == NULL){
 		  printf("Erro na leitura\n");
 		  exit(1);
 	  }
+
+	printf("Entre uma identificação para essa busca: ");
+	scanf("%s",nome);
 	  
 	 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
 		 printf("Sequência de busca inválida\n");
 		 exit(1);
 	}  
+	printString("Identificação da busca: ",nome);
 	  printString("Sequência de busca: ",c);
 	  
 	 c_size = b1_size+b2_size+bv_size;

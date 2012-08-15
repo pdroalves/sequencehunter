@@ -18,7 +18,7 @@ int conta_posicoes(char *seq);
 void adicionar_elemento(lista_ligada *lista, lista_ligada *novo);
 lista_ligada* criar_lista();
 void remover_elemento(lista_ligada *atual, lista_ligada *anterior);
-int limpando_sensos(lista_ligada *l);
+Despareados* recupera_despareados(lista_ligada *l);
 void imprimir_sensos(lista_ligada **l);
 int qnt_relativa(lista_ligada* l);
 lista_ligada** ordena_pares(lista_ligada* l);
