@@ -251,14 +251,14 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 						switch(buffer.resultado[i]){
 							case 1:
 								tmp = buffer.seq[i];
-								printf("S: %s\n",tmp);
+								//printf("S: %s\n",tmp);
 								novo = criar_elemento_pilha(tmp);
 								empilha(p_sensos,novo);
 								buffer.load--;
 							break;
 							case 2:
 								tmp = buffer.seq[i];
-								printf("N: %s\n",tmp);
+								//printf("N: %s\n",tmp);
 								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
 								empilha(p_antisensos,novo);
 								buffer.load--;

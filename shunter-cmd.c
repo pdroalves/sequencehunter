@@ -23,12 +23,14 @@
 	#include "processing_data.h"
 	#define SEQ_BUSCA_TAM 1000
 
+	gboolean fromFile = FALSE;
 	//###############
 	static GOptionEntry entries[] = 
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento através da arquitetura CUDA", NULL },
+		{ "fromFile", 'f', 0, G_OPTION_ARG_NONE, &fromFile, "Carrega a configuração de busca do arquivo shset.dat", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
@@ -91,7 +93,17 @@
 	  seqs_validas = check_sequencias_validas();
 	 //////////////////////////////////
 	////////////////////////////////////////////////////////
-
+	if(fromFile){
+		FILE *set;
+		set = fopen("shset.dat","r");
+		fscanf(set,"%s",c);
+		if(c == NULL){
+			printf("Erro na leitura\n");
+			exit(1);
+		}
+		fscanf(set,"%s",nome);
+		
+	}else{
 	  printf("Entre a sequência: ");
 	  scanf("%s",c);
 	  if(c == NULL){
@@ -101,7 +113,8 @@
 
 	printf("Entre uma identificação para essa busca: ");
 	scanf("%s",nome);
-	  
+	}
+	
 	 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
 		 printf("Sequência de busca inválida\n");
 		 exit(1);
