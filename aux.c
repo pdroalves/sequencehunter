@@ -254,6 +254,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								//printf("S: %s\n",tmp);
 								novo = criar_elemento_pilha(tmp);
 								empilha(p_sensos,novo);
+								printString("Senso:",tmp);
 								buffer.load--;
 							break;
 							case 2:
@@ -261,6 +262,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								//printf("N: %s\n",tmp);
 								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
 								empilha(p_antisensos,novo);
+								printString("Antisenso:",tmp);
 								buffer.load--;
 							break;
 							default:

@@ -35,7 +35,7 @@ GLIB_LIBS_WIN := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) \
 CFLAGS_WIN = $(GLIB_CFLAGS_WIN) $(GTK_CFLAGS_WIN)
 LIBS_WIN = $(GLIB_LIBS_WIN) $(GTK_LIBS_WIN)
 
-INSTALL = ../../bin
+INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
 
 all:windows linux
 
