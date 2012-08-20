@@ -52,7 +52,7 @@ lista_ligada* criar_elemento_antisenso(char *seq){
 	novo->qsenso = 0;
 	novo->qasenso = 1;
 	novo->senso = (char*)malloc((seq_size+1)*sizeof(char));
-	strcpy(novo->senso,get_antisenso(seq));
+	strcpy(novo->senso,seq);
 	novo->prox = NULL;
 	return novo;
 }
@@ -120,9 +120,9 @@ int busca_lista_s(lista_ligada *l, char *seq){
 }
 
 int busca_lista_as(lista_ligada *l, char *seq){
-	//Busca e adiciona determinada sequência antisenso nas listas ligadas
-	//Retorna 0 se encontrar ou adicionar a sequência com sucesso
-	//Retorna 1 se não encontrar ou não for possivel adicionar a sequência
+	//Busca por determinada sequência antisenso nas listas ligadas
+	//Retorna 0 se encontrar
+	//Retorna 1 se não enccontrar
 	lista_ligada *p;
 	int cmp;
 	
@@ -148,14 +148,13 @@ int busca_lista_as(lista_ligada *l, char *seq){
 		}
 		
 		adicionar_elemento(l,criar_elemento_antisenso(seq));
-		return 0;
+		return 1;
 	}
 	
 	return 1;	
 }
 
 void qnt_relativa(lista_ligada* l){
-	//Retorna a quantidade relativa de exemplares de cada sequência
 	float total = 0;
 	
 	lista_ligada *p;
@@ -224,6 +223,7 @@ lista_ligada** ordena_pares(lista_ligada* l){
 	
 Despareados* recupera_despareados(lista_ligada *l){
 	lista_ligada *atual,*anterior;
+	int sensos_solitarios = 0;
 	Despareados *desp;
 	int diff;
 	
@@ -233,9 +233,10 @@ Despareados* recupera_despareados(lista_ligada *l){
 	if(anterior != NULL){
 		atual = anterior->prox;
 		while(atual != NULL){
-			diff = atual->qsenso - atual->qasenso;	
+			diff = atual->qsenso - atual->qasenso;
+			printf("%s - S:%d - As:%d\n",atual->senso,atual->qsenso,atual->qasenso);
+			print_despareadas(atual->senso,atual->qsenso,atual->qasenso);
 			if(diff != 0){
-				 printf("%s - S:%d - As:%d\n",atual->senso,atual->qsenso,atual->qasenso);
 				 if(diff > 0) desp->sensos+=diff;
 				 else desp->antisensos+=-diff;
 			}
@@ -255,9 +256,11 @@ void imprimir_sensos(lista_ligada **resultados){
 	if(resultados[0]->senso != NULL){
 		print_resultados(resultados);
 		while(resultados[i]->pares != -1){
+			if(resultados[i]->pares != 0)
 			printf("	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
 			i++;
 		}
 	}
 	return;
 }
+

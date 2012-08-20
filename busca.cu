@@ -151,7 +151,7 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
   int tam = buffer.load;
   int razao = tam / nthreads;
   int size = bloco1 + bloco2;
-  int blocoZ = blocos - size;//Total de bases que queremos encontrar  
+  int blocoZ = blocos - size;//Total de bases que queremos encontrar
   char *hold;
   for(posicao=th_id*razao;posicao < th_id + razao;posicao++){
 	  char *seq = buffer.seq[posicao];//Seto ponteiro para a sequência que será analisada
@@ -165,10 +165,9 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 	  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
 	  int x0S=1;
 	  int x0A=1;
-	  int xn;/////
-	  
+	  int xn;
 	  int totalmatchs = blocos;
-	  char tipo = '\0';						
+	  int tipo = 0;						
 	  s_match = as_match = 0;
 	  i=0;
 	  
@@ -203,10 +202,12 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 		 //printf("as_match: %d\n",as_match);
 		  
 		if(s_match == bloco1){
-			x0S = i;//Marca primeiro elemento 
+			//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+			x0S = i;
 		}
 		if(as_match == bloco2){
-			x0A = i;//Marca primeiro elemento 
+			//printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+			x0A = i;
 		}
 		atual = busca_vertice(seq[i],a,c,g,t);
 		if(atual != NULL)
@@ -221,27 +222,27 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 	  ///////////////////////////////
 	  
 	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
-	  if(s_match == totalmatchs){
-		  x0 = x0S;
-		  tipo = 'S';
-	  }
-	  if(as_match == totalmatchs){
-		  x0 = x0A;
-		  tipo = 'N';
-	  }
-		if(s_match == totalmatchs || as_match == totalmatchs){
-			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-			hold = (char*)malloc(blocoZ*sizeof(char));
-			hold[0] = tipo;
-			for(i=0;i<blocoZ;i++){
-			  hold[i+1] = seq[x0 + i];
-			}
-			hold[i+1] = '\0';
-			//free(buffer.seq[posicao]);
-			buffer.seq[posicao] = hold;
-		}else
-			buffer.seq[posicao][0] = '\0';
+
+	if(s_match == totalmatchs){
+		x0 = x0S;
+		tipo = 1;
 	}
+	if(as_match == totalmatchs){
+		x0 = x0A;
+		tipo = 2;
+	}
+	
+	buffer.resultado[posicao] = tipo;
+
+	if(s_match == totalmatchs || as_match == totalmatchs){
+		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+		for(i=0;i<blocoZ;i++){
+		  buffer.seq[posicao][i] = seq[x0 + i];
+		}
+		buffer.seq[posicao][i] = '\0';
+	}
+	
+}
 	
   return;
 }
@@ -432,6 +433,7 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
 		atual->s_marcas[i]=1;
 		printf("%c marcado na posicao %d.\n",atual->vertice,i);
 	}else{
+		//printf("Elemento variável encontrado.\n");
 		a->s_marcas[i]=1;
 		c->s_marcas[i]=1;
 		g->s_marcas[i]=1;
@@ -450,6 +452,7 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
 		atual->as_marcas[i]=1;
 		printf("%c marcado na posicao %d.\n",atual->vertice,i);
 	}else{
+		//printf("Elemento variável encontrado.\n");
 		a->as_marcas[i]=1;
 		c->as_marcas[i]=1;
 		g->as_marcas[i]=1;

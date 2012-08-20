@@ -35,7 +35,7 @@ GLIB_LIBS_WIN := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) \
 CFLAGS_WIN = $(GLIB_CFLAGS_WIN) $(GTK_CFLAGS_WIN)
 LIBS_WIN = $(GLIB_LIBS_WIN) $(GTK_LIBS_WIN)
 
-INSTALL = ../../bin
+INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
 
 all:windows linux
 
@@ -50,7 +50,7 @@ windows:cmd_win gui_win
 ##Linux##################################
 #########################################
 cmd_linux:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
-	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA)
+	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
 gui_linux:shunter-gui.o_linux log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
 	$(CC_LINUX) -g shunter-gui.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 

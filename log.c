@@ -62,13 +62,10 @@ void print_open_file(char *c){
 	return;
 }
 void printString(char *c,char *s){
-	if(s != NULL){
+	if(s != NULL)
 		fprintf(logfile,"%s %s\n",c,s);
-		fprintf(logfileDetalhado,"%s %s\n",c,s);
-	}else{
+	else
 		fprintf(logfile,"%s\n",c);
-		fprintf(logfileDetalhado,"%s %s\n",c,s);
-	}
 	
 }
 
@@ -81,9 +78,25 @@ void print_seqs_carregadas(int n){
 	fprintf(logfileDetalhado,"Sequências carregadas: %d\n",n);
 }
 
-void print_matchs(int sensos,int antisensos){
-	fprintf(logfile,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.",sensos,antisensos);
-	fprintf(logfileDetalhado,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.",sensos,antisensos);
+void print_total_seqs(int sensos,int antisensos){
+	fprintf(logfile,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.\n",sensos,antisensos);
+	fprintf(logfileDetalhado,"Sequências senso encontradas: %d.\nSequências antisenso encontradas: %d.\n",sensos,antisensos);
+}
+
+void print_despareadas_seqs(int sensos,int antisensos){
+	fprintf(logfile,"Sequências senso despareadas: %d.\nSequências antisenso despareadas: %d.\n",sensos,antisensos);
+	fprintf(logfileDetalhado,"Sequências senso despareadas: %d.\nSequências antisenso despareadas: %d.\n",sensos,antisensos);
+}
+
+void print_despareadas(char *seq,int sensos,int antisensos){
+	fprintf(logfile,"	%s - S:%d - As:%d.\n",seq,sensos,antisensos);
+	fprintf(logfileDetalhado,"	%s - S:%d - As:%d.\n",seq,sensos,antisensos);
+
+}
+
+void print_tipos_seqs(int sensos,int antisensos){
+	fprintf(logfile,"Tipos de sensos encontradas: %d.\nTipos de antisensos encontradas: %d.",sensos,antisensos);
+	fprintf(logfileDetalhado,"Tipos de sensos encontradas: %d.\nTipos de antisensos encontradas: %d.",sensos,antisensos);	
 }
 
 void print_resultados(lista_ligada** resultados){
@@ -92,15 +105,17 @@ void print_resultados(lista_ligada** resultados){
 	
 	fprintf(logfile,"Pares encontrados:\n\n");
 	while(resultados[i]->pares != -1){
+		if(resultados[i]->pares != 0){
 			fprintf(logfile,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
 			fprintf(logfileDetalhado,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+		}
 			i++;
 	}
 	
 	i=0;
 	fprintf(logfile,"Sensos despareados:\n\n");
 	while(resultados[i]->pares != -1){
-			///fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
+			fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
 			fprintf(logfileDetalhado,"	%s S:%d - AS:%d\n",resultados[i]->senso,resultados[i]->qsenso,resultados[i]->qasenso);
 			i++;
 	}
@@ -128,9 +143,8 @@ void print_sequencias_validas(int seqs_validas){
 
 void closeLog(){
 
-  printString("Termino.",NULL);
   print_time();
-  fprintf(logfile,"-------------------------\n");
+  fprintf(logfile,"\n-------------------------\n");
   
   
    if(logfile != NULL)

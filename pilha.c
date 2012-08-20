@@ -33,20 +33,22 @@ pilha criar_pilha(){
 }
 
 pilha* criar_elemento_pilha(char *seq){
+	char *new_seq;
 	pilha *elemento;
 	int seq_size;
     int i;
     
    seq_size = strlen(seq);
+   new_seq = (char*)malloc((seq_size+1)*sizeof(char));
+   strcpy(new_seq,seq);
    
-   for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
+   /*for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
    if(i != seq_size){
 	    seq[i] = '\0';
 	    seq_size = strlen(seq);
-   }
+   }*/
    elemento = (pilha*) malloc (sizeof (pilha));
-   elemento->seq = (char*) malloc((seq_size+1)*sizeof(char));
-   strcpy(elemento->seq,seq);
+   elemento->seq = new_seq;
 	
 	return elemento;
 }

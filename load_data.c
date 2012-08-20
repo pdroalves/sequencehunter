@@ -54,6 +54,7 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 	}
 	*bloco2 = tam - *bloco1 - *blocoV;
 		
+	
 	if(*bloco1 == -1 || *bloco2 == -1 || *blocoV == -1)
 		return 0;
 	return 1;
@@ -123,6 +124,8 @@ void prepare_buffer(Buffer *b,int c){
 	get_setup(&n);
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
+	b->resultado = (int*)malloc(c*sizeof(int));
+	
 	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
@@ -152,18 +155,8 @@ void fill_buffer(Buffer *b,int n){
 		}
 		if(feof(f[files-1]) == 1 && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
-	if(hold != NULL)
-	free(hold);
+	//if(hold != NULL)
+	//free(hold);
 	return;
-}
-
-void release_buffer(Buffer *b,int c){
-	int i;
-	printf("%d\n",c);
-	/*for(i = 0;i < c;i++){
-		free(b->seq[i]);
-	}*/
-	free(b->seq);
-	free(b);
 }
 
