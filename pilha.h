@@ -7,3 +7,4 @@ pilha criar_pilha();
 int tamanho_da_pilha(pilha*);
 void destroy(pilha *tp);
 int pilha_vazia(pilha *tp);
+void despejar(pilha* p,char *filename);

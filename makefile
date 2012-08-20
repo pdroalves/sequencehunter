@@ -49,7 +49,8 @@ windows:cmd_win gui_win
 
 ##Linux##################################
 #########################################
-cmd_linux:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
+cmd_linux:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o build_control
+	./build_control version
 	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
 gui_linux:shunter-gui.o_linux log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
@@ -149,9 +150,12 @@ cuda_functions.o_win:cuda_functions.cu
 #########################################
 #########################################
 #########################################
+
+build_control:build_control.c
+	gcc build_control.c -o build_control
 	
 clean:
 	rm -f *.o *.{c,h}~ shunter-cmd shunter-gui shunter-cmd.exe shunter-gui.exe
 
 install:
-	cp shunter-cmd shunter-gui shunter-cmd.exe shunter-gui.exe $(INSTALL)
+	cp shunter-cmd $(INSTALL)

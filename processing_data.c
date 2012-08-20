@@ -95,7 +95,7 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 			as_tipos++;
 		free(hold);
 	}
-	
+	/*
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
 	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
 	printf("Procurando sensos despareados...\n");
@@ -118,6 +118,9 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	}
 	free(resultados[i]);
 	free(resultados);	
+	*/
+	
+	
 	destroy(p_sensos);
 	destroy(p_antisensos);
 	return l;

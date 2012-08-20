@@ -22,6 +22,8 @@
 #define buffer_size 204800 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
+gboolean verbose;
+gboolean silent;
 
 
 void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
@@ -33,7 +35,9 @@ void load_buffer_NONCuda(Buffer *b,int n);
 void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos);
 	
-void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
+void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos,gboolean disable_cuda,gboolean sil,gboolean verb){
+	verbose = verb;
+	sil = silent;
 if(CUDA)
 	auxCUDA(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
 else
@@ -251,7 +255,8 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 						switch(buffer.resultado[i]){
 							case 1:
 								tmp = buffer.seq[i];
-								//printf("S: %s\n",tmp);
+								if(verbose == TRUE && silent != TRUE)	
+									printf("S: %s - %d\n",tmp,p);
 								novo = criar_elemento_pilha(tmp);
 								empilha(p_sensos,novo);
 								printString("Senso:",tmp);
@@ -259,7 +264,8 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 							break;
 							case 2:
 								tmp = buffer.seq[i];
-								//printf("N: %s\n",tmp);
+								if(verbose == TRUE && silent != TRUE)
+									printf("N: %s - %d\n",tmp,p);
 								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
 								empilha(p_antisensos,novo);
 								printString("Antisenso:",tmp);

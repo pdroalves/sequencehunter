@@ -96,6 +96,17 @@ char* desempilha (pilha *tp) {
 	}
 }
 
+void despejar(pilha* p,char *filename){
+	FILE *f;
+	f = fopen(filename,"w+");
+	
+	while(!pilha_vazia(p)){
+			fprintf("%s\n",desempilha(p));
+	}
+	
+	fclose(f);
+}
+
 int tamanho_da_pilha(pilha *tp){
 	int p;
 	pilha *tmp;

@@ -21,9 +21,14 @@
 	#include "load_data.h"
 	#include "pilha.h"
 	#include "processing_data.h"
+	#include "version.h"
 	#define SEQ_BUSCA_TAM 1000
 
 	gboolean fromFile = FALSE;
+gboolean disable_cuda = FALSE;
+gboolean verbose = FALSE;
+gboolean silent = FALSE;
+	gboolean check_build = FALSE;
 	//###############
 	static GOptionEntry entries[] = 
 	  {
@@ -34,9 +39,15 @@
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
+		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o número da build", NULL },
+		
 		{ NULL }
 	  };
 
+	int get_build(){
+		
+		return build; 
+	}
 
 
 	//####################
@@ -67,7 +78,10 @@
 	  pilha p_sensos;
 	  pilha p_antisensos;
 	  
-	  
+	  if(check_build){
+		  printf("Build: %d\n",get_build());
+		  return 0;
+	  }
 	  //Inicializa
 	  prepareLog();
 	  p_sensos = criar_pilha();
@@ -123,13 +137,13 @@
 	  printString("Sequência de busca: ",c);
 	  
 	 c_size = b1_size+b2_size+bv_size;
-	  
+	 
 	if(disable_cuda){
 		printf("Forçando modo OpenMP.\n");
 		printString(NULL,"Forçando modo OpenMP.");
-		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos); 
+		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose);
 	processar(&p_sensos,&p_antisensos);
 	  
 	 close_file();

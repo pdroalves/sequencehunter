@@ -17,7 +17,7 @@ int open_file(char **entrada,int);
 
 FILE **f;
 int files = 0;
-gboolean check_seqs = 0;
+gboolean check_seqs = FALSE;
 /* converts integer into string */
 
 
