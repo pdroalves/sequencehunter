@@ -100,11 +100,10 @@ void despejar(pilha* p,char *filename){
 	FILE *f;
 	f = fopen(filename,"w+");
 	
-	while(!pilha_vazia(p)){
-			fprintf("%s\n",desempilha(p));
+	while(pilha_vazia(p)){
+			fprintf(f,"%s\n",desempilha(p));
 	}
 	
-	fclose(f);
 }
 
 int tamanho_da_pilha(pilha *tp){

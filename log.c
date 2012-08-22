@@ -91,7 +91,6 @@ void print_despareadas_seqs(int sensos,int antisensos){
 void print_despareadas(char *seq,int sensos,int antisensos){
 	fprintf(logfile,"	%s - S:%d - As:%d.\n",seq,sensos,antisensos);
 	fprintf(logfileDetalhado,"	%s - S:%d - As:%d.\n",seq,sensos,antisensos);
-
 }
 
 void print_tipos_seqs(int sensos,int antisensos){
@@ -112,13 +111,6 @@ void print_resultados(lista_ligada** resultados){
 			i++;
 	}
 	
-	i=0;
-	fprintf(logfile,"Sensos despareados:\n\n");
-	while(resultados[i]->pares != -1){
-			fprintf(logfile,"	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
-			fprintf(logfileDetalhado,"	%s S:%d - AS:%d\n",resultados[i]->senso,resultados[i]->qsenso,resultados[i]->qasenso);
-			i++;
-	}
 }
 
 void print_tempo(float tempo){

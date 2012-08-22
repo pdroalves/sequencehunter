@@ -97,7 +97,7 @@ linkedlist.o:linkedlist.c
 	$(CC_LINUX) -g -c linkedlist.c -o linkedlist.o
 	
 processing_data.o:processing_data.c
-	$(CC_LINUX) -g -c processing_data.c -o processing_data.o
+	$(CC_LINUX) -g -c processing_data.c -o processing_data.o $(GLIB_CFLAGS)
 	
 pilha.o:pilha.c
 	$(CC_LINUX) -g -c pilha.c -o pilha.o
@@ -125,7 +125,7 @@ linkedlist.o_win:linkedlist.c
 	$(CC_WIN64) -g -c linkedlist.c -o linkedlist.o $(OPENMP_WIN)
 	
 processing_data.o_win:processing_data.c
-	$(CC_WIN64) -g -c processing_data.c -o processing_data.o
+	$(CC_WIN64) -g -c processing_data.c -o processing_data.o $(GLIB_CFLAGS_WIN)
 	
 pilha.o_win:pilha.c
 	$(CC_WIN64) -g -c pilha.c -o pilha.o

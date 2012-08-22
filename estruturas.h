@@ -37,6 +37,14 @@ struct lista_ligada{
 };
 typedef struct lista_ligada lista_ligada;
 
+struct Value{
+	int pares;
+	int qsenso;
+	int qasenso;
+	float qnt_relativa;
+};
+typedef struct Value value;
+
 struct buffer{
 	char **seq;
 	int *resultado;

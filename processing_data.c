@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <glib.h>
 #include "estruturas.h"
 #include "log.h"
-#include "linkedlist.h"
+#include "ghashtable.c"
 #include "pilha.h"
 #define TAM_MAX 10000
 
@@ -70,46 +71,59 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	lista_ligada *l;
 	lista_ligada **resultados;
+	GHashTable* hash_table;
 	Despareados *desp;
 	int s_tipos = 0;
 	int as_tipos = 0;
 	int retorno;
-	l = criar_lista();
 	char *hold;
 	
-	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
 	
+	hash_table = criar_ghash_table();
+	
+	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
+	//despejar(p_sensos,"sensos");
+	//despejar(p_antisensos,"antisensos");
 	//Processa sensos
 	while(pilha_vazia(p_sensos) == 1){
 		hold = desempilha(p_sensos);
-		retorno = busca_lista_s(l,hold);
-		if(retorno == 1)
+		retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
+		if(retorno)
 			s_tipos++;
-		free(hold);
 	}
 	
+	//Processa antisensos
 	while( pilha_vazia(p_antisensos)== 1){
 		hold = desempilha(p_antisensos);
-		retorno = busca_lista_as(l,hold);
-		if(retorno == 1)
+		retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
+		if(retorno)
 			as_tipos++;
-		free(hold);
 	}
-	/*
+	
+	//print_all(hash_table);
+	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
 	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
+	
+	
 	printf("Procurando sensos despareados...\n");
-	desp = recupera_despareados(l);
+	
+	
+	desp = recupera_despareados_ht(hash_table);
 	print_despareadas_seqs(desp->sensos,desp->antisensos);
 	printf("Sensos despareados: %d.\n",desp->sensos);
 	printf("Antisensos despareados: %d.\n",desp->antisensos);
-	
 	printf("Processando.\n");
-	qnt_relativa(l);
+	
+	qnt_relativa_ht(hash_table);
+	
+	
+	//LinkedList
+	l = converter_para_lista_ligada(hash_table);
+	
 	resultados = ordena_pares(l);
 	printf("Frequencias estimadas:\n");
 	imprimir_sensos(resultados);
-	
 	
 	int i = 0;
 	while(resultados[i]->pares != -1){
@@ -118,8 +132,6 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	}
 	free(resultados[i]);
 	free(resultados);	
-	*/
-	
 	
 	destroy(p_sensos);
 	destroy(p_antisensos);

@@ -70,114 +70,26 @@ lista_ligada* adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 	return tmp;
 }
 
+void g_hash_table_adapter_to_linked_list(char *seq,value *entry,lista_ligada *l){
+	if(entry->qnt_relativa > 0 + 1e-7){
+		lista_ligada* novo;
+		
+		novo = criar_elemento_senso(seq);
+		novo->pares = entry->pares;
+		novo->qsenso = entry->qsenso;
+		novo->qasenso = entry->qasenso;
+		novo->qnt_relativa = entry->qnt_relativa;
+		
+		adicionar_elemento(l,novo);
+	}
+	return;
+}
+
 void remover_elemento(lista_ligada *atual, lista_ligada *anterior){
 	anterior->prox = atual->prox;
 	free(atual->senso);
 	free(atual);
 	atual = anterior->prox;
-	return;
-}
-
-int busca_lista_s(lista_ligada *l, char *seq){
-	//Busca por determinada sequência senso nas listas ligadas
-	//Retorna 0 se encontrar ou se seq for nulo
-	//Retorna 1 se não encontrar e tiver de adiciona-lo no final da lista
-	lista_ligada *p;
-	int cmp;
-	int str_size;
-	
-	str_size = strlen(seq);
-	
-	if(seq != NULL){
-		if(l->prox != NULL){//Lista vazia
-			p = l->prox;	
-			cmp = strncmp(seq,p->senso,str_size);
-			if(cmp == 0){
-					//Encontrou
-					p->qsenso++;
-					//free(seq);
-					return 0;
-			}
-			
-			while(p != NULL){
-				cmp = strncmp(seq,p->senso,str_size);
-				if(cmp == 0){
-						//Encontrou
-						p->qsenso++;
-						//free(seq);
-						return 0;
-				}
-				p = p->prox;
-			}
-		}
-		//Não encontrou e chegou ao fim da lista ligada
-		
-		adicionar_elemento(l,criar_elemento_senso(seq));
-		return 1;
-	}
-	
-	return 0;	
-}
-
-int busca_lista_as(lista_ligada *l, char *seq){
-	//Busca por determinada sequência antisenso nas listas ligadas
-	//Retorna 0 se encontrar
-	//Retorna 1 se não enccontrar
-	lista_ligada *p;
-	int cmp;
-	
-	if(seq != NULL){
-		if(l->prox != NULL){//Lista vazia
-			p = l->prox;	
-			cmp = strcmp(seq,p->senso);
-			if(cmp == 0){
-					//Encontrou
-					p->qasenso++;
-					return 0;
-			}
-			
-			while(p != NULL){
-				cmp = strcmp(seq,p->senso);
-				if(cmp == 0){
-						//Encontrou
-						p->qasenso++;
-						return 0;
-				}
-				p = p->prox;
-			}
-		}
-		
-		adicionar_elemento(l,criar_elemento_antisenso(seq));
-		return 1;
-	}
-	
-	return 1;	
-}
-
-void qnt_relativa(lista_ligada* l){
-	float total = 0;
-	
-	lista_ligada *p;
-	
-	//Contabiliza a quantidade total de pares encontrados
-	p = l->prox;
-	while(p !=NULL){
-		p->pares = MIN(p->qsenso,p->qasenso);
-		total += p->pares;
-		p = p->prox;
-	}
-	
-	//Grava quantidade relativa de cada tipo de pares encontrados
-	p = l->prox;
-	while(p != NULL){
-		if(total > 0){
-			p->qnt_relativa = p->pares / total;
-		}else{
-			p->qnt_relativa = 0;
-		}		
-		p = p->prox;
-	}
-	
 	return;
 }
 

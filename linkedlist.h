@@ -22,3 +22,4 @@ Despareados* recupera_despareados(lista_ligada *l);
 void imprimir_sensos(lista_ligada **l);
 int qnt_relativa(lista_ligada* l);
 lista_ligada** ordena_pares(lista_ligada* l);
+void g_hash_table_adapter_to_linked_list(gchar *seq,value *entry,lista_ligada *l);

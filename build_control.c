@@ -49,7 +49,6 @@ int main(int argc,char *argv[]){
 		FILE *build_history;
 
 		buildfilename = (char*)malloc(100*sizeof(char));
-		
 		strcpy(buildfilename,argv[1]);
 		strcat(buildfilename,".h");
 		build_control = fopen(buildfilename,"a+");
