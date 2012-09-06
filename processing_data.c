@@ -77,10 +77,11 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	int as_tipos = 0;
 	int retorno;
 	char *hold;
+	GTimer *timer;
 	
 	
 	hash_table = criar_ghash_table();
-	
+	g_timer_start(timer);
 	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
 	//despejar(p_sensos,"sensos");
 	//despejar(p_antisensos,"antisensos");
@@ -91,7 +92,11 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 		if(retorno)
 			s_tipos++;
 	}
+	g_timer_stop(timer);
+	printf("Pilha de sensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
+	g_timer_reset(timer);
+	g_timer_start(timer);
 	//Processa antisensos
 	while( pilha_vazia(p_antisensos)== 1){
 		hold = desempilha(p_antisensos);
@@ -99,6 +104,9 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 		if(retorno)
 			as_tipos++;
 	}
+	
+	g_timer_stop(timer);
+	printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
 	//print_all(hash_table);
 	
@@ -108,21 +116,43 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	printf("Procurando sensos despareados...\n");
 	
-	
+	g_timer_reset(timer);
+	g_timer_start(timer);
 	desp = recupera_despareados_ht(hash_table);
 	print_despareadas_seqs(desp->sensos,desp->antisensos);
 	printf("Sensos despareados: %d.\n",desp->sensos);
 	printf("Antisensos despareados: %d.\n",desp->antisensos);
 	printf("Processando.\n");
 	
-	qnt_relativa_ht(hash_table);
+	g_timer_stop(timer);
+	printf("Sequências despareadas encontradas em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
+	g_timer_reset(timer);
+	g_timer_start(timer);
+	qnt_relativa_ht(hash_table);
+	g_timer_stop(timer);
+	printf("Calculo da distribuição feita em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	//Salva resultado:
+	g_timer_reset(timer);
+	g_timer_start(timer);
+	write_ht_to_file(hash_table);
+	g_timer_stop(timer);
+	printf("Resultados salvos em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
 	//LinkedList
+	g_timer_reset(timer);
+	g_timer_start(timer);	
 	l = converter_para_lista_ligada(hash_table);
+	g_timer_stop(timer);
+	printf("Conversão para Linked List em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
+	g_timer_reset(timer);
+	g_timer_start(timer);
 	resultados = ordena_pares(l);
 	printf("Frequencias estimadas:\n");
+	g_timer_stop(timer);
+	printf("Sequências ordenadas em %f ms.\n",g_timer_elapsed(timer,NULL));
 	imprimir_sensos(resultados);
 	
 	int i = 0;
@@ -135,6 +165,8 @@ lista_ligada* processar(pilha *p_sensos,pilha *p_antisensos){
 	
 	destroy(p_sensos);
 	destroy(p_antisensos);
+	//g_timer_destroy(timer);
+	//free(timer);
 	return l;
 }
 

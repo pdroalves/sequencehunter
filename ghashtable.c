@@ -130,3 +130,46 @@ lista_ligada* converter_para_lista_ligada(GHashTable *hash_table){
 	return l;
 }
 
+void write_ht_to_file_func(char *seq,value *entry,ResultFiles *result){
+	if(entry->qsenso == 1){
+		fprintf(result->file1,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);
+	}
+	
+	if(entry->qsenso >= 2 && entry->qsenso <= 99){
+		fprintf(result->file299,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);
+	}
+	
+	if(entry->qsenso >= 100 && entry->qsenso <= 999){
+		fprintf(result->file100999,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
+	}
+	
+	if(entry->qsenso >= 1000 && entry->qsenso <= 9999){
+		fprintf(result->file10009999,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
+	}
+	
+	if(entry->qsenso >= 10000){
+		//fprintf(result->file10000,"%s\n",seq);		
+		
+		fprintf(result->file10000,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
+	}
+}
+
+void write_ht_to_file(GHashTable *hash_table){
+	
+	ResultFiles result;
+	result.file1 = fopen("senso_seq_1.txt","w");
+	result.file299 = fopen("senso_seq_2-99.txt","w");
+	result.file100999 = fopen("senso_seq_100-999.txt","w");
+	result.file10009999 = fopen("senso_seq_1000-9999.txt","w");
+	result.file10000 = fopen("senso_seq_10000.txt","w");
+	
+	g_hash_table_foreach(hash_table,write_ht_to_file_func,&result);
+	
+	fclose(result.file1);
+	fclose(result.file299);
+	fclose(result.file100999);
+	fclose(result.file10009999);
+	fclose(result.file10000);
+	
+	return;
+}
