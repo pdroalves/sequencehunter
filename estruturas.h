@@ -59,4 +59,12 @@ struct despareados{
 };
 typedef struct despareados Despareados;
 
+struct resultfiles{
+	FILE *file1;
+	FILE *file299;
+	FILE *file100999;
+	FILE *file10009999;
+	FILE *file10000;
+};
+typedef struct resultfiles ResultFiles;
 #endif

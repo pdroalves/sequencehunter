@@ -19,7 +19,7 @@
 #include "log.h"
 #include "pilha.h"
 
-#define buffer_size 204800 //Capacidade máxima do buffer
+#define buffer_size 1024 //Capacidade máxima do buffer
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 gboolean verbose;
@@ -205,7 +205,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	char *tmp;
 	int blocoV = blocos - bloco1 - bloco2+1;
 	int iter;
-	int buffer_size_NC = 5120*2;
+	int buffer_size_NC = 5120;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
