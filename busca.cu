@@ -8,8 +8,9 @@
 
 #include <stdio.h>
 #include <cuda.h>
+extern "C" {
 #include "estruturas.h"
-
+}
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)//Toma cuidado de não usar printf sem que a máquina suporte.
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
@@ -134,7 +135,7 @@ extern "C" void k_busca_helper(int num_blocks,int num_threads,const int bloco1,c
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Versão sem CUDA 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -148,13 +149,13 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
   ////////
   ////////
   int posicao;
-  int tam = buffer.load;
+  int tam = buffer->load;
   int razao = tam / nthreads;
   int size = bloco1 + bloco2;
   int blocoZ = blocos - size;//Total de bases que queremos encontrar
   char *hold;
-  for(posicao=th_id*razao;posicao < th_id + razao;posicao++){
-	  char *seq = buffer.seq[posicao];//Seto ponteiro para a sequência que será analisada
+  for(posicao=0;posicao < tam;posicao++){
+	  char *seq = buffer->seq[posicao];//Seto ponteiro para a sequência que será analisada
 	  //printf("%d: Peguei: %s\n",posicao,seq);
 	  int i;
 	  int s_match;
@@ -232,14 +233,14 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 		tipo = 2;
 	}
 	
-	buffer.resultado[posicao] = tipo;
+	buffer->resultado[posicao] = tipo;
 
 	if(s_match == totalmatchs || as_match == totalmatchs){
 		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 		for(i=0;i<blocoZ;i++){
-		  buffer.seq[posicao][i] = seq[x0 + i];
+		  buffer->seq[posicao][i] = seq[x0 + i];
 		}
-		buffer.seq[posicao][i] = '\0';
+		buffer->seq[posicao][i] = '\0';
 	}
 	
 }

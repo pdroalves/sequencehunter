@@ -42,12 +42,17 @@ pilha* criar_elemento_pilha(char *seq){
    new_seq = (char*)malloc((seq_size+1)*sizeof(char));
    strcpy(new_seq,seq);
    
-   /*for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
+   for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
    if(i != seq_size){
 	    seq[i] = '\0';
 	    seq_size = strlen(seq);
-   }*/
-   elemento = (pilha*) malloc (sizeof (pilha));
+   }
+   
+	elemento = (pilha*) malloc (sizeof (pilha));
+ 
+	while(elemento == NULL){
+		elemento = (pilha*) malloc (sizeof (pilha));
+	}
    elemento->seq = new_seq;
 	
 	return elemento;
@@ -59,12 +64,27 @@ void destroy(pilha *tp){
 	return;
 }
 
-// Insere um elemento y na pilha tp.
+// Insere um elemento novo na pilha tp.
 void empilha (pilha *tp,pilha *novo) { 
    novo->prox  = tp->prox;
    tp->prox = novo; 
    //printf("Elemento %s empilhado.\n",novo->seq);
    return;
+}
+
+// Conecta as duas pilhas mantendo a pilha A no começo
+
+void empilhar_pilha(pilha *A,pilha *B){
+	// Procura o ultimo elemento da pilha A
+	pilha *p;
+	p = A;
+	while(p->prox != NULL){
+		p = p->prox;
+	}
+	
+	//Linka as duas listas
+	p->prox = B->prox;
+	//free(B);
 }
 
 // Remove um elemento da pilha tp.
@@ -83,27 +103,39 @@ char* desempilha (pilha *tp) {
 	    return NULL;
    }else{
 	   //Encontra o tamanho da sequência
-	   seq_size = strlen(p->seq);
-	   if(seq_size + 1 > 0){
-		   seq = (char*)malloc((seq_size+1)*sizeof(char));
-		   strcpy(seq,p->seq);
-		   tp->prox = p->prox;
-		   free (p);
+	      seq = p->seq;
+		   tp->prox = p->prox;  
 		   return seq; 
-		}else{
-			return NULL;
-		}	
-	}
+	}	
+	
 }
 
-void despejar(pilha* p,char *filename){
-	FILE *f;
-	f = fopen(filename,"w+");
-	
+void despejar(pilha* p,FILE *f){
+	char *seq;	
 	while(pilha_vazia(p)){
-			fprintf(f,"%s\n",desempilha(p));
+			seq = desempilha(p);
+			fputs(seq,f);
+			free(seq);
 	}
-	
+
+	rewind(f);
+	return ;
+}
+
+char* carrega_do_arquivo(int n,FILE *filename){
+	char *seq;
+	seq = (char*)malloc((n+1)*sizeof(char));
+	if(!feof(filename)){
+		fgets(seq,n+1,filename);
+		return seq;
+	}else return NULL;
+}
+
+void carregar_pilha(pilha *p,char *filename){
+	FILE *f;
+	f = fopen(filename,"r");
+
+
 }
 
 int tamanho_da_pilha(pilha *tp){

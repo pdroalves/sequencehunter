@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
 #include "estruturas.h"
 #include "log.h"
 #include "processing_data.h"
@@ -60,17 +60,19 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 	return 1;
 }
 int open_file(char **entrada,int qnt){
-	int checks[qnt];
+	int *checks;
 	int i;
 	int abertos = 0;
 	int tmp = 0;
 	int seqs_validas;
+
+	checks = (int*)malloc(qnt*sizeof(int));
 	
 	f = (FILE**)malloc(qnt*sizeof(FILE*));
 	while(files < qnt && abertos+1 < qnt){
-		f[files] = fopen(entrada[abertos+1],"r+");
+		f[files] = fopen(entrada[abertos+1],"r");
 		checks[files] = f[files]!=NULL;
-		if(checks[files] == 0){
+		if(!checks[files]){
 			printf("Arquivo %s não pode ser aberto.\n",entrada[files+1]);
 			abertos++;
 		}else{
@@ -81,9 +83,7 @@ int open_file(char **entrada,int qnt){
 		}
 	}
 	
-	for(i=0;i<qnt;i++) tmp += checks[files];
-
-	return tmp==qnt;
+	return files;
 }
 
 int check_sequencias_validas(){
@@ -111,7 +111,7 @@ void get_setup(int *n){
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
-	while(check_seq_valida(tmp)==0) fscanf(f[0],"%s",tmp);		
+	while(!check_seq_valida(tmp)) fscanf(f[0],"%s",tmp);		
 	rewind(f[0]);
 	*n = (int)(strlen(tmp));
 	free(tmp);
@@ -141,7 +141,7 @@ void fill_buffer(Buffer *b,int n){
 	hold = (char*)malloc(TAM_MAX*sizeof(char));
 	//Enche buffer
 	for(j=0;j < files && i < b->capacidade;j++){		
-		while(i < b->capacidade && feof(f[j]) == 0){
+		while(i < b->capacidade && !feof(f[j])){
 				fscanf(f[j],"%s",hold);
 				if(check_seq_valida(hold)){
 					strcpy(b->seq[i],hold);
@@ -153,7 +153,7 @@ void fill_buffer(Buffer *b,int n){
 			b->load--;
 			i = b->load;
 		}
-		if(feof(f[files-1]) == 1 && b->load == 0) b->load = -1;//Não há mais arquivos
+		if(feof(f[files-1]) && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
 	//if(hold != NULL)
 	//free(hold);

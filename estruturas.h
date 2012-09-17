@@ -9,6 +9,7 @@
 #ifndef ESTRUTURAS_H
 #define ESTRUTURAS_H
 
+
 struct vertice_grafo{
 		char vertice;
 		int *s_marcas;
@@ -67,4 +68,6 @@ struct resultfiles{
 	FILE *file10000;
 };
 typedef struct resultfiles ResultFiles;
+
+
 #endif

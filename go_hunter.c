@@ -38,8 +38,8 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos,gboolean disable_cuda,gboolean sil,gboolean verb){
 	verbose = verb;
 	sil = silent;
-if(CUDA)
-	auxCUDA(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
+	if(CUDA){}
+	//auxCUDA(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
 else
 	auxNONcuda(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
 return;
@@ -80,7 +80,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 return;	
 }
 	
-void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
+/*void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
 	printf("CUDA Mode.\n");
 	int n;//Elementos por sequência
 	vgrafo *d_a;
@@ -143,7 +143,7 @@ void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 	cudaFree(d_senso);
 	cudaFree(d_antisenso);
 	return;
-}
+}*/
 
 void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 	//Recebe um vetor de caracteres com o padrão a ser procurado
@@ -157,7 +157,7 @@ void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d
 	return;
 }
 
-void load_buffer_CUDA(Buffer *b,char** s,int n){
+/*void load_buffer_CUDA(Buffer *b,char** s,int n){
 	int i;
 	
 	if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
@@ -179,6 +179,7 @@ void load_buffer_CUDA(Buffer *b,char** s,int n){
 	
 	return;
 }
+*/
 
 void load_buffer_NONCuda(Buffer *b,int n){
 	
@@ -206,6 +207,13 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	int blocoV = blocos - bloco1 - bloco2+1;
 	int iter;
 	int buffer_size_NC = 5120;
+	int i;
+	int tam;
+	int razao;
+	int p=0;
+	pilha *novo;
+	int th_id;
+	int nthreads;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
@@ -232,20 +240,16 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			
 		}
 		
-			int i;
-			int tam;
-			int razao;
-			int p=0;
-			pilha *novo;
-			const int th_id = omp_get_thread_num()-1;
-			const int nthreads = omp_get_num_threads()-1;
+			
+			th_id = omp_get_thread_num()-1;
+			nthreads = omp_get_num_threads()-1;
 	
 			while( buffer_flag == 1 && th_id != -1){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 			while(buffer.load != -1 && th_id != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer	
-					busca(bloco1,bloco2,blocos,buffer,th_id,nthreads,d_a,d_c,d_g,d_t);//Kernel de busca
+					busca(bloco1,bloco2,blocos,&buffer,th_id,nthreads,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer.load;
 					p += tam;
@@ -323,7 +327,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	return;
 }
 
-void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
+/*void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
 	
 	Buffer buffer;
 	char **s;
@@ -404,6 +408,6 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 		}
 	}
 	return;
-}
+}*/
 
 

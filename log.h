@@ -1,4 +1,7 @@
 /* This file was automatically generated.  Do not edit! */
+
+#ifndef LOG_H
+#define LOG_H
 void prepareLog();
 void print_time();
 void printToLog_Fim(int tiro,int raio,int fim,float x,float z);
@@ -16,3 +19,4 @@ void print_resultados(lista_ligada** resultados);
 void print_tempo(float tempo);
 void print_sequencias_validas(int seqs_validas);
 void closeLog();
+#endif

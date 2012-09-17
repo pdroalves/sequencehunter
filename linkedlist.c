@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <omp.h>
 #include "estruturas.h"
 #include "log.h"
 #include "operacoes.h"
@@ -119,15 +118,9 @@ lista_ligada** ordena_pares(lista_ligada* l){
 	}
 	
 	//Ordena
-	#pragma omp parallel shared(vetor) shared(tam)
-	{
-		int razao;
-		th_id = omp_get_thread_num();
-		nthreads = omp_get_num_threads();
-		razao = tam/nthreads;
 		
-		quicksort(vetor,th_id*razao,(th_id+1)*razao-1);
-	}
+	quicksort(vetor,0,tam-1);
+	
 	vetor[tam] = (lista_ligada*)malloc(sizeof(lista_ligada));
 	vetor[tam]->pares = -1;
 	return vetor;

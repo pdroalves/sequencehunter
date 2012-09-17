@@ -49,21 +49,21 @@ windows:cmd_win gui_win
 
 ##Linux##################################
 #########################################
-cmd_linux:shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o build_control
+cmd_linux:shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o build_control
 	./build_control version
-	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
+	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
-gui_linux:shunter-gui.o_linux log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
-	$(CC_LINUX) -g shunter-gui.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
+gui_linux:shunter-gui.o_linux log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o
+	$(CC_LINUX) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
 
 #########################################
 #Windows#################################
 #########################################
-cmd_win:shunter-cmd.o_win log.o_win load_data.o_win aux.o_win operacoes.o_win busca.o_win pilha.o_win processing_data.o_win linkedlist.o_win cuda_functions.o_win
-	$(CUDA_CC) -o shunter-cmd.exe shunter-cmd.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o -lm -O0 $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_WIN)
+cmd_win:shunter-cmd.o_win log.o_win load_data.o_win go_hunter.o_win operacoes.o_win busca.o_win pilha.o_win processing_data.o_win linkedlist.o_win cuda_functions.o_win
+	$(CUDA_CC) -o shunter-cmd.exe shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o -lm -O0 $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_WIN)
 
-gui_win:shunter-gui.o_win log.o_win load_data.o_win aux.o_win operacoes.o_win busca.o_win pilha.o_win processing_data.o_win linkedlist.o_win cuda_functions.o_win
-	$(CC_WIN) -g shunter-gui.o log.o load_data.o aux.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o -lm -O0 $(GLIB_LIBS_WIN) $(GLIB_LIBS_WIN) $(GTK_CFLAGS_WIN) $(GTK_LIBS_WIN) -o shunter-gui.exe $(OPENMP) $(CUDA) 
+gui_win:shunter-gui.o_win log.o_win load_data.o_win go_hunter.o_win operacoes.o_win busca.o_win pilha.o_win processing_data.o_win linkedlist.o_win cuda_functions.o_win
+	$(CC_WIN) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o -lm -O0 $(GLIB_LIBS_WIN) $(GLIB_LIBS_WIN) $(GTK_CFLAGS_WIN) $(GTK_LIBS_WIN) -o shunter-gui.exe $(OPENMP) $(CUDA) 
 
 #########################################
 #Mac#####################################
@@ -81,8 +81,8 @@ shunter-gui.o_linux:shunter-gui.c
 shunter-cmd.o:shunter-cmd.c
 	$(CC_LINUX) -g -c shunter-cmd.c -o shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
 	
-aux.o:aux.c
-	$(CC_LINUX) -g -c aux.c -o aux.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+go_hunter.o:go_hunter.c
+	$(CC_LINUX) -g -c go_hunter.c -o go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 load_data.o:load_data.c
 	$(CC_LINUX) -g -c load_data.c -o load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
@@ -109,8 +109,8 @@ shunter-gui.o_win:shunter-gui.c
 shunter-cmd.o_win:shunter-cmd.c
 	$(CC_WIN64) -g -c shunter-cmd.c -o shunter-cmd.o $(GLIB_CFLAGS_WIN) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
 	
-aux.o_win:aux.c
-	$(CC_WIN64) -g -c aux.c -o aux.o $(GLIB_CFLAGS_WIN) $(OPENMP_WIN) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+go_hunter.o_win:go_hunter.c
+	$(CC_WIN64) -g -c go_hunter.c -o go_hunter.o $(GLIB_CFLAGS_WIN) $(OPENMP_WIN) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 load_data.o_win:load_data.c
 	$(CC_WIN64) -g -c load_data.c -o load_data.o $(GLIB_CFLAGS_WIN)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++

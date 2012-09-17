@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <glib.h>
 #include "estruturas.h"
-
 void prepareLog();
 void print_time();
 void printString(char*,char*);

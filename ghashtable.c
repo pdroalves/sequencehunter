@@ -25,14 +25,27 @@
 
 value* atualizar_parametro(value *novo, value *velho);
 
+
+void free_key(gchar *seq){
+	free(seq);
+	return;
+}
+
+void free_value(value *valor){
+	free(valor);
+	return;
+}
+
 GHashTable* criar_ghash_table(){
 	//return g_hash_table_new(g_str_hash,g_str_equal,free,free);
-	return g_hash_table_new(g_str_hash,g_str_equal);
+	return g_hash_table_new_full(g_str_hash,g_str_equal,free_key,free_value);
 }
 
 value* criar_value(int pares,int qsenso,int qasenso,float qnt_relativa){
 	value *valor;
 	valor = (value*)malloc(sizeof(value));
+	while(valor == NULL)
+		valor = (value*)malloc(sizeof(value));
 	valor->pares = pares;
 	valor->qsenso = qsenso;
 	valor->qasenso = qasenso;
