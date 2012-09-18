@@ -2,9 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
+#include "ghashtable.h"
 #include "estruturas.h"
 #include "log.h"
-#include "ghashtable.h"
 #include "pilha.h"
 #define TAM_MAX 10000
 

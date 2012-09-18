@@ -1,6 +1,7 @@
 #ifndef GHASHTABLE_H
 #define GHASHTABLE_H
-
+#include <glib.h>
+#include "estruturas.h"
 GHashTable* criar_ghash_table();
 value* criar_value(int pares,int qsenso,int qasenso,float qnt_relativa);
 void adicionar_elemento(GHashTable *hash_table,gchar *seq,value *novo_parametro);
