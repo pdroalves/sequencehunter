@@ -68,6 +68,4 @@ struct resultfiles{
 	FILE *file10000;
 };
 typedef struct resultfiles ResultFiles;
-
-
 #endif

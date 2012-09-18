@@ -78,12 +78,20 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	int as_tipos = 0;
 	int retorno;
 	char *hold;
+<<<<<<< HEAD
 	int i;
 	//GTimer *timer;
+=======
+	GTimer *timer;
+>>>>>>> GlibHashTable
 	
 	//timer = g_timer_new();
 	hash_table = criar_ghash_table();
+<<<<<<< HEAD
 	//g_timer_start(timer);
+=======
+	g_timer_start(timer);
+>>>>>>> GlibHashTable
 	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
 	
 	sensos = fopen("tmp_sensos","w+");
@@ -103,11 +111,19 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 			s_tipos++;
 		hold = carrega_do_arquivo(n,sensos);
 	}
+<<<<<<< HEAD
 	//g_timer_stop(timer);
 	//printf("Pilha de sensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
+=======
+	g_timer_stop(timer);
+	printf("Pilha de sensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	g_timer_reset(timer);
+	g_timer_start(timer);
+>>>>>>> GlibHashTable
 	//Processa antisensos
 	hold = carrega_do_arquivo(n,antisensos);
 	while( hold != NULL){
@@ -122,6 +138,9 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//g_timer_stop(timer);
 	//printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
+	g_timer_stop(timer);
+	printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
 	//print_all(hash_table);
 	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
@@ -130,14 +149,20 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	
 	printf("Procurando sensos despareados...\n");
 	
+<<<<<<< HEAD
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
+=======
+	g_timer_reset(timer);
+	g_timer_start(timer);
+>>>>>>> GlibHashTable
 	desp = recupera_despareados_ht(hash_table);
 	print_despareadas_seqs(desp->sensos,desp->antisensos);
 	printf("Sensos despareados: %d.\n",desp->sensos);
 	printf("Antisensos despareados: %d.\n",desp->antisensos);
 	printf("Processando.\n");
 	
+<<<<<<< HEAD
 	//g_timer_stop(timer);
 	//printf("Sequências despareadas encontradas em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
@@ -169,6 +194,38 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//printf("Sequências ordenadas em %f ms.\n",g_timer_elapsed(timer,NULL));
 	//imprimir_sensos(resultados);
 	
+=======
+	g_timer_stop(timer);
+	printf("Sequências despareadas encontradas em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	g_timer_reset(timer);
+	g_timer_start(timer);
+	qnt_relativa_ht(hash_table);
+	g_timer_stop(timer);
+	printf("Calculo da distribuição feita em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	//Salva resultado:
+	g_timer_reset(timer);
+	g_timer_start(timer);
+	write_ht_to_file(hash_table);
+	g_timer_stop(timer);
+	printf("Resultados salvos em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	//LinkedList
+	g_timer_reset(timer);
+	g_timer_start(timer);	
+	l = converter_para_lista_ligada(hash_table);
+	g_timer_stop(timer);
+	printf("Conversão para Linked List em %f ms.\n",g_timer_elapsed(timer,NULL));
+	
+	g_timer_reset(timer);
+	g_timer_start(timer);
+	resultados = ordena_pares(l);
+	printf("Frequencias estimadas:\n");
+	g_timer_stop(timer);
+	printf("Sequências ordenadas em %f ms.\n",g_timer_elapsed(timer,NULL));
+	imprimir_sensos(resultados);
+>>>>>>> GlibHashTable
 	
 	//g_timer_destroy(timer);
 	
@@ -178,9 +235,19 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 		i++;
 	}
 	free(resultados[i]);
+<<<<<<< HEAD
 	free(resultados);	*/
 	//free(timer);
 	return NULL;
+=======
+	free(resultados);	
+	
+	destroy(p_sensos);
+	destroy(p_antisensos);
+	//g_timer_destroy(timer);
+	//free(timer);
+	return l;
+>>>>>>> GlibHashTable
 }
 
 void swap(lista_ligada** a, lista_ligada** b) {
