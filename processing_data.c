@@ -36,7 +36,7 @@ int get_sequencias_validas(FILE **f,int files){
 	return seqs_validas;
 }
 
-	int check_seq_valida(char *p){
+int check_seq_valida(char *p){
 	int i;
 	int n = strlen(p);
 	
@@ -97,7 +97,7 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	
 	//Processa sensos
 	hold = carrega_do_arquivo(n,sensos);
-	while(hold != NULL){
+	while(hold != NULL && check_seq_valida(hold)){
 		retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 		if(retorno)
 			s_tipos++;
@@ -110,7 +110,7 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//g_timer_start(timer);
 	//Processa antisensos
 	hold = carrega_do_arquivo(n,antisensos);
-	while( hold != NULL){
+	while( hold != NULL && check_seq_valida(hold)){
 		retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 		if(retorno)
 			as_tipos++;

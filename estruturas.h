@@ -24,6 +24,7 @@ typedef struct vertice_grafo vgrafo;
 struct pilha{
 	//Implementação usando listas ligadas
 	char *seq;
+	int size;
 	struct pilha *prox;
 };
 typedef struct pilha pilha;

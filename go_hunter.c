@@ -10,7 +10,7 @@
 #include <omp.h> 
 #include <glib.h>
 #include <string.h>
-#include "cuda.h"
+#include "cuda.h"X
 #include "cuda_runtime_api.h"
 #include "estruturas.h"
 #include "load_data.h"
@@ -20,6 +20,9 @@
 #include "pilha.h"
 
 #define buffer_size 1024 //Capacidade máxima do buffer
+#define LIMITE_PILHA 10000
+const char tmp_s_name[11] = "tmp_sensos";
+const char tmp_as_name[15] = "tmp_antisensos";
 __constant__ char *d_buffer[buffer_size];
 int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
 gboolean verbose;
@@ -221,9 +224,14 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	//tmp = (char*)malloc(blocoV*sizeof(char));
     
 			
-	#pragma omp parallel num_threads(2) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
+	#pragma omp parallel num_threads(3) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
 	{	
-		#pragma omp master
+		th_id = omp_get_thread_num()-1;
+		nthreads = omp_get_num_threads()-1;
+		
+		#pragma omp sections
+		{
+		#pragma omp section
 		{
 			while(buffer.load != -1){//Looping até o final do buffer
 				//printf("%d.\n",buffer.load);
@@ -239,11 +247,38 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			///////////////////////////////////	
 			
 		}
-		
+		#pragma omp section
+		{
+		  FILE *tmp_sensos;
+		  FILE *tmp_antisensos;
+		  
+		  tmp_sensos = fopen(tmp_s_name,"w");
+		  tmp_antisensos = fopen(tmp_as_name,"w");
+		  
+		  while( buffer_flag == 1 && th_id != -1){
+			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
-			th_id = omp_get_thread_num()-1;
-			nthreads = omp_get_num_threads()-1;
-	
+
+		  while(buffer.load != -1){
+			  ///////////////////////////////////
+			  buffer_flag = 1;//Sinal fechado////
+			  ///////////////////////////////////	
+		    if(tamanho_da_pilha(p_sensos) > LIMITE_PILHA){
+		      despejar_seq(desempilha(p_sensos),tmp_sensos);
+		    }
+		    if(tamanho_da_pilha(p_antisensos) > LIMITE_PILHA){
+		      despejar_seq(desempilha(p_antisensos),tmp_antisensos);
+		    }
+		    ///////////////////////////////////
+			buffer_flag = 0;//Sinal aberto////
+			///////////////////////////////////	
+		  }
+
+		  fclose(tmp_sensos);
+		  fclose(tmp_antisensos);
+		}
+		#pragma omp section
+		{
 			while( buffer_flag == 1 && th_id != -1){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
@@ -255,13 +290,14 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					p += tam;
 					//printf("%d\n",p);
 					razao = tam / nthreads;
-					for(i = th_id*razao; i < th_id + razao;i++){//Copia sequências senso e antisenso encontradas
+					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(buffer.resultado[i]){
 							case 1:
 								tmp = buffer.seq[i];
 								if(verbose == TRUE && silent != TRUE)	
 									printf("S: %s - %d\n",tmp,p);
 								novo = criar_elemento_pilha(tmp);
+								while(buffer_flag == 1){ }//Se a pilha estiver sendo esvaziada, aguarda
 								empilha(p_sensos,novo);
 								//printString("Senso:",tmp);
 								buffer.load--;
@@ -271,6 +307,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								if(verbose == TRUE && silent != TRUE)
 									printf("N: %s - %d\n",tmp,p);
 								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
+								while(buffer_flag == 1){ }//Se a pilha estiver sendo esvaziada, aguarda
 								empilha(p_antisensos,novo);
 								//printString("Antisenso:",tmp);
 								buffer.load--;
@@ -319,8 +356,10 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					}//Espera o buffer ser carregado
 				
 			}
+		}
 		
 	}
+}
 	
 	//printf("Iterações executadas: %d.\n",iter);
 	//free(tmp);

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 #include "estruturas.h"
 #include "operacoes.h"
 
@@ -28,13 +29,14 @@ pilha criar_pilha(){
 	pilha cabeca;
 	cabeca.seq = (char*)malloc(5*sizeof(char));
 	strcpy(cabeca.seq,"Head");
+	cabeca.size=0;
 	cabeca.prox = NULL;
 	return cabeca;
 }
 
 pilha* criar_elemento_pilha(char *seq){
 	char *new_seq;
-	pilha *elemento;
+	pilha elemento;
 	int seq_size;
     int i;
     
@@ -48,19 +50,17 @@ pilha* criar_elemento_pilha(char *seq){
 	    seq_size = strlen(seq);
    }
    
-	elemento = (pilha*) malloc (sizeof (pilha));
- 
-	while(elemento == NULL){
-		elemento = (pilha*) malloc (sizeof (pilha));
-	}
-   elemento->seq = new_seq;
+	elemento.seq = new_seq;
 	
-	return elemento;
+	return &elemento;
 }
 
 void destroy(pilha *tp){
-	while(tamanho_da_pilha(tp) > 0)
-		desempilha(tp);
+	char *seq;
+	while(tamanho_da_pilha(tp) > 0){
+		seq = desempilha(tp);
+		if(seq != NULL) free(seq);
+	}
 	return;
 }
 
@@ -68,6 +68,7 @@ void destroy(pilha *tp){
 void empilha (pilha *tp,pilha *novo) { 
    novo->prox  = tp->prox;
    tp->prox = novo; 
+   tp->size++;
    //printf("Elemento %s empilhado.\n",novo->seq);
    return;
 }
@@ -84,7 +85,9 @@ void empilhar_pilha(pilha *A,pilha *B){
 	
 	//Linka as duas listas
 	p->prox = B->prox;
+	A->size+=B->size;
 	//free(B);
+	
 }
 
 // Remove um elemento da pilha tp.
@@ -94,20 +97,21 @@ char* desempilha (pilha *tp) {
    pilha *p;
    char *seq;
    int seq_size;
-   
+   #pragma omp atomic
+   {
    p = tp->prox;
    
    if(p == NULL){
-		printf("Pilha vazia.\n");
-		free(tp);
+		// Pilha vazia
 	    return NULL;
    }else{
 	   //Encontra o tamanho da sequência
-	      seq = p->seq;
-		   tp->prox = p->prox;  
-		   return seq; 
+		seq = p->seq;
+		tp->prox = p->prox;  
+		tp->size--;
+		return seq; 
 	}	
-	
+}
 }
 
 void despejar(pilha* p,FILE *f){
@@ -120,6 +124,13 @@ void despejar(pilha* p,FILE *f){
 
 	rewind(f);
 	return ;
+}
+
+void despejar_seq(char *seq,FILE *f){
+	fputs(seq,f);
+	//if(seq != NULL)
+		//free(seq);
+	return;
 }
 
 char* carrega_do_arquivo(int n,FILE *filename){
@@ -139,18 +150,7 @@ void carregar_pilha(pilha *p,char *filename){
 }
 
 int tamanho_da_pilha(pilha *tp){
-	int p;
-	pilha *tmp;
-
-	p = 0;
-	tmp = tp;
-
-	while(tmp->prox != NULL){
-		tmp = tmp->prox;
-		p++;
-	}
-
-	return p;
+	return tp->size;
 }
 
 int pilha_vazia(pilha *tp){
