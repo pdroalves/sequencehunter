@@ -57,13 +57,16 @@ gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro){
 	//Retorna TRUE se a key ainda não existir na hast_table. FALSE caso contrário.
 	value* velho_parametro;
 	
-	velho_parametro = g_hash_table_lookup(hash_table,seq);
-	if(velho_parametro == NULL){
-		g_hash_table_insert(hash_table,seq,novo_parametro);
-		return TRUE;
-	}else{
-		g_hash_table_insert(hash_table,seq,atualizar_parametro(novo_parametro,velho_parametro));
-		return FALSE;
+	#pragma omp atomic
+	{
+		velho_parametro = g_hash_table_lookup(hash_table,seq);
+		if(velho_parametro == NULL){
+			g_hash_table_insert(hash_table,seq,novo_parametro);
+			return TRUE;
+		}else{
+			g_hash_table_insert(hash_table,seq,atualizar_parametro(novo_parametro,velho_parametro));
+			return FALSE;
+		}
 	}
 }
 void print_all(GHashTable *hash_table){

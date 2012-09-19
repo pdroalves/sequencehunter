@@ -40,6 +40,8 @@ int check_seq_valida(char *p){
 	int i;
 	int n = strlen(p);
 	
+	if(n == 0) return 0;
+	
 	for(i = 0; i < n;i++){
 			switch(p[i]){
 				case 'A':
@@ -86,22 +88,25 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//g_timer_start(timer);
 	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
 	
-	sensos = fopen("tmp_sensos","w+");
-	antisensos = fopen("tmp_antisensos","w+");
+	sensos = fopen("tmp_sensos","r");
+	antisensos = fopen("tmp_antisensos","r");
 
 	//Descarrega tudo para o HD e limpa a memória
-	despejar(p_sensos,sensos);
+	/*despejar(p_sensos,sensos);
 	despejar(p_antisensos,antisensos);
 	destroy(p_sensos);
 	destroy(p_antisensos);
-	
+	*/
 	//Processa sensos
-	hold = carrega_do_arquivo(n,sensos);
-	while(hold != NULL && check_seq_valida(hold)){
-		retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-		if(retorno)
-			s_tipos++;
+	#pragma omp parallel shared(n) shared(sensos) shared(hash_table) shared(s_tipos)
+	{  
 		hold = carrega_do_arquivo(n,sensos);
+		while(hold != NULL && check_seq_valida(hold)){
+			retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
+			if(retorno)
+				s_tipos++;
+			hold = carrega_do_arquivo(n,sensos);
+		}
 	}
 	//g_timer_stop(timer);
 	//printf("Pilha de sensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
@@ -109,14 +114,16 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
 	//Processa antisensos
-	hold = carrega_do_arquivo(n,antisensos);
-	while( hold != NULL && check_seq_valida(hold)){
-		retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-		if(retorno)
-			as_tipos++;
+	#pragma omp parallel shared(n) shared(antisensos) shared(hash_table) shared(as_tipos)
+	{
 		hold = carrega_do_arquivo(n,antisensos);
+		while( hold != NULL && check_seq_valida(hold)){
+			retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
+			if(retorno)
+				as_tipos++;
+			hold = carrega_do_arquivo(n,antisensos);
+		}
 	}
-
 	fclose(sensos);
 	fclose(antisensos);
 	//g_timer_stop(timer);

@@ -65,8 +65,8 @@
 	  int bv_size;
 	  int is_cuda_available = 0;
 	  int bibliotecas_validas;
-	  pilha p_sensos;
-	  pilha p_antisensos;
+	  pilha* p_sensos;
+	  pilha* p_antisensos;
 
 	  
 	  //##########################
@@ -157,8 +157,8 @@
 		printString(NULL,"Forçando modo OpenMP.");
 		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose);
-	processar(bv_size,&p_sensos,&p_antisensos);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,p_sensos,p_antisensos,disable_cuda,silent,verbose);
+	processar(bv_size,p_sensos,p_antisensos);
 	  
 	 close_file();
 	 free(c);

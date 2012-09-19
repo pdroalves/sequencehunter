@@ -82,7 +82,7 @@ int open_file(char **entrada,int qnt){
 			abertos++;
 		}
 	}
-	
+	free(checks);
 	return files;
 }
 
@@ -121,7 +121,11 @@ void get_setup(int *n){
 void prepare_buffer(Buffer *b,int c){
 	int i;
 	int n;
+	char* tamanho_do_buffer;
+	
 	get_setup(&n);
+	tamanho_do_buffer = itoaa(c);
+	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
 	b->resultado = (int*)malloc(c*sizeof(int));
@@ -129,7 +133,9 @@ void prepare_buffer(Buffer *b,int c){
 	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
-	printString("Buffer configurado para: ",itoaa(c));
+	printString("Buffer configurado para: ",tamanho_do_buffer);
+	
+	free(tamanho_do_buffer);
 	return;
 }
 
@@ -156,7 +162,7 @@ void fill_buffer(Buffer *b,int n){
 		if(feof(f[files-1]) && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
 	//if(hold != NULL)
-	//free(hold);
+	free(hold);
 	return;
 }
 

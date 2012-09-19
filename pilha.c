@@ -19,40 +19,42 @@ char* desempilha(pilha *tp);
 int conta_posicoes(char *seq);
 pilha* criar_elemento_pilha(char*);
 void empilha(pilha*,pilha*);
-pilha criar_pilha();
+pilha* criar_pilha();
 int tamanho_da_pilha(pilha*);
 void destroy(pilha *tp);
 int pilha_vazia(pilha *tp);
 
 
-pilha criar_pilha(){
-	pilha cabeca;
-	cabeca.seq = (char*)malloc(5*sizeof(char));
-	strcpy(cabeca.seq,"Head");
-	cabeca.size=0;
-	cabeca.prox = NULL;
+pilha* criar_pilha(){
+	pilha *cabeca;
+	cabeca = malloc(sizeof(pilha));
+	cabeca->seq = malloc(5*sizeof(char)); 
+	strcpy(cabeca->seq,"Head");
+	cabeca->size=0;
+	cabeca->prox = NULL;
 	return cabeca;
 }
 
 pilha* criar_elemento_pilha(char *seq){
 	char *new_seq;
-	pilha elemento;
+	pilha *elemento;
 	int seq_size;
     int i;
     
    seq_size = strlen(seq);
-   new_seq = (char*)malloc((seq_size+1)*sizeof(char));
-   strcpy(new_seq,seq);
-   
    for(i=0;i<seq_size && check_base_valida(seq[i]);i++);
    if(i != seq_size){
 	    seq[i] = '\0';
 	    seq_size = strlen(seq);
-   }
+   }  
    
-	elemento.seq = new_seq;
+	elemento = malloc(sizeof(pilha));
+	elemento->seq = (char*)malloc((seq_size+1)*sizeof(char));
+	strcpy(elemento->seq,seq);
+	elemento->size = 0;
+	elemento->prox = NULL;
 	
-	return &elemento;
+	return elemento;
 }
 
 void destroy(pilha *tp){
@@ -99,27 +101,27 @@ char* desempilha (pilha *tp) {
    int seq_size;
    #pragma omp atomic
    {
-   p = tp->prox;
-   
-   if(p == NULL){
-		// Pilha vazia
-	    return NULL;
-   }else{
-	   //Encontra o tamanho da sequência
-		seq = p->seq;
-		tp->prox = p->prox;  
-		tp->size--;
-		return seq; 
+	   p = tp->prox;
+	   
+	   tp->size--;
+	   if(p == NULL){
+			// Pilha vazia
+			return NULL;
+	   }else{
+		   //Encontra o tamanho da sequência
+			seq = p->seq;
+			tp->prox = p->prox;  
+			return seq; 
+		}	
 	}	
-}
 }
 
 void despejar(pilha* p,FILE *f){
 	char *seq;	
-	while(pilha_vazia(p)){
+	while(!pilha_vazia(p)){
 			seq = desempilha(p);
 			fputs(seq,f);
-			free(seq);
+			//free(seq);
 	}
 
 	rewind(f);
@@ -127,19 +129,23 @@ void despejar(pilha* p,FILE *f){
 }
 
 void despejar_seq(char *seq,FILE *f){
-	fputs(seq,f);
-	//if(seq != NULL)
-		//free(seq);
+	if(seq != NULL){
+		fputs(seq,f);
+		free(seq);
+	}
 	return;
 }
 
 char* carrega_do_arquivo(int n,FILE *filename){
 	char *seq;
 	seq = (char*)malloc((n+1)*sizeof(char));
-	if(!feof(filename)){
-		fgets(seq,n+1,filename);
-		return seq;
-	}else return NULL;
+	#pragma omp atomic
+	{
+		if(!feof(filename)){
+			fgets(seq,n+1,filename);
+			return seq;
+		}else return NULL;
+	}
 }
 
 void carregar_pilha(pilha *p,char *filename){
@@ -154,6 +160,6 @@ int tamanho_da_pilha(pilha *tp){
 }
 
 int pilha_vazia(pilha *tp){
-	if(tp->prox == NULL) return 0;//Vazia
-	return 1;//Não vazia
+	if(tp->prox == NULL) return 1;//Vazia
+	return 0;//Não vazia
 }
