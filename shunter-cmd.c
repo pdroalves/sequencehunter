@@ -29,6 +29,7 @@
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
 	gboolean check_build = FALSE;
+	gboolean memory_save = TRUE;
 	//###############
 	static GOptionEntry entries[] = 
 	  {
@@ -38,6 +39,7 @@
 		{ "fromFile", 'f', 0, G_OPTION_ARG_NONE, &fromFile, "Carrega a configuração de busca do arquivo shset.dat", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
+		{ "memorysaving", 'm', 0, G_OPTION_ARG_NONE, &memory_save, "Economiza memória RAM a custo do desempenho", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
 		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o número da build", NULL },
 		
@@ -155,9 +157,9 @@
 	if(disable_cuda){
 		printf("Forçando modo OpenMP.\n");
 		printString(NULL,"Forçando modo OpenMP.");
-		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose); 
+		aux(0,c,b1_size,b2_size,c_size,p_sensos,p_antisensos,disable_cuda,silent,verbose,memory_save); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,p_sensos,p_antisensos,disable_cuda,silent,verbose);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,p_sensos,p_antisensos,disable_cuda,silent,verbose,memory_save);
 	processar(bv_size,p_sensos,p_antisensos);
 	  
 	 close_file();

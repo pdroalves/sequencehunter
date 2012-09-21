@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <omp.h>
 #include "estruturas.h"
 #include "log.h"
 #include "linkedlist.h"
@@ -56,18 +57,19 @@ value* criar_value(int pares,int qsenso,int qasenso,float qnt_relativa){
 gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro){
 	//Retorna TRUE se a key ainda não existir na hast_table. FALSE caso contrário.
 	value* velho_parametro;
-	
-	#pragma omp atomic
+	gboolean answer;
+	#pragma omp critical
 	{
 		velho_parametro = g_hash_table_lookup(hash_table,seq);
 		if(velho_parametro == NULL){
 			g_hash_table_insert(hash_table,seq,novo_parametro);
-			return TRUE;
+			answer = TRUE;
 		}else{
 			g_hash_table_insert(hash_table,seq,atualizar_parametro(novo_parametro,velho_parametro));
-			return FALSE;
+			answer = FALSE;
 		}
 	}
+	return answer;
 }
 void print_all(GHashTable *hash_table){
 	GHashTableIter iter;

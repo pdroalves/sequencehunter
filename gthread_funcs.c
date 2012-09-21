@@ -47,16 +47,16 @@ void* iterator(void *args){
 	vgrafo *g;
 	vgrafo *t;
 	char *tmp;
-	pilha p_sensos;
-	pilha p_antisensos;
+	pilha *p_sensos;
+	pilha *p_antisensos;
 	pilha *novo;
 	Buffer *buffer;
 	gboolean verbose;
 	gboolean silent;
 
 	//Carrega pilhas
-	  p_sensos = criar_pilha();
-	  p_antisensos = criar_pilha();
+	p_sensos = criar_pilha();
+	p_antisensos = criar_pilha();
 	
 	//Abre pacote
 	ip = (IteratorPack*) args;

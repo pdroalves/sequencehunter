@@ -20,8 +20,6 @@ int files = 0;
 gboolean check_seqs = FALSE;
 /* converts integer into string */
 
-
-
 char* itoaa(unsigned long num) {
         char* retstr = (char*)calloc(12, sizeof(char));
         if (sprintf(retstr, "%ld", num) > 0) {
@@ -108,12 +106,15 @@ void close_file(){
 
 void get_setup(int *n){
 	char *tmp;
+	
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
+	
 	while(!check_seq_valida(tmp)) fscanf(f[0],"%s",tmp);		
 	rewind(f[0]);
 	*n = (int)(strlen(tmp));
+	
 	free(tmp);
 	return;
 }
@@ -124,15 +125,15 @@ void prepare_buffer(Buffer *b,int c){
 	char* tamanho_do_buffer;
 	
 	get_setup(&n);
-	tamanho_do_buffer = itoaa(c);
 	
 	b->capacidade = c;
-	b->seq = (char**)malloc(c*sizeof(char*));
+	b->seq = (char*)malloc(c*sizeof(char*));
 	b->resultado = (int*)malloc(c*sizeof(int));
+	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+3)*sizeof(char));
 	
-	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
+	tamanho_do_buffer = itoaa(c);
 	printString("Buffer configurado para: ",tamanho_do_buffer);
 	
 	free(tamanho_do_buffer);
@@ -144,7 +145,7 @@ void fill_buffer(Buffer *b,int n){
 	int j = 0;
 	char *hold;
 	
-	hold = (char*)malloc(TAM_MAX*sizeof(char));
+	hold = malloc(TAM_MAX*sizeof(char));
 	//Enche buffer
 	for(j=0;j < files && i < b->capacidade;j++){		
 		while(i < b->capacidade && !feof(f[j])){
@@ -161,7 +162,6 @@ void fill_buffer(Buffer *b,int n){
 		}
 		if(feof(f[files-1]) && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
-	//if(hold != NULL)
 	free(hold);
 	return;
 }
