@@ -58,6 +58,7 @@ gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro){
 	//Retorna TRUE se a key ainda não existir na hast_table. FALSE caso contrário.
 	value* velho_parametro;
 	gboolean answer;
+	
 	#pragma omp critical
 	{
 		velho_parametro = g_hash_table_lookup(hash_table,seq);

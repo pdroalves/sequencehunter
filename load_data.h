@@ -11,3 +11,5 @@ void get_setup(int *);
 int check_gpu_mode();
 int check_sequencias_validas();
 extern gboolean check_seqs;
+void despejar_seq(char *seq,FILE *f);
+char* carrega_do_arquivo(int n,FILE *filename);

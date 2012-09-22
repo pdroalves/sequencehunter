@@ -14,11 +14,7 @@ CUDA_ARCH = -arch=sm_20
 
 INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
 
-all:windows linux
-
-linux:cmd_linux gui_linux
-
-windows:cmd_win gui_win
+all:cmd gui
 
 #########################################
 ##Executaveis############################
@@ -26,12 +22,12 @@ windows:cmd_win gui_win
 
 ##Linux##################################
 #########################################
-cmd_linux:shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
+cmd:shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
 	./build_control version
-	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
+	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
-gui_linux:shunter-gui.o_linux log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o
-	$(CC_LINUX) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o pilha.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
+gui:shunter-gui.o_linux log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o
+	$(CC_LINUX) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
 
 #########################################
 ############ GCC e MingWW ###############
@@ -63,8 +59,8 @@ linkedlist.o:linkedlist.c
 processing_data.o:processing_data.c
 	$(CC_LINUX) -g -c processing_data.c -o processing_data.o $(GLIB_CFLAGS)
 	
-pilha.o:pilha.c
-	$(CC_LINUX) -g -c pilha.c -o pilha.o $(GLIB_CFLAGS)
+fila.o:fila.c
+	$(CC_LINUX) -g -c fila.c -o fila.o $(GLIB_CFLAGS)
 	
 ghashtable.o:ghashtable.c
 	$(CC_LINUX) -g -c ghashtable.c -o ghashtable.o $(GLIB_CFLAGS)
