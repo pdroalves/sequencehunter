@@ -19,7 +19,6 @@
 	#include "go_hunter.h"
 	#include "log.h"
 	#include "load_data.h"
-	#include "pilha.h"
 	#include "processing_data.h"
 	#include "version.h"
 	#define SEQ_BUSCA_TAM 1000
@@ -65,8 +64,6 @@
 	  int bv_size;
 	  int is_cuda_available = 0;
 	  int bibliotecas_validas;
-	  pilha* p_sensos;
-	  pilha* p_antisensos;
 
 	  
 	  //##########################
@@ -86,12 +83,11 @@
 	  }
 
 	  printf("Iniciando Sequence Hunter...\n\n",get_build());
-
+	  if(verbose)
+		printf("Modo verbose\n");
+	  
 	  //Inicializa
-	  prepareLog();
-	  p_sensos = criar_pilha();
-	  p_antisensos = criar_pilha();
-	 
+	  prepareLog();	 
 	  
 	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
 	  nome = (char*)malloc((100)*sizeof(char));
@@ -155,11 +151,13 @@
 	if(disable_cuda){
 		printf("Forçando modo OpenMP.\n");
 		printString(NULL,"Forçando modo OpenMP.");
-		aux(0,c,b1_size,b2_size,c_size,&p_sensos,&p_antisensos,disable_cuda,silent,verbose); 
+		aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,p_sensos,p_antisensos,disable_cuda,silent,verbose);
-	processar(bv_size,p_sensos,p_antisensos);
+	else aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+	processar(bv_size);
 	  
+	  if(!silent)
+		printf("Algoritmo concluído.\n");
 	 close_file();
 	 free(c);
 	 

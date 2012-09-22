@@ -166,3 +166,26 @@ void fill_buffer(Buffer *b,int n){
 	return;
 }
 
+void despejar_seq(char *seq,FILE *f){
+	#pragma omp critical(Fila)
+	{
+		if(seq != NULL){
+			fputs(seq,f);
+			free(seq);
+		}
+	}
+	return;
+}
+
+char* carrega_do_arquivo(int n,FILE *filename){
+	char *seq;
+	seq = (char*)malloc((n+1)*sizeof(char));
+	#pragma omp critical
+	{
+		if(!feof(filename)){
+			fgets(seq,n+1,filename);
+			return seq;
+		}else return NULL;
+	}
+}
+

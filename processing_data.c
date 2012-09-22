@@ -5,7 +5,6 @@
 #include "ghashtable.h"
 #include "estruturas.h"
 #include "log.h"
-#include "pilha.h"
 #define TAM_MAX 10000
 
 int check_seq_valida(char *p);
@@ -38,7 +37,9 @@ int get_sequencias_validas(FILE **f,int files){
 
 int check_seq_valida(char *p){
 	int i;
-	int n = strlen(p);
+	int n;
+	
+	n = strlen(p);
 	
 	if(n == 0) return 0;
 	
@@ -68,7 +69,7 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
+lista_ligada* processar(int n){
 	
 	lista_ligada *l;
 	lista_ligada **resultados;
@@ -79,14 +80,13 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	int s_tipos = 0;
 	int as_tipos = 0;
 	int retorno;
-	char *hold;
 	int i;
+	char *hold;
 	//GTimer *timer;
 	
 	//timer = g_timer_new();
 	hash_table = criar_ghash_table();
 	//g_timer_start(timer);
-	print_total_seqs(tamanho_da_pilha(p_sensos),tamanho_da_pilha(p_antisensos));
 	
 	sensos = fopen("tmp_sensos","r");
 	antisensos = fopen("tmp_antisensos","r");
@@ -98,7 +98,7 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	destroy(p_antisensos);
 	*/
 	//Processa sensos
-	#pragma omp parallel shared(n) shared(sensos) shared(hash_table) shared(s_tipos)
+	#pragma omp parallel shared(n) shared(sensos) shared(hash_table) shared(s_tipos) private(hold)
 	{  
 		hold = carrega_do_arquivo(n,sensos);
 		while(hold != NULL && check_seq_valida(hold)){
@@ -114,7 +114,7 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
 	//Processa antisensos
-	#pragma omp parallel shared(n) shared(antisensos) shared(hash_table) shared(as_tipos)
+	#pragma omp parallel shared(n) shared(antisensos) shared(hash_table) shared(as_tipos) private(hold)
 	{
 		hold = carrega_do_arquivo(n,antisensos);
 		while( hold != NULL && check_seq_valida(hold)){
@@ -139,11 +139,11 @@ lista_ligada* processar(int n,pilha *p_sensos,pilha *p_antisensos){
 	
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
-	desp = recupera_despareados_ht(hash_table);
-	print_despareadas_seqs(desp->sensos,desp->antisensos);
-	printf("Sensos despareados: %d.\n",desp->sensos);
-	printf("Antisensos despareados: %d.\n",desp->antisensos);
-	printf("Processando.\n");
+	//desp = recupera_despareados_ht(hash_table);
+	//print_despareadas_seqs(desp->sensos,desp->antisensos);
+	//printf("Sensos despareados: %d.\n",desp->sensos);
+	//printf("Antisensos despareados: %d.\n",desp->antisensos);
+	//printf("Processando.\n");
 	
 	//g_timer_stop(timer);
 	//printf("Sequências despareadas encontradas em %f ms.\n",g_timer_elapsed(timer,NULL));

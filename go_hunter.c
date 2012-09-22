@@ -10,17 +10,17 @@
 #include <omp.h> 
 #include <glib.h>
 #include <string.h>
-#include "cuda.h"X
+#include "cuda.h"
 #include "cuda_runtime_api.h"
 #include "estruturas.h"
 #include "load_data.h"
 #include "operacoes.h"
 #include "busca.h"
 #include "log.h"
-#include "pilha.h"
+#include "fila.h"
 
-#define buffer_size 1024 //Capacidade máxima do buffer
-#define LIMITE_PILHA 10000
+#define buffer_size 1024 // Capacidade máxima do buffer
+#define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
 const char tmp_s_name[11] = "tmp_sensos";
 const char tmp_as_name[15] = "tmp_antisensos";
 __constant__ char *d_buffer[buffer_size];
@@ -29,26 +29,26 @@ gboolean verbose;
 gboolean silent;
 
 
-void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
-void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos);
+void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos);
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos);
 void setup_for_cuda(char*,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t);
 void load_buffer_CUDA(Buffer *b,char** s,int n);
 void load_buffer_NONCuda(Buffer *b,int n);
-void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_senso,pilha *p_antisenso);
-void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos);
+void cudaIteracoes(int bloco1,int bloco2,int blocoV,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t);
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t);
 	
-void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos,gboolean disable_cuda,gboolean sil,gboolean verb){
+void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,gboolean disable_cuda,gboolean sil,gboolean verb){
 	verbose = verb;
 	sil = silent;
 	if(CUDA){}
 	//auxCUDA(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
 else
-	auxNONcuda(c,bloco1,bloco2,blocos,p_sensos,p_antisensos);
+	auxNONcuda(c,bloco1,bloco2,blocos);
 return;
 }
 
-void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha *p_sensos,pilha *p_antisensos){
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos){
 	
 	int n;//Elementos por sequência
 	vgrafo g_a;
@@ -71,7 +71,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,pilha
 	printString("Iniciando iterações:\n",NULL);
 	
     //cudaEventRecord(start,0);
-	NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t,p_sensos,p_antisensos);
+	NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t);
     //cudaEventRecord(stop,0);
     //cudaEventSynchronize(stop);
     //cudaEventElapsedTime(&tempo,start,stop);
@@ -202,7 +202,7 @@ void load_buffer_NONCuda(Buffer *b,int n){
 	return;
 }
 
-void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,pilha *p_sensos,pilha *p_antisensos){
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	
 	Buffer buffer;
 	char **s;
@@ -214,21 +214,22 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	int tam;
 	int razao;
 	int p=0;
-	pilha *novo;
+	Fila *f_sensos;
+	Fila *f_antisensos;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
-
-	//tmp = (char*)malloc(blocoV*sizeof(char));
-    
 			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(buffer_flag) shared(p_sensos) shared(p_antisensos) shared(iter)
+	#pragma omp parallel num_threads(3) shared(buffer) shared(buffer_flag) shared(f_sensos) shared(f_antisensos) shared(iter)
 	{	
 		
 		#pragma omp sections
 		{
 		#pragma omp section
 		{
+			f_sensos = criar_fila();
+			f_antisensos = criar_fila();
+		
 			while(buffer.load != -1){//Looping até o final do buffer
 				//printf("%d.\n",buffer.load);
 				///////////////////////////////////
@@ -256,32 +257,21 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			
 
 		  while(buffer.load != -1){
-			  ///////////////////////////////////
-			  buffer_flag = 1;//Sinal fechado////
-			  ///////////////////////////////////	
-		    if(tamanho_da_pilha(p_sensos) > LIMITE_PILHA){
-		      despejar_seq(desempilha(p_sensos),tmp_sensos);
+		    if(tamanho_da_fila(f_sensos) > 0){
+				despejar_seq(desenfileirar(f_sensos),tmp_sensos);
 		    }
-		    if(tamanho_da_pilha(p_antisensos) > LIMITE_PILHA){
-		      despejar_seq(desempilha(p_antisensos),tmp_antisensos);
-		    }
-		    ///////////////////////////////////
-			buffer_flag = 0;//Sinal aberto////
-			///////////////////////////////////	
+		    if(tamanho_da_fila(f_antisensos) > 0){
+				despejar_seq(desenfileirar(f_antisensos),tmp_antisensos);
+			}
 		  }
-
-			///////////////////////////////////
-			buffer_flag = 1;//Sinal fechado////
-			///////////////////////////////////	
-			while(tamanho_da_pilha(p_sensos) > 0){
-				despejar_seq(desempilha(p_sensos),tmp_sensos);
+			
+			if(tamanho_da_fila(f_sensos) > 0){
+		      despejar_fila(f_sensos,tmp_sensos);
 			}
-			while(tamanho_da_pilha(p_antisensos) > 0){
-			despejar_seq(desempilha(p_antisensos),tmp_antisensos);
+		    if(tamanho_da_fila(f_antisensos) > 0){
+		      despejar_fila(f_antisensos,tmp_antisensos);
 			}
-			///////////////////////////////////
-			buffer_flag = 0;//Sinal aberto////
-			///////////////////////////////////	
+			
 		  
 		  fclose(tmp_sensos);
 		  fclose(tmp_antisensos);
@@ -304,9 +294,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								tmp = buffer.seq[i];
 								if(verbose == TRUE && silent != TRUE)	
 									printf("S: %s - %d\n",tmp,p);
-								novo = criar_elemento_pilha(tmp);
-								while(buffer_flag == 1){ }//Se a pilha estiver sendo esvaziada, aguarda
-								empilha(p_sensos,novo);
+								enfileirar(f_sensos,tmp);
 								//printString("Senso:",tmp);
 								buffer.load--;
 							break;
@@ -314,9 +302,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 								tmp = buffer.seq[i];
 								if(verbose == TRUE && silent != TRUE)
 									printf("N: %s - %d\n",tmp,p);
-								novo = criar_elemento_pilha((char*)get_antisenso(tmp));
-								while(buffer_flag == 1){ }//Se a pilha estiver sendo esvaziada, aguarda
-								empilha(p_antisensos,novo);
+								enfileirar(f_antisensos,get_antisenso(tmp));
 								//printString("Antisenso:",tmp);
 								buffer.load--;
 							break;
