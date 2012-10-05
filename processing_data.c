@@ -4,6 +4,7 @@
 #include <glib.h>
 #include "ghashtable.h"
 #include "estruturas.h"
+#include "load_data.h"
 #include "log.h"
 #define TAM_MAX 10000
 
@@ -71,10 +72,10 @@ int check_seq_valida(char *p){
 
 lista_ligada* processar(int n){
 	
-	lista_ligada *l;
-	lista_ligada **resultados;
+//	lista_ligada *l;
+//	lista_ligada **resultados;
 	GHashTable* hash_table;
-	Despareados *desp;
+	//Despareados *desp;
 	FILE *sensos;
 	FILE *antisensos;
 	int s_tipos = 0;

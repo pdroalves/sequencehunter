@@ -59,10 +59,8 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 }
 int open_file(char **entrada,int qnt){
 	int *checks;
-	int i;
 	int abertos = 0;
 	int tmp = 0;
-	int seqs_validas;
 
 	checks = (int*)malloc(qnt*sizeof(int));
 	
@@ -127,7 +125,7 @@ void prepare_buffer(Buffer *b,int c){
 	get_setup(&n);
 	
 	b->capacidade = c;
-	b->seq = (char*)malloc(c*sizeof(char*));
+	b->seq = (char**)malloc(c*sizeof(char*));
 	b->resultado = (int*)malloc(c*sizeof(int));
 	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+3)*sizeof(char));
 	
@@ -145,7 +143,7 @@ void fill_buffer(Buffer *b,int n){
 	int j = 0;
 	char *hold;
 	
-	hold = malloc(TAM_MAX*sizeof(char));
+	hold = (char*)malloc(TAM_MAX*sizeof(char));
 	//Enche buffer
 	for(j=0;j < files && i < b->capacidade;j++){		
 		while(i < b->capacidade && !feof(f[j])){
@@ -179,13 +177,15 @@ void despejar_seq(char *seq,FILE *f){
 
 char* carrega_do_arquivo(int n,FILE *filename){
 	char *seq;
-	seq = (char*)malloc((n+1)*sizeof(char));
 	#pragma omp critical
 	{
 		if(!feof(filename)){
+			seq = (char*)malloc((n+1)*sizeof(char));
 			fgets(seq,n+1,filename);
-			return seq;
-		}else return NULL;
+		}else{
+			seq = NULL;
+		}
 	}
+	return seq;
 }
 

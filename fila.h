@@ -4,6 +4,7 @@
 #define FILA_H
 
 Fila* criar_fila();
+void start_fila_lock();
 FilaItem* criar_elemento_fila(char *seq);
 void enfileirar(Fila *f,char *novo);
 void enfileirar_fila(Fila *A,Fila *B);

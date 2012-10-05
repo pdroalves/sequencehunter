@@ -24,7 +24,7 @@
 const char tmp_s_name[11] = "tmp_sensos";
 const char tmp_as_name[15] = "tmp_antisensos";
 __constant__ char *d_buffer[buffer_size];
-int buffer_flag;//0 se o buffer já foi carregado, 1 se estiver sendo carregado.
+omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 
@@ -192,9 +192,6 @@ void load_buffer_NONCuda(Buffer *b,int n){
 			//print_seqs_carregadas(b->load);
 			//printf("%s\n",b->seq[0]);	
 		}
-		//////////////////////////////////
-		buffer_flag = 0;//Sinal aberto////
-		//////////////////////////////////
 			
 	}
 		
@@ -205,54 +202,53 @@ void load_buffer_NONCuda(Buffer *b,int n){
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	
 	Buffer buffer;
-	char **s;
 	char *tmp;
 	int blocoV = blocos - bloco1 - bloco2+1;
-	int iter;
 	int buffer_size_NC = 5120;
 	int i;
 	int tam;
-	int razao;
 	int p=0;
 	Fila *f_sensos;
 	Fila *f_antisensos;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
+	f_sensos = criar_fila();
+	f_antisensos = criar_fila();
+	start_fila_lock();
 			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(buffer_flag) shared(f_sensos) shared(f_antisensos) shared(iter)
+	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
 	{	
 		
 		#pragma omp sections
 		{
 		#pragma omp section
 		{
-			f_sensos = criar_fila();
-			f_antisensos = criar_fila();
-		
+		//////////////////////////////////////////
+		// Carrega o buffer //////////////////////
+		//////////////////////////////////////////
 			while(buffer.load != -1){//Looping até o final do buffer
 				//printf("%d.\n",buffer.load);
-				///////////////////////////////////
-				buffer_flag = 1;//Sinal fechado////
-				///////////////////////////////////	
-				load_buffer_NONCuda(&buffer,n);
-				while(buffer.load > 0){
-				}
+				if(buffer.load == 0)
+					load_buffer_NONCuda(&buffer,n);
 			}
-			///////////////////////////////////
-			buffer_flag = 0;//Sinal Aberto////
-			///////////////////////////////////	
-			
+		
+		//////////////////////////////////////////
+		//////////////////////////////////////////
+		//////////////////////////////////////////	
 		}
 		#pragma omp section
 		{
+		//////////////////////////////////////////
+		// Libera memoria ////////////////////////
+		//////////////////////////////////////////
 		  FILE *tmp_sensos;
 		  FILE *tmp_antisensos;
 		  
 		  tmp_sensos = fopen(tmp_s_name,"w");
 		  tmp_antisensos = fopen(tmp_as_name,"w");
 		  
-		  while( buffer_flag == 1){
+		  while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 
@@ -275,14 +271,21 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 		  
 		  fclose(tmp_sensos);
 		  fclose(tmp_antisensos);
+		//////////////////////////////////////////
+		//////////////////////////////////////////
+		//////////////////////////////////////////
 		}
 		#pragma omp section
 		{
-			while( buffer_flag == 1){
+		//////////////////////////////////////////
+		// Realiza as iteracoes///////////////////
+		//////////////////////////////////////////
+			while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 			while(buffer.load != -1){
-				//Realiza loop enquanto existirem sequências para encher o buffer	
+				//Realiza loop enquanto existirem sequências para encher o buffer
+				
 					busca(bloco1,bloco2,blocos,&buffer,0,1,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer.load;
@@ -293,7 +296,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 							case 1:
 								tmp = buffer.seq[i];
 								if(verbose == TRUE && silent != TRUE)	
-									printf("S: %s - %d\n",tmp,p);
+									printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
 								enfileirar(f_sensos,tmp);
 								//printString("Senso:",tmp);
 								buffer.load--;
@@ -301,7 +304,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 							case 2:
 								tmp = buffer.seq[i];
 								if(verbose == TRUE && silent != TRUE)
-									printf("N: %s - %d\n",tmp,p);
+									printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								enfileirar(f_antisensos,get_antisenso(tmp));
 								//printString("Antisenso:",tmp);
 								buffer.load--;
@@ -318,11 +321,13 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 						printf("Erro! Buffer não foi totalmente esvaziado.\n");
 						buffer.load = 0;
 					}
-		
-					while(buffer_flag == 1 || buffer.load == 0){
-					}//Espera o buffer ser carregado
-				
+					
+					while(buffer.load==0){}
+									
 			}
+		//////////////////////////////////////////
+		//////////////////////////////////////////
+		//////////////////////////////////////////
 		}
 		
 	}

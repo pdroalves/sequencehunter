@@ -98,8 +98,6 @@ lista_ligada** ordena_pares(lista_ligada* l){
 	lista_ligada** vetor;
 	int tam = 0;
 	int i;
-	int th_id;
-	int nthreads;
 	
 	//Calcula tamanho da lista ligada e adiciona elemento no vetor
 	p = l->prox;

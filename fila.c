@@ -46,8 +46,8 @@ FilaItem* criar_elemento_fila(char *seq){
 
 
 void enfileirar(Fila *f,char *seq){
-         omp_set_lock(&fila_lock);
 		FilaItem* novo;
+         omp_set_lock(&fila_lock);
 		//printf("Enfileirando\n");
 		novo = criar_elemento_fila(seq);
 		
@@ -79,9 +79,9 @@ void enfileirar_fila(Fila *A,Fila *B){
 }
 
 char* desenfileirar(Fila *f){
-         omp_set_lock(&fila_lock);
 		FilaItem *hold;
 		char *seq;
+         omp_set_lock(&fila_lock);
 		//printf("Desenfileirando\n");
 		
 		if(f->size > 0){
@@ -101,7 +101,7 @@ gboolean fila_vazia(Fila *f){
 }
 
 void despejar_fila(Fila *f,FILE *file){
-	while(!fila_vazia){
+	while(!fila_vazia(f)){
 		despejar_seq(desenfileirar(f),file);
 	}
 	return;
