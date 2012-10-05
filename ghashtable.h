@@ -10,9 +10,6 @@ void print_all(GHashTable *hash_table);
 Despareados* recupera_despareados_ht(GHashTable *hash_table);
 void qnt_relativa_ht(GHashTable *hash_table);
 void write_ht_to_file(GHashTable *hash_table);
-<<<<<<< HEAD
 gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro);
-=======
->>>>>>> GlibHashTable
 
 #endif

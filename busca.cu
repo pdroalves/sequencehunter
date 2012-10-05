@@ -150,12 +150,10 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
   ////////
   int posicao;
   int tam = buffer->load;
-  int razao = tam / nthreads;
   int size = bloco1 + bloco2;
   int blocoZ = blocos - size;//Total de bases que queremos encontrar
-  char *hold;
   for(posicao=0;posicao < tam;posicao++){
-	  char *seq = buffer->seq[posicao];//Seto ponteiro para a sequência que será analisada
+	  char *seq;
 	  //printf("%d: Peguei: %s\n",posicao,seq);
 	  int i;
 	  int s_match;
@@ -166,9 +164,9 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 	  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
 	  int x0S=1;
 	  int x0A=1;
-	  int xn;
 	  int totalmatchs = blocos;
-	  int tipo = 0;						
+	  int tipo = 0;				
+	  seq = buffer->seq[posicao];//Seto ponteiro para a sequência que será analisada		
 	  s_match = as_match = 0;
 	  i=0;
 	  
@@ -417,7 +415,6 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
 											
   //Configura grafo
   int i;
-  int j;
   int size;
   vgrafo *atual;
 											
@@ -425,7 +422,6 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   build_grafo(size,a,c,g,t);
 											
   i=0;
-  j=0;
   printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
   while(senso[i] != '\0'){
@@ -444,7 +440,6 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   }
 											
   i=0;
-  j=0;
   printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){

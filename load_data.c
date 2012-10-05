@@ -20,8 +20,6 @@ int files = 0;
 gboolean check_seqs = FALSE;
 /* converts integer into string */
 
-
-
 char* itoaa(unsigned long num) {
         char* retstr = (char*)calloc(12, sizeof(char));
         if (sprintf(retstr, "%ld", num) > 0) {
@@ -61,10 +59,8 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 }
 int open_file(char **entrada,int qnt){
 	int *checks;
-	int i;
 	int abertos = 0;
 	int tmp = 0;
-	int seqs_validas;
 
 	checks = (int*)malloc(qnt*sizeof(int));
 	
@@ -82,7 +78,7 @@ int open_file(char **entrada,int qnt){
 			abertos++;
 		}
 	}
-	
+	free(checks);
 	return files;
 }
 
@@ -108,12 +104,15 @@ void close_file(){
 
 void get_setup(int *n){
 	char *tmp;
+	
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
+	
 	while(!check_seq_valida(tmp)) fscanf(f[0],"%s",tmp);		
 	rewind(f[0]);
 	*n = (int)(strlen(tmp));
+	
 	free(tmp);
 	return;
 }
@@ -121,15 +120,21 @@ void get_setup(int *n){
 void prepare_buffer(Buffer *b,int c){
 	int i;
 	int n;
+	char* tamanho_do_buffer;
+	
 	get_setup(&n);
+	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
 	b->resultado = (int*)malloc(c*sizeof(int));
+	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+3)*sizeof(char));
 	
-	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
-	printString("Buffer configurado para: ",itoaa(c));
+	tamanho_do_buffer = itoaa(c);
+	printString("Buffer configurado para: ",tamanho_do_buffer);
+	
+	free(tamanho_do_buffer);
 	return;
 }
 
@@ -155,8 +160,32 @@ void fill_buffer(Buffer *b,int n){
 		}
 		if(feof(f[files-1]) && b->load == 0) b->load = -1;//Não há mais arquivos
 	}
-	//if(hold != NULL)
-	//free(hold);
+	free(hold);
 	return;
+}
+
+void despejar_seq(char *seq,FILE *f){
+	#pragma omp critical(Fila)
+	{
+		if(seq != NULL){
+			fputs(seq,f);
+			free(seq);
+		}
+	}
+	return;
+}
+
+char* carrega_do_arquivo(int n,FILE *filename){
+	char *seq;
+	#pragma omp critical
+	{
+		if(!feof(filename)){
+			seq = (char*)malloc((n+1)*sizeof(char));
+			fgets(seq,n+1,filename);
+		}else{
+			seq = NULL;
+		}
+	}
+	return seq;
 }
 

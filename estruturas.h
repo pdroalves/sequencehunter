@@ -21,12 +21,19 @@ struct vertice_grafo{
 };
 typedef struct vertice_grafo vgrafo;
 
-struct pilha{
-	//Implementação usando listas ligadas
+
+struct fila_item{
 	char *seq;
-	struct pilha *prox;
+	struct fila_item *prox;//Ponteiro para o item seguinte
 };
-typedef struct pilha pilha;
+typedef struct fila_item FilaItem;
+
+struct fila{
+	FilaItem *first;//Primeiro elemento da fila
+	FilaItem *end;//Ultimo elemento da fila
+	int size;//Elementos na fila
+};
+typedef struct fila Fila;
 
 struct lista_ligada{
 	char *senso;
@@ -68,4 +75,6 @@ struct resultfiles{
 	FILE *file10000;
 };
 typedef struct resultfiles ResultFiles;
+
+
 #endif
