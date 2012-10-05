@@ -16,18 +16,42 @@ extern "C" {
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
 
-extern "C" void set_grafo_helper(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
-extern "C" void k_busca_helper(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **s,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t);
-extern "C" __global__ void set_grafo(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
-extern "C" void set_grafo_NONCuda(char*,char *,vgrafo*,vgrafo*,vgrafo*, vgrafo*);
+extern "C" __global__ void k_buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
+extern "C" __host__ void buscador(int bloco1,int bloco2,int blocos,char *seq,int *resultado,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
-__device__ void build_grafo(vgrafo*,vgrafo*,vgrafo*, vgrafo*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
+extern "C" void k_busca(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,Buffer *buffer,char **s,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+  dim3 dimBlock(num_threads);
+  dim3 dimGrid(num_blocks);
+	
+  k_buscador<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,buffer,d_a,d_c,d_g,d_t);//Kernel de busca
+	
+  return;
+}
+
+extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,vgrafo *h_a,vgrafo *h_c,vgrafo *h_g,vgrafo *h_t){
+  int i;
+  int size;
+	
+  size = buffer->load;
+	
+  for(i=0; i < size; i++)
+    buscador(bloco1,bloco2,blocos,buffer->seq[i],buffer->resultado,h_a,h_c,h_g,h_t);//Metodo de busca
+		
+  return;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
-//////////////////					Kernel Principal 				////////////////////
+//////////////////					Buscador		 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-extern "C" __global__ void k_busca(const int bloco1,const int bloco2,const int blocos,char **data,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////				Metodo de busca com CUDA				////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" __global__ void k_buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -40,10 +64,8 @@ extern "C" __global__ void k_busca(const int bloco1,const int bloco2,const int b
   ////////
   ////////
   ////////
-  											
-  const int posicao = blockIdx.x*blockDim.x + threadIdx.x;
-  char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
-  //printf("%d: Peguei: %s\n",posicao,seq);
+  int size = bloco1 + bloco2;
+  int blocoZ = blocos - size;//Total de bases que queremos encontrar
   int i;
   int s_match;
   int as_match;
@@ -51,51 +73,56 @@ extern "C" __global__ void k_busca(const int bloco1,const int bloco2,const int b
   vgrafo *anterior;
   vgrafo *ant_anterior;
   int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
-  int xn;/////
-  int size = bloco1 + bloco2;
-  int blocoZ = blocos - size;//Total de bases que queremos encontrar
-  char tipo = '\0';						
+  int x0S=1;
+  int x0A=1;
+  int totalmatchs = blocos;
+  char *seq;
+  int id;
+  id = threadIdx.x;
+  seq = buffer->seq[id];
   s_match = as_match = 0;
+  int tipo;
+  tipo = 0;
   i=0;
-  
+	  
   ////////////////////
   ////////////////////										
   //Iteração inicial//																			
   ////////////////////
   ////////////////////
+  if(s_match == bloco1) x0S = i;
+  if(as_match == bloco2) x0A = i;
   ant_anterior = busca_vertice(seq[i],a,c,g,t);
-  caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
-  i++;
+  if(ant_anterior != NULL){
+    caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
+    i++;
+  }
+		
+  if(s_match == bloco1) x0S = i;
+  if(as_match == bloco2) x0A = i;
   anterior = busca_vertice(seq[i],a,c,g,t);
   caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
   i++;
-  
-  																			
+	  
+																				
   ///////////////////////
   ///////////////////////					
   //Iterações seguintes//																			
   ///////////////////////
   ///////////////////////
-  										
-#pragma unroll 1
-  while( seq[i] != '\0' && s_match < size && as_match < size) {
-	  //printf("s_match: %d\n",s_match);
-	  //printf("as_match: %d\n",as_match);
-	  
-	if(s_match == bloco1){
-		//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
-		tipo = 'S';//Senso
-		x0 = i;//Marca primeiro elemento 
-		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
-		i = xn;  //Salta o bloco variável
-	}
-	if(as_match == bloco2){
-		//printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
-		tipo = 'N';//Não-Senso
-		x0 = i;//Marca primeiro elemento 
-		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
-		i = xn;  //Salta o bloco variável
-	}
+						
+  while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
+    //printf("s_match: %d\n",s_match);
+    //printf("as_match: %d\n",as_match);
+		  
+    if(s_match == bloco1){
+      //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+      x0S = i;
+    }
+    if(as_match == bloco2){
+      //printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+      x0A = i;
+    }
     atual = busca_vertice(seq[i],a,c,g,t);
     if(atual != NULL)
       caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
@@ -107,35 +134,41 @@ extern "C" __global__ void k_busca(const int bloco1,const int bloco2,const int b
   ///////////////////////////////											
   //Guarda o que foi encontrado//
   ///////////////////////////////
-  
+	  
   //printf("s_match: %d - as_match: %d\n",s_match,as_match);
-	
-	
-    if(s_match == size || as_match == size){
-		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-		seq[0] = tipo;
-		for(i=1;i<=blocoZ;i++){
-		  seq[i] = seq[x0 + i-1];
-		}
-		seq[i] = '\0';
-		return;
-	}
-	seq[0] = '\0';
-	
-	
-  return;
-}
 
-extern "C" void k_busca_helper(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **s,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
-	dim3 dimBlock(num_threads);
-	dim3 dimGrid(num_blocks);
-	k_busca<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,s,d_a,d_c,d_g,d_t);//Kernel de busca
+  if(s_match == totalmatchs){
+    x0 = x0S;
+    tipo = 1;
+  }
+  if(as_match == totalmatchs){
+    x0 = x0A;
+    tipo = 2;
+  }
+	
+  buffer->resultado[id] = tipo;
+
+  if(s_match == totalmatchs || as_match == totalmatchs){
+    //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+    for(i=0;i<blocoZ;i++){
+      seq[i] = seq[x0 + i];
+    }
+    seq[i] = '\0';
+  }
+	
+
+	
+return;
 }
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////
-//////////////////					Versão sem CUDA 				////////////////////
+///////////////				Metodo de busca sem CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,const int th_id,const int nthreads,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+
+extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,char *seq,int *resultado,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -148,102 +181,96 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
   ////////
   ////////
   ////////
-  int posicao;
-  int tam = buffer->load;
   int size = bloco1 + bloco2;
   int blocoZ = blocos - size;//Total de bases que queremos encontrar
-  for(posicao=0;posicao < tam;posicao++){
-	  char *seq;
-	  //printf("%d: Peguei: %s\n",posicao,seq);
-	  int i;
-	  int s_match;
-	  int as_match;
-	  vgrafo *atual;
-	  vgrafo *anterior;
-	  vgrafo *ant_anterior;
-	  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
-	  int x0S=1;
-	  int x0A=1;
-	  int totalmatchs = blocos;
-	  int tipo = 0;				
-	  seq = buffer->seq[posicao];//Seto ponteiro para a sequência que será analisada		
-	  s_match = as_match = 0;
-	  i=0;
+  int i;
+  int s_match;
+  int as_match;
+  vgrafo *atual;
+  vgrafo *anterior;
+  vgrafo *ant_anterior;
+  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
+  int x0S=1;
+  int x0A=1;
+  int totalmatchs = blocos;
+  s_match = as_match = 0;
+  int tipo = 0;
+  i=0;
 	  
-	  ////////////////////
-	  ////////////////////										
-	  //Iteração inicial//																			
-	  ////////////////////
-	  ////////////////////
-	  if(s_match == bloco1) x0S = i;
-	  if(as_match == bloco2) x0A = i;
-	  ant_anterior = busca_vertice(seq[i],a,c,g,t);
-	  if(ant_anterior != NULL){
-		  caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
-		  i++;
-		}
+  ////////////////////
+  ////////////////////										
+  //Iteração inicial//																			
+  ////////////////////
+  ////////////////////
+  if(s_match == bloco1) x0S = i;
+  if(as_match == bloco2) x0A = i;
+  ant_anterior = busca_vertice(seq[i],a,c,g,t);
+  if(ant_anterior != NULL){
+    caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
+    i++;
+  }
 		
-	  if(s_match == bloco1) x0S = i;
-	  if(as_match == bloco2) x0A = i;
-	  anterior = busca_vertice(seq[i],a,c,g,t);
-	  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
-	  i++;
+  if(s_match == bloco1) x0S = i;
+  if(as_match == bloco2) x0A = i;
+  anterior = busca_vertice(seq[i],a,c,g,t);
+  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
+  i++;
 	  
 																				
-	  ///////////////////////
-	  ///////////////////////					
-	  //Iterações seguintes//																			
-	  ///////////////////////
-	  ///////////////////////
+  ///////////////////////
+  ///////////////////////					
+  //Iterações seguintes//																			
+  ///////////////////////
+  ///////////////////////
 						
-	  while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
-		  //printf("s_match: %d\n",s_match);
-		 //printf("as_match: %d\n",as_match);
+  while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
+    //printf("s_match: %d\n",s_match);
+    //printf("as_match: %d\n",as_match);
 		  
-		if(s_match == bloco1){
-			//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
-			x0S = i;
-		}
-		if(as_match == bloco2){
-			//printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
-			x0A = i;
-		}
-		atual = busca_vertice(seq[i],a,c,g,t);
-		if(atual != NULL)
-		  caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
-		i++;
-		ant_anterior = anterior;
-		anterior = atual;
-	  }
+    if(s_match == bloco1){
+      //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+      x0S = i;
+    }
+    if(as_match == bloco2){
+      //printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+      x0A = i;
+    }
+    atual = busca_vertice(seq[i],a,c,g,t);
+    if(atual != NULL)
+      caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
+    i++;
+    ant_anterior = anterior;
+    anterior = atual;
+  }
 
-	  ///////////////////////////////											
-	  //Guarda o que foi encontrado//
-	  ///////////////////////////////
+  ///////////////////////////////											
+  //Guarda o que foi encontrado//
+  ///////////////////////////////
 	  
-	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
+  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
 
-	if(s_match == totalmatchs){
-		x0 = x0S;
-		tipo = 1;
-	}
-	if(as_match == totalmatchs){
-		x0 = x0A;
-		tipo = 2;
-	}
+  if(s_match == totalmatchs){
+    x0 = x0S;
+    tipo = 1;
+  }
+  if(as_match == totalmatchs){
+    x0 = x0A;
+    tipo = 2;
+  }
 	
-	buffer->resultado[posicao] = tipo;
+  *resultado = tipo;
 
-	if(s_match == totalmatchs || as_match == totalmatchs){
-		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-		for(i=0;i<blocoZ;i++){
-		  buffer->seq[posicao][i] = seq[x0 + i];
-		}
-		buffer->seq[posicao][i] = '\0';
-	}
+  if(s_match == totalmatchs || as_match == totalmatchs){
+    //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+    for(i=0;i<blocoZ;i++){
+      seq[i] = seq[x0 + i];
+    }
+    seq[i] = '\0';
+  }
 	
-}
+
 	
-  return;
+return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -282,7 +309,7 @@ extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anteri
   else{//Não bate
     if(anterior != NULL && ant_anterior != NULL)
       if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-		(*s_match)=0;
+	(*s_match)=0;
   }
 												
   if(atual->as_marcas[(*as_match)] == 1)//Elemento e posição batem com o que queremos
@@ -290,7 +317,7 @@ extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anteri
   else{//Não bate
     if(anterior != NULL && ant_anterior != NULL)
       if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-		(*as_match)=0;
+	(*as_match)=0;
   }
   //printf("s_match: %d\n",*s_match);
   return;	
@@ -372,12 +399,12 @@ extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgraf
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
     if(atual != NULL){
-		atual->s_marcas[i-j]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
-	}else{
-		//printf("Elemento variável encontrado.\n");
-		j++;
-	}
+      atual->s_marcas[i-j]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+    }else{
+      //printf("Elemento variável encontrado.\n");
+      j++;
+    }
     i++;
   }
 											
@@ -387,13 +414,13 @@ extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgraf
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
-      if(atual != NULL){
-		atual->as_marcas[i-j]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
-	}else{
-		//printf("Elemento variável encontrado.\n");
-		j++;
-	}
+    if(atual != NULL){
+      atual->as_marcas[i-j]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
+    }else{
+      //printf("Elemento variável encontrado.\n");
+      j++;
+    }
     i++;
   }
   /*
@@ -408,7 +435,7 @@ extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgraf
 
 
 extern "C" void set_grafo_helper(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-set_grafo<<<1,1>>>(senso,antisenso,a,c,g,t);
+  set_grafo<<<1,1>>>(senso,antisenso,a,c,g,t);
 }
 
 extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
@@ -427,15 +454,15 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
     if(atual != NULL){
-		atual->s_marcas[i]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i);
-	}else{
-		//printf("Elemento variável encontrado.\n");
-		a->s_marcas[i]=1;
-		c->s_marcas[i]=1;
-		g->s_marcas[i]=1;
-		t->s_marcas[i]=1;
-	}
+      atual->s_marcas[i]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+    }else{
+      //printf("Elemento variável encontrado.\n");
+      a->s_marcas[i]=1;
+      c->s_marcas[i]=1;
+      g->s_marcas[i]=1;
+      t->s_marcas[i]=1;
+    }
     i++;
   }
 											
@@ -444,16 +471,16 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
-      if(atual != NULL){
-		atual->as_marcas[i]=1;
-		printf("%c marcado na posicao %d.\n",atual->vertice,i);
-	}else{
-		//printf("Elemento variável encontrado.\n");
-		a->as_marcas[i]=1;
-		c->as_marcas[i]=1;
-		g->as_marcas[i]=1;
-		t->as_marcas[i]=1;
-	}
+    if(atual != NULL){
+      atual->as_marcas[i]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+    }else{
+      //printf("Elemento variável encontrado.\n");
+      a->as_marcas[i]=1;
+      c->as_marcas[i]=1;
+      g->as_marcas[i]=1;
+      t->as_marcas[i]=1;
+    }
     i++;
   }
   /*
@@ -468,25 +495,25 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
 
 
 extern "C" void destroy_grafo(vgrafo *a,vgrafo *c,vgrafo *g,vgrafo *t){
-	free(a->s_marcas);
-	free(a->as_marcas);
-	//free(a);
-	free(c->s_marcas);
-	free(c->as_marcas);
-	//free(c);
-	free(g->s_marcas);
-	free(g->as_marcas);
-	//free(g);
-	free(t->s_marcas);
-	free(t->as_marcas);
-	//free(t);
-	return;
+  free(a->s_marcas);
+  free(a->as_marcas);
+  //free(a);
+  free(c->s_marcas);
+  free(c->as_marcas);
+  //free(c);
+  free(g->s_marcas);
+  free(g->as_marcas);
+  //free(g);
+  free(t->s_marcas);
+  free(t->as_marcas);
+  //free(t);
+  return;
 }
 
 extern "C" void destroy_grafo_CUDA(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-	cudaFree(a);
-	cudaFree(c);
-	cudaFree(g);
-	cudaFree(t);
-	return;
+  cudaFree(a);
+  cudaFree(c);
+  cudaFree(g);
+  cudaFree(t);
+  return;
 }

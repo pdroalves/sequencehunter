@@ -286,7 +286,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			while(buffer.load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer
 				
-					busca(bloco1,bloco2,blocos,&buffer,0,1,d_a,d_c,d_g,d_t);//Kernel de busca
+					busca(bloco1,bloco2,blocos,&buffer,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer.load;
 					p += tam;
