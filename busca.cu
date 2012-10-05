@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 extern "C" __global__ void k_buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
-extern "C" __host__ void buscador(int bloco1,int bloco2,int blocos,char *seq,int *resultado,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
+extern "C" __host__ void buscador(int bloco1,int bloco2,int blocos,Buffer *buffer,int id,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t);
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 
@@ -37,7 +37,7 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
   size = buffer->load;
 	
   for(i=0; i < size; i++)
-    buscador(bloco1,bloco2,blocos,buffer->seq[i],buffer->resultado,h_a,h_c,h_g,h_t);//Metodo de busca
+    buscador(bloco1,bloco2,blocos,buffer,i,h_a,h_c,h_g,h_t);//Metodo de busca
 		
   return;
 }
@@ -168,7 +168,7 @@ return;
 ///////////////				Metodo de busca sem CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,char *seq,int *resultado,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int id,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
  
   ////////
   ////////
@@ -195,6 +195,8 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int bl
   int totalmatchs = blocos;
   s_match = as_match = 0;
   int tipo = 0;
+  char *seq;
+  seq = buffer->seq[id];
   i=0;
 	  
   ////////////////////
@@ -258,7 +260,7 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int bl
     tipo = 2;
   }
 	
-  *resultado = tipo;
+  buffer->resultado[id] = tipo;
 
   if(s_match == totalmatchs || as_match == totalmatchs){
     //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
