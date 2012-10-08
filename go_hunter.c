@@ -19,7 +19,7 @@
 #include "log.h"
 #include "fila.h"
 
-#define buffer_size 32 // Capacidade máxima do buffer
+#define buffer_size 4 // Capacidade máxima do buffer
 #define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
 const char tmp_s_name[11] = "tmp_sensos";
 const char tmp_as_name[15] = "tmp_antisensos";
@@ -27,7 +27,7 @@ __constant__ char *d_buffer[buffer_size];
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
-
+char **data;
 
 void auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos);
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos);
@@ -176,13 +176,16 @@ void load_buffer_CUDA(Buffer *d_buffer,int *load,int n){
 			print_seqs_carregadas(*load);
 			//printf("%s\n",b->seq[0]);
 			d_buffer->load = *load;
+			//Copia sequencias para GPU e grava os enderecos em d_buffer->seq
 			for(i=0;i<(*load);i++)
 				cudaMemcpy(d_buffer->seq[i],h_buffer.seq[i],(n+1)*sizeof(char),cudaMemcpyHostToDevice);
+			//Copia os enderecos das sequencias para a GPU
+			cudaMemcpy(data,d_buffer->seq,(*load)*sizeof(char*),cudaMemcpyHostToDevice);	
 		}
 			
 	}
 		
-	//Destruir h_buffer
+	//Destroy h_buffer
 	return;
 }
 
@@ -362,6 +365,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 	f_sensos = criar_fila();
 	f_antisensos = criar_fila();
 	start_fila_lock();
+	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
 			
 	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load)
 	{	
@@ -444,7 +448,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 			while(buffer_load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer
 				
-					k_busca(num_blocks,num_threads,bloco1,bloco2,blocos,&buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+					k_busca(num_blocks,num_threads,bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 					tam = buffer_load;
 					p += tam;
@@ -454,18 +458,18 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(hold[i]){
 							case 1:
-								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,buffer.seq[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
 								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)	
-									printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+									//printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
 								enfileirar(f_sensos,tmp);
 								//printString("Senso:",tmp);
 								buffer_load--;
 							break;
 							case 2:
-								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,buffer.seq[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
 								if(verbose == TRUE && silent != TRUE)
-									printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
+									//printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								enfileirar(f_antisensos,get_antisenso(tmp));
 								//printString("Antisenso:",tmp);
 								buffer_load--;

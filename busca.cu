@@ -30,7 +30,7 @@ __global__ void helloCUDA(float f)
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int *resultados,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_buscador(int bloco1,int bloco2, int blocos,char **data,int *resultados,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 
 	
   ////////
@@ -66,9 +66,7 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int 
   x0A = 1;
   totalmatchs = blocos;
   id = threadIdx.x;
-  seq = buffer->seq[id];
-	resultados[id] = 1;
-  /*  
+  seq = data[id];
   s_match = as_match = 0;
   tipo = 0;
   i=0;
@@ -77,8 +75,8 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int 
   //Iteração inicial//																			
   ////////////////////
   ////////////////////
-  if(s_match == bloco1) x0S = i;
-  if(as_match == bloco2) x0A = i;
+  if(0 == bloco1) x0S = i;
+  if(0 == bloco2) x0A = i;
   ant_anterior = busca_vertice(seq[i],a,c,g,t);
   if(ant_anterior != NULL){
     caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
@@ -98,8 +96,8 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int 
   ///////////////////////
 						
   while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
-    //printf("s_match: %d\n",s_match);
-    //printf("as_match: %d\n",as_match);
+    //printf("%d - s_match: %d\n",i+1,s_match);
+    //printf("%d - as_match: %d\n",i+1,as_match);
 		  
     if(s_match == bloco1){
       //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
@@ -116,13 +114,13 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int 
     ant_anterior = anterior;
     anterior = atual;
   }
-
   ///////////////////////////////											
   //Guarda o que foi encontrado//
   ///////////////////////////////
 	  
-  printf("s_match: %d - as_match: %d\n",s_match,as_match);
-
+ // printf("s_match: %d - as_match: %d\n",s_match,as_match);
+ // printf("totalmatchs: %d\n",totalmatchs);
+  
   if(s_match == totalmatchs){
     x0 = x0S;
     tipo = 1;
@@ -135,13 +133,12 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,Buffer *buffer,int 
   resultados[id] = tipo;
 
   if(s_match == totalmatchs || as_match == totalmatchs){
-    //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+   // printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
     for(i=0;i<blocoZ;i++){
       seq[i] = seq[x0 + i];
     }
     seq[i] = '\0';
-  }*/
-	
+	}
 	
 	return;
 }
@@ -271,10 +268,11 @@ extern "C" void checkCudaError(){
     }   
 }
 
-extern "C" void k_busca(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+extern "C" void k_busca(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
-	k_buscador<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+	
+	k_buscador<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
 	//k_buscador<<<dimGrid,dimBlock>>>();//Kernel de busca
 	
 	//helloCUDA<<<dimGrid,dimBlock>>>(5);
@@ -406,7 +404,6 @@ extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgraf
 											
   //Configura grafo
   int i;
-  int j;
   int size;
   vgrafo *atual;
 											
@@ -415,33 +412,37 @@ extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgraf
   build_grafo(size,a,c,g,t);
 											
   i=0;
-  j=0;
   printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
     if(atual != NULL){
-      atual->s_marcas[i-j]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
-    }else{
+      atual->s_marcas[i]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+     }else{
       //printf("Elemento variável encontrado.\n");
-      j++;
+      a->s_marcas[i]=1;
+      c->s_marcas[i]=1;
+      g->s_marcas[i]=1;
+      t->s_marcas[i]=1;
     }
     i++;
   }
 											
   i=0;
-  j=0;
   printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
     if(atual != NULL){
-      atual->as_marcas[i-j]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i-j);
-    }else{
+      atual->as_marcas[i]=1;
+      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+      }else{
       //printf("Elemento variável encontrado.\n");
-      j++;
+      a->as_marcas[i]=1;
+      c->as_marcas[i]=1;
+      g->as_marcas[i]=1;
+      t->as_marcas[i]=1;
     }
     i++;
   }
