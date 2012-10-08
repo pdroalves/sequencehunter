@@ -61,7 +61,7 @@
 	  int b1_size;
 	  int b2_size;
 	  int bv_size;
-	  int is_cuda_available = 0;
+	  int is_cuda_available = 1;
 	  int bibliotecas_validas;
 
 	  

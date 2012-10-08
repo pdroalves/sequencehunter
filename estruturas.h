@@ -55,7 +55,6 @@ typedef struct Value value;
 
 struct buffer{
 	char **seq;
-	int *resultado;
 	int capacidade;
 	int load;//Guarda a quantidade de sequências carregadas;
 };

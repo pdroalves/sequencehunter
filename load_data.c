@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include "cuda.h"
+#include "cuda_runtime_api.h"
 #include "estruturas.h"
 #include "log.h"
 #include "processing_data.h"
@@ -126,11 +128,30 @@ void prepare_buffer(Buffer *b,int c){
 	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
-	b->resultado = (int*)malloc(c*sizeof(int));
-	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+3)*sizeof(char));
+	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	
 	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
+	tamanho_do_buffer = itoaa(c);
+	printString("Buffer configurado para: ",tamanho_do_buffer);
+	
+	free(tamanho_do_buffer);
+	return;
+}
+
+void prepare_buffer_CUDA(Buffer *d_buffer,int n,int c){
+	int i;
+	char *tamanho_do_buffer;
+	
+	d_buffer->capacidade = c;
+	d_buffer->load = 0;
+	d_buffer->seq = (char**)malloc(c*sizeof(char*));
+
+	for(i=0;i<c;i++) 
+		cudaMalloc((void**)&(d_buffer->seq[i]),(n+1)*sizeof(char));
+    
+	printf("Buffer configurado para sequências de até %d posições.\n",n);
+    
 	tamanho_do_buffer = itoaa(c);
 	printString("Buffer configurado para: ",tamanho_do_buffer);
 	
