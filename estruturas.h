@@ -8,7 +8,8 @@
 
 #ifndef ESTRUTURAS_H
 #define ESTRUTURAS_H
-
+#define SENSO 1
+#define ANTISENSO 2
 
 struct vertice_grafo{
 		char vertice;

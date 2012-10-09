@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-
+#include "busca.h"
 extern "C" int gpuDeviceInit(int devID);
 extern "C" inline int _ConvertSMVer2Cores(int major, int minor);
 extern "C" int gpuGetMaxGflopsDeviceId();
 extern "C" int findCudaDevice();
 
- int MAX(int A,int B){
+int MAX(int A,int B){
 	return A >= B ? A:B;
  }
 
@@ -220,4 +220,5 @@ extern "C" int findCudaDevice()
     return devID;
 }
 // end of CUDA Helper Functions
+
 

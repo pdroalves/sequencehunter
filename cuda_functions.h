@@ -7,6 +7,5 @@ int gpuGetMaxGflopsDeviceId();
 int findCudaDevice();
 int check_gpu_mode();
 int escolhe_GPU();
-void getDevice(int deviceCount,struct cudaDeviceProp deviceProp,gboolean verbose);
 void copyStrToDevice(char *src,char *dst,int size);
 #endif

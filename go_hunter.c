@@ -349,6 +349,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	return;
 }
 
+
 void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	
 	Buffer buffer;
@@ -432,7 +433,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 			// Realiza as iteracoes///////////////////
 			//////////////////////////////////////////
 			int *hold;
-			int *resultados;
+			char **resultados;
 			int num_blocks;
 			int num_threads;
 			num_blocks = 1;
@@ -441,16 +442,15 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 			
 			tmp = (char*)malloc((blocoV+1)*sizeof(char));
 			hold = (int*)malloc(buffer_size*sizeof(int));
-			cudaMalloc((void**)&resultados,buffer_size*sizeof(int));
+			cudaMalloc((void**)&resultados,buffer_size*sizeof(char*));
 			
 			while( buffer_load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 			while(buffer_load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-				
+					printf("///////////////////////\n");
 					k_busca(num_blocks,num_threads,bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
-					
 					tam = buffer_load;
 					p += tam;
 					//printf("%d\n",p);
@@ -458,19 +458,20 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					checkCudaError();
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(hold[i]){
-							case 1:
+							case SENSO:
 								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
 								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)	
-									//printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+									printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
 								enfileirar(f_sensos,tmp);
 								//printString("Senso:",tmp);
 								buffer_load--;
 							break;
-							case 2:
+							case ANTISENSO:
 								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)
-									//printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
+									printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								enfileirar(f_antisensos,get_antisenso(tmp));
 								//printString("Antisenso:",tmp);
 								buffer_load--;

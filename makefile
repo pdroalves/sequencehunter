@@ -48,7 +48,7 @@ load_data.o:load_data.c
 	$(CC_LINUX) -g -c load_data.c -o load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 operacoes.o:operacoes.c
-	$(CC_LINUX) -g -c operacoes.c -o operacoes.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++ -lcuda -lcudart
+	$(CC_LINUX) -g -c operacoes.c -o operacoes.o $(GLIB_CFLAGS) 
 	
 log.o:log.c
 	$(CC_LINUX) -g -c log.c -o log.o $(GLIB_CFLAGS)
@@ -74,6 +74,8 @@ busca.o:busca.cu
 	
 cuda_functions.o:cuda_functions.cu
 	$(CUDA_CC) $(CUDA_ARCH) -G -g -c cuda_functions.cu $(GLIB_CFLAGS)
+	
+	
 
 build_control:build_control.c
 	gcc build_control.c -o build_control

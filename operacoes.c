@@ -47,4 +47,5 @@ int check_base_valida(char c){
 	else return 0;
 }
 
+
 	
