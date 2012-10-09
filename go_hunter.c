@@ -186,6 +186,7 @@ void load_buffer_CUDA(Buffer *d_buffer,int *load,int n){
 	}
 		
 	//Destroy h_buffer
+	//for(i=0;i<buffer_size;i++) free(h_buffer.seq);
 	return;
 }
 
@@ -458,7 +459,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(hold[i]){
 							case 1:
-								cudaMemcpy(tmp,buffer.seq[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
 								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)	
 									//printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
@@ -467,7 +468,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 								buffer_load--;
 							break;
 							case 2:
-								cudaMemcpy(tmp,buffer.seq[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
 								if(verbose == TRUE && silent != TRUE)
 									//printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								enfileirar(f_antisensos,get_antisenso(tmp));

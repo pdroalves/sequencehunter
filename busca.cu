@@ -132,12 +132,12 @@ __global__ void k_buscador(int bloco1,int bloco2, int blocos,char **data,int *re
 	
   resultados[id] = tipo;
 
+  //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
   if(s_match == totalmatchs || as_match == totalmatchs){
-   // printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-    for(i=0;i<blocoZ;i++){
-      seq[i] = seq[x0 + i];
-    }
-    seq[i] = '\0';
+		for(i=0;i<blocoZ;i++){
+		  seq[i] = seq[x0 + i];
+		}
+		seq[i] = '\0';
 	}
 	
 	return;
