@@ -495,6 +495,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 			//////////////////////////////////////////
 			//////////////////////////////////////////
 			//////////////////////////////////////////
+			cudaFree(resultados);
 			}
 		
 		}
@@ -503,6 +504,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 	//printf("Iterações executadas: %d.\n",iter);
 	//free(tmp);
 	cudaDeviceReset();
+	cudaFree(data);
 	return;
 }
 
