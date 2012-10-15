@@ -28,7 +28,112 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgra
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador(int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_buscador2(int bloco1,int bloco2, int blocos,char **data,int *resultados,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+ 
+  ////////
+  ////////
+  ////////
+  ////////		Recebe o tamanho dos blocos 1 e 2
+  ////////		Recebe o tamanho total da sequência
+  ////////		Recebe o endereço com todo o buffer
+  ////////		Recebe ponteiros para cada vertice do grafo
+  ////////
+  ////////
+  ////////
+  ////////
+  											
+  const int posicao = threadIdx.x;
+  char *seq = data[posicao];//Seto ponteiro para a sequência que será analisada
+  //printf("%d: Peguei: %s\n",posicao,seq);
+  int i;
+  int s_match;
+  int as_match;
+  vgrafo *atual;
+  vgrafo *anterior;
+  vgrafo *ant_anterior;
+  int x0=1;
+  int x0S;
+  int x0A;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
+  int xn;/////
+  int size = bloco1 + bloco2;
+  int blocoZ = blocos - size;//Total de bases que queremos encontrar
+  int tipo = 0;						
+  s_match = as_match = 0;
+  i=0;
+  
+  ////////////////////
+  ////////////////////										
+  //Iteração inicial//																			
+  ////////////////////
+  ////////////////////
+  if(0 == bloco1) x0S = i;
+  if(0 == bloco2) x0A = i;
+  ant_anterior = busca_vertice(seq[i],a,c,g,t);
+  if(ant_anterior!=NULL)
+	caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
+  i++;
+		
+  if(s_match == bloco1) x0S = i;
+  if(as_match == bloco2) x0A = i;
+  anterior = busca_vertice(seq[i],a,c,g,t);
+  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
+  i++;
+  
+  																			
+  ///////////////////////
+  ///////////////////////					
+  //Iterações seguintes//																			
+  ///////////////////////
+  ///////////////////////
+  										
+  while( seq[i] != '\0' && s_match < size && as_match < size) {
+	  //printf("s_match: %d\n",s_match);
+	  //printf("as_match: %d\n",as_match);
+	  
+	if(s_match == bloco1){
+		//printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+		x0 = i;//Marca primeiro elemento 
+		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+		i = xn;  //Salta o bloco variável
+	}
+	if(as_match == bloco2){
+		//printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+		x0 = i;//Marca primeiro elemento 
+		xn = x0 + blocoZ;//Marca primeiro elemento do bloco 2
+		i = xn;  //Salta o bloco variável
+	}
+    atual = busca_vertice(seq[i],a,c,g,t);
+    if(atual != NULL)
+      caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
+    i++;
+    ant_anterior = anterior;
+    anterior = atual;
+  }
+
+  ///////////////////////////////											
+  //Guarda o que foi encontrado//
+  ///////////////////////////////
+  
+  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
+	
+	
+    if(s_match == size || as_match == size){
+		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+		
+			resultados[posicao] = tipo;
+		
+		for(i=0;i<blocoZ;i++){
+		  seq[i] = seq[x0 + i];
+		}
+		seq[i] = '\0';
+		return;
+	}
+	seq[0] = '\0';
+	
+	
+  return;
+}
+__global__ void k_buscador(int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,char **foundedSeqs,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 
 	
   ////////
@@ -90,11 +195,11 @@ __global__ void k_buscador(int bloco1,int bloco2, int totalmatchs,char **data,in
     //printf("%d - as_match: %d\n",i+1,as_match);
 		  
     if(s_match == bloco1){
-      //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
+      //printf("--> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",i,seq);
       x0S = i;
     }
     if(as_match == bloco2){
-      //printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
+      //printf("--> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",i,seq);
       x0A = i;
     }
     atual = busca_vertice(seq[i],a,c,g,t);
@@ -108,30 +213,27 @@ __global__ void k_buscador(int bloco1,int bloco2, int totalmatchs,char **data,in
   //Guarda o que foi encontrado//
   ///////////////////////////////
 	  
-  printf("s_match: %d - as_match: %d\n",s_match,as_match);
+  //printf("s_match: %d - as_match: %d - x0S: %d - x0A: %d\n",s_match,as_match,x0S,x0A);
  // printf("totalmatchs: %d\n",totalmatchs);
   
   if(s_match == totalmatchs){
-    x0 = x0S;
 	resultados[id] = SENSO;
-    printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+    //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 	for(i=0;i<blocoZ;i++){
-	  seq[i] = seq[x0 + i];
+	   foundedSeqs[id][i] = seq[x0S + i];
 	}
-	seq[i] = '\0';
+	 foundedSeqs[id][i] = '\0';
   }
   else
    if(as_match == totalmatchs){
-		x0 = x0A;
 		resultados[id] = ANTISENSO;
-		printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 		for(i=0;i<blocoZ;i++){
-		  seq[i] = seq[x0 + i];
+		  foundedSeqs[id][i] = seq[x0A + i];
 		}
-		seq[i] = '\0';
+		foundedSeqs[id][i] = '\0';
 	}
 	
-	__syncthreads();
 	return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -273,23 +375,28 @@ extern "C" void cudaCopyCharArrays(char **src,char **dst,int n){
 }
 
 extern "C" char** cudaGetArrayOfArraysChar(int narrays,int arrays_size){
+	char **cudaArray;
 	char **array;
 	int i;
-	cudaMalloc((void**)&array,narrays*sizeof(char*));
+	array = (char**)malloc(narrays*sizeof(char*));
+	cudaMalloc((void**)&cudaArray,narrays*sizeof(char*));
 	checkCudaError();
+	
 	for(i=0;i<narrays;i++){ 
 		cudaMalloc((void**)&(array[i]),arrays_size*sizeof(char));
 		checkCudaError();
 	}
+	cudaMemcpy(cudaArray,array,narrays*sizeof(char*),cudaMemcpyHostToDevice);
 		
-	return array;
+	checkCudaError();
+	return cudaArray;
 }
 
-extern "C" void k_busca(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+extern "C" void k_busca(int num_blocks,int num_threads,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,char **foundedSeqs,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+	k_buscador<<<dimGrid,dimBlock>>>(bloco1,bloco2,blocos,data,resultados,foundedSeqs,d_a,d_c,d_g,d_t);//Kernel de busca
 	cudaThreadSynchronize();
 	checkCudaError();
 	return;

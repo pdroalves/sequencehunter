@@ -19,7 +19,7 @@
 #include "log.h"
 #include "fila.h"
 
-#define buffer_size 4 // Capacidade máxima do buffer
+#define buffer_size 512 // Capacidade máxima do buffer
 #define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
 const char tmp_s_name[11] = "tmp_sensos";
 const char tmp_as_name[15] = "tmp_antisensos";
@@ -211,7 +211,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	Buffer buffer;
 	char *tmp;
 	int blocoV = blocos - bloco1 - bloco2+1;
-	int buffer_size_NC = 5120;
+	int buffer_size_NC = buffer_size*2;
 	int i;
 	int tam;
 	int p=0;
@@ -327,7 +327,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 					}
 					
 										
-					if(buffer.load != 0)
+					if(buffer.load > 0)
 					{
 						printf("Erro! Buffer não foi totalmente esvaziado.\n");
 						buffer.load = 0;
@@ -433,33 +433,39 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 			// Realiza as iteracoes///////////////////
 			//////////////////////////////////////////
 			int *hold;
-			char **resultados;
+			int *resultados;
 			int num_blocks;
 			int num_threads;
+			char **d_foundedSeqs;
+			char **h_foundedSeqs;
 			num_blocks = 1;
 			num_threads = buffer_size;
 			char *tmp;
 			
 			tmp = (char*)malloc((blocoV+1)*sizeof(char));
 			hold = (int*)malloc(buffer_size*sizeof(int));
-			cudaMalloc((void**)&resultados,buffer_size*sizeof(char*));
-			
+			cudaMalloc((void**)&resultados,buffer_size*sizeof(int));
+			d_foundedSeqs = cudaGetArrayOfArraysChar(buffer_size,blocoV+1);
+			h_foundedSeqs = (char**)malloc(buffer_size*sizeof(char*));
+			checkCudaError();
+					
 			while( buffer_load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 			while(buffer_load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-					printf("///////////////////////\n");
-					k_busca(num_blocks,num_threads,bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+					//printf("///////////////////////\n");
+					k_busca(num_blocks,num_threads,bloco1,bloco2,blocos,data,resultados,d_foundedSeqs,d_a,d_c,d_g,d_t);//Kernel de busca
 					tam = buffer_load;
 					p += tam;
 					//printf("%d\n",p);
 					cudaMemcpy(hold,resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
+					cudaMemcpy(h_foundedSeqs,d_foundedSeqs,buffer_size*sizeof(char*),cudaMemcpyDeviceToHost);
 					checkCudaError();
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(hold[i]){
 							case SENSO:
-								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,h_foundedSeqs[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
 								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)	
 									printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
@@ -468,7 +474,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 								buffer_load--;
 							break;
 							case ANTISENSO:
-								cudaMemcpy(tmp,buffer.seq[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+								cudaMemcpy(tmp,h_foundedSeqs[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
 								checkCudaError();
 								if(verbose == TRUE && silent != TRUE)
 									printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
@@ -483,7 +489,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					}
 					
 										
-					if(buffer_load != 0)
+					if(buffer_load > 0)
 					{
 						printf("Erro! Buffer não foi totalmente esvaziado.\n");
 						buffer_load = 0;
