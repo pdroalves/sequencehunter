@@ -11,9 +11,7 @@
 #define TAM_MAX 10000
 
 void get_setup(int*);	
-void fill_buffer(struct buffer*,int);
 int check_seq(char*,int*,int*,int*);
-void prepare_buffer(struct buffer*,int);
 void close_file();
 int open_file(char **entrada,int);
 
@@ -143,8 +141,6 @@ void prepare_buffer_CUDA(Buffer *d_buffer,int n,int c){
 	int i;
 	char *tamanho_do_buffer;
 	
-	d_buffer->capacidade = c;
-	d_buffer->load = 0;
 	d_buffer->seq = (char**)malloc(c*sizeof(char*));
 
 	for(i=0;i<c;i++) 
@@ -159,7 +155,7 @@ void prepare_buffer_CUDA(Buffer *d_buffer,int n,int c){
 	return;
 }
 
-void fill_buffer(Buffer *b,int n){
+void fill_buffer(Buffer *b){
 	int i = 0;
 	int j = 0;
 	char *hold;
@@ -183,6 +179,33 @@ void fill_buffer(Buffer *b,int n){
 	}
 	free(hold);
 	return;
+}
+
+int fill_buffer_CUDA(char **seqs,int MAX_TO_LOAD){
+	int i = 0;
+	int j = 0;
+	char *hold;
+	
+	hold = (char*)malloc(TAM_MAX*sizeof(char));
+	
+	//Enche buffer
+	for(j=0;j < files && i < MAX_TO_LOAD;j++){		
+		while(i < MAX_TO_LOAD && !feof(f[j])){
+				fscanf(f[j],"%s",hold);
+				if(check_seq_valida(hold)){
+					//printf("Lido: %s\n",hold);
+					strcpy(seqs[i],hold);
+					strcat(seqs[i],"\0");
+					i++;
+				}
+		}
+		if(i < MAX_TO_LOAD && i!=0){ 
+			i--;
+		}
+		if(feof(f[files-1]) && i == 0) i = -1;//Não ha mais arquivos
+	}
+	free(hold);
+	return i;
 }
 
 void despejar_seq(char *seq,FILE *f){

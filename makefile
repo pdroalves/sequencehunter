@@ -22,9 +22,9 @@ all:cmd gui
 
 ##Linux##################################
 #########################################
-cmd:shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
+cmd:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
 	./build_control version
-	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
+	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
 gui:shunter-gui.o_linux log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o
 	$(CC_LINUX) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
@@ -43,6 +43,12 @@ shunter-cmd.o:shunter-cmd.c
 	
 go_hunter.o:go_hunter.c
 	$(CC_LINUX) -g -c go_hunter.c -o go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	
+go_hunter_cuda.o:go_hunter_cuda.c
+	$(CC_LINUX) -g -c go_hunter_cuda.c -o go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	
+go_hunter_noncuda.o:go_hunter_noncuda.c
+	$(CC_LINUX) -g -c go_hunter_noncuda.c -o go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 load_data.o:load_data.c
 	$(CC_LINUX) -g -c load_data.c -o load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++

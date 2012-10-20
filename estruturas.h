@@ -10,6 +10,9 @@
 #define ESTRUTURAS_H
 #define SENSO 1
 #define ANTISENSO 2
+#define buffer_size 512 // Capacidade máxima do buffer
+#define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
+char **data;
 
 struct vertice_grafo{
 		char vertice;
