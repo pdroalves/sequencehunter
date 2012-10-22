@@ -116,7 +116,7 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
 	  ///////////////////////////////
 		
 				  
-	  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
+	  //printf("s_match: %d - as_match: %d, x0S: %d, x0A: %d\n",s_match,as_match,x0S,x0A);
 	  //printf("totalmatchs: %d\n",totalmatchs);
 	  
 	  

@@ -30,8 +30,7 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 			print_seqs_carregadas(loaded);
 			//Copia sequencias para GPU
 			for(i=0;i<loaded;i++)
-				cudaHostGetDevicePointer(&d_seqs[i],h_seqs[i],0);
-				//cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size)*sizeof(char),cudaMemcpyHostToDevice,stream);
+				cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
 			cudaMemcpyAsync(data,d_seqs,loaded*sizeof(char*),cudaMemcpyHostToDevice,stream);	
 		}		
 		*load = loaded;	
@@ -73,10 +72,12 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 	start_fila_lock();
 	omp_init_lock(&DtH_copy_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
-	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocMapped | cudaHostAllocWriteCombined);
+	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
 	for(i=0;i<buffer_size;i++)
-		cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocMapped | cudaHostAllocWriteCombined);
-	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocMapped | cudaHostAllocWriteCombined);	
+		cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocDefault);
+	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+	for(i=0;i<buffer_size;i++)
+			cudaMalloc((void**)&d_data[i],(n+1)*sizeof(char));
 	cudaHostAlloc((void**)&h_resultados,buffer_size*sizeof(int),cudaHostAllocDefault);	
 		
 	#pragma omp parallel num_threads(4) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(seqsToProcess) shared(h_resultados)
@@ -118,7 +119,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 				cudaMalloc((void**)&dp_founded,buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
 					cudaMalloc((void**)&d_founded[i],(blocoV+1)*sizeof(char));
-				cudaMemcpyAsync(dp_founded,d_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice,stream1);
+				cudaMemcpyAsync(dp_founded,d_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice,stream2);
 	
 				while( buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -135,9 +136,9 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 								cudaMemcpyAsync(founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
 						checkCudaError();
 						processadas += buffer_load;	
-						seqsToProcess = buffer_load;	
+						seqsToProcess = buffer_load;
+						buffer_load = 0;	
 						omp_unset_lock(&DtH_copy_lock);
-						cudaStreamSynchronize(stream2);
 						while(buffer_load==0){}
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
@@ -157,6 +158,7 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 						omp_set_lock(&DtH_copy_lock);
 						// Essa parte pode ser feita em paralelo
 						for(i = 0; i < seqsToProcess;i++){//Copia sequências senso e antisenso encontradas
+							if(strcmp(founded[i],"") != 0)
 							switch(h_resultados[i]){
 								case SENSO:
 									tmp = founded[i];
@@ -164,7 +166,6 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
 									seqsToProcess--;
-									buffer_load--;
 								break;
 								case ANTISENSO:
 									tmp = founded[i];
@@ -172,11 +173,9 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
 									seqsToProcess--;
-									buffer_load--;
 								break;
 								default:
 									seqsToProcess--;
-									buffer_load--;
 								break;
 							}
 						}
