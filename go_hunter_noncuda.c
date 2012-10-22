@@ -5,6 +5,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include "estruturas.h"
+#include "go_hunter_noncuda.h"
 #include "load_data.h"
 #include "operacoes.h"
 #include "busca.h"
@@ -14,9 +15,9 @@
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
+
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
 const char tmp_ncuda_as_name[15] = "tmp_antisensos";
-
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil){
 	
 	int n;//Elementos por sequência

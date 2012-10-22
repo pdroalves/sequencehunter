@@ -209,13 +209,13 @@ int fill_buffer_CUDA(char **seqs,int MAX_TO_LOAD){
 }
 
 void despejar_seq(char *seq,FILE *f){
-	#pragma omp critical(Fila)
-	{
-		if(seq != NULL){
-			fputs(seq,f);
+	if(seq != NULL){
+			int size;
+			size = strlen(seq);
+			//fputs(seq,f);
+			fwrite(seq,sizeof(char),size,f);
 			free(seq);
 		}
-	}
 	return;
 }
 
@@ -225,7 +225,8 @@ char* carrega_do_arquivo(int n,FILE *filename){
 	{
 		if(!feof(filename)){
 			seq = (char*)malloc((n+1)*sizeof(char));
-			fgets(seq,n+1,filename);
+			fread(seq,sizeof(char),n,filename);
+			//fgets(seq,n+1,filename);
 		}else{
 			seq = NULL;
 		}

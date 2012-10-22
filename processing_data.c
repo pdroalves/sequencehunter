@@ -65,8 +65,8 @@ lista_ligada* processar(int n){
 	hash_table = criar_ghash_table();
 	//g_timer_start(timer);
 	
-	sensos = fopen("tmp_sensos","r");
-	antisensos = fopen("tmp_antisensos","r");
+	sensos = fopen("tmp_sensos.bin","rb");
+	antisensos = fopen("tmp_antisensos.bin","rb");
 
 	//Descarrega tudo para o HD e limpa a memória
 	/*despejar(p_sensos,sensos);

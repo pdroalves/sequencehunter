@@ -4,6 +4,7 @@
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include "go_hunter_cuda.h"
 #include "estruturas.h"
 #include "load_data.h"
 #include "operacoes.h"
@@ -15,9 +16,9 @@ omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 __constant__ char *d_buffer[buffer_size];
-const char tmp_cuda_s_name[11] = "tmp_sensos";
-const char tmp_cuda_as_name[15] = "tmp_antisensos";
 omp_lock_t DtH_copy_lock;
+const char tmp_cuda_s_name[] = "tmp_sensos.bin";
+const char tmp_cuda_as_name[] = "tmp_antisensos.bin";
 
 void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStream_t stream){
 	int i;
@@ -39,71 +40,30 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 	return;
 }
 
-void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
-	
-	
-	Buffer buffer;
-	int blocoV = blocos - bloco1 - bloco2+1;
-	int i;
-	int seqsToProcess;
-	int processadas;
-	int buffer_load;
-	int *h_resultados;
-	Fila *f_sensos;
-	Fila *f_antisensos;
-	char **h_data;
-	char **d_data;
-	char **founded;		
-	cudaStream_t stream1;
-	cudaStream_t stream2;
 
-	//Inicializa buffer
-	cudaStreamCreate(&stream1);
-	cudaStreamCreate(&stream2);
-	cudaHostAlloc((void**)&founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
-	for(i=0;i<buffer_size;i++)
-		cudaHostAlloc((void**)&founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
-	
-	buffer_load = 0;
-	seqsToProcess = 0;
-	processadas=0;
-	f_sensos = criar_fila();
-	f_antisensos = criar_fila();
-	start_fila_lock();
-	omp_init_lock(&DtH_copy_lock);
-	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
-	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
-	for(i=0;i<buffer_size;i++)
-		cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocDefault);
-	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
-	for(i=0;i<buffer_size;i++)
-			cudaMalloc((void**)&d_data[i],(n+1)*sizeof(char));
-	cudaHostAlloc((void**)&h_resultados,buffer_size*sizeof(int),cudaHostAllocDefault);	
-		
-	#pragma omp parallel num_threads(4) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(seqsToProcess) shared(h_resultados)
-	{	
-		
-		#pragma omp sections
-		{
-			#pragma omp section
-			{
+
+void buffer_manager(int *buffer_load,char **h_data,char **d_data,int n,cudaStream_t stream1){
 				//////////////////////////////////////////
 				// Carrega o buffer //////////////////////
 				//////////////////////////////////////////
-					while(buffer_load != GATHERING_DONE){//Looping até o final do buffer
+					while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
 					//printf("%d.\n",buffer.load);
-					if(buffer_load == 0){
-						load_buffer_CUDA(h_data,d_data,n,&buffer_load,stream1);
+					if(*buffer_load == 0){
+						load_buffer_CUDA(h_data,d_data,n,buffer_load,stream1);
 					}	
 				}
 				//////////////////////////////////////////
 				//////////////////////////////////////////
 				//////////////////////////////////////////	
-			}
-			#pragma omp section
-			{
+}
+
+
+void search_manager(int *buffer_load,int *seqsToProcess,int *processadas,int *h_resultados,Fila *founded,int bloco1,int bloco2,int blocoV,cudaStream_t stream1,cudaStream_t stream2,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+				int i;
 				int num_blocks;
 				int num_threads;
+				int blocos;
+				char **h_founded;
 				char **d_founded;
 				char **dp_founded;	
 				/*if(buffer_size >= 512){
@@ -114,70 +74,82 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					num_threads = buffer_size;
 				//}
 				int *d_resultados;
+				
+				blocos = blocoV + bloco1 + bloco2 - 1;
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
 				cudaHostAlloc((void**)&d_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				cudaMalloc((void**)&dp_founded,buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
 					cudaMalloc((void**)&d_founded[i],(blocoV+1)*sizeof(char));
 				cudaMemcpyAsync(dp_founded,d_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice,stream2);
+				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				for(i=0;i<buffer_size;i++)
+					cudaHostAlloc((void**)&h_founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
 	
-				while( buffer_load == 0){
+				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
-				while( buffer_load != GATHERING_DONE){
+				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						k_busca(num_threads,num_blocks,buffer_load,bloco1,bloco2,blocos,data,d_resultados,dp_founded,d_a,d_c,d_g,d_t,stream1);//Kernel de busca
+						k_busca(num_threads,num_blocks,*buffer_load,bloco1,bloco2,blocos,data,d_resultados,dp_founded,d_a,d_c,d_g,d_t,stream1);//Kernel de busca
 						omp_set_lock(&DtH_copy_lock);
 						// Inicia processamento dos resultados
 						//printf("%d\n",p);
 						cudaMemcpyAsync(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost,stream2);
 						checkCudaError();
-						for(i=0;i<buffer_load;i++)
+						for(i=0;i<*buffer_load;i++)
 							if(h_resultados[i] != 0)
-								cudaMemcpyAsync(founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
+								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
+						for(i=0;i<*buffer_load;i++)
+							if(h_resultados[i] != 0)
+								enfileirar(founded,h_founded[i]);
 						checkCudaError();
-						processadas += buffer_load;	
-						seqsToProcess = buffer_load;
-						buffer_load = 0;	
+						*processadas += *buffer_load;	
+						*seqsToProcess = *buffer_load;
+						*buffer_load = 0;	
 						omp_unset_lock(&DtH_copy_lock);
-						while(buffer_load==0){}
+						cudaStreamSynchronize(stream2);
+						print_fila(founded);
+						while(*buffer_load==0){}
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
 				cudaFreeHost(d_resultados);
-			}		
-			#pragma omp section
-			{
+}
+
+void results_manager(int *buffer_load,int *seqsToProcess,int processadas,int *h_resultados,Fila *founded,Fila *f_sensos,Fila *f_antisensos){
+	//////////////////////////////////////////
+				// Realiza o processamento das iteracoes//
 				//////////////////////////////////////////
-				// Realiza as iteracoes///////////////////
-				//////////////////////////////////////////
+				int i;
 				char *tmp;
 				
-				while( seqsToProcess == 0){
+				while( *seqsToProcess == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
-				while(buffer_load != GATHERING_DONE){
+				while(*buffer_load != GATHERING_DONE){
 						omp_set_lock(&DtH_copy_lock);
 						// Essa parte pode ser feita em paralelo
-						for(i = 0; i < seqsToProcess;i++){//Copia sequências senso e antisenso encontradas
-							if(strcmp(founded[i],"") != 0)
+						i=0;
+						while(tamanho_da_fila(founded) > 0){//Copia sequências senso e antisenso encontradas
 							switch(h_resultados[i]){
 								case SENSO:
-									tmp = founded[i];
+									tmp = desenfileirar(founded);
 									if(verbose == TRUE && silent != TRUE)	
 										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
-									seqsToProcess--;
+									*seqsToProcess--;
 								break;
 								case ANTISENSO:
-									tmp = founded[i];
+									tmp = desenfileirar(founded);
 									if(verbose == TRUE && silent != TRUE)
 										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
-									seqsToProcess--;
+									*seqsToProcess--;
 								break;
 								default:
-									seqsToProcess--;
+									*seqsToProcess--;
 								break;
 							}
+							i++;
 						}
 						omp_unset_lock(&DtH_copy_lock);
 											
@@ -188,26 +160,26 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 							buffer_load = 0;
 						}*/
 						
-						while(seqsToProcess==0 && buffer_load != GATHERING_DONE){}
+						while(*seqsToProcess==0 && *buffer_load != GATHERING_DONE){}
 										
 					}
-				}
-				#pragma omp section
-				{
+}
+
+void memory_cleaner_manager(int *buffer_load,Fila *f_sensos,Fila *f_antisensos){
 					//////////////////////////////////////////
 					// Libera memoria ////////////////////////
 					//////////////////////////////////////////
 					  FILE *tmp_sensos;
 					  FILE *tmp_antisensos;
 					  
-					  tmp_sensos = fopen(tmp_cuda_s_name,"w");
-					  tmp_antisensos = fopen(tmp_cuda_as_name,"w");
+					  tmp_sensos = fopen(tmp_cuda_s_name,"wb");
+					  tmp_antisensos = fopen(tmp_cuda_as_name,"wb");
 					  
-					  while( buffer_load == 0){
+					  while( *buffer_load == 0){
 						}//Aguarda para que o buffer seja enchido pela primeira vez
 						
 
-					  while(buffer_load != GATHERING_DONE){
+					  while(*buffer_load != GATHERING_DONE){
 						if(tamanho_da_fila(f_sensos) > 0){
 							despejar_seq(desenfileirar(f_sensos),tmp_sensos);
 						}
@@ -229,7 +201,72 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 					//////////////////////////////////////////
 					//////////////////////////////////////////
 					//////////////////////////////////////////
-				}
+}
+
+
+void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+	
+	
+	Buffer buffer;
+	int blocoV = blocos - bloco1 - bloco2+1;
+	int i;
+	int seqsToProcess;
+	int processadas;
+	int buffer_load;
+	int *h_resultados;
+	Fila *f_sensos;
+	Fila *f_antisensos;
+	Fila *founded;
+	char **h_data;
+	char **d_data;		
+	cudaStream_t stream1;
+	cudaStream_t stream2;
+
+	//Inicializa buffer
+	cudaStreamCreate(&stream1);
+	cudaStreamCreate(&stream2);
+	cudaHostAlloc((void**)&founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
+	for(i=0;i<buffer_size;i++)
+		cudaHostAlloc((void**)&founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
+	
+	buffer_load = 0;
+	seqsToProcess = 0;
+	processadas=0;
+	f_sensos = criar_fila();
+	f_antisensos = criar_fila();
+	founded = criar_fila();
+	start_fila_lock();
+	omp_init_lock(&DtH_copy_lock);
+	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
+	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+	for(i=0;i<buffer_size;i++)
+		cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocDefault);
+	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+	for(i=0;i<buffer_size;i++)
+			cudaMalloc((void**)&d_data[i],(n+1)*sizeof(char));
+	cudaHostAlloc((void**)&h_resultados,buffer_size*sizeof(int),cudaHostAllocDefault);	
+		
+	#pragma omp parallel num_threads(4) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(seqsToProcess) shared(h_resultados)
+	{	
+		
+		#pragma omp sections
+		{
+			#pragma omp section
+			{
+				buffer_manager(&buffer_load,h_data,d_data,n,stream1);
+			}
+			#pragma omp section
+			{
+				search_manager(&buffer_load,&seqsToProcess,&processadas,h_resultados,founded,bloco1,bloco2,blocoV,stream1,stream2,d_a,d_c,d_g,d_t);
+			}		
+			#pragma omp section
+			{
+				results_manager(&buffer_load,&seqsToProcess,processadas,h_resultados,founded,f_sensos,f_antisensos);
+			}
+			#pragma omp section
+			{
+				memory_cleaner_manager(&buffer_load,f_sensos,f_antisensos);
+			}
 		}
 	}
 	//printf("Iterações executadas: %d.\n",iter);
@@ -247,6 +284,10 @@ void cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_
 	//cudaFree(data);
 	return;
 }
+
+
+
+
 
 void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
 	//Recebe um vetor de caracteres com o padrão a ser procurado

@@ -152,7 +152,9 @@
 		printString(NULL,"Forçando modo OpenMP.");
 		aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
 	}
-	else aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+	else{
+		aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+	}
 	processar(bv_size);
 	  
 	  if(!silent)

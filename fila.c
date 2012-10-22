@@ -48,7 +48,7 @@ FilaItem* criar_elemento_fila(char *seq){
 void enfileirar(Fila *f,char *seq){
 		FilaItem* novo;
          omp_set_lock(&fila_lock);
-		//printf("Enfileirando\n");
+		printf("Enfileirando: %s\n",seq);
 		novo = criar_elemento_fila(seq);
 		
 		switch(f->size){
@@ -115,6 +115,22 @@ int tamanho_da_fila(Fila *f){
 	return size;
 }
 
+void print_fila(Fila *f){
+	int i;
+	char *seq;
+	FilaItem *fi;
+	printf("Imprimindo fila:\n");
+	
+    omp_set_lock(&fila_lock);
+    if(f->size > 0){
+		fi = f->first;
+		for(i=0;i<f->size;i++){
+			printf("%s\n",fi->seq);
+			fi = fi->prox;
+		}
+	}
+    omp_unset_lock(&fila_lock);
+}
 
 void destroy(Fila *f){
 	if(f->size != 0){

@@ -26,7 +26,6 @@ struct vertice_grafo{
 };
 typedef struct vertice_grafo vgrafo;
 
-
 struct fila_item{
 	char *seq;
 	struct fila_item *prox;//Ponteiro para o item seguinte
