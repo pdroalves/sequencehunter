@@ -28,7 +28,7 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgra
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,char **founded,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 
   
   ////////
@@ -55,14 +55,16 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
   char *seq;
   int id;
   int tipo;
+  char *seqToReturn;
   
   tipo = 0;
   blocoZ = totalmatchs - bloco1 - bloco2;
   x0 = x0S = x0A = 1;
-  id = threadIdx.x;
+  id = threadIdx.x + blockIdx.x*blockDim.x;
   //printf("id:%d,loaded:%d\n",id,loaded);
   if(id < loaded){
 	  seq = data[id];
+	  seqToReturn = founded[id];
 	  //printf("Loaded: %s\n",seq);
 	  s_match = as_match = 0;
 	  i=0;
@@ -121,20 +123,20 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
 	  if(s_match == totalmatchs){
 		x0 = x0S;
 		tipo = 1;
-	  }
-	  if(as_match == totalmatchs){
-		x0 = x0A;
-		tipo = 2;
-	  }
+	  }else
+		  if(as_match == totalmatchs){
+			x0 = x0A;
+			tipo = 2;
+		  }
 		
 	  resultados[id] = tipo;
 
-	  if(s_match == totalmatchs || as_match == totalmatchs){
+	  if(tipo != 0){
 		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
 		for(i=0;i<blocoZ;i++){
-		  seq[i] = seq[x0 + i];
+		  seqToReturn[i] = seq[x0 + i];
 		}
-		seq[i] = '\0';
+		seqToReturn[i] = '\0';
 	  }
 		
 	}	
@@ -291,11 +293,11 @@ extern "C" char** cudaGetArrayOfArraysChar(int narrays,int arrays_size){
 	return array;
 }
 
-extern "C" void k_busca(int num_threads,int num_blocks,const int loaded,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,cudaStream_t stream){
+extern "C" void k_busca(int num_threads,int num_blocks,const int loaded,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,char **founded,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,cudaStream_t stream){
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,bloco1,bloco2,blocos,data,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,bloco1,bloco2,blocos,data,resultados,founded,d_a,d_c,d_g,d_t);//Kernel de busca
 	checkCudaError();
 	return;
 }

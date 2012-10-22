@@ -17,7 +17,6 @@ struct lista_ligada {
 #define PROCESSING_DATA_H
 void gerar_relatorio();
 lista_ligada *processar(int n);
-int get_sequencias_validas(FILE**,int);
 int check_seq_valida(char *p);
 void quicksort(lista_ligada **l, int left, int right);
 #endif

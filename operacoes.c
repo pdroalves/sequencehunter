@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <omp.h>
+#define TAM_MAX 10000
 
 char* get_antisenso(char *s){
 	int i;
@@ -47,5 +49,33 @@ int check_base_valida(char c){
 	else return 0;
 }
 
+int get_sequencias_validas(FILE **f,int files){
+	int j = 0;
+	int notify_tamanho_variavel = 0;
+	int seqs_validas = 0;
+	int m = 0;
+	int n = 0;
+	char *tmp;
+	
+	#pragma omp parallels shared(files) shared(seqs_validas)
+	{
+		tmp = (char*)malloc(TAM_MAX*sizeof(char));
+		for(j=0;j < files;j++){		
+			while(feof(f[j]) == 0){
+					fscanf(f[j],"%s",tmp);	
+					n = strlen(tmp);
+					if(check_seq_valida(tmp)){	
+						seqs_validas++;
+						//printf("%d\n",seqs_validas);
+						if(m == 0) m = n;
+						else if(n!=m && notify_tamanho_variavel == 0) notify_tamanho_variavel = 1;
+					}
+					tmp[0] = '\0';
+			}
+		}
+	}
+	for(j=0;j<files;j++) rewind(f[j]);
+	return seqs_validas;
+}
 
 	

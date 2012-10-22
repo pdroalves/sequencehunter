@@ -221,4 +221,3 @@ extern "C" int findCudaDevice()
 }
 // end of CUDA Helper Functions
 
-

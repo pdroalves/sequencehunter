@@ -54,7 +54,7 @@ load_data.o:load_data.c
 	$(CC_LINUX) -g -c load_data.c -o load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 operacoes.o:operacoes.c
-	$(CC_LINUX) -g -c operacoes.c -o operacoes.o $(GLIB_CFLAGS) 
+	$(CC_LINUX) -g -c operacoes.c -o operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
 	
 log.o:log.c
 	$(CC_LINUX) -g -c log.c -o log.o $(GLIB_CFLAGS)
@@ -63,7 +63,7 @@ linkedlist.o:linkedlist.c
 	$(CC_LINUX) -g -c linkedlist.c -o linkedlist.o $(GLIB_CFLAGS)
 	
 processing_data.o:processing_data.c
-	$(CC_LINUX) -g -c processing_data.c -o processing_data.o $(GLIB_CFLAGS)
+	$(CC_LINUX) -g -c processing_data.c -o processing_data.o $(GLIB_CFLAGS) 
 	
 fila.o:fila.c
 	$(CC_LINUX) -g -c fila.c -o fila.o $(GLIB_CFLAGS)
