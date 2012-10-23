@@ -46,11 +46,10 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-lista_ligada* processar(int n){
+lista_ligada* processar(GHashTable* hash_table,int n){
 	
 //	lista_ligada *l;
 //	lista_ligada **resultados;
-	GHashTable* hash_table;
 	//Despareados *desp;
 	FILE *sensos;
 	FILE *antisensos;
@@ -62,47 +61,8 @@ lista_ligada* processar(int n){
 	//GTimer *timer;
 	
 	//timer = g_timer_new();
-	hash_table = criar_ghash_table();
 	//g_timer_start(timer);
 	
-	sensos = fopen("tmp_sensos.bin","rb");
-	antisensos = fopen("tmp_antisensos.bin","rb");
-
-	//Descarrega tudo para o HD e limpa a memória
-	/*despejar(p_sensos,sensos);
-	despejar(p_antisensos,antisensos);
-	destroy(p_sensos);
-	destroy(p_antisensos);
-	*/
-	//Processa sensos
-	#pragma omp parallel shared(n) shared(sensos) shared(hash_table) shared(s_tipos) private(hold)
-	{  
-		hold = carrega_do_arquivo(n,sensos);
-		while(hold != NULL && check_seq_valida(hold)){
-			retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-			if(retorno)
-				s_tipos++;
-			hold = carrega_do_arquivo(n,sensos);
-		}
-	}
-	//g_timer_stop(timer);
-	//printf("Pilha de sensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
-	
-	//g_timer_reset(timer);
-	//g_timer_start(timer);
-	//Processa antisensos
-	#pragma omp parallel shared(n) shared(antisensos) shared(hash_table) shared(as_tipos) private(hold)
-	{
-		hold = carrega_do_arquivo(n,antisensos);
-		while( hold != NULL && check_seq_valida(hold)){
-			retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-			if(retorno)
-				as_tipos++;
-			hold = carrega_do_arquivo(n,antisensos);
-		}
-	}
-	fclose(sensos);
-	fclose(antisensos);
 	//g_timer_stop(timer);
 	//printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
@@ -200,12 +160,4 @@ void quicksort(lista_ligada **l, int left, int right) {
     quicksort(l, r + 1, right);
   }
   
-}
-
-void gerar_relatorio(){
-		//		Deve criar arquivo data-hora.txt com a sequência buscada, a quantidade de sequências lidas na biblioteca, tamanho do buffer,
-		//	tempo de processamento, tipos e quantidade de sensos e antisensos encontrados (inclusive sua quantidade relativa) e quantidade de
-		//	sensos e antisensos encontrados mas que foram descartados por não possuirem pares.
-	
-	
 }

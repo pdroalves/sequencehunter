@@ -18,44 +18,6 @@ gboolean silent;
 
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
 const char tmp_ncuda_as_name[15] = "tmp_antisensos";
-void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil){
-	
-	int n;//Elementos por sequência
-	vgrafo g_a;
-	vgrafo g_c;
-	vgrafo g_g;
-	vgrafo g_t;
-	verbose = verb;
-	silent = sil;
-	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
-	//cudaEvent_t start;
-	//cudaEvent_t stop;
-	//cudaEventCreate(&start);
-	//cudaEventCreate(&stop);
-	float tempo = 0;
-	printf("OpenMP Mode.\n");
-	get_setup(&n);
-	
-	setup_without_cuda(c,&g_a,&g_c,&g_g,&g_t);
-	
-	printString("Dados inicializados.\n",NULL);
-	printSet(n);
-	printString("Iniciando iterações:\n",NULL);
-	
-    //cudaEventRecord(start,0);
-	NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t);
-    //cudaEventRecord(stop,0);
-    //cudaEventSynchronize(stop);
-    //cudaEventElapsedTime(&tempo,start,stop);
-    
-	printString("Iterações terminadas. Tempo: ",NULL);
-	print_tempo(tempo);
-	destroy_grafo(&g_a,&g_c,&g_g,&g_t);
-	
-return;	
-}
-	
-
 
 
 void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
@@ -88,7 +50,7 @@ void load_buffer_NONCuda(Buffer *b,int n){
 	return;
 }
 
-void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
 	
 	Buffer buffer;
 	char *tmp;
@@ -99,6 +61,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	int p=0;
 	Fila *f_sensos;
 	Fila *f_antisensos;
+	GHashTable* hash_table;
 	
 	//Inicializa buffer
 	prepare_buffer(&buffer,buffer_size_NC);
@@ -106,7 +69,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	f_antisensos = criar_fila();
 	start_fila_lock();
 			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
+	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(hash_table)
 	{	
 		
 		#pragma omp sections
@@ -133,7 +96,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 		//////////////////////////////////////////
 		  FILE *tmp_sensos;
 		  FILE *tmp_antisensos;
-		  
+		  int retorno;
 		  tmp_sensos = fopen(tmp_ncuda_s_name,"w");
 		  tmp_antisensos = fopen(tmp_ncuda_as_name,"w");
 		  
@@ -141,25 +104,24 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 
-		  while(buffer.load != -1){
-		    if(tamanho_da_fila(f_sensos) > 0){
-				despejar_seq(desenfileirar(f_sensos),tmp_sensos);
-		    }
-		    if(tamanho_da_fila(f_antisensos) > 0){
-				despejar_seq(desenfileirar(f_antisensos),tmp_antisensos);
-			}
-		  }
-			
-			if(tamanho_da_fila(f_sensos) > 0){
-		      despejar_fila(f_sensos,tmp_sensos);
-			}
-		    if(tamanho_da_fila(f_antisensos) > 0){
-		      despejar_fila(f_antisensos,tmp_antisensos);
-			}
-			
-		  
-		  fclose(tmp_sensos);
-		  fclose(tmp_antisensos);
+	
+					  while(buffer.load != GATHERING_DONE){
+						if(tamanho_da_fila(f_sensos) > 0){
+							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+						}
+						if(tamanho_da_fila(f_antisensos) > 0){
+							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+						}
+					  }
+						
+						while(tamanho_da_fila(f_sensos) > 0){
+							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+						}
+						while(tamanho_da_fila(f_antisensos) > 0){
+							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+						}
+				
+					
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
@@ -228,10 +190,46 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo 
 	
 	//printf("Iterações executadas: %d.\n",iter);
 	//free(tmp);
-	return;
+	return hash_table;
 }
 
 
 
-
+GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil){
+	
+	int n;//Elementos por sequência
+	vgrafo g_a;
+	vgrafo g_c;
+	vgrafo g_g;
+	vgrafo g_t;
+	verbose = verb;
+	silent = sil;
+	GHashTable* hash_table;
+	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
+	//cudaEvent_t start;
+	//cudaEvent_t stop;
+	//cudaEventCreate(&start);
+	//cudaEventCreate(&stop);
+	float tempo = 0;
+	printf("OpenMP Mode.\n");
+	get_setup(&n);
+	
+	setup_without_cuda(c,&g_a,&g_c,&g_g,&g_t);
+	
+	printString("Dados inicializados.\n",NULL);
+	printSet(n);
+	printString("Iniciando iterações:\n",NULL);
+	
+    //cudaEventRecord(start,0);
+	hash_table = NONcudaIteracoes(bloco1,bloco2,blocos,n,&g_a,&g_c,&g_g,&g_t);
+    //cudaEventRecord(stop,0);
+    //cudaEventSynchronize(stop);
+    //cudaEventElapsedTime(&tempo,start,stop);
+    
+	printString("Iterações terminadas. Tempo: ",NULL);
+	print_tempo(tempo);
+	destroy_grafo(&g_a,&g_c,&g_g,&g_t);
+	
+return hash_table;	
+}
 

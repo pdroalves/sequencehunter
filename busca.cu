@@ -137,6 +137,7 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
 		  seqToReturn[i] = seq[x0 + i];
 		}
 		seqToReturn[i] = '\0';
+			//printf("%d - %s\n",tipo,seqToReturn);
 	  }
 		
 	}	

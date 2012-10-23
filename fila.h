@@ -3,7 +3,7 @@
 #ifndef FILA_H
 #define FILA_H
 
-Fila* criar_fila();
+Fila* criar_fila(char *nome;);
 void start_fila_lock();
 FilaItem* criar_elemento_fila(char *seq);
 void print_fila(Fila *f);

@@ -33,6 +33,7 @@ struct fila_item{
 typedef struct fila_item FilaItem;
 
 struct fila{
+	char *nome;
 	FilaItem *first;//Primeiro elemento da fila
 	FilaItem *end;//Ultimo elemento da fila
 	int size;//Elementos na fila

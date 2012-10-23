@@ -16,7 +16,7 @@ struct lista_ligada {
 #ifndef PROCESSING_DATA_H
 #define PROCESSING_DATA_H
 void gerar_relatorio();
-lista_ligada *processar(int n);
+lista_ligada *processar(GHashTable* hash_table,int n);
 int check_seq_valida(char *p);
 void quicksort(lista_ligada **l, int left, int right);
 #endif

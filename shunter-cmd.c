@@ -63,6 +63,7 @@
 	  int bv_size;
 	  int is_cuda_available = 1;
 	  int bibliotecas_validas;
+	  GHashTable* hash_table;
 
 	  
 	  //##########################
@@ -150,12 +151,12 @@
 	if(disable_cuda){
 		printf("Forçando modo OpenMP.\n");
 		printString(NULL,"Forçando modo OpenMP.");
-		aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
+		hash_table = aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
 	}
 	else{
-		aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+		hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
 	}
-	processar(bv_size);
+	processar(hash_table,bv_size);
 	  
 	  if(!silent)
 		printf("Algoritmo concluído.\n");

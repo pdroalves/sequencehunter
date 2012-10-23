@@ -19,9 +19,10 @@
 
 omp_lock_t fila_lock;
 
-Fila* criar_fila(){
+Fila* criar_fila(char *nome){
 	Fila *f;
-	f = (Fila*)malloc(1+sizeof(Fila));
+	f = (Fila*)malloc(sizeof(Fila));
+	f->nome = nome;
 	f->size = 0;
 	return f;
 }
@@ -48,7 +49,7 @@ FilaItem* criar_elemento_fila(char *seq){
 void enfileirar(Fila *f,char *seq){
 		FilaItem* novo;
          omp_set_lock(&fila_lock);
-		printf("Enfileirando: %s\n",seq);
+		//printf("Enfileirando: %s\n",seq);
 		novo = criar_elemento_fila(seq);
 		
 		switch(f->size){
@@ -70,6 +71,7 @@ void enfileirar(Fila *f,char *seq){
          omp_unset_lock(&fila_lock);
 	return;
 }
+
 
 void enfileirar_fila(Fila *A,Fila *B){
 	//Adiciona a fila B no final da fila A
