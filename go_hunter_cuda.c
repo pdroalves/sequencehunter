@@ -76,9 +76,7 @@ void buffer_manager(int *buffer_load,char **h_data,char **d_data,int n,cudaStrea
 					while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
 					//printf("%d.\n",buffer.load);
 					if(*buffer_load == 0){
-						omp_set_lock(&load_lock);
 						load_buffer_CUDA(h_data,d_data,n,buffer_load,stream1);
-						omp_unset_lock(&load_lock);
 					}	
 				}
 				THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
@@ -127,11 +125,10 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						omp_set_lock(&load_lock);
 						k_busca(num_threads,num_blocks,*buffer_load,bloco1,bloco2,blocos,data,d_resultados,dp_founded,d_a,d_c,d_g,d_t,stream1);//Kernel de busca
-						omp_unset_lock(&load_lock);
 						omp_set_lock(&DtH_copy_lock);
 						// Inicia processamento dos resultados
+						cudaStreamSynchronize(stream1);
 						//printf("%d\n",p);
 						loaded = *buffer_load;
 						*buffer_load = 0;	
@@ -139,8 +136,11 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 						checkCudaError();
 						for(i=0;i<loaded;i++)
-							if(h_resultados[i] != 0)
-								cudaMemcpy(h_founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost);
+							if(h_resultados[i] != 0){
+								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
+								checkCudaError();
+							}
+						cudaStreamSynchronize(stream2);
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] != 0){
 								enfileirar(founded,h_founded[i]);

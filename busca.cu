@@ -298,7 +298,7 @@ extern "C" void k_busca(int num_threads,int num_blocks,const int loaded,const in
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,bloco1,bloco2,blocos,data,resultados,founded,d_a,d_c,d_g,d_t);//Kernel de busca
+	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,bloco1,bloco2,blocos,data,resultados,founded,d_a,d_c,d_g,d_t);//Kernel de busca
 	checkCudaError();
 	return;
 }
