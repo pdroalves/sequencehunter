@@ -42,11 +42,15 @@ GHashTable* criar_ghash_table(){
 	return g_hash_table_new_full(g_str_hash,g_str_equal,free_key,free_value);
 }
 
+void destroir_ghash_table(GHashTable *hash_table){
+	g_hash_table_destroy (hash_table);
+	free(hash_table); 
+	return;
+}
+
 value* criar_value(int pares,int qsenso,int qasenso,float qnt_relativa){
 	value *valor;
 	valor = (value*)malloc(sizeof(value));
-	while(valor == NULL)
-		valor = (value*)malloc(sizeof(value));
 	valor->pares = pares;
 	valor->qsenso = qsenso;
 	valor->qasenso = qasenso;

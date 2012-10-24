@@ -66,7 +66,7 @@ lista_ligada* processar(GHashTable* hash_table,int n){
 	//g_timer_stop(timer);
 	//printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
 	
-	//print_all(hash_table);
+	print_all(hash_table);
 	
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
 	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
@@ -94,7 +94,7 @@ lista_ligada* processar(GHashTable* hash_table,int n){
 	//Salva resultado:
 	//g_timer_reset(timer);
 	//g_timer_start(timer);
-	write_ht_to_file(hash_table);
+	//write_ht_to_file(hash_table);
 	//g_timer_stop(timer);
 	//printf("Resultados salvos em %f ms.\n",g_timer_elapsed(timer,NULL));
 	

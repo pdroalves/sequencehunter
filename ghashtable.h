@@ -4,6 +4,7 @@
 #include "estruturas.h"
 GHashTable* criar_ghash_table();
 value* criar_value(int pares,int qsenso,int qasenso,float qnt_relativa);
+void destroir_ghash_table(GHashTable* hash_table);
 void adicionar_elemento(GHashTable *hash_table,gchar *seq,value *novo_parametro);
 value* atualizar_parametro(value *novo, value *velho);
 void print_all(GHashTable *hash_table);
