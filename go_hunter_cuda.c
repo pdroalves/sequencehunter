@@ -57,8 +57,8 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 			print_seqs_carregadas(loaded);
 			//Copia sequencias para GPU
 			for(i=0;i<loaded;i++)
-				cudaMemcpy(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice);
-			cudaMemcpy(data,d_seqs,loaded*sizeof(char*),cudaMemcpyHostToDevice);	
+				cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+			cudaMemcpyAsync(data,d_seqs,loaded*sizeof(char*),cudaMemcpyHostToDevice,stream);	
 		}		
 		*load = loaded;	
 	}
