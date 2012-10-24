@@ -208,8 +208,6 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 					// Libera memoria ////////////////////////
 					//////////////////////////////////////////
 					THREAD_DONE[THREAD_CLEANER] = FALSE;
-					  FILE *tmp_sensos;
-					  FILE *tmp_antisensos;
 					  int retorno;
 					  			  
 					  while( *buffer_load == 0){

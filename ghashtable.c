@@ -84,7 +84,7 @@ void print_all(GHashTable *hash_table){
 	g_hash_table_iter_init(&iter,hash_table);
 	while(g_hash_table_iter_next(&iter,&key,&entry)){
 		printf("%s\n",key);
-		printf("%d - %d - %d - %f\n",entry->pares,entry->qsenso,entry->qasenso,entry->qnt_relativa);
+		printf("%d - %d\n",entry->qsenso,entry->qasenso);
 		print_despareadas(key,entry->qsenso,entry->qasenso);
 	}
 	return;

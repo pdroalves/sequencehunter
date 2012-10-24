@@ -4,6 +4,7 @@
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include "ghashtable.h"
 #include "estruturas.h"
 #include "go_hunter_noncuda.h"
 #include "load_data.h"
@@ -68,8 +69,9 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 	f_sensos = criar_fila();
 	f_antisensos = criar_fila();
 	start_fila_lock();
+	
 			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(hash_table)
+	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
 	{	
 		
 		#pragma omp sections
@@ -94,12 +96,9 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 		//////////////////////////////////////////
 		// Libera memoria ////////////////////////
 		//////////////////////////////////////////
-		  FILE *tmp_sensos;
-		  FILE *tmp_antisensos;
 		  int retorno;
-		  tmp_sensos = fopen(tmp_ncuda_s_name,"w");
-		  tmp_antisensos = fopen(tmp_ncuda_as_name,"w");
 		  
+			hash_table = criar_ghash_table();
 		  while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
