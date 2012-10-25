@@ -23,7 +23,6 @@ gboolean verbose;
 gboolean silent;
 __constant__ char *d_buffer[buffer_size];
 omp_lock_t DtH_copy_lock;
-omp_lock_t load_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
 
 char* convertResultToChar(int n){
@@ -57,7 +56,8 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 			print_seqs_carregadas(loaded);
 			//Copia sequencias para GPU
 			for(i=0;i<loaded;i++)
-				cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+				cudaHostGetDevicePointer(&d_seqs[i],h_seqs[i],0);
+				//cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
 			cudaMemcpyAsync(data,d_seqs,loaded*sizeof(char*),cudaMemcpyHostToDevice,stream);	
 		}		
 		*load = loaded;	
@@ -275,9 +275,8 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgr
 	tipo_founded = criar_fila("Tipo Founded");
 	start_fila_lock();
 	omp_init_lock(&DtH_copy_lock);
-	omp_init_lock(&load_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
-	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocMapped | cudaHostAllocWriteCombined);
 	for(i=0;i<buffer_size;i++)
 		cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocDefault);
 	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
@@ -311,7 +310,6 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgr
 	//free(tmp);
 	cudaDeviceReset();
 	omp_destroy_lock(&DtH_copy_lock);
-	omp_destroy_lock(&load_lock);
 	//cudaStreamDestroy(stream1);
 	//cudaStreamDestroy(stream2);
 	/*for(i=0;i<buffer_size;i++){
@@ -321,7 +319,7 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgr
 	cudaFreeHost(founded);
 	cudaFreeHost(h_data);
 	cudaFreeHost(d_data);*/
-	//cudaFree(data);
+	cudaFree(data);
 	return hash_table;
 }
 

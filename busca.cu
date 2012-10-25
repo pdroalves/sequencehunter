@@ -28,6 +28,17 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgra
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
+__device__ void copyString(char *dst,char *src){
+	int i;
+	i=0;
+	while(src[i] != '\0'){
+		dst[i] = src[i];
+		i++;
+	}
+	src[i] = '\0';
+	return;
+}
+
 __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,char **founded,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 
   
@@ -52,7 +63,7 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
   int x0;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
   int x0S;
   int x0A;
-  char *seq;
+  char seq[MAX_SEQ_SIZE_SUPPORTED];
   int id;
   int tipo;
   char *seqToReturn;
@@ -63,7 +74,8 @@ __global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,cha
   id = threadIdx.x + blockIdx.x*blockDim.x;
   //printf("id:%d,loaded:%d\n",id,loaded);
   if(id < loaded){
-	  seq = data[id];
+//	  seq = data[id];
+	  copyString(seq,data[id]);
 	  seqToReturn = founded[id];
 	  //printf("Loaded: %s\n",seq);
 	  s_match = as_match = 0;

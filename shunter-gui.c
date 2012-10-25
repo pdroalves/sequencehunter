@@ -2,18 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "cuda_functions.h"
 #include "estruturas.h"
 #include "load_data.h"
-
-#ifdef WIN32
-#include <windows.h>
-#endif
 
 #define MAJORV 0
 #define MINORV 0
 #define LOG_MAX 10e7
 
+static GtkWidget *list_library;
+static GtkWidget *list_examples;
 GtkEntry *hunt_entry;
 GtkEntry *hunt;
 gchar ver[10];
@@ -43,7 +41,17 @@ static GtkActionEntry entries[] =
 	{"About",GTK_STOCK_ABOUT,"S_obre",NULL,NULL,G_CALLBACK(show_about)}
 };
 
+static enum{
+		ARQUIVO,
+		COUNT_SEQ,
+		N_COL1
+};
 
+static enum{
+		SEQ,
+		ARQUIVO_SEQ,
+		N_COL2
+};
 
 /* converts integer into string */
 char* itoa_(unsigned long num) {
@@ -59,6 +67,64 @@ int isbase(const gchar *c){
 	if( strcmp(c,"A") == 0 || strcmp(c,"a") == 0 || strcmp(c,"C") == 0 || strcmp(c,"c") == 0 || strcmp(c,"T") == 0 || strcmp(c,"t") == 0 || strcmp(c,"G") == 0 || strcmp(c,"g") == 0 || strcmp(c,"N") == 0 || strcmp(c,"n") ==0)
 		return 0;
 	return 1;
+}
+
+static GtkWidget *setup_list_library_added(){
+
+        GtkWidget *sc_win;
+        GtkListStore *store;
+        GtkCellRenderer *cell;
+        GtkTreeViewColumn *column;
+
+        sc_win = gtk_scrolled_window_new(NULL,NULL);
+        store = gtk_list_store_new(N_COL1, G_TYPE_STRING,G_TYPE_STRING);
+        list_library = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+        gtk_tree_view_set_show_expanders(GTK_TREE_VIEW (list_library),TRUE);
+
+		cell = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes("File",cell,"text",ARQUIVO,NULL);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(list_library),column);
+		
+		cell = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes("Valid Sequences",cell,"text",COUNT_SEQ,NULL);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(list_library),column);
+
+		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc_win), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+        gtk_container_add(GTK_CONTAINER(sc_win), list_library);
+
+        g_object_unref(G_OBJECT(store));
+
+        return sc_win;
+}
+
+static GtkWidget *setup_list_library_examples(){
+
+        GtkWidget *sc_win;
+        GtkListStore *store;
+        GtkCellRenderer *cell;
+        GtkTreeViewColumn *column;
+
+        sc_win = gtk_scrolled_window_new(NULL,NULL);
+        store = gtk_list_store_new(N_COL2, G_TYPE_STRING, G_TYPE_STRING);
+        list_examples = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+        gtk_tree_view_set_show_expanders(GTK_TREE_VIEW (list_examples),TRUE);
+
+		cell = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes("Sequence",cell,"text",SEQ,NULL);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(list_examples),column);
+
+		cell = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes("File",cell,"text",ARQUIVO_SEQ,NULL);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(list_examples),column);
+
+		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc_win), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+        gtk_container_add(GTK_CONTAINER(sc_win), list_examples);
+
+        g_object_unref(G_OBJECT(store));
+
+        return sc_win;
 }
 
 void insert_text_handler (GtkEntry *entry,
@@ -241,7 +307,7 @@ int main (int argc, char *argv[]){
 	GtkToolItem *sep;
 	GtkToolItem *exit;
 	
-	GtkWidget *hbox,*vbox;
+	GtkWidget *general_vbox,*hunt_vbox,*hunt_hbox,*lib_load_vbox,*lib_examples_vbox,*hbox,*vbox;
 	GtkWidget *hunt_label;
 	GtkWidget *hunt_button;
 	GtkWidget *spinner;
@@ -257,8 +323,20 @@ int main (int argc, char *argv[]){
 	GtkTextBuffer *buffer;
 	
 	GtkWidget *scrolled;
-	GtkWidget *expander;
-  
+	GtkWidget *lib_examples_expander;
+	
+	GtkWidget *library_manager_label;
+	GtkWidget *list_library_view;
+	GtkTreeSelection *selection;
+	GtkWidget *add_button;
+	GtkWidget *remove_button;
+	GtkWidget *process_button;
+	
+	GtkWidget *library_examples_label;
+	GtkWidget *list_library_examples_view;
+	GtkWidget *more_button;
+	GtkWidget *less_button;
+	
 	GdkColor color;
 	char *title;
 	gtk_init(&argc,&argv);
@@ -272,8 +350,6 @@ int main (int argc, char *argv[]){
 	hunt_button = gtk_button_new_with_mnemonic("_Hunt");
 	//gtk_widget_set_sensitive(hunt_button, FALSE);
 	set_button = gtk_button_new_with_mnemonic("_Set");
-	hbox = gtk_hbox_new(FALSE,2);
-	vbox = gtk_vbox_new(FALSE,2);
 	label_seq_intro = gtk_label_new("Sequência configurada para busca:");
 	strcpy(ver,"RC - ");
 	strcat(ver,itoa_(MAJORV));
@@ -332,7 +408,24 @@ int main (int argc, char *argv[]){
 	gtk_widget_modify_text (hunt_seq, GTK_STATE_NORMAL, &color);
 	
 	
-	//Configura log_window	
+	// Configura list_view das bibliotecas adicionadas
+	library_manager_label = gtk_label_new("Librarys to Process:");
+	list_library_view = setup_list_library_added();
+	selection  = gtk_tree_view_get_selection(GTK_TREE_VIEW(list_library));
+	
+	add_button = gtk_button_new_with_mnemonic("_Add");
+	remove_button = gtk_button_new_with_mnemonic("_Remove");
+	process_button = gtk_button_new_with_mnemonic("_Process");
+	
+	//g_signal_connect(add_button,"clicked",G_CALLBACK(add_library),selection);
+	//g_signal_connect(remove_button,"clicked",G_CALLBACK(remove_library),selection);
+	
+	
+	// Configura list_view dos exemplos das bibliotecas adicionadas
+	library_examples_label = gtk_label_new("Some examples:");
+	list_library_examples_view = setup_list_library_examples();
+	
+		//Configura log_window	
 	scrolled = gtk_scrolled_window_new(NULL,NULL);
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW (scrolled), log_window);
 	
@@ -340,7 +433,7 @@ int main (int argc, char *argv[]){
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window),title);
 	gtk_window_set_resizable(GTK_WINDOW(window),TRUE);
-	gtk_window_set_default_size(GTK_WINDOW(window),500,200);
+	gtk_window_set_default_size(GTK_WINDOW(window),800,800);
 	gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
 
 	//Filemenu
@@ -365,7 +458,6 @@ int main (int argc, char *argv[]){
 	g_signal_connect(open,"clicked",G_CALLBACK(open_library),window);
 	g_signal_connect(about,"clicked",G_CALLBACK(show_about),window);
 	g_signal_connect(exit,"clicked",G_CALLBACK(gtk_main_quit),NULL);
-	
 	g_signal_connect(window,"delete-event",G_CALLBACK(gtk_main_quit),NULL);
 	g_signal_connect(hunt,"changed",G_CALLBACK(hunt_seq_set),hunt_seq);
 	g_signal_connect(hunt_entry,"insert_text",G_CALLBACK(insert_text_handler),NULL);
@@ -374,59 +466,90 @@ int main (int argc, char *argv[]){
     g_signal_connect (G_OBJECT (hunt_button), "clicked",G_CALLBACK (on_hunt_clicked), spinner);
     g_signal_connect (hunt,"activate",G_CALLBACK(do_highlight),NULL);
 	//Desenha a janela
+
+	//GtkWidget *general_vbox,*hunt_vbox,*lib_load_vbox,*lib_examples_vbox,*hbox,*vbox;
+		
+	general_vbox = gtk_vbox_new(FALSE,5);
+	gtk_box_pack_start(GTK_BOX(general_vbox), toolbar, FALSE, FALSE, 5);
+	hunt_hbox = gtk_hbox_new(FALSE,2);	
 	
-	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 5);
+	lib_load_vbox = gtk_vbox_new(FALSE,2);
+	
+	hbox = gtk_hbox_new(TRUE,6);
+	vbox = gtk_vbox_new(FALSE,2);
+	gtk_box_pack_start(GTK_BOX(lib_load_vbox), library_manager_label, FALSE,FALSE,4); // Label: "Librarys files"
+	gtk_box_pack_start(GTK_BOX(hbox),list_library_view, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox),add_button,FALSE,FALSE,1);
+	gtk_box_pack_start(GTK_BOX(vbox),remove_button,FALSE,FALSE,1);
+	gtk_box_pack_start(GTK_BOX(vbox),process_button,FALSE,FALSE,1);
+	gtk_box_pack_start(GTK_BOX(hbox),vbox, FALSE, TRUE,1);
+	gtk_box_pack_start(GTK_BOX(lib_load_vbox),hbox, FALSE, FALSE,5);
+	
+	lib_examples_vbox = gtk_vbox_new(FALSE,2);
+	gtk_box_pack_start(GTK_BOX(lib_examples_vbox), library_examples_label, FALSE,TRUE,4); // Label: "Librarys files"
+	gtk_box_pack_start(GTK_BOX(lib_examples_vbox),list_library_examples_view, TRUE, TRUE, 5);
+	
+	lib_examples_expander = gtk_expander_new ("");
+    gtk_container_add (GTK_CONTAINER (lib_examples_expander), lib_examples_vbox);
+		
+	hunt_vbox = gtk_vbox_new(FALSE,2);
 	
 	hbox = gtk_hbox_new(FALSE,2);
 	gtk_box_pack_start(GTK_BOX(hbox), hunt_label, FALSE,TRUE,4);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,5);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,5);
 	
 	hbox = gtk_hbox_new(FALSE,2);
 	gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(hunt_entry),TRUE,TRUE,4);
 	gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(set_button),FALSE,FALSE,1);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 
 	hbox = gtk_hbox_new(FALSE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),label_seq_intro,FALSE,FALSE,10);
-	gtk_box_pack_start(GTK_BOX(hbox),hunt,TRUE,TRUE,40);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, TRUE,12);
+	gtk_box_pack_start(GTK_BOX(hbox),GTK_WIDGET(hunt),TRUE,TRUE,40);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, TRUE,12);
 	
 	hbox = gtk_hbox_new(TRUE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_label_new("Dados carregados:"),FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(hbox),load_data,FALSE,FALSE,5);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 	
 	hbox = gtk_hbox_new(TRUE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_label_new("Integridade dos dados:"),FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(hbox),data_integrity,FALSE,FALSE,5);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 	
 	hbox = gtk_hbox_new(TRUE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_label_new("Sequência para busca:"),FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(hbox),hunt_seq,FALSE,FALSE,5);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 	
 	hbox = gtk_hbox_new(TRUE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_label_new("Suporte a CUDA:"),FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(hbox),cuda_support,FALSE,FALSE,5);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 	
 	hbox = gtk_hbox_new(TRUE,2);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_label_new("Status:"),FALSE,FALSE,5);
 	gtk_box_pack_start(GTK_BOX(hbox),status,FALSE,FALSE,5);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,2);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,2);
 	
 	hbox = gtk_hbox_new(FALSE,1);
 	gtk_box_pack_start(GTK_BOX(hbox),gtk_hbox_new(TRUE,2), FALSE, FALSE,150);
 	gtk_box_pack_start(GTK_BOX(hbox),hunt_button,TRUE,TRUE,10);
 	gtk_box_pack_start(GTK_BOX(hbox),spinner,FALSE,FALSE,2);
-	gtk_box_pack_start(GTK_BOX(vbox),hbox, FALSE, FALSE,20);
+	gtk_box_pack_start(GTK_BOX(hunt_vbox),hbox, FALSE, FALSE,20);
 	
-	expander = gtk_expander_new ("Mais detalhes:");
-    gtk_box_pack_start (GTK_BOX(vbox), expander, TRUE, TRUE, 10);
-	gtk_container_add (GTK_CONTAINER (expander), scrolled);
+	vbox = gtk_vbox_new(FALSE,2);
+	gtk_box_pack_start(GTK_BOX(vbox),lib_load_vbox, TRUE, TRUE,5);
+	gtk_box_pack_start(GTK_BOX(vbox),hunt_vbox, TRUE, FALSE,5);
+	gtk_box_pack_start(GTK_BOX(hunt_hbox),vbox, TRUE, FALSE,5);	
+	gtk_box_pack_start(GTK_BOX(hunt_hbox),lib_examples_expander, TRUE, FALSE,5);
+	
+	gtk_box_pack_start(GTK_BOX(general_vbox),hunt_hbox, TRUE, TRUE,5);
+	
+    gtk_box_pack_start (GTK_BOX(general_vbox), scrolled, TRUE, TRUE, 10);
  
-	gtk_container_add(GTK_CONTAINER(window),vbox);
+	gtk_container_add(GTK_CONTAINER(window),general_vbox);
 	gtk_rc_parse("gtkrc");
 	gtk_widget_show_all(window);
 	gtk_widget_hide(spinner);

@@ -26,8 +26,8 @@ cmd:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncu
 	./build_control version
 	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA) -Xcompiler --Wall
 	
-gui:shunter-gui.o_linux log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o
-	$(CC_LINUX) -g shunter-gui.o log.o load_data.o go_hunter.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA) -lstdc++ 
+gui:shunter-gui.o_linux log.o cuda_functions.o load_data.o log.o processing_data.o ghashtable.o operacoes.o linkedlist.o build_control
+	$(CC_LINUX) -g shunter-gui.o cuda_functions.o load_data.o log.o processing_data.o ghashtable.o operacoes.o linkedlist.o -lm -O0 $(GLIB_LIBS) $(GLIB_LIBS) $(GTK_CFLAGS) $(GTK_LIBS) -o shunter-gui $(OPENMP) $(CUDA)
 
 #########################################
 ############ GCC e MingWW ###############

@@ -13,6 +13,7 @@
 #define GATHERING_DONE -1
 #define buffer_size 512 // Capacidade máxima do buffer
 #define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
+#define MAX_SEQ_SIZE_SUPPORTED 1000
 char **data;
 
 struct vertice_grafo{
