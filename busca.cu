@@ -13,6 +13,7 @@ extern "C" {
 }
 #include "cuda_functions.h"
 
+
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)//Toma cuidado de não usar printf sem que a máquina suporte.
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
@@ -378,7 +379,7 @@ extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anteri
   return;	
 }
 
-__host__ __device__ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
 												
   int i;
 											
@@ -435,65 +436,67 @@ __host__ __device__ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgr
   return;
 }
 
-extern "C" __global__ void set_grafo(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-											
-  //Configura grafo
+__device__ void baseChooser(char *c,int *linha){
+	switch(c){
+			case 'A':
+				linha[A] = 1;	
+			break;
+			case 'C':
+				linha[C] = 1;		
+			break;
+			case 'G':
+				linha[G] = 1;	
+			break;
+			case 'T':
+				linha[T] = 1;
+			break;
+			default:
+				linha[N] = 1;
+			break;
+	}
+	return;
+}
+
+void getMatrix(int **matrix,char *str,int n){
+	// Matrix já deve vir alocada
+	int size_x;
+	int size_y;
+	int i;
+
+	size_x = N_COL;
+	size_y = n;
+
+	// Preenche matriz
+	for(i = 0; i < size_y;i++){
+		baseChooser(str[i],matrix[i]);
+	}	
+
+	return matrix;
+}
+
+
+extern "C" void set_grafo_helper(char *senso,char *antisenso,int **d_matrix_senso,int **d_matrix_antisenso){
+  set_grafo_CUDA<<<1,1>>>(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
+}
+
+extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matrix_senso,int **matrix_antisenso){
+  // As matrizes já devem vir alocadas
   int i;
   int size;
-  vgrafo *atual;
 											
   for(size=0;senso[size] != '\0';size++);//Pega tamanho das sequências
-  size++;
-  build_grafo(size,a,c,g,t);
 											
   i=0;
   printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
-  while(senso[i] != '\0'){
-    atual = busca_vertice(senso[i],a,c,g,t);
-    if(atual != NULL){
-      atual->s_marcas[i]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i);
-     }else{
-      //printf("Elemento variável encontrado.\n");
-      a->s_marcas[i]=1;
-      c->s_marcas[i]=1;
-      g->s_marcas[i]=1;
-      t->s_marcas[i]=1;
-    }
-    i++;
-  }
+  getMatrix(matrix_senso,senso,size);
 											
   i=0;
   printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
-  while(antisenso[i] != '\0'){
-    atual = busca_vertice(antisenso[i],a,c,g,t);
-    if(atual != NULL){
-      atual->as_marcas[i]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i);
-      }else{
-      //printf("Elemento variável encontrado.\n");
-      a->as_marcas[i]=1;
-      c->as_marcas[i]=1;
-      g->as_marcas[i]=1;
-      t->as_marcas[i]=1;
-    }
-    i++;
-  }
-  /*
-    for(i=0;i<size;i++){
-    printf("%c: %d -> %d\n",'A',i,a->s_marcas[i]);
-    printf("%c: %d -> %d\n",'C',i,c->s_marcas[i]);
-    printf("%c: %d -> %d\n",'G',i,g->s_marcas[i]);
-    printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
-    }*/
+  getMatrix(matrix_antisenso,antisenso,size);
+  
   return;
-}
-
-
-extern "C" void set_grafo_helper(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-  set_grafo<<<1,1>>>(senso,antisenso,a,c,g,t);
 }
 
 extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){

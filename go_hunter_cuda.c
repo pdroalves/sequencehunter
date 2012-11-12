@@ -327,22 +327,40 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgr
 
 
 
-void setup_for_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d_t){
-	//Recebe um vetor de caracteres com o padrão a ser procurado
-	//Recebe ponteiros para os quatro vértices do grafo já na memória da GPU
-	char *d_senso;
-	char *d_antisenso;
-	int size = strlen(seq)+1;
+void setup_for_cuda(char *seq,int **d_matrix_senso,int **d_matrix_antisenso){
+	// Recebe um vetor de caracteres com o padrão a ser procurado
+	// As matrizes não precisam estar alocadas
+	char *senso;
+	char *antisenso;
+	int **h_matrix_senso;
+	int **h_matrix_antisenso;
+	int size = strlen(seq);
+	int i;
 	
-	//Aloca memória na GPU
-    cudaMalloc((void**)&d_senso,size*sizeof(char));
-    cudaMalloc((void**)&d_antisenso,size*sizeof(char));
-    
-    cudaMemcpy(d_senso,seq,size*sizeof(char),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_antisenso,(const void*)get_antisenso(seq),size*sizeof(char),cudaMemcpyHostToDevice);
+	// Aloca memória na CPU
+	cudaMalloc((void**)&d_matrix_senso,size*sizeof(int*));
+	cudaMalloc((void**)&d_matrix_antisenso,size*sizeof(int*));
+	
+	h_matrix_senso = (int**)malloc(size*sizeof(int*));
+	h_matrix_antisenso = (int**)malloc(size*sizeof(int*));
+	
+	// Aloca memória na GPU
+	for(i = 0; i < size ; i++){
+		cudaMalloc((void**)&h_matrix_senso[i],N_COL*sizeof(int));
+		cudaMalloc((void**)&h_matrix_antisenso[i],N_COL*sizeof(int));
+	}
+	cudaMalloc((void**)&senso,(size+1)*sizeof(char));
+	cudaMalloc((void**)&antisenso,(size+1)*sizeof(char));
+	
+	// Copia dados
+    cudaMemcpy(d_matrix_senso,h_matrix_senso,size*sizeof(int*),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(int*),cudaMemcpyHostToDevice);
+      
+    cudaMemcpy(senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
+    cudaMemcpy(antisenso,(const void*)get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
     
     //Configura grafos direto na memória da GPU
-	set_grafo_helper(d_senso,d_antisenso,d_a,d_c,d_g,d_t);
+	set_grafo_helper(d_senso,d_antisenso,d_matrix_senso,d_matrix_antisenso);
 	printString("Grafo de busca contigurado.",NULL);
 	cudaFree(d_senso);
 	cudaFree(d_antisenso);
