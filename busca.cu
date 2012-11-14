@@ -29,133 +29,76 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgra
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__device__ void copyString(char *dst,char *src){
-	int i;
-	i=0;
-	while(src[i] != '\0'){
-		dst[i] = src[i];
-		i++;
-	}
-	src[i] = '\0';
-	return;
-}
-
-__global__ void k_buscador(int loaded,int bloco1,int bloco2, int totalmatchs,char **data,int *resultados,char **founded,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
+__global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultados,int **matrix_senso,int **matrix_antisenso){
 
   
   ////////
   ////////
   ////////
-  ////////		Recebe o tamanho dos blocos 1 e 2
-  ////////		Recebe o tamanho total da sequência
-  ////////		Recebe o endereço com todo o buffer
-  ////////		Recebe ponteiros para cada vertice do grafo
+  ////////		n: o tamanho da sequência de busca
+  ////////		data: o endereço com todo o buffer
   ////////
   ////////
   ////////
-  ////////
+  
   int i;
-  int blocoZ;//Total de bases que queremos encontrar
-  int s_match;
-  int as_match;
-  vgrafo *atual;
-  vgrafo *anterior;
-  vgrafo *ant_anterior;
-  int x0;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
-  int x0S;
-  int x0A;
-  char seq[MAX_SEQ_SIZE_SUPPORTED];
-  int id;
+  int seqId;// id da sequencia analisada
+  int baseId;// id da base analisada por cada thread
   int tipo;
-  char *seqToReturn;
+  int linha[N_COL];// Cada thread cuida de uma linha
+  int retorno;
+  int fase;
+  int p;
+  __shared__ int retorno_sum;
   
   tipo = 0;
-  blocoZ = totalmatchs - bloco1 - bloco2;
-  x0 = x0S = x0A = 1;
-  id = threadIdx.x + blockIdx.x*blockDim.x;
-  //printf("id:%d,loaded:%d\n",id,loaded);
-  if(id < loaded){
-//	  seq = data[id];
-	  copyString(seq,data[id]);
-	  seqToReturn = founded[id];
-	  //printf("Loaded: %s\n",seq);
-	  s_match = as_match = 0;
-	  i=0;
-	  ////////////////////
-	  ////////////////////										
-	  //Iteração inicial//																			
-	  ////////////////////
-	  ////////////////////
-	  if(0 == bloco1) x0S = i;
-	  if(0 == bloco2) x0A = i;
-	  ant_anterior = busca_vertice(seq[i],a,c,g,t);
-	  if(ant_anterior!=NULL)
-		caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
-	  i++;
-			
-	  if(s_match == bloco1) x0S = i;
-	  if(as_match == bloco2) x0A = i;
-	  anterior = busca_vertice(seq[i],a,c,g,t);
-	  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
-	  i++;
-																	
-	  ///////////////////////
-	  ///////////////////////					
-	  //Iterações seguintes//																			
-	  ///////////////////////
-	  ///////////////////////
-							
-	  while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
-		//printf("%d - s_match: %d\n",i+1,s_match);
-		//printf("%d - as_match: %d\n",i+1,as_match);
-			  
-		if(s_match == bloco1){
-		  //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
-		  x0S = i;
-		}
-		if(as_match == bloco2){
-		  //printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
-		  x0A = i;
-		}
-		atual = busca_vertice(seq[i],a,c,g,t);
-		if(atual != NULL)
-			caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
-		i++;
-		ant_anterior = anterior;
-		anterior = atual;
-	  }
-	  ///////////////////////////////											
-	  //Guarda o que foi encontrado//
-	  ///////////////////////////////
-		
-				  
-	  //printf("s_match: %d - as_match: %d, x0S: %d, x0A: %d\n",s_match,as_match,x0S,x0A);
-	  //printf("totalmatchs: %d\n",totalmatchs);
-	  
-	  
-	  if(s_match == totalmatchs){
-		x0 = x0S;
-		tipo = 1;
-	  }else
-		  if(as_match == totalmatchs){
-			x0 = x0A;
-			tipo = 2;
-		  }
-		
-	  resultados[id] = tipo;
+  seqId = blockIdx.x;
+  baseId = threadIdx.x;
+  retorno_sum = 0;
+  fase = 0;
 
-	  if(tipo != 0){
-		//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-		for(i=0;i<blocoZ;i++){
-		  seqToReturn[i] = seq[x0 + i];
+	if(seqId < totalseqs){
+  
+	   // Pega uma linha da matriz Ma
+	   getLine(data[seqId][baseId],&linha,&p);  
+  
+	  while(fase + p < n && tipo == 0){
+			   
+			   // Subtrai a linha do thread da linha da matriz de busca senso
+			   retorno = vec_diff(&linha,matrix_senso[baseId],p,fase);
+			   retorno_sum += retorno;
+			   
+			   // Sincroniza todos os threads
+			   __syncthreads();
+			 
+			   if(retorno_sum == 0){
+				   // Eh senso
+				   tipo = SENSO;
+			   }else{
+				   retorno_sum = 0;
+				   
+					// Subtrai a linha do thread da linha da matriz de busca antisenso
+				   retorno = vec_diff(&linha,matrix_antisenso[baseId],p,fase);
+				   retorno_sum += retorno;
+				   
+				   // Sincroniza todos os threads
+				   __syncthreads();
+				   
+					if(retorno_sum == 0){
+						// Eh antisenso
+						tipo = ANTISENSO;
+					}
+			   }
+			 
+			fase++;   
 		}
-		seqToReturn[i] = '\0';
-			//printf("%d - %s\n",tipo,seqToReturn);
-	  }
-		
-	}	
+	}
+	resultados[seqId] = tipo;
+	   
 	return;
 }
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -436,28 +379,73 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ void baseChooser(char *c,int *linha){
-	switch(c){
-			case 'A':
-				linha[A] = 1;	
-			break;
-			case 'C':
-				linha[C] = 1;		
-			break;
-			case 'G':
-				linha[G] = 1;	
-			break;
-			case 'T':
-				linha[T] = 1;
-			break;
-			default:
-				linha[N] = 1;
-			break;
+__device__ __host__ void getLine(char *c,int *linha,int *n){
+	// Recebe um vetor de bases e retorna uma linha de binarios
+	int i=0;
+	while(c[i] != '\0'){
+		switch(c[i]){
+				case 'A':
+					linha[i] = 1;	
+				break;
+				case 'C':
+					linha[i] = 1;		
+				break;
+				case 'G':
+					linha[i] = 1;	
+				break;
+				case 'T':
+					linha[i] = 1;
+				break;
+				default:
+					linha[i] = 1;
+				break;
+		}
+		i++;
 	}
+	*n = i;
 	return;
 }
 
-void getMatrix(int **matrix,char *str,int n){
+__device__ __host__ char* getBase(int *linha,int n){
+	// Recebe uma linha de binarios e retorna uma base
+		switch(n){
+				case A:
+					return 'A';	
+				break;
+				case C:
+					return 'C';		
+				break;
+				case G:
+					return 'G';	
+				break;
+				case T:
+					return 'T';
+				break;
+				default:
+					return 'N';
+				break;
+		}
+	return;
+}
+
+__device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase){
+	// Subtrai os  elementos do vetor analise de busca. analise deve  ter n elementos.
+	int i = 0;
+	int j = fase;
+	int results = 0;
+	
+	if(analise[N] == 1) return 0;
+	
+	while(i < n){
+		results+=analise[i]-busca[j];
+		i++;
+		j++;
+	}
+	
+	return results;
+}
+
+__device__ __host__ void getMatrix(int **matrix,char *str,int n){
 	// Matrix já deve vir alocada
 	int size_x;
 	int size_y;
@@ -468,11 +456,12 @@ void getMatrix(int **matrix,char *str,int n){
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		baseChooser(str[i],matrix[i]);
+		getLine(str[i],matrix[i]);
 	}	
 
 	return matrix;
 }
+
 
 
 extern "C" void set_grafo_helper(char *senso,char *antisenso,int **d_matrix_senso,int **d_matrix_antisenso){
