@@ -29,9 +29,9 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgra
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultados,int **matrix_senso,int **matrix_antisenso){
+__global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultados,int *gap,int **matrix_senso,int **matrix_antisenso){
 
-  
+  ////////		UM	BLOCO PODE SEQUENCIA COM O MESMO NUMERO DE THREADS E BASES
   ////////
   ////////
   ////////
@@ -94,10 +94,48 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 		}
 	}
 	resultados[seqId] = tipo;
+	gap[seqId] = fase;
 	   
 	return;
 }
 
+__global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultados,int *gap,char **founded,int **matrix_senso,int **matrix_antisenso){
+	
+	///////			UM THREAD POR SEQUENCIA
+    ////////
+    ////////
+    ////////
+    ////////		n: o tamanho da sequência de busca
+    ////////		data: o endereço com todo o buffer
+    ////////
+    ////////
+    ////////
+  
+    int i;
+    int seqId;// id da sequencia analisada
+    int baseId;// id da base analisada por cada thread
+    int tipo;
+    int linha[N_COL];// Cada thread cuida de uma linha
+    int retorno;
+    int fase;
+    int p;
+    char *seqToReturn;
+    __shared__ int retorno_sum;
+  
+    seqId = threadIdx.x + blockIdx.x*blockDim.x;
+	if(seqId < totalseqs){
+		tipo = resultados[seqId];
+		fase = gap[seqId];
+		seqToReturn = founded[seqId];
+		
+		if(tipo != 0){
+			for(i=0;i<n;i++)
+				seqToReturn[i] = data[seqId][i+fase];
+		}
+	}
+	   
+	return;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
