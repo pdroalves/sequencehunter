@@ -89,23 +89,14 @@ void buffer_manager(int *buffer_load,char **h_data,char **d_data,int n,cudaStrea
 
 
 
-void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *founded,int bloco1,int bloco2,int blocoV,cudaStream_t stream1,cudaStream_t stream2,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *founded,int bloco1,int bloco2,int blocoV,cudaStream_t stream1,cudaStream_t stream2,int **d_matrix_senso,int **d_matrix_antisenso){
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				int i;
-				int num_blocks;
-				int num_threads;
 				int blocos;
 				int *h_resultados;
 				char **h_founded;
 				char **d_founded;
 				char **dp_founded;	
-				/*if(buffer_size >= 512){
-					num_blocks = buffer_size/512 +1;
-					num_threads = 512;
-				}else{*/
-					num_blocks = 1;
-					num_threads = buffer_size;
-				//}
 				int *d_resultados;
 				int loaded;
 				blocos = blocoV + bloco1 + bloco2 - 1;
@@ -125,7 +116,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						k_busca(num_threads,num_blocks,*buffer_load,bloco1,bloco2,blocos,data,d_resultados,dp_founded,d_a,d_c,d_g,d_t,stream1);//Kernel de busca
+						k_busca(*buffer_load,bloco1,bloco2,blocos,data,d_resultados,dp_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
 						omp_set_lock(&DtH_copy_lock);
 						// Inicia processamento dos resultados
 						cudaStreamSynchronize(stream1);
@@ -241,7 +232,7 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 }
 
 
-GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,int **d_matrix_senso,int **d_matrix_antisenso){
 	
 	
 	Buffer buffer;
@@ -294,7 +285,7 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgr
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,bloco1,bloco2,blocoV,stream1,stream2,d_a,d_c,d_g,d_t);
+				search_manager(&buffer_load,&processadas,tipo_founded,founded,bloco1,bloco2,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso);
 			}		
 			#pragma omp section
 			{
@@ -360,56 +351,45 @@ void setup_for_cuda(char *seq,int **d_matrix_senso,int **d_matrix_antisenso){
     cudaMemcpy(antisenso,(const void*)get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
     
     //Configura grafos direto na memória da GPU
-	set_grafo_helper(d_senso,d_antisenso,d_matrix_senso,d_matrix_antisenso);
+	set_grafo_helper(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
 	printString("Grafo de busca contigurado.",NULL);
-	cudaFree(d_senso);
-	cudaFree(d_antisenso);
+	cudaFree(senso);
+	cudaFree(antisenso);
 	return;
 }
 
 GHashTable* auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil){
 	printf("CUDA Mode.\n");
 	int n;//Elementos por sequência
-	vgrafo *d_a;
-	vgrafo *d_c;
-	vgrafo *d_g;
-	vgrafo *d_t;
 	cudaEvent_t start;
 	cudaEvent_t stop;
 	GHashTable* hash_table;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	float tempo;
+	int **d_matrix_senso;
+	int **d_matrix_antisenso;
 	
 	verbose = verb;
 	silent = sil;
 	
 	get_setup(&n);
-	
-	cudaMalloc((void**)&d_a,sizeof(vgrafo));
-    cudaMalloc((void**)&d_c,sizeof(vgrafo));
-    cudaMalloc((void**)&d_g,sizeof(vgrafo));
-    cudaMalloc((void**)&d_t,sizeof(vgrafo));
     
 	//Inicializa
-	setup_for_cuda(c,d_a,d_c,d_g,d_t);
+	setup_for_cuda(c,d_matrix_senso,d_matrix_antisenso);
 	
 	printString("Dados inicializados.\n",NULL);
 	printSet(n);
 	printString("Iniciando iterações:\n",NULL);
 	
    // cudaEventRecord(start,0);
-    hash_table = cudaIteracoes(bloco1,bloco2,blocos,n,d_a,d_c,d_g,d_t);
+    hash_table = cudaIteracoes(bloco1,bloco2,blocos,n,d_matrix_senso,d_matrix_antisenso);
    // cudaEventRecord(stop,0);
    // cudaEventSynchronize(stop);
    // cudaEventElapsedTime(&tempo,start,stop);
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
-	cudaFree(d_a);
-	cudaFree(d_c);
-	cudaFree(d_g);
-	cudaFree(d_t);
 	cudaThreadExit();
 	return hash_table;
 

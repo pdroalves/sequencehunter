@@ -18,8 +18,14 @@ extern "C" {
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
 
+
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
+__device__ __host__ int getLine(char *c,int *linha);
+__device__ __host__ char* getBase(int *linha,int n);
+__device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase);
+__device__ __host__ void getMatrix(int **matrix,char *str,int n);
+extern "C" void checkCudaError();
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Buscador		 				////////////////////
@@ -41,11 +47,10 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
   ////////
   ////////
   
-  int i;
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada por cada thread
   int tipo;
-  int linha[N_COL];// Cada thread cuida de uma linha
+  int linha[5];// Cada thread cuida de uma linha
   int retorno;
   int fase;
   int p;
@@ -60,12 +65,12 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 	if(seqId < totalseqs){
   
 	   // Pega uma linha da matriz Ma
-	   getLine(data[seqId][baseId],&linha,&p);  
+	   p = getLine(&data[seqId][baseId],linha);  
   
 	  while(fase + p < n && tipo == 0){
 			   
 			   // Subtrai a linha do thread da linha da matriz de busca senso
-			   retorno = vec_diff(&linha,matrix_senso[baseId],p,fase);
+			   retorno = vec_diff(linha,matrix_senso[baseId],p,fase);
 			   retorno_sum += retorno;
 			   
 			   // Sincroniza todos os threads
@@ -78,7 +83,7 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 				   retorno_sum = 0;
 				   
 					// Subtrai a linha do thread da linha da matriz de busca antisenso
-				   retorno = vec_diff(&linha,matrix_antisenso[baseId],p,fase);
+				   retorno = vec_diff(linha,matrix_antisenso[baseId],p,fase);
 				   retorno_sum += retorno;
 				   
 				   // Sincroniza todos os threads
@@ -99,7 +104,7 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 	return;
 }
 
-__global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultados,int *gap,char **founded,int **matrix_senso,int **matrix_antisenso){
+__global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultados,int *gap,char **founded){
 	
 	///////			UM THREAD POR SEQUENCIA
     ////////
@@ -115,12 +120,9 @@ __global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultad
     int seqId;// id da sequencia analisada
     int baseId;// id da base analisada por cada thread
     int tipo;
-    int linha[N_COL];// Cada thread cuida de uma linha
     int retorno;
     int fase;
-    int p;
     char *seqToReturn;
-    __shared__ int retorno_sum;
   
     seqId = threadIdx.x + blockIdx.x*blockDim.x;
 	if(seqId < totalseqs){
@@ -134,6 +136,22 @@ __global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultad
 		}
 	}
 	   
+	return;
+}
+
+extern "C" void k_busca(const int loaded,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,cudaStream_t stream){
+	dim3 dimBlockK1(blocos);
+	dim3 dimGridK1(loaded);
+	dim3 dimBlockK2(loaded);
+	dim3 dimGridK2(1);
+	int *gap;
+	
+	cudaMalloc((void**)&gap,loaded*sizeof(int));
+	
+	k_buscador_analyse<<<dimGridK1,dimBlockK1,0,stream>>>(loaded,blocos,data,resultados,gap,d_matrix_senso,d_matrix_antisenso);
+	k_buscador_convert<<<dimGridK2,dimBlockK2,0,stream>>>(loaded,blocos,data,resultados,gap,founded);
+	
+	checkCudaError();
 	return;
 }
 
@@ -288,14 +306,7 @@ extern "C" char** cudaGetArrayOfArraysChar(int narrays,int arrays_size){
 	return array;
 }
 
-extern "C" void k_busca(int num_threads,int num_blocks,const int loaded,const int bloco1,const int bloco2,const int blocos,char **data,int *resultados,char **founded,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t,cudaStream_t stream){
-	dim3 dimBlock(num_threads);
-	dim3 dimGrid(num_blocks);
-	
-	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,bloco1,bloco2,blocos,data,resultados,founded,d_a,d_c,d_g,d_t);//Kernel de busca
-	checkCudaError();
-	return;
-}
+
 
 extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,vgrafo *h_a,vgrafo *h_c,vgrafo *h_g,vgrafo *h_t){
 	int i;
@@ -417,8 +428,9 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ __host__ void getLine(char *c,int *linha,int *n){
+__device__ __host__ int getLine(char *c,int *linha){
 	// Recebe um vetor de bases e retorna uma linha de binarios
+	// Retorna tambem o tamanho n da sequencia
 	int i=0;
 	while(c[i] != '\0'){
 		switch(c[i]){
@@ -440,30 +452,22 @@ __device__ __host__ void getLine(char *c,int *linha,int *n){
 		}
 		i++;
 	}
-	*n = i;
-	return;
+	return i;
 }
 
 __device__ __host__ char* getBase(int *linha,int n){
 	// Recebe uma linha de binarios e retorna uma base
 		switch(n){
 				case A:
-					return 'A';	
-				break;
+					return "A";	
 				case C:
-					return 'C';		
-				break;
+					return "C";
 				case G:
-					return 'G';	
-				break;
+					return "G";	
 				case T:
-					return 'T';
-				break;
-				default:
-					return 'N';
-				break;
+					return "T";
 		}
-	return;
+	return "N";
 }
 
 __device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase){
@@ -485,45 +489,41 @@ __device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase){
 
 __device__ __host__ void getMatrix(int **matrix,char *str,int n){
 	// Matrix já deve vir alocada
-	int size_x;
 	int size_y;
 	int i;
 
-	size_x = N_COL;
 	size_y = n;
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		getLine(str[i],matrix[i]);
+		getLine(&str[i],matrix[i]);
 	}	
 
-	return matrix;
+	return;
 }
 
 
 
-extern "C" void set_grafo_helper(char *senso,char *antisenso,int **d_matrix_senso,int **d_matrix_antisenso){
-  set_grafo_CUDA<<<1,1>>>(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
-}
 
 extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matrix_senso,int **matrix_antisenso){
   // As matrizes já devem vir alocadas
-  int i;
   int size;
 											
   for(size=0;senso[size] != '\0';size++);//Pega tamanho das sequências
 											
-  i=0;
   printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
   getMatrix(matrix_senso,senso,size);
-											
-  i=0;
+
   printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
   getMatrix(matrix_antisenso,antisenso,size);
   
   return;
+}
+
+extern "C" void set_grafo_helper(char *senso,char *antisenso,int **d_matrix_senso,int **d_matrix_antisenso){
+  set_grafo_CUDA<<<1,1>>>(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
 }
 
 extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
