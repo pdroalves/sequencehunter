@@ -16,16 +16,6 @@
 #define MAX_SEQ_SIZE_SUPPORTED 1000
 char **data;
 
-
-const enum{
-	A,
-	C,
-	G,
-	T,
-	N,
-	N_COL
-};
-
 struct vertice_grafo{
 		char vertice;
 		int *s_marcas;
