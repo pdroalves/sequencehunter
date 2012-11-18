@@ -21,7 +21,7 @@ extern "C" {
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 __device__ __host__ int getSeqSize(char *seq);
-__device__ __host__ int* getLine(char c);
+__device__ __host__ void getLine(char c,int *linha);
 __device__ __host__ char* getBase(int *linha,int n);
 extern "C" __device__ __host__ int vec_diff(int *analise,int *busca,int fase);
 __device__ __host__ void getMatrix(int **matrix,char *str,int n);
@@ -50,25 +50,23 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada por cada thread
   int tipo;
-  int *linha;// Cada thread cuida de uma linha
+  int linha[N_COL];// Cada thread cuida de uma linha
   int retorno;
   int fase;
   char *seq;
   __shared__ int retorno_sum;
-  int i;
   
   tipo = 0;
   seqId = blockIdx.x;
   baseId = threadIdx.x;
   retorno_sum = 0;
   fase = 0;
-  
-  for(i=0;i<N_COL;i++)linha[i] = 0; 
 	if(seqId < totalseqs){
   
 	  // Pega uma linha da matriz Ma
 	  seq = data[seqId];	
-	  linha = getLine(seq[baseId]);  
+	  getLine(seq[baseId],linha);  
+  /*
   
 	  while(fase + N_COL < n && tipo == 0){
 			   
@@ -100,11 +98,11 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 			 
 			fase++;   
 		}
+	   */
 	}
 	printf("%d\n",tipo);
 	resultados[seqId] = tipo;
 	gap[seqId] = fase;
-	   
 	return;
 }
 
@@ -119,7 +117,7 @@ __global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultad
     ////////
     ////////
     ////////
-  
+  /*
     int i;
     int seqId;// id da sequencia analisada
     int tipo;
@@ -137,7 +135,7 @@ __global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultad
 				seqToReturn[i] = data[seqId][i+fase];
 		}
 	}
-	   
+	   */
 	return;
 }
 
@@ -430,12 +428,10 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ __host__ int* getLine(char c){
+__device__ __host__ void getLine(char c,int *linha){
 	// Recebe uma base e retorna uma linha de binarios
-	int *linha;
 	int i;
 	
-	linha = (int*)malloc(N_COL*sizeof(int));
 	for(i=0;i<N_COL;i++) linha[i] = 0;
 	
 	switch(c){
@@ -456,7 +452,7 @@ __device__ __host__ int* getLine(char c){
 		break;
 	}
 
-	return linha;
+	return;
 }
 
 __device__ __host__ char* getBase(int *linha,int n){
@@ -502,7 +498,7 @@ __device__ __host__ void getMatrix(int **matrix,char *str,int n){
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
 		printf("Marcando %d - %c\n",i+1,str[i]);
-		matrix[i] = getLine(str[i]);
+		getLine(str[i],matrix[i]);
 	}	
 
 	return;
