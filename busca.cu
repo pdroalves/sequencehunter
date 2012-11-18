@@ -20,9 +20,10 @@ extern "C" {
 
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
-__device__ __host__ int getLine(char *c,int *linha);
+__device__ __host__ int getSeqSize(char *seq);
+__device__ __host__ int* getLine(char c);
 __device__ __host__ char* getBase(int *linha,int n);
-__device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase);
+extern "C" __device__ __host__ int vec_diff(int *analise,int *busca,int fase);
 __device__ __host__ void getMatrix(int **matrix,char *str,int n);
 extern "C" void checkCudaError();
 
@@ -49,29 +50,32 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada por cada thread
   int tipo;
-  int linha[5];// Cada thread cuida de uma linha
+  int *linha;// Cada thread cuida de uma linha
   int retorno;
   int fase;
-  int p;
+  char *seq;
   __shared__ int retorno_sum;
+  int i;
   
   tipo = 0;
   seqId = blockIdx.x;
   baseId = threadIdx.x;
   retorno_sum = 0;
   fase = 0;
-
+  
+  for(i=0;i<N_COL;i++)linha[i] = 0; 
 	if(seqId < totalseqs){
   
-	   // Pega uma linha da matriz Ma
-	   p = getLine(&data[seqId][baseId],linha);  
+	  // Pega uma linha da matriz Ma
+	  seq = data[seqId];	
+	  linha = getLine(seq[baseId]);  
   
-	  while(fase + p < n && tipo == 0){
+	  while(fase + N_COL < n && tipo == 0){
 			   
 			   // Subtrai a linha do thread da linha da matriz de busca senso
-			   retorno = vec_diff(linha,matrix_senso[baseId],p,fase);
-			   retorno_sum += retorno;
-			   
+			   retorno = vec_diff(linha,matrix_senso[baseId],fase);
+			   retorno_sum += retorno;		
+			   	   
 			   // Sincroniza todos os threads
 			   __syncthreads();
 			 
@@ -82,7 +86,7 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 				   retorno_sum = 0;
 				   
 					// Subtrai a linha do thread da linha da matriz de busca antisenso
-				   retorno = vec_diff(linha,matrix_antisenso[baseId],p,fase);
+				   retorno = vec_diff(linha,matrix_antisenso[baseId],fase);
 				   retorno_sum += retorno;
 				   
 				   // Sincroniza todos os threads
@@ -97,6 +101,7 @@ __global__ void k_buscador_analyse(int totalseqs,int n,char **data,int *resultad
 			fase++;   
 		}
 	}
+	printf("%d\n",tipo);
 	resultados[seqId] = tipo;
 	gap[seqId] = fase;
 	   
@@ -117,9 +122,7 @@ __global__ void k_buscador_convert(int totalseqs,int n,char **data,int *resultad
   
     int i;
     int seqId;// id da sequencia analisada
-    int baseId;// id da base analisada por cada thread
     int tipo;
-    int retorno;
     int fase;
     char *seqToReturn;
   
@@ -427,31 +430,33 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ __host__ int getLine(char *c,int *linha){
-	// Recebe um vetor de bases e retorna uma linha de binarios
-	// Retorna tambem o tamanho n da sequencia
-	int i=0;
-	while(c[i] != '\0'){
-		switch(c[i]){
-				case 'A':
-					linha[i] = 1;	
-				break;
-				case 'C':
-					linha[i] = 1;		
-				break;
-				case 'G':
-					linha[i] = 1;	
-				break;
-				case 'T':
-					linha[i] = 1;
-				break;
-				default:
-					linha[i] = 1;
-				break;
-		}
-		i++;
+__device__ __host__ int* getLine(char c){
+	// Recebe uma base e retorna uma linha de binarios
+	int *linha;
+	int i;
+	
+	linha = (int*)malloc(N_COL*sizeof(int));
+	for(i=0;i<N_COL;i++) linha[i] = 0;
+	
+	switch(c){
+		case 'A':
+			linha[A] = 1;	
+		break;
+		case 'C':
+			linha[C] = 1;		
+		break;
+		case 'G':
+			linha[G] = 1;	
+		break;
+		case 'T':
+			linha[T] = 1;
+		break;
+		case 'N':
+			linha[N] = 1;
+		break;
 	}
-	return i;
+
+	return linha;
 }
 
 __device__ __host__ char* getBase(int *linha,int n){
@@ -469,15 +474,16 @@ __device__ __host__ char* getBase(int *linha,int n){
 	return "N";
 }
 
-__device__ __host__ int vec_diff(int *analise,int *busca,int n,int fase){
-	// Subtrai os  elementos do vetor analise de busca. analise deve  ter n elementos.
+
+extern "C" __device__ __host__ int vec_diff(int *analise,int *busca,int fase){
+	// Subtrai os  elementos do vetor analise de busca
 	int i = 0;
 	int j = fase;
 	int results = 0;
 	
 	if(analise[N] == 1) return 0;
 	
-	while(i < n){
+	while(i < N_COL){
 		results+=analise[i]-busca[j];
 		i++;
 		j++;
@@ -495,12 +501,18 @@ __device__ __host__ void getMatrix(int **matrix,char *str,int n){
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		getLine(&str[i],matrix[i]);
+		printf("Marcando %d - %c\n",i+1,str[i]);
+		matrix[i] = getLine(str[i]);
 	}	
 
 	return;
 }
 
+__device__ __host__ int getSeqSize(char *seq){
+	int size;
+	for(size=0;seq[size] != '\0';size++);//Pega tamanho das sequências
+	return size;
+}
 
 
 
@@ -508,7 +520,7 @@ extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matr
   // As matrizes já devem vir alocadas
   int size;
 											
-  for(size=0;senso[size] != '\0';size++);//Pega tamanho das sequências
+  size = getSeqSize(senso);
 											
   printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
