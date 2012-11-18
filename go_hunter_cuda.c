@@ -169,12 +169,14 @@ void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *f
 							switch(resultado){
 								case SENSO:
 									if(verbose && !silent)
-										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										//printf("senso");
+										//printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
 								break;
 								case ANTISENSO:
 									if(verbose && !silent)
-										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										//printf("antisenso");
+										//printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
 								break;
 							}
@@ -319,26 +321,32 @@ GHashTable* cudaIteracoes(int bloco1,int bloco2,int blocos,int n,int **d_matrix_
 
 
 
+
 void setup_for_cuda(char *seq,int **d_matrix_senso,int **d_matrix_antisenso){
 	// Recebe um vetor de caracteres com o padrão a ser procurado
-	// As matrizes não precisam estar alocadas
+	// As matrizes precisam estar alocadas
 	char *senso;
 	char *antisenso;
+	int **h_matrix_senso;
+	int **h_matrix_antisenso;
 	int size = strlen(seq);
 	int i;
-	int *tmp;
 	
-	// Aloca memória na CPU
-	tmp = (int*)calloc(0,N_COL*sizeof(int));
+	h_matrix_senso = (int**)malloc(size*sizeof(int*));
+	h_matrix_antisenso = (int**)malloc(size*sizeof(int*));
 	
 	// Aloca memória na GPU
-	cudaMalloc((void**)&d_matrix_senso,size*sizeof(int*));
-	cudaMalloc((void**)&d_matrix_antisenso,size*sizeof(int*));
-	
+	for(i = 0; i < size ; i++){
+		cudaMalloc((void**)&h_matrix_senso[i],N_COL*sizeof(int));
+		cudaMalloc((void**)&h_matrix_antisenso[i],N_COL*sizeof(int));
+	}
 	cudaMalloc((void**)&senso,(size+1)*sizeof(char));
 	cudaMalloc((void**)&antisenso,(size+1)*sizeof(char));
 	
-	// Copia dados      
+	// Copia dados
+    cudaMemcpy(d_matrix_senso,h_matrix_senso,size*sizeof(int*),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(int*),cudaMemcpyHostToDevice);
+      
     cudaMemcpy(senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
     cudaMemcpy(antisenso,(const void*)get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
     
@@ -367,6 +375,9 @@ GHashTable* auxCUDA(char *c,const int bloco1,const int bloco2,const int blocos,g
 	
 	get_setup(&n);
     
+	// Aloca memória na CPU
+	cudaMalloc((void**)&d_matrix_senso,n*sizeof(int*));
+	cudaMalloc((void**)&d_matrix_antisenso,n*sizeof(int*));
 	//Inicializa
 	setup_for_cuda(c,d_matrix_senso,d_matrix_antisenso);
 	
