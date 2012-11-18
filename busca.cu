@@ -18,7 +18,6 @@ extern "C" {
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
 
-
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 __device__ __host__ int getLine(char *c,int *linha);
