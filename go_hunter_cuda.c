@@ -89,7 +89,7 @@ void buffer_manager(int *buffer_load,char **h_data,char **d_data,int n,cudaStrea
 
 
 
-void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *founded,const int seqSize_an,const int seqSize_bu,int blocoV,cudaStream_t stream1,cudaStream_t stream2,int **d_matrix_senso,int **d_matrix_antisenso){
+void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *founded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,cudaStream_t stream1,cudaStream_t stream2,int **d_matrix_senso,int **d_matrix_antisenso){
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				int i;
 				int *h_resultados;
@@ -114,7 +114,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,data,d_resultados,dp_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,dp_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
 						omp_set_lock(&DtH_copy_lock);
 						// Inicia processamento dos resultados
 						cudaStreamSynchronize(stream1);
@@ -167,14 +167,12 @@ void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *f
 							switch(resultado){
 								case SENSO:
 									if(verbose && !silent)
-										printf("senso");
-										//printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
 								break;
 								case ANTISENSO:
 									if(verbose && !silent)
-										printf("antisenso");
-										//printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
 								break;
 							}
@@ -236,7 +234,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	
 	
 	Buffer buffer;
-	int blocoV = seqSize_bu - bloco1 - bloco2+1;
+	int blocoV = seqSize_bu - bloco1 - bloco2;
 	int i;
 	int processadas;
 	int buffer_load;
@@ -286,7 +284,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso);
+				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso);
 			}		
 			#pragma omp section
 			{

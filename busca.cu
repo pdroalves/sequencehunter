@@ -37,7 +37,7 @@ extern "C" void checkCudaError();
 
 __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,char **data,int *resultados,int *gap,int **matrix_senso,int **matrix_antisenso){
 
-  ////////		UM	BLOCO PODE SEQUENCIA COM O MESMO NUMERO DE THREADS E BASES
+  ////////		UM	BLOCO POR SEQUENCIA COM O MESMO NUMERO DE THREADS E BASES
   ////////
   ////////
   ////////
@@ -134,18 +134,18 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 	return;
 }
 
-__global__ void k_buscador_convert(int totalseqs,int seqSize_an,int seqSize_busca,char **data,int *resultados,int *gap,char **founded){
+__global__ void k_buscador_convert(int totalseqs,int bloco1,int bloco2,int blocoV,char **data,int *resultados,int *gap,char **founded){
 	
 	///////			UM THREAD POR SEQUENCIA
     ////////
     ////////
-    ////////
-    ////////		n: o tamanho da sequência de busca
+	////////		seqSize_an: o tamanho da sequência analisada
+	////////		seqSize_busca: o tamanho da sequência de busca
     ////////		data: o endereço com todo o buffer
     ////////
     ////////
     ////////
-  /*
+  
     int i;
     int seqId;// id da sequencia analisada
     int tipo;
@@ -158,16 +158,21 @@ __global__ void k_buscador_convert(int totalseqs,int seqSize_an,int seqSize_busc
 		fase = gap[seqId];
 		seqToReturn = founded[seqId];
 		
-		if(tipo != 0){
-			for(i=0;i<n;i++)
-				seqToReturn[i] = data[seqId][i+fase];
+		if(tipo == SENSO){
+			for(i=0;i<blocoV;i++)
+				seqToReturn[i] = data[seqId][i+fase+bloco1];
+		}
+		
+		if(tipo == ANTISENSO){
+			for(i=0;i<blocoV;i++)
+				seqToReturn[i] = data[seqId][i+fase+bloco2];
 		}
 	}
-	   */
+	   
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,cudaStream_t stream){
 	dim3 dimBlockK1(seqSize_bu);
 	dim3 dimGridK1(loaded);
 	dim3 dimBlockK2(loaded);
@@ -177,7 +182,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	cudaMalloc((void**)&gap,loaded*sizeof(int));
 	
 	k_buscador_analyse<<<dimGridK1,dimBlockK1,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso);
-	k_buscador_convert<<<dimGridK2,dimBlockK2,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,founded);
+	k_buscador_convert<<<dimGridK2,dimBlockK2,0,stream>>>(loaded,bloco1,bloco2,blocoV,data,resultados,gap,founded);
 	
 	checkCudaError();
 	return;
