@@ -94,19 +94,20 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				int i;
 				int *h_resultados;
 				char **h_founded;
-				char **d_founded;
-				char **dp_founded;	
+				//char **d_founded;
+				//char **dp_founded;	
 				int *d_resultados;
 				int loaded;
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
-				cudaHostAlloc((void**)&d_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
-				cudaMalloc((void**)&dp_founded,buffer_size*sizeof(char*));
-				for(i=0;i<buffer_size;i++)
-					cudaMalloc((void**)&d_founded[i],(blocoV+1)*sizeof(char));
-				cudaMemcpyAsync(dp_founded,d_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice,stream2);
+				//cudaMalloc((void**)&dp_founded,buffer_size*sizeof(char*));
+				
 				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
 					cudaHostAlloc((void**)&h_founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
+				//cudaMemcpyAsync(dp_founded,d_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice,stream2);
+				//cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				//for(i=0;i<buffer_size;i++)
+				//	cudaHostAlloc((void**)&h_founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
 				cudaHostAlloc((void**)&h_resultados,buffer_size*sizeof(int),cudaHostAllocDefault);	
 	
 				while( *buffer_load == 0){
@@ -114,7 +115,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,dp_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
 						omp_set_lock(&DtH_copy_lock);
 						// Inicia processamento dos resultados
 						cudaStreamSynchronize(stream1);
@@ -124,21 +125,19 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						*processadas += loaded;
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 						checkCudaError();
-						for(i=0;i<loaded;i++)
+						/*for(i=0;i<loaded;i++)
 							if(h_resultados[i] != 0){
 								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
 								checkCudaError();
-							}
+							}*/
 						cudaStreamSynchronize(stream2);
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] == SENSO ||h_resultados[i] == ANTISENSO){
-								printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
+								//printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
 								enfileirar(founded,h_founded[i]);
 								enfileirar(tipo_founded,convertResultToChar(h_resultados[i]));
 							}
 						checkCudaError();
-						if(verbose && !silent)
-							printf("Sequencias processadas: %d\n",*processadas);
 						omp_unset_lock(&DtH_copy_lock);
 						//print_fila(founded);
 						while(*buffer_load==0){}

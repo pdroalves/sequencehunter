@@ -10,7 +10,7 @@ OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
 CUDA = -L/usr/local/cuda/lib64 -lcudart 
-CUDA_ARCH = -arch=sm_20
+CUDA_ARCH = -arch=sm_20 -O2
 
 INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
 

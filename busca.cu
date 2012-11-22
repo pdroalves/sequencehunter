@@ -59,7 +59,6 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   int fase;
   char *seq;
   tipo = 0;
-  alarm = 0;
   seqId = blockIdx.x;
   baseId = threadIdx.x;
   fase = 0;
@@ -101,11 +100,12 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   
 			   // Subtrai a linha do thread da linha da matriz de busca senso
 			   //retorno[baseId] = vec_diff(linha,matrix_senso[baseId],fase);
-			    retorno[baseId] = 0;	
+			    retorno[baseId] = 0;
+			    alarm=0;	
 			  	if(!matrix_senso[baseId][N]){
 					i=0;
 					j = fase;
-					while(i < N_COL){
+					while(i < N_COL-1){
 						// printf("seqID: %d - baseId: %d - analise[%d]: %d - busca[%d]: %d\n",seqId,baseId,i,linha[i],j,matrix_senso[baseId][j]);
 						 retorno[baseId] += abs(linha[i]-matrix_senso[baseId][j]);
 					//	if(retorno[baseId]){
@@ -119,18 +119,24 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   __syncthreads();
 			   
 			   // Somatoria dos resultados
-			   i = blockDim.x/2;
+			   /*i = blockDim.x/2;
 			   while(i!=0){
-				   if(baseId < i)
+				   if(baseId <= i)
 						retorno[baseId] += retorno[baseId+i];
 					__syncthreads();
 					i /= 2;
-			   }
+			   }*/
+			   if(retorno[baseId]>0){
+						//printf("seqID: %d - baseId: %d - setando o alarme!\n",seqId,baseId);
+					   alarm=1;
+					
+					}
+				  __syncthreads();
 			   
 			   // Se encontrou algo, guarda o tipo
 			   if(baseId == 0){
 				//printf("seqId %d - retorno: %d\n",seqId,retorno[0]);
-				   if(!retorno[0]){
+				   if(alarm==0){
 					   tipo = SENSO;
 					   resultados[seqId] = SENSO;	
 					   gap[seqId] = fase;				   
@@ -146,34 +152,47 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 					///////////////////////// ANTISENSO /////////////////////
 					/////////////////////////////////////////////////////////
 					retorno[baseId] = 0;	
-			   			   
+			   		alarm=0;	   
 					// Subtrai a linha do thread da linha da matriz de busca antisenso				       
 					if(!matrix_antisenso[baseId][N]){
 						i=0;
 						j = fase;
-						while(i < N_COL){
-							// printf("seqID: %d - baseId: %d - analise[%d]: %d - busca[%d]: %d\n",seqId,baseId,i,linha[i],j,matrix_senso[baseId][j]);
+						while(i < N_COL-1){
+							 //printf("seqID: %d - baseId: %d - analise[%d]: %d - busca[%d]: %d\n",seqId,baseId,i,linha[i],j,matrix_senso[baseId][j]);
 							 retorno[baseId] += abs(linha[i]-matrix_antisenso[baseId][j]);
-						//	if(retorno[baseId]){
-						//		 printf("ERRO! seqID: %d - baseId: %d - retorno: %d\n",seqId,baseId,retorno[baseId]);
-						//	}
+							//if(retorno[baseId]){
+							//	 printf("ERRO! seqID: %d - baseId: %d - retorno: %d\n",seqId,baseId,retorno[baseId]);
+							//}
 							i++;
 							j++;
 						}
 				  }
 				  __syncthreads();
 			   
-				  i = blockDim.x/2;
+				  /*i = blockDim.x/2;
 				  while(i!=0){
-						if(baseId < i)
+						printf("%d\n",i);
+						if(baseId <= i){
 							retorno[baseId] += retorno[baseId+i];
+							printf("seqID: %d - baseId: %d - Somando %d com %d, %d+%d\n",seqId,baseId,baseId,baseId+i,retorno[baseId],retorno[baseId+i]);
+						}
 						__syncthreads();
 						i /= 2;
-				   }
-					   
+				   }*/
+				   
+				   if(retorno[baseId]>0){
+						//printf("seqID: %d - baseId: %d - setando o alarme!\n",seqId,baseId);
+					   alarm=1;
+					
+					}
+				  __syncthreads();
+				  	   
 				   // Sincroniza todos os threads
 				   if(baseId == 0){
-					   if(!retorno[0]){
+						//printf("seqID: %d - baseId: %d - retorno0: %d\n",seqId,baseId,retorno[0]);
+						//printf("seqID: %d - baseId: %d - retorno10: %d\n",seqId,baseId,retorno[10]);
+						//printf("seqID: %d - baseId: %d - Checando o alarme: %d\n",seqId,baseId,alarm);
+					   if(alarm==0){
 						   tipo = ANTISENSO;
 						   resultados[seqId] = ANTISENSO;	
 						   gap[seqId] = fase;				   
@@ -185,7 +204,12 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			fase++;   
 		}
 	}
-	//if(threadIdx.x == 0)
+	if(threadIdx.x == 0){
+		if(!tipo){
+			resultados[seqId] = 0;
+			gap[seqId] = 0;
+		}
+	}
 	//printf("seqId: %3d - baseId: %d - Sequencia: %s - %d\n",seqId,baseId,seq,tipo);
 	return;
 }
@@ -213,6 +237,7 @@ __global__ void k_buscador_convert(int totalseqs,int bloco1,int bloco2,int bloco
 		tipo = resultados[seqId];
 		fase = gap[seqId];
 		seqToReturn = founded[seqId];
+		//printf("Seq: %d - tipo: %d - fase: %d\n",seqId,tipo,fase);
 		
 		if(tipo == SENSO){
 			for(i=0;i<blocoV;i++)
@@ -229,15 +254,26 @@ __global__ void k_buscador_convert(int totalseqs,int bloco1,int bloco2,int bloco
 }
 
 extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,cudaStream_t stream){
+	int blocks2;
+	int threads2;
+	int *gap;
+	
 	dim3 dimBlockK1(seqSize_bu);
 	dim3 dimGridK1(loaded);
-	dim3 dimBlockK2(loaded);
-	dim3 dimGridK2(1);
-	int *gap;
 	
 	cudaMalloc((void**)&gap,loaded*sizeof(int));
 	
 	k_buscador_analyse<<<dimGridK1,dimBlockK1,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso);
+	if(loaded > MAX_CUDA_THREADS){
+		threads2 = MAX_CUDA_THREADS;
+		blocks2 = loaded/MAX_CUDA_THREADS +1;
+	}else{
+		threads2 = loaded;
+		blocks2 = 1;
+	}
+	dim3 dimBlockK2(threads2);
+	dim3 dimGridK2(blocks2);
+	
 	k_buscador_convert<<<dimGridK2,dimBlockK2,0,stream>>>(loaded,bloco1,bloco2,blocoV,data,resultados,gap,founded);
 	
 	checkCudaError();
