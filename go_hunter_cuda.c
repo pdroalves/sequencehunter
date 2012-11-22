@@ -139,6 +139,8 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 							}
 						checkCudaError();
 						omp_unset_lock(&DtH_copy_lock);
+						if(verbose && !silent)
+							printf("Sequencias analisadas: %d\n",*processadas);
 						//print_fila(founded);
 						while(*buffer_load==0){}
 				}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -167,12 +169,12 @@ void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *f
 							switch(resultado){
 								case SENSO:
 									if(verbose && !silent)
-										//printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
 								break;
 								case ANTISENSO:
 									if(verbose && !silent)
-										//printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
 								break;
 							}
