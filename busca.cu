@@ -50,7 +50,8 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada por cada thread
-  int tipo;
+  __shared__ int tipo;
+  __shared__ int alarm;
   int linha[N_COL];// Cada thread cuida de uma linha
   __shared__ int retorno[11];
   int i;
@@ -58,6 +59,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   int fase;
   char *seq;
   tipo = 0;
+  alarm = 0;
   seqId = blockIdx.x;
   baseId = threadIdx.x;
   fase = 0;
@@ -66,19 +68,49 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 	  // Pega uma linha da matriz Ma
 	  seq = data[seqId];	
 	  //printf("seq: %s\n",seq);
-	  getLine(seq[baseId],&linha[0]); 
+	 // getLine(seq[baseId],&linha[0]); 
+	  
+	  // Carrega a linha relativa a base analisada
+	  // O compilador nao gostou que eu usasse a getLine() aqui
+	  for(i=0;i<N_COL;i++) linha[i] = 0;
+	
+	  switch(seq[baseId]){
+		case 'A':
+			linha[A] = 1;	
+		break;
+		case 'C':
+			linha[C] = 1;		
+		break;
+		case 'G':
+			linha[G] = 1;	
+		break;
+		case 'T':
+			linha[T] = 1;
+		break;
+		case 'N':
+			linha[N] = 1;
+		break;
+	  }
+	  
+	  
 	  //for(i=0;i<N_COL;i++) printf("%d\n",linha[i]);
 	  while(fase + seqSize_an <= seqSize_bu && tipo == 0){
+			   /////////////////////////////////////////////////////////
+			   ///////////////////////// SENSO /////////////////////////
+			   /////////////////////////////////////////////////////////
 			   
 			   // Subtrai a linha do thread da linha da matriz de busca senso
 			   //retorno[baseId] = vec_diff(linha,matrix_senso[baseId],fase);
 			    retorno[baseId] = 0;	
-			  	if(matrix_senso[baseId][N] != 1){
+			  	if(!matrix_senso[baseId][N]){
+					i=0;
 					j = fase;
 					while(i < N_COL){
+						// printf("seqID: %d - baseId: %d - analise[%d]: %d - busca[%d]: %d\n",seqId,baseId,i,linha[i],j,matrix_senso[baseId][j]);
 						 retorno[baseId] += abs(linha[i]-matrix_senso[baseId][j]);
-						 if(abs(matrix_senso[baseId][j]) > 1 || abs(linha[i]) > 1)
-							printf("seqId: %d, baseId: %d - results: %d - analise[%d]: %d - busca[%d]: %d - fase: %d\n",seqId,baseId,retorno[baseId],i,linha[i],i,matrix_senso[baseId][j],fase);
+					//	if(retorno[baseId]){
+					//		 printf("ERRO! seqID: %d - baseId: %d - retorno: %d\n",seqId,baseId,retorno[baseId]);
+					//	}
 						i++;
 						j++;
 					}
@@ -86,6 +118,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			  // printf("retorno[%d]: %d\n",baseId,retorno[baseId]);
 			   __syncthreads();
 			   
+			   // Somatoria dos resultados
 			   i = blockDim.x/2;
 			   while(i!=0){
 				   if(baseId < i)
@@ -93,26 +126,46 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 					__syncthreads();
 					i /= 2;
 			   }
-			   	   
-			   // Sincroniza todos os threads
+			   
+			   // Se encontrou algo, guarda o tipo
 			   if(baseId == 0){
 				//printf("seqId %d - retorno: %d\n",seqId,retorno[0]);
-				   if(retorno[0] == 0){
+				   if(!retorno[0]){
 					   tipo = SENSO;
 					   resultados[seqId] = SENSO;	
 					   gap[seqId] = fase;				   
 				   }
 			   }
+			   
+			   	__syncthreads();
 			   //printf("S: %d - %s\n",retorno_sum,seq);
 
-			   if(tipo != SENSO){				   
-					// Subtrai a linha do thread da linha da matriz de busca antisenso
-				   retorno[baseId] = vec_diff(linha,matrix_antisenso[baseId],fase);
-				    __syncthreads();
+			  if(tipo != SENSO){	
+				   
+					/////////////////////////////////////////////////////////
+					///////////////////////// ANTISENSO /////////////////////
+					/////////////////////////////////////////////////////////
+					retorno[baseId] = 0;	
+			   			   
+					// Subtrai a linha do thread da linha da matriz de busca antisenso				       
+					if(!matrix_antisenso[baseId][N]){
+						i=0;
+						j = fase;
+						while(i < N_COL){
+							// printf("seqID: %d - baseId: %d - analise[%d]: %d - busca[%d]: %d\n",seqId,baseId,i,linha[i],j,matrix_senso[baseId][j]);
+							 retorno[baseId] += abs(linha[i]-matrix_antisenso[baseId][j]);
+						//	if(retorno[baseId]){
+						//		 printf("ERRO! seqID: %d - baseId: %d - retorno: %d\n",seqId,baseId,retorno[baseId]);
+						//	}
+							i++;
+							j++;
+						}
+				  }
+				  __syncthreads();
 			   
-				   i = blockDim.x/2;
-				   while(i!=0){
-					   if(baseId < i)
+				  i = blockDim.x/2;
+				  while(i!=0){
+						if(baseId < i)
 							retorno[baseId] += retorno[baseId+i];
 						__syncthreads();
 						i /= 2;
@@ -120,17 +173,20 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 					   
 				   // Sincroniza todos os threads
 				   if(baseId == 0){
-					   if(retorno[0] == 0){
+					   if(!retorno[0]){
 						   tipo = ANTISENSO;
 						   resultados[seqId] = ANTISENSO;	
 						   gap[seqId] = fase;				   
 					   }
 				   }
+					__syncthreads();
 			   }
+			   
 			fase++;   
 		}
 	}
-	//printf("%d\n",tipo);
+	//if(threadIdx.x == 0)
+	//printf("seqId: %3d - baseId: %d - Sequencia: %s - %d\n",seqId,baseId,seq,tipo);
 	return;
 }
 
@@ -516,7 +572,7 @@ __device__ int vec_diff(int analise[],int busca[],int fase){
 	
 	results = 0;		
 	while(i < N_COL){
-		//printf("results: %d - analise[%d]: %d - busca[%d]: %d\n",results,analise[i],busca[i]);
+		printf("results: %d - analise[%d]: %d - busca[%d]: %d\n",results,analise[i],busca[i]);
 		results += abs(analise[i]-busca[j]);
 		i++;
 		j++;

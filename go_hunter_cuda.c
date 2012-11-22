@@ -126,12 +126,13 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						checkCudaError();
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] != 0){
-								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV+1)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
+								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
 								checkCudaError();
 							}
 						cudaStreamSynchronize(stream2);
 						for(i=0;i<loaded;i++)
-							if(h_resultados[i] != 0){
+							if(h_resultados[i] == SENSO ||h_resultados[i] == ANTISENSO){
+								printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
 								enfileirar(founded,h_founded[i]);
 								enfileirar(tipo_founded,convertResultToChar(h_resultados[i]));
 							}
@@ -167,12 +168,12 @@ void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *f
 							switch(resultado){
 								case SENSO:
 									if(verbose && !silent)
-										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										//printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
 									enfileirar(f_sensos,tmp);
 								break;
 								case ANTISENSO:
 									if(verbose && !silent)
-										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										//printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
 									enfileirar(f_antisensos,get_antisenso(tmp));
 								break;
 							}
