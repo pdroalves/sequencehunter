@@ -16,6 +16,7 @@
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
+omp_lock_t MC_copy_lock;
 
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
 const char tmp_ncuda_as_name[15] = "tmp_antisensos";
@@ -68,7 +69,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 	prepare_buffer(&buffer,buffer_size_NC);
 	f_sensos = criar_fila();
 	f_antisensos = criar_fila();
-	start_fila_lock();
+	omp_init_lock(&MC_copy_lock);
 	
 			
 	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
@@ -97,7 +98,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 		// Libera memoria ////////////////////////
 		//////////////////////////////////////////
 		  int retorno;
-		  
+		  char *hold;
 			hash_table = criar_ghash_table();
 		  while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -106,18 +107,35 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 	
 					  while(buffer.load != GATHERING_DONE){
 						if(tamanho_da_fila(f_sensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_sensos);
+							omp_unset_lock(&MC_copy_lock);
+								
+								
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 						}
 						if(tamanho_da_fila(f_antisensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_antisensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 						}
 					  }
 						
 						while(tamanho_da_fila(f_sensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_sensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 						}
 						while(tamanho_da_fila(f_antisensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_antisensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 						}
 				
 					
@@ -132,34 +150,72 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 		//////////////////////////////////////////
 		
 		int *resultados;
+		cudaEvent_t startK,stopK,start,stop;
+		float elapsedTimeK,elapsedTime;
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
+		cudaEventCreate(&start);
+		cudaEventCreate(&stop);
+		cudaEventCreate(&startK);
+		cudaEventCreate(&stopK);
+			FILE *busca_,*retorno;
+				
+				busca_ = fopen("noncuda_busca.dat","w+");
+				retorno = fopen("noncuda_retorno.dat","w+");
 		
 			while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
+				cudaEventRecord(start,0);
 			while(buffer.load != -1){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-				
+				cudaEventRecord(stop,0);
+				cudaEventSynchronize(stop);
+				cudaEventElapsedTime(&elapsedTime,start,stop);
+				printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+				fprintf(retorno,"%f\n",elapsedTime);
+					
+				cudaEventRecord(startK,0);
 					busca(bloco1,bloco2,blocos,&buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+					
+				cudaEventRecord(stopK,0);
+				cudaEventSynchronize(stopK);
+				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
+				printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+				fprintf(busca_,"%f\n",elapsedTimeK);
+				cudaEventRecord(start,0);
+						
 					
 					tam = buffer.load;
 					p += tam;
-					//printf("%d\n",p);
+						if(p > 1000000) {
+							
+							fclose(busca_);
+							fclose(retorno);
+							exit(0);
+						}
+							
+					printf("%d\n",p);
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case 1:
 								tmp = buffer.seq[i];
-								if(verbose == TRUE && silent != TRUE)	
-									printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+								//if(verbose == TRUE && silent != TRUE)	
+								//	printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+								omp_set_lock(&MC_copy_lock);
 								enfileirar(f_sensos,tmp);
+								omp_unset_lock(&MC_copy_lock);
+								
 								//printString("Senso:",tmp);
 								buffer.load--;
 							break;
 							case 2:
 								tmp = buffer.seq[i];
-								if(verbose == TRUE && silent != TRUE)
-									printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
+								//if(verbose == TRUE && silent != TRUE)
+								//	printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
+								omp_set_lock(&MC_copy_lock);	
 								enfileirar(f_antisensos,get_antisenso(tmp));
+								omp_unset_lock(&MC_copy_lock);
+								
 								//printString("Antisenso:",tmp);
 								buffer.load--;
 							break;
@@ -179,6 +235,8 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 					while(buffer.load==0){}
 									
 			}
+				//fclose(busca_);
+				//fclose(retorno);
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////

@@ -23,6 +23,7 @@ gboolean verbose;
 gboolean silent;
 __constant__ char *d_buffer[buffer_size];
 omp_lock_t DtH_copy_lock;
+omp_lock_t MC_copy_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
 
 char* convertResultToChar(int n){
@@ -99,7 +100,24 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				int *d_resultados;
 				int loaded;
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
+				cudaEvent_t startK,stopK;
+				cudaEvent_t start,stop;
+				//cudaEvent_t startV,stopV;
+				float elapsedTimeK,elapsedTime;
+				FILE *busca,*retorno,*variavel;
+				
+				busca = fopen("cuda_busca.dat","w");
+				retorno = fopen("cuda_retorno.dat","w");
+				//variavel = fopen("cuda_variavel.dat","w");
+				
 				//cudaMalloc((void**)&dp_founded,buffer_size*sizeof(char*));
+				
+				cudaEventCreate(&start);
+				cudaEventCreate(&stop);
+				cudaEventCreate(&startK);
+				cudaEventCreate(&stopK);
+			//	cudaEventCreate(&startV);
+				//cudaEventCreate(&stopV);
 				
 				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
@@ -113,16 +131,43 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
+						cudaEventRecord(start,0);
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
+						cudaEventRecord(stop,0);
+						cudaEventSynchronize(stop);
+						cudaEventElapsedTime(&elapsedTime,start,stop);
+						printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+						fprintf(retorno,"%f\n",elapsedTime);
+						cudaEventRecord(startK,0);
+						
+						loaded = *buffer_load;
 						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
-						omp_set_lock(&DtH_copy_lock);
-						// Inicia processamento dos resultados
+						
+						cudaEventRecord(stopK,0);
+						cudaEventSynchronize(stopK);
+						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
+						printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+						fprintf(busca,"%f\n",elapsedTimeK);
+						cudaEventRecord(start,0);
+						
+						/*cudaEventRecord(startV,0);
+						cudaEventRecord(stopV,0);
+						cudaEventSynchronize(stopV);
+						cudaEventElapsedTime(&elapsedTime,startV,stopV);
+						printf("Tempo V: %.2f ms\n",elapsedTime);
+						*/// Inicia processamento dos resultados
 						cudaStreamSynchronize(stream1);
 						//printf("%d\n",p);
-						loaded = *buffer_load;
 						*buffer_load = 0;	
 						*processadas += loaded;
+						if(*processadas > 1000000) {
+							
+							fclose(busca);
+							fclose(retorno);
+							exit(0);
+						}
+							
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 						checkCudaError();
 						/*for(i=0;i<loaded;i++)
@@ -133,12 +178,13 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						cudaStreamSynchronize(stream2);
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] == SENSO ||h_resultados[i] == ANTISENSO){
+								omp_set_lock(&DtH_copy_lock);
 								//printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
 								enfileirar(founded,h_founded[i]);
 								enfileirar(tipo_founded,convertResultToChar(h_resultados[i]));
+								omp_unset_lock(&DtH_copy_lock);
 							}
 						checkCudaError();
-						omp_unset_lock(&DtH_copy_lock);
 						if(verbose && !silent)
 							printf("Sequencias analisadas: %d\n",*processadas);
 						//print_fila(founded);
@@ -160,27 +206,31 @@ void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *f
 				
 				
 				while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_SEARCH]){
-						omp_set_lock(&DtH_copy_lock);
 						// Essa parte pode ser feita em paralelo
 						i=0;
 						while(tamanho_da_fila(founded) > 0){//Copia sequências senso e antisenso encontradas
+							omp_set_lock(&DtH_copy_lock);
 							resultado = convertResultToInt(desenfileirar(tipo_founded)); 
 							tmp = desenfileirar(founded);
+							omp_unset_lock(&DtH_copy_lock);
 							switch(resultado){
 								case SENSO:
-									if(verbose && !silent)
-										printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+									//if(verbose && !silent)
+									//	printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+									omp_set_lock(&MC_copy_lock);
 									enfileirar(f_sensos,tmp);
+									omp_unset_lock(&MC_copy_lock);
 								break;
 								case ANTISENSO:
-									if(verbose && !silent)
-										printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+									//if(verbose && !silent)
+									//	printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+									omp_set_lock(&MC_copy_lock);
 									enfileirar(f_antisensos,get_antisenso(tmp));
+									omp_unset_lock(&MC_copy_lock);
 								break;
 							}
 							i++;
 						}
-						omp_unset_lock(&DtH_copy_lock);
 											
 						/*if(seqsToProcess != 0 || buffer_load !=0)
 						{
@@ -200,6 +250,7 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 					//////////////////////////////////////////
 					THREAD_DONE[THREAD_CLEANER] = FALSE;
 					  int retorno;
+					  char *hold;
 					  			  
 					  while( *buffer_load == 0){
 						}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -207,23 +258,35 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 
 					  while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_RESULTS]){
 						if(tamanho_da_fila(f_sensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_sensos);
+							omp_unset_lock(&MC_copy_lock);
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 						}
 						if(tamanho_da_fila(f_antisensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_antisensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 						}
 					  }
 						
 						while(tamanho_da_fila(f_sensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_sensos),criar_value(0,1,0,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_sensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 						}
 						while(tamanho_da_fila(f_antisensos) > 0){
-							retorno = adicionar_ht(hash_table,desenfileirar(f_antisensos),criar_value(0,0,1,0));
+							omp_set_lock(&MC_copy_lock);
+							hold = desenfileirar(f_antisensos);
+							omp_unset_lock(&MC_copy_lock);
+							
+							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 						}
-					
-					if(g_hash_table_size(hash_table) == 0)
-						printf("Ta vazio!\n");
-		
+						
 					THREAD_DONE[THREAD_CLEANER] = TRUE;
 					return;
 					//////////////////////////////////////////
@@ -265,8 +328,8 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	f_antisensos = criar_fila("Antisensos");
 	founded = criar_fila("Founded");
 	tipo_founded = criar_fila("Tipo Founded");
-	start_fila_lock();
 	omp_init_lock(&DtH_copy_lock);
+	omp_init_lock(&MC_copy_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
 	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocMapped | cudaHostAllocWriteCombined);
 	for(i=0;i<buffer_size;i++)

@@ -110,7 +110,6 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 						i++;
 					}
 			  }
-			   //printf("retorno[%d]: %d\n",baseId,retorno[baseId]);
 			   
 			   if(retorno[baseId]>0){
 						//printf("seqID: %d - baseId: %d - setando o alarme!\n",seqId,baseId);
@@ -146,7 +145,6 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 							i++;
 						}
 				  }
-				  __syncthreads();
 			   				   
 				   if(retorno[baseId]>0){
 						//printf("seqID: %d - baseId: %d - setando o alarme!\n",seqId,baseId);

@@ -17,7 +17,6 @@
 #include "operacoes.h"
 #include "load_data.h"
 
-omp_lock_t fila_lock;
 
 Fila* criar_fila(char *nome){
 	Fila *f;
@@ -25,11 +24,6 @@ Fila* criar_fila(char *nome){
 	f->nome = nome;
 	f->size = 0;
 	return f;
-}
-
-void start_fila_lock(){
-	omp_init_lock (&fila_lock);
-	return;
 }
 
 FilaItem* criar_elemento_fila(char *seq){
@@ -48,7 +42,6 @@ FilaItem* criar_elemento_fila(char *seq){
 
 void enfileirar(Fila *f,char *seq){
 		FilaItem* novo;
-         omp_set_lock(&fila_lock);
 		//printf("Enfileirando: %s\n",seq);
 		novo = criar_elemento_fila(seq);
 		
@@ -67,8 +60,6 @@ void enfileirar(Fila *f,char *seq){
 		}
 		
 		f->size = f->size + 1;
-	
-         omp_unset_lock(&fila_lock);
 	return;
 }
 
@@ -83,7 +74,6 @@ void enfileirar_fila(Fila *A,Fila *B){
 char* desenfileirar(Fila *f){
 		FilaItem *hold;
 		char *seq;
-         omp_set_lock(&fila_lock);
 		//printf("Desenfileirando\n");
 		
 		if(f->size > 0){
@@ -94,7 +84,6 @@ char* desenfileirar(Fila *f){
 			f->size--;
 		}
 		
-         omp_unset_lock(&fila_lock);
 		return seq;
 }
 
@@ -111,9 +100,7 @@ void despejar_fila(Fila *f,FILE *file){
 
 int tamanho_da_fila(Fila *f){
 	int size;
-    omp_set_lock(&fila_lock);
     size = f->size;
-    omp_unset_lock(&fila_lock);
 	return size;
 }
 
@@ -123,7 +110,6 @@ void print_fila(Fila *f){
 	FilaItem *fi;
 	printf("Imprimindo fila:\n");
 	
-    omp_set_lock(&fila_lock);
     if(f->size > 0){
 		fi = f->first;
 		for(i=0;i<f->size;i++){
@@ -131,7 +117,6 @@ void print_fila(Fila *f){
 			fi = fi->prox;
 		}
 	}
-    omp_unset_lock(&fila_lock);
 }
 
 void destroy(Fila *f){
