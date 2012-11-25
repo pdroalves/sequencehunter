@@ -131,25 +131,25 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
-						cudaEventRecord(start,0);
+						//cudaEventRecord(start,0);
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						cudaEventRecord(stop,0);
-						cudaEventSynchronize(stop);
-						cudaEventElapsedTime(&elapsedTime,start,stop);
-						printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-						fprintf(retorno,"%f\n",elapsedTime);
-						cudaEventRecord(startK,0);
+						//cudaEventRecord(stop,0);
+						//cudaEventSynchronize(stop);
+						//cudaEventElapsedTime(&elapsedTime,start,stop);
+						//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+						//fprintf(retorno,"%f\n",elapsedTime);
+						//cudaEventRecord(startK,0);
 						
 						loaded = *buffer_load;
 						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
 						
-						cudaEventRecord(stopK,0);
-						cudaEventSynchronize(stopK);
-						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-						printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-						fprintf(busca,"%f\n",elapsedTimeK);
-						cudaEventRecord(start,0);
+						//cudaEventRecord(stopK,0);
+						//cudaEventSynchronize(stopK);
+						//cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
+						//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+						//fprintf(busca,"%f\n",elapsedTimeK);
+						//cudaEventRecord(start,0);
 						
 						/*cudaEventRecord(startV,0);
 						cudaEventRecord(stopV,0);
