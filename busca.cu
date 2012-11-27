@@ -50,10 +50,10 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada
-  __shared__ int tipo;
-  __shared__ int alarm;
+  int tipo;
+  int alarm;
   int linha[N_COL];// Cada thread cuida de uma linha
-  __shared__ int retorno[MAX_CUDA_THREADS];
+  int retorno[MAX_CUDA_THREADS_PER_BLOCK];
   int i;
   int fase;
   char *seq;
@@ -80,7 +80,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 					retorno[baseId] = 0;
 					
 					// Carrega a linha relativa a base analisada
-					#pragma unroll N_COL
+					#pragma unroll 5
 					  for(i=0;i<N_COL;i++) linha[i] = 0;
 					
 					  switch(seq[baseId]){
@@ -101,7 +101,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 						break;
 					  }
 					if(!matrix_senso[baseId][N]){
-						#pragma unroll N_COL
+						#pragma unroll 5
 						for(i=0;i < N_COL;i++){
 							 retorno[baseId] += abs(linha[i]-matrix_senso[baseId][i]);
 						}
@@ -132,7 +132,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 						retorno[baseId] = 0;
 						
 						// Carrega a linha relativa a base analisada
-						#pragma unroll N_COL
+						#pragma unroll 5
 						  for(i=0;i<N_COL;i++) linha[i] = 0;
 						
 						  switch(seq[baseId]){
@@ -196,10 +196,21 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 }
 
 extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,int *gap,cudaStream_t stream){
-	dim3 dimBlockK1(seqSize_bu);
-	dim3 dimGridK1(loaded);
+	int num_threads;
+	int num_blocks;
 	
-	k_buscador_analyse<<<dimGridK1,dimBlockK1,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV,founded);
+	if(loaded > MAX_CUDA_THREADS_PER_BLOCK){
+		num_threads = MAX_CUDA_THREADS_PER_BLOCK;
+		num_blocks = (float)loaded/(float)num_threads + 1;
+	}else{
+		num_threads = loaded;
+		num_blocks = 1;
+	}
+	
+	dim3 dimBlock(num_threads);
+	dim3 dimGrid(num_blocks);
+	
+	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV,founded);
 	
 	checkCudaError();
 	return;
