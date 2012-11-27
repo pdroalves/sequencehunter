@@ -11,9 +11,9 @@
 #define SENSO 1
 #define ANTISENSO 2
 #define GATHERING_DONE -1
-#define buffer_size 5120 // Capacidade máxima do buffer
+#define buffer_size 512 // Capacidade máxima do buffer
 #define FILA_MIN 10000 // Tamanho minimo da fila antes de começar a esvazia-la
-#define MAX_CUDA_THREADS 1024
+#define MAX_CUDA_THREADS 512
 char **data;
 
 const enum{

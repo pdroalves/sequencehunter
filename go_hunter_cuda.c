@@ -99,7 +99,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				//char **dp_founded;	
 				int *d_resultados;
 				int loaded;
-				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
+				int *gap;
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				//cudaEvent_t startV,stopV;
@@ -119,6 +119,8 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 			//	cudaEventCreate(&startV);
 				//cudaEventCreate(&stopV);
 				
+				cudaMalloc((void**)&gap,buffer_size*sizeof(int));
+				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
 				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
 					cudaHostAlloc((void**)&h_founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
@@ -131,25 +133,25 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
-						//cudaEventRecord(start,0);
+						cudaEventRecord(start,0);
 				while( *buffer_load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
-						//cudaEventRecord(stop,0);
-						//cudaEventSynchronize(stop);
-						//cudaEventElapsedTime(&elapsedTime,start,stop);
+						cudaEventRecord(stop,0);
+						cudaEventSynchronize(stop);
+						cudaEventElapsedTime(&elapsedTime,start,stop);
 						//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-						//fprintf(retorno,"%f\n",elapsedTime);
-						//cudaEventRecord(startK,0);
+						fprintf(retorno,"%f\n",elapsedTime);
+						cudaEventRecord(startK,0);
 						
 						loaded = *buffer_load;
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,gap,stream1);//Kernel de busca
 						
-						//cudaEventRecord(stopK,0);
-						//cudaEventSynchronize(stopK);
-						//cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
+						cudaEventRecord(stopK,0);
+						cudaEventSynchronize(stopK);
+						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 						//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						//fprintf(busca,"%f\n",elapsedTimeK);
-						//cudaEventRecord(start,0);
+						cudaEventRecord(start,0);
 						
 						/*cudaEventRecord(startV,0);
 						cudaEventRecord(stopV,0);
@@ -161,12 +163,12 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						//printf("%d\n",p);
 						*buffer_load = 0;	
 						*processadas += loaded;
-						if(*processadas > 1000000) {
+						/*if(*processadas > 1000000) {
 							
 							fclose(busca);
 							fclose(retorno);
 							exit(0);
-						}
+						}*/
 							
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 						checkCudaError();
@@ -175,9 +177,9 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 								cudaMemcpyAsync(h_founded[i],d_founded[i],(blocoV)*sizeof(char),cudaMemcpyDeviceToHost,stream2);
 								checkCudaError();
 							}*/
-						cudaStreamSynchronize(stream2);
+						//cudaStreamSynchronize(stream2);
 						for(i=0;i<loaded;i++)
-							if(h_resultados[i] == SENSO ||h_resultados[i] == ANTISENSO){
+							if(h_resultados[i] != 0){
 								omp_set_lock(&DtH_copy_lock);
 								//printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
 								enfileirar(founded,h_founded[i]);

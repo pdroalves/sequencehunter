@@ -57,7 +57,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 	Buffer buffer;
 	char *tmp;
 	int blocoV = blocos - bloco1 - bloco2+1;
-	int buffer_size_NC = 5120;
+	int buffer_size_NC = buffer_size;
 	int i;
 	int tam;
 	int p=0;
@@ -171,8 +171,8 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventRecord(stop,0);
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
-				printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-				fprintf(retorno,"%f\n",elapsedTime);
+				//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+				//fprintf(retorno,"%f\n",elapsedTime);
 					
 				cudaEventRecord(startK,0);
 					busca(bloco1,bloco2,blocos,&buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
@@ -180,21 +180,21 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventRecord(stopK,0);
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-				printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-				fprintf(busca_,"%f\n",elapsedTimeK);
+				//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+				//fprintf(busca_,"%f\n",elapsedTimeK);
 				cudaEventRecord(start,0);
 						
 					
 					tam = buffer.load;
 					p += tam;
-						if(p > 1000000) {
+					/*	if(p > 1000000) {
 							
 							fclose(busca_);
 							fclose(retorno);
 							exit(0);
-						}
+						}*/
 							
-					printf("%d\n",p);
+					//printf("%d\n",p);
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case 1:

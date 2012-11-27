@@ -1,4 +1,4 @@
-CUDA_CC = nvcc
+CUDA_CC = nvcc -O2
 CC_LINUX = gcc
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
