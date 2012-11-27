@@ -150,25 +150,14 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 						//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-						//fprintf(busca,"%f\n",elapsedTimeK);
+						fprintf(busca,"%f\n",elapsedTimeK);
 						cudaEventRecord(start,0);
 						
-						/*cudaEventRecord(startV,0);
-						cudaEventRecord(stopV,0);
-						cudaEventSynchronize(stopV);
-						cudaEventElapsedTime(&elapsedTime,startV,stopV);
-						printf("Tempo V: %.2f ms\n",elapsedTime);
-						*/// Inicia processamento dos resultados
+						// Inicia processamento dos resultados
 						cudaStreamSynchronize(stream1);
 						//printf("%d\n",p);
 						*buffer_load = 0;	
 						*processadas += loaded;
-						/*if(*processadas > 1000000) {
-							
-							fclose(busca);
-							fclose(retorno);
-							exit(0);
-						}*/
 							
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(int),cudaMemcpyDeviceToHost);
 						checkCudaError();
