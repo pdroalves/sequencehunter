@@ -101,7 +101,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 						break;
 					  }
 					if(!matrix_senso[baseId][N]){
-						#pragma unroll 5
+						#pragma unroll N_COL
 						for(i=0;i < N_COL;i++){
 							 retorno[baseId] += abs(linha[i]-matrix_senso[baseId][i]);
 						}
