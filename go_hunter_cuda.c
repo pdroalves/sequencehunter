@@ -58,8 +58,8 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 			print_seqs_carregadas(loaded);
 			//Copia sequencias para GPU
 			for(i=0;i<loaded;i++)
-				cudaHostGetDevicePointer(&d_seqs[i],h_seqs[i],0);
-				//cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+				//cudaHostGetDevicePointer(&d_seqs[i],h_seqs[i],0);
+				cudaMemcpyAsync(d_seqs[i],h_seqs[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
 			cudaMemcpyAsync(data,d_seqs,loaded*sizeof(char*),cudaMemcpyHostToDevice,stream);	
 		}		
 		*load = loaded;	
@@ -70,12 +70,26 @@ void load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,int *load,cudaStr
 
 
 
-void buffer_manager(int *buffer_load,char **h_data,char **d_data,int n,cudaStream_t stream1){
+void buffer_manager(int *buffer_load,int n,cudaStream_t stream1){
 				//////////////////////////////////////////
 				// Carrega o buffer //////////////////////
 				//////////////////////////////////////////
 				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
-					while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
+				char **h_data;
+				char **d_data;
+				int i;
+						
+				//cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				h_data = (char**)malloc(buffer_size*sizeof(char*));
+				for(i=0;i<buffer_size;i++)
+					//cudaMalloc((void**)&h_data[i],(n+1)*sizeof(char));
+					h_data[i] = (char*)malloc((n+1)*sizeof(char));
+					
+				cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				for(i=0;i<buffer_size;i++)
+						cudaMalloc((void**)&d_data[i],(n+1)*sizeof(char));
+	
+				while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
 					//printf("%d.\n",buffer.load);
 					if(*buffer_load == 0){
 						load_buffer_CUDA(h_data,d_data,n,buffer_load,stream1);
@@ -128,7 +142,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				//for(i=0;i<buffer_size;i++)
 				//	cudaHostAlloc((void**)&h_founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
 				cudaHostAlloc((void**)&h_resultados,buffer_size*sizeof(int),cudaHostAllocDefault);	
-	
+				
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
@@ -297,8 +311,6 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	Fila *f_antisensos;
 	Fila *founded;
 	Fila *tipo_founded;
-	char **h_data;
-	char **d_data;		
 	cudaStream_t stream1;
 	cudaStream_t stream2;
 	GHashTable* hash_table;
@@ -321,12 +333,6 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	omp_init_lock(&DtH_copy_lock);
 	omp_init_lock(&MC_copy_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
-	cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocMapped | cudaHostAllocWriteCombined);
-	for(i=0;i<buffer_size;i++)
-		cudaHostAlloc((void**)&h_data[i],(seqSize_bu+1)*sizeof(char),cudaHostAllocDefault);
-	cudaHostAlloc((void**)&d_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
-	for(i=0;i<buffer_size;i++)
-			cudaMalloc((void**)&d_data[i],(seqSize_bu+1)*sizeof(char));
 		
 	#pragma omp parallel num_threads(OMP_NTHREADS) shared(hash_table) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
 	{	
@@ -335,7 +341,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 		{
 			#pragma omp section
 			{
-				buffer_manager(&buffer_load,h_data,d_data,seqSize_an,stream1);
+				buffer_manager(&buffer_load,seqSize_an,stream1);
 			}
 			#pragma omp section
 			{

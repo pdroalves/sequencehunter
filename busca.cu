@@ -51,33 +51,31 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   int seqId;// id da sequencia analisada
   int baseId;// id da base analisada
   int tipo;
-  int alarm;
   int linha[N_COL];// Cada thread cuida de uma linha
-  int retorno[MAX_CUDA_THREADS_PER_BLOCK];
+  int retorno;
+  int alarmS;
+  int alarmAS;
   int i;
   int fase;
   char *seq;
   char *seqToReturn;
   
   seqId = threadIdx.x + blockIdx.x*blockDim.x;
-  tipo = 0;
-  fase = 0;
   
 	if(seqId < totalseqs){
+	  tipo = 0;
+	  fase = 0;
 	  while(fase + seqSize_bu <= seqSize_an && tipo == 0){
 			   /////////////////////////////////////////////////////////
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
 			   // Subtrai a linha do thread da linha da matriz de busca senso
-			    alarm=0;	
-			    
 			    seq = data[seqId]+fase;	
 			    
-			    for(baseId=0; baseId < seqSize_bu && 
-								!alarm; 
+			    // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
+			    for(baseId=0; 
+						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
-					retorno[baseId] = 0;
-					
 					// Carrega a linha relativa a base analisada
 					#pragma unroll 5
 					  for(i=0;i<N_COL;i++) linha[i] = 0;
@@ -99,94 +97,56 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 							linha[N] = 1;
 						break;
 					  }
-					if(!matrix_senso[baseId][N]){
-						#pragma unroll N_COL
+					  
+					retorno = 0;
+					if(!matrix_senso[baseId][N] && !alarmS){
+						#pragma unroll 5
 						for(i=0;i < N_COL;i++){
-							 retorno[baseId] += abs(linha[i]-matrix_senso[baseId][i]);
+							 retorno += abs(linha[i]-matrix_senso[baseId][i]);
 						}
+					}
+							   
+					if(retorno > 0){
+					   alarmS = 1;						
 					}	
-				   if(retorno[baseId] > 0){
-						   alarm = 1;
+					
+					retorno = 0;
+						// Subtrai a linha do thread da linha da matriz de busca antisenso				       
+					if(!matrix_antisenso[baseId][N] && !alarmAS){
+						#pragma unroll 5
+						for(i=0; i < N_COL; i++){
+							retorno += abs(linha[i]-matrix_antisenso[baseId][i]);
 						}
+					}
+						
+				   if(retorno > 0){
+						alarmAS = 1;
+					}
 				}
 			   
 			   // Se encontrou algo, guarda o tipo
-			   if(!alarm){
+			   if(!alarmS){
 				 tipo = SENSO;
 				 resultados[seqId] = SENSO;		   
-			    }
-			   
-			   
-			  if(tipo != SENSO){	
-				   
-					/////////////////////////////////////////////////////////
-					///////////////////////// ANTISENSO /////////////////////
-					/////////////////////////////////////////////////////////
-			   		alarm=0;
-			   		
-			   		for(baseId=0; baseId < seqSize_bu && 
-								!alarm; 
-										baseId++){
-						retorno[baseId] = 0;
-						
-						// Carrega a linha relativa a base analisada
-						#pragma unroll 5
-						  for(i=0;i<N_COL;i++) linha[i] = 0;
-						
-						  switch(seq[baseId]){
-							case 'A':
-								linha[A] = 1;	
-							break;
-							case 'C':
-								linha[C] = 1;		
-							break;
-							case 'G':
-								linha[G] = 1;	
-							break;
-							case 'T':
-								linha[T] = 1;
-							break;
-							case 'N':
-								linha[N] = 1;
-							break;
-						}	   
-						// Subtrai a linha do thread da linha da matriz de busca antisenso				       
-						if(!matrix_antisenso[baseId][N]){
-							for(i=0; i < N_COL; i++){
-								 retorno[baseId] += abs(linha[i]-matrix_antisenso[baseId][i]);
-							}
-						}
-								   
-					   if(retorno[baseId] > 0){
-						   alarm = 1;						
-						}
-				  }
-				  	
-			   // Se encontrou algo, guarda o tipo   
-				if(!alarm){
-					tipo = ANTISENSO;
-					resultados[seqId] = ANTISENSO;	   
-				}
-				   
-			} 
+			    }else  
+					if(!alarmAS){
+						tipo = ANTISENSO;
+						resultados[seqId] = ANTISENSO;	   
+					}
+			 
 			fase++;   
 		}
 	
-		if(!tipo){
-			resultados[seqId] = 0;
-		}else{
+		if(tipo > 0){
 			seqToReturn = founded[seqId];	
 			if(tipo == SENSO){
 				for(i=0;i < blocoV; i++)
 					seqToReturn[i] = data[seqId][fase + bloco1 + i - 1];
 			}else{
-				if(tipo == ANTISENSO){
-					for(i=0;i < blocoV; i++)
-						seqToReturn[i] = data[seqId][fase + bloco2 + i -1];
-				}
+				for(i=0;i < blocoV; i++)
+					seqToReturn[i] = data[seqId][fase + bloco2 + i - 1];
 			}
 		}
-		//printf("seqId: %3d - baseId: %d - Sequencia: %s - %d\n",seqId,baseId,seq,tipo);
 	}
 	return;
 }
@@ -529,26 +489,6 @@ __device__ __host__ char* getBase(int *linha,int n){
 	return "N";
 }
 
-
-__device__ int vec_diff(int analise[],int busca[],int fase){
-	// Subtrai os  elementos do vetor analise de busca
-	int i = 0;
-	int j = fase;
-	int results;
-	
-	if(busca[N] == 1) return 0;
-	
-	results = 0;		
-	while(i < N_COL){
-		printf("results: %d - analise[%d]: %d - busca[%d]: %d\n",results,analise[i],busca[i]);
-		results += abs(analise[i]-busca[j]);
-		i++;
-		j++;
-	}
-	//printf("resultss: %d - analise[0]: %d - busca[0]: %d\n",results,analise[0],busca[0]);
-	return results;
-}
-
 __device__ __host__ void getMatrix(int **matrix,char *str,int n){
 	// Matrix já deve vir alocada
 	int size_y;
@@ -558,7 +498,7 @@ __device__ __host__ void getMatrix(int **matrix,char *str,int n){
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		printf("Marcando %d - %c\n",i+1,str[i]);
+		//printf("Marcando %d - %c\n",i+1,str[i]);
 		getLine(str[i],matrix[i]);
 	}	
 
@@ -576,35 +516,35 @@ __device__ __host__ int getSeqSize(char *seq){
 extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matrix_senso,int **matrix_antisenso){
   // As matrizes já devem vir alocadas
   int size;
-  int i;
-  int j;
+  //int i;
+  //int j;
   											
   size = getSeqSize(senso);
 											
-  printf("Configurando senso. -> %s.\n",senso);
+  //printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
   getMatrix(matrix_senso,senso,size);
   
   
   // Imprime matriz senso
-  for(i=0;i<size;i++){
+  /*for(i=0;i<size;i++){
 	printf("%3d - ",i); 
 	for(j=0;j<N_COL;j++)
 		printf("%d ",matrix_senso[i][j]);
 	printf("\n");	
-  }
+  }*/
 
-  printf("\nConfigurando antisenso. -> %s.\n",antisenso);
+  //printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
   getMatrix(matrix_antisenso,antisenso,size);
   
   // Imprime matriz antisenso
-  for(i=0;i<size;i++){ 
+  /*for(i=0;i<size;i++){ 
 	printf("%3d ",i); 
 	for(j=0;j<N_COL;j++)
 		printf("%d ",matrix_antisenso[i][j]);
 	printf("\n");	
-  }
+  }*/
   
   return;
 }
@@ -624,13 +564,13 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   build_grafo(size,a,c,g,t);
 											
   i=0;
-  printf("Configurando senso. -> %s.\n",senso);
+ //printf("Configurando senso. -> %s.\n",senso);
   //Configura sequência senso
   while(senso[i] != '\0'){
     atual = busca_vertice(senso[i],a,c,g,t);
     if(atual != NULL){
       atual->s_marcas[i]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+      //printf("%c marcado na posicao %d.\n",atual->vertice,i);
     }else{
       //printf("Elemento variável encontrado.\n");
       a->s_marcas[i]=1;
@@ -642,13 +582,13 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *
   }
 											
   i=0;
-  printf("\nConfigurando antisenso. -> %s.\n",antisenso);
+  //printf("\nConfigurando antisenso. -> %s.\n",antisenso);
   //Configura sequência antisenso
   while(antisenso[i] != '\0'){
     atual = busca_vertice(antisenso[i],a,c,g,t);
     if(atual != NULL){
       atual->as_marcas[i]=1;
-      printf("%c marcado na posicao %d.\n",atual->vertice,i);
+      //printf("%c marcado na posicao %d.\n",atual->vertice,i);
     }else{
       //printf("Elemento variável encontrado.\n");
       a->as_marcas[i]=1;

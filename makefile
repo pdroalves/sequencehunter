@@ -10,7 +10,7 @@ OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
 CUDA = -L/usr/local/cuda/lib64 -lcudart 
-CUDA_ARCH = -arch=sm_20
+CUDA_ARCH = 
 
 INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
 
@@ -76,7 +76,7 @@ ghashtable.o:ghashtable.c
 ############ NVCC LINUX##################
 #########################################
 busca.o:busca.cu
-	$(CUDA_CC) $(CUDA_ARCH) -G -g -c busca.cu
+	$(CUDA_CC) -Xptxas -v $(CUDA_ARCH) -G -g -c busca.cu
 	
 cuda_functions.o:cuda_functions.cu
 	$(CUDA_CC) $(CUDA_ARCH) -G -g -c cuda_functions.cu $(GLIB_CFLAGS)
