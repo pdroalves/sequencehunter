@@ -21,7 +21,8 @@
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
-__constant__ char *d_buffer[buffer_size];
+__constant__ int **d_matrix_senso;
+__constant__ int **d_matrix_antisenso;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
@@ -99,7 +100,6 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 				//char **dp_founded;	
 				int *d_resultados;
 				int loaded;
-				int *gap;
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				//cudaEvent_t startV,stopV;
@@ -119,7 +119,6 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 			//	cudaEventCreate(&startV);
 				//cudaEventCreate(&stopV);
 				
-				cudaMalloc((void**)&gap,buffer_size*sizeof(int));
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(int));
 				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
@@ -144,7 +143,7 @@ void search_manager(int *buffer_load,int *processadas,Fila *tipo_founded,Fila *f
 						cudaEventRecord(startK,0);
 						
 						loaded = *buffer_load;
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,gap,stream1);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,h_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
 						
 						cudaEventRecord(stopK,0);
 						cudaEventSynchronize(stopK);
@@ -412,15 +411,13 @@ void setup_for_cuda(char *seq,int **d_matrix_senso,int **d_matrix_antisenso){
 
 GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,gboolean verb,gboolean sil){
 	printf("CUDA Mode.\n");
-	int seqSize_an;//Elementos por sequência
 	cudaEvent_t start;
 	cudaEvent_t stop;
 	GHashTable* hash_table;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	float tempo;
-	int **d_matrix_senso;
-	int **d_matrix_antisenso;
+	int seqSize_an;//Elementos por sequência
 	
 	verbose = verb;
 	silent = sil;

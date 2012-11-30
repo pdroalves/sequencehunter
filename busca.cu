@@ -35,7 +35,7 @@ extern "C" void checkCudaError();
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,char **data,int *resultados,int *gap,int **matrix_senso,int **matrix_antisenso,int bloco1,int bloco2,int blocoV,char **founded){
+__global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,char **data,int *resultados,int **matrix_senso,int **matrix_antisenso,int bloco1,int bloco2,int blocoV,char **founded){
 
   ////////		UM THREAD POR SEQUENCIa
   ////////
@@ -68,7 +68,6 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   /////////////////////////////////////////////////////////
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
-			   //printf("seqID %3d - baseID: %3d - fase: %d\n",seqId,baseId,fase);
 			   // Subtrai a linha do thread da linha da matriz de busca senso
 			    alarm=0;	
 			    
@@ -114,8 +113,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   // Se encontrou algo, guarda o tipo
 			   if(!alarm){
 				 tipo = SENSO;
-				 resultados[seqId] = SENSO;	
-				 gap[seqId] = fase;				   
+				 resultados[seqId] = SENSO;		   
 			    }
 			   
 			   
@@ -167,8 +165,7 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   // Se encontrou algo, guarda o tipo   
 				if(!alarm){
 					tipo = ANTISENSO;
-					resultados[seqId] = ANTISENSO;	
-					gap[seqId] = fase;				   
+					resultados[seqId] = ANTISENSO;	   
 				}
 				   
 			} 
@@ -177,7 +174,6 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 	
 		if(!tipo){
 			resultados[seqId] = 0;
-			gap[seqId] = 0;
 		}else{
 			seqToReturn = founded[seqId];	
 			if(tipo == SENSO){
@@ -210,7 +206,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV,founded);
+	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV,founded);
 	
 	checkCudaError();
 	return;
