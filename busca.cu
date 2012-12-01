@@ -35,9 +35,19 @@ extern "C" void checkCudaError();
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,char **data,int *resultados,int **matrix_senso,int **matrix_antisenso,int bloco1,int bloco2,int blocoV,char **founded){
+__global__ void k_buscador_analyse(int totalseqs,
+										int seqSize_an,
+										int seqSize_bu,
+										char **data,
+										short int *resultados,
+										short int *gap,
+										short int **matrix_senso,
+										short int **matrix_antisenso,
+										int bloco1,
+										int bloco2,
+										int blocoV){
 
-  ////////		UM THREAD POR SEQUENCIa
+  ////////		UM THREAD POR SEQUENCIA
   ////////
   ////////
   ////////
@@ -48,17 +58,16 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
   ////////
   ////////
   
-  int seqId;// id da sequencia analisada
-  int baseId;// id da base analisada
-  int tipo;
-  int linha[N_COL];// Cada thread cuida de uma linha
-  int retorno;
-  int alarmS;
-  int alarmAS;
-  int i;
-  int fase;
+  unsigned int seqId;// id da sequencia analisada
+  short int baseId;// id da base analisada
+  short int tipo;
+  short int linha[N_COL];// Cada thread cuida de uma linha
+  short int retorno;
+  short int alarmS;
+  short int alarmAS;
+  short int i;
+  short int fase;
   char *seq;
-  char *seqToReturn;
   
   seqId = threadIdx.x + blockIdx.x*blockDim.x;
   
@@ -70,6 +79,8 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
 			   // Subtrai a linha do thread da linha da matriz de busca senso
+			   alarmS = 0;
+			   alarmAS = 0;
 			    seq = data[seqId]+fase;	
 			    
 			    // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
@@ -126,32 +137,24 @@ __global__ void k_buscador_analyse(int totalseqs,int seqSize_an,int seqSize_bu,c
 			   
 			   // Se encontrou algo, guarda o tipo
 			   if(!alarmS){
-				 tipo = SENSO;
-				 resultados[seqId] = SENSO;		   
+				 tipo = SENSO;	   
 			    }else  
 					if(!alarmAS){
-						tipo = ANTISENSO;
-						resultados[seqId] = ANTISENSO;	   
+						tipo = ANTISENSO;	   
 					}
 			 
 			fase++;   
 		}
 	
 		if(tipo > 0){
-			seqToReturn = founded[seqId];	
-			if(tipo == SENSO){
-				for(i=0;i < blocoV; i++)
-					seqToReturn[i] = data[seqId][fase + bloco1 + i - 1];
-			}else{
-				for(i=0;i < blocoV; i++)
-					seqToReturn[i] = data[seqId][fase + bloco2 + i - 1];
-			}
-		}
+			resultados[seqId] = tipo;
+			gap[seqId] = fase;
+		}	
 	}
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,int *resultados,char **founded,int **d_matrix_senso,int **d_matrix_antisenso,int *gap,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,short int *gap,short int **d_matrix_senso,short int **d_matrix_antisenso,cudaStream_t stream){
 	int num_threads;
 	int num_blocks;
 	
@@ -166,7 +169,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV,founded);
+	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
@@ -445,7 +448,7 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ __host__ void getLine(char c,int *linha){
+__device__ __host__ void getLine(char c,short int *linha){
 	// Recebe uma base e retorna uma linha de binarios
 	int i;
 	
@@ -489,7 +492,7 @@ __device__ __host__ char* getBase(int *linha,int n){
 	return "N";
 }
 
-__device__ __host__ void getMatrix(int **matrix,char *str,int n){
+__device__ __host__ void getMatrix(short int **matrix,char *str,int n){
 	// Matrix já deve vir alocada
 	int size_y;
 	int i;
@@ -513,7 +516,7 @@ __device__ __host__ int getSeqSize(char *seq){
 
 
 
-extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matrix_senso,int **matrix_antisenso){
+extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,short int **matrix_senso,short int **matrix_antisenso){
   // As matrizes já devem vir alocadas
   int size;
   //int i;
@@ -549,7 +552,7 @@ extern "C" __global__ void set_grafo_CUDA(char *senso,char *antisenso,int **matr
   return;
 }
 
-extern "C" void set_grafo_helper(char *senso,char *antisenso,int **d_matrix_senso,int **d_matrix_antisenso){
+extern "C" void set_grafo_helper(char *senso,char *antisenso,short int **d_matrix_senso,short int **d_matrix_antisenso){
   set_grafo_CUDA<<<1,1>>>(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
 }
 
