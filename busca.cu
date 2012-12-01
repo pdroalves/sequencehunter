@@ -18,6 +18,8 @@ extern "C" {
 #define printf(f, ...) ((void)(f, __VA_ARGS__),0)
 #endif
 
+#define ABSOLUTO(a) a>=0?a:-a
+
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 __device__ __host__ int getSeqSize(char *seq);
@@ -30,6 +32,7 @@ extern "C" void checkCudaError();
 ////////////////////////////////////////////////////////////////////////////////////////
 //////////////////					Buscador		 				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ///////////////				Metodo de busca com CUDA				////////////////////
@@ -62,11 +65,10 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int baseId;// id da base analisada
   short int tipo;
   short int linha[N_COL];// Cada thread cuida de uma linha
-  short int retorno;
   short int alarmS;
   short int alarmAS;
-  short int i;
   short int fase;
+  short int j;
   char *seq;
   
   seqId = threadIdx.x + blockIdx.x*blockDim.x;
@@ -79,17 +81,17 @@ __global__ void k_buscador_analyse(int totalseqs,
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
 			   // Subtrai a linha do thread da linha da matriz de busca senso
-			   alarmS = 0;
-			   alarmAS = 0;
 			   seq = data[seqId]+fase;	
-			    
 			    // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
 			    for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
-					// Carrega a linha relativa a base analisada
-					#pragma unroll 5
-					  for(i=0;i<N_COL;i++) linha[i] = 0;
+					// Carrega a linha relativa a base analisada					  
+					  linha[0] = 0;
+					  linha[1] = 0;
+					  linha[2] = 0;
+					  linha[3] = 0;
+					  linha[4] = 0;
 					
 					  switch(seq[baseId]){
 						case 'A':
@@ -108,36 +110,30 @@ __global__ void k_buscador_analyse(int totalseqs,
 							linha[N] = 1;
 						break;
 					  }
-					if(!matrix_senso[baseId][N] && !alarmS){
-						#pragma unroll 5
-						for(i=0;i < N_COL;i++){
-							 alarmS += abs(linha[i]-matrix_senso[baseId][i]);
-						}
-					}
-							   	
-						// Subtrai a linha do thread da linha da matriz de busca antisenso				       
-					if(!matrix_antisenso[baseId][N] && !alarmAS){
-						#pragma unroll 5
-						for(i=0; i < N_COL; i++){
-							alarmAS += abs(linha[i]-matrix_antisenso[baseId][i]);
-						}
-					}
-				}
-			   
-			   // Se encontrou algo, guarda o tipo
-			   if(!alarmS){
-				 tipo = SENSO;
-				 resultados[seqId] = SENSO;	  
-				gap[seqId] = fase; 
-			    }else  
-					if(!alarmAS){
-						tipo = ANTISENSO;	
-						resultados[seqId] = ANTISENSO;	    
-						gap[seqId] = fase;
-					}
-			 
+					#pragma unroll 5
+					for(j=0; j < N_COL && !alarmS;j++)
+						if(!matrix_senso[baseId][N])
+							 alarmS = (linha[j]-matrix_senso[baseId][j]);
+					#pragma unroll 5		   	
+						// Subtrai a linha do thread da linha da matriz de busca antisenso		
+					for(j=0; j < N_COL && !alarmAS;j++)
+						if(!matrix_antisenso[baseId][N])
+							 alarmAS = (linha[j]-matrix_antisenso[baseId][j]);
 			fase++;   
-		}		
+			}
+		}			
+		
+		// Se encontrou algo, guarda o tipo
+		if(!alarmS){
+			 tipo = SENSO;
+		}else  
+			if(!alarmAS){
+				tipo = ANTISENSO;	
+			}
+						
+					 
+		resultados[seqId] = tipo;	 	 
+		gap[seqId] = fase; 		
 	}
 	return;
 }

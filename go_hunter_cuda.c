@@ -470,7 +470,7 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
-	cudaThreadExit();
+	//cudaThreadExit();
 	return hash_table;
 
 }
