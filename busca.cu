@@ -23,7 +23,7 @@ extern "C" {
 extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
 extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 __device__ __host__ int getSeqSize(char *seq);
-__device__ __host__ void getLine(char c,int *linha);
+__device__ int getLine(char c);
 __device__ __host__ char* getBase(int *linha,int n);
 extern "C" __device__ __host__ int vec_diff(int analise[],int busca[],int fase);
 __device__ __host__ void getMatrix(int **matrix,char *str,int n);
@@ -60,7 +60,7 @@ __global__ void k_buscador_analyse(int totalseqs,
   ////////
   ////////
   
-  unsigned int seqId;// id da sequencia analisada
+  const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
   short int baseId;// id da base analisada
   short int tipo;
   short int linha[N_COL];// Cada thread cuida de uma linha
@@ -71,11 +71,10 @@ __global__ void k_buscador_analyse(int totalseqs,
   __shared__ short int seqSize_bu;
   char *seq;
   
-  seqId = threadIdx.x + blockIdx.x*blockDim.x;
   
 	if(seqId < totalseqs){
 	  seqSize_bu = bloco1+bloco2+blocoV;
-	  tipo = -1;
+	  tipo = 0;
 	  fase = 0;
 	  alarmS = alarmAS = 1;
 	  while(fase + seqSize_bu <= seqSize_an && alarmS && alarmAS){
@@ -96,7 +95,8 @@ __global__ void k_buscador_analyse(int totalseqs,
 					  linha[2] = 0;
 					  linha[3] = 0;
 					  linha[4] = 0;
-					
+					  //linha[getLine(seq[baseId])] = 1;
+					  
 					  switch(seq[baseId]){
 						case 'A':
 							linha[A] = 1;	
@@ -110,18 +110,24 @@ __global__ void k_buscador_analyse(int totalseqs,
 						case 'T':
 							linha[T] = 1;
 						break;
-						case 'N':
+						default:
 							linha[N] = 1;
 						break;
 					  }
-					#pragma unroll 5
-					for(j=0; j < N_COL && !alarmS;j++)
-						if(!matrix_senso[baseId][N])
-							 alarmS = (linha[j]-matrix_senso[baseId][j]);
-					#pragma unroll 5		   		
-					for(j=0; j < N_COL && !alarmAS;j++)
-						if(!matrix_antisenso[baseId][N])
-							 alarmAS = (linha[j]-matrix_antisenso[baseId][j]);
+					
+					if(!matrix_senso[baseId][N])
+					{  
+						#pragma unroll 5
+						for(j=0; j < N_COL && !alarmS;j++)
+								 alarmS = (linha[j]-matrix_senso[baseId][j]);
+					}
+					
+					if(!matrix_antisenso[baseId][N])
+					{	
+						#pragma unroll 5		   		
+						for(j=0; j < N_COL && !alarmAS;j++)
+								 alarmAS = (linha[j]-matrix_antisenso[baseId][j]);
+					}
 			}
 			fase++;   
 		}			
@@ -434,61 +440,37 @@ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
   return;
 }
 
-__device__ __host__ void getLine(char c,short int *linha){
+__device__ int getLine(char c){
 	// Recebe uma base e retorna uma linha de binarios
-	int i;
-	
-	for(i=0;i<N_COL;i++) linha[i] = 0;
 	
 	switch(c){
 		case 'A':
-			linha[A] = 1;	
-		break;
+			return A;
 		case 'C':
-			linha[C] = 1;		
-		break;
+			return C;
 		case 'G':
-			linha[G] = 1;	
-		break;
+			return G;
 		case 'T':
-			linha[T] = 1;
-		break;
-		case 'N':
-			linha[N] = 1;
-		break;
+			return T;
+		default:
+			return N;
 	}
-	
-	//for(i=0;i<N_COL;i++) printf("%d\n",linha[i]);
-
-	return;
 }
 
-__device__ __host__ char* getBase(int *linha,int n){
-	// Recebe uma linha de binarios e retorna uma base
-		switch(n){
-				case A:
-					return "A";	
-				case C:
-					return "C";
-				case G:
-					return "G";	
-				case T:
-					return "T";
-		}
-	return "N";
-}
-
-__device__ __host__ void getMatrix(short int **matrix,char *str,int n){
+__device__ void getMatrix(short int **matrix,char *str,int n){
 	// Matrix já deve vir alocada
 	int size_y;
 	int i;
+	int j;
 
 	size_y = n;
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
 		//printf("Marcando %d - %c\n",i+1,str[i]);
-		getLine(str[i],matrix[i]);
+		#pragma unroll 5
+		for(j=0;j<N_COL;j++) matrix[i][j] = 0;
+		matrix[i][getLine(str[i])] = 1;
 	}	
 
 	return;

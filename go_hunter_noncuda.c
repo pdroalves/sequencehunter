@@ -152,6 +152,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 		int *resultados;
 		cudaEvent_t startK,stopK,start,stop;
 		float elapsedTimeK,elapsedTime;
+		float iteration_time;
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
 		cudaEventCreate(&start);
 		cudaEventCreate(&stop);
@@ -161,6 +162,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				
 				busca_ = fopen("noncuda_busca.dat","w+");
 				retorno = fopen("noncuda_retorno.dat","w+");
+		iteration_time = 0;
 		
 			while( buffer.load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -171,6 +173,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventRecord(stop,0);
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
+				iteration_time += elapsedTime;
 				//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				//fprintf(retorno,"%f\n",elapsedTime);
 					
@@ -180,6 +183,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventRecord(stopK,0);
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
+				iteration_time += elapsedTimeK;
 				//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 				//fprintf(busca_,"%f\n",elapsedTimeK);
 				cudaEventRecord(start,0);
@@ -237,6 +241,9 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 			}
 				//fclose(busca_);
 				//fclose(retorno);
+				
+				printf("Busca realizada em %.2f ms.\n",iteration_time);
+	
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
@@ -245,8 +252,6 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 	}
 }
 	
-	//printf("Iterações executadas: %d.\n",iter);
-	//free(tmp);
 	return hash_table;
 }
 
