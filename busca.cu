@@ -40,7 +40,6 @@ extern "C" void checkCudaError();
 
 __global__ void k_buscador_analyse(int totalseqs,
 										int seqSize_an,
-										int seqSize_bu,
 										char **data,
 										short int *resultados,
 										short int *gap,
@@ -69,19 +68,24 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int alarmAS;
   short int fase;
   short int j;
+  __shared__ short int seqSize_bu;
   char *seq;
   
   seqId = threadIdx.x + blockIdx.x*blockDim.x;
   
 	if(seqId < totalseqs){
-	  tipo = 0;
+	  seqSize_bu = bloco1+bloco2+blocoV;
+	  tipo = -1;
 	  fase = 0;
-	  while(fase + seqSize_bu <= seqSize_an && tipo == 0){
+	  alarmS = alarmAS = 1;
+	  while(fase + seqSize_bu <= seqSize_an && alarmS && alarmAS){
 			   /////////////////////////////////////////////////////////
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
 			   // Subtrai a linha do thread da linha da matriz de busca senso
 			   seq = data[seqId]+fase;	
+			   alarmS = 0;
+			   alarmAS = 0;
 			    // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
 			    for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
@@ -114,13 +118,12 @@ __global__ void k_buscador_analyse(int totalseqs,
 					for(j=0; j < N_COL && !alarmS;j++)
 						if(!matrix_senso[baseId][N])
 							 alarmS = (linha[j]-matrix_senso[baseId][j]);
-					#pragma unroll 5		   	
-						// Subtrai a linha do thread da linha da matriz de busca antisenso		
+					#pragma unroll 5		   		
 					for(j=0; j < N_COL && !alarmAS;j++)
 						if(!matrix_antisenso[baseId][N])
 							 alarmAS = (linha[j]-matrix_antisenso[baseId][j]);
-			fase++;   
 			}
+			fase++;   
 		}			
 		
 		// Se encontrou algo, guarda o tipo
@@ -129,8 +132,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 		}else  
 			if(!alarmAS){
 				tipo = ANTISENSO;	
-			}
-						
+			}					
 					 
 		resultados[seqId] = tipo;	 	 
 		gap[seqId] = fase; 		
@@ -153,7 +155,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,seqSize_bu,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV);
+	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;

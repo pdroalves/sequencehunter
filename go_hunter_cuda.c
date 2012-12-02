@@ -148,7 +148,7 @@ void search_manager(int *buffer_load,
 				h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
 				local_data = (char**)malloc(buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
-					local_data[i] = (char*)malloc(seqSize_an*sizeof(char));
+					local_data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
 				
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -188,7 +188,7 @@ void search_manager(int *buffer_load,
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] != 0){
 								if(h_resultados[i] == SENSO) hold = bloco1 + h_gap[i] -1;
-								else hold = bloco2 + h_gap - 1;
+								else hold = bloco2 + h_gap[i] - 1;
 								h_founded[i] = local_data[i]+hold;
 								h_founded[i][blocoV]= '\0';
 								omp_set_lock(&DtH_copy_lock);
@@ -202,8 +202,18 @@ void search_manager(int *buffer_load,
 							printf("Sequencias analisadas: %d\n",*processadas);
 						//print_fila(founded);
 						while(*buffer_load==0){}
-				}//Aguarda para que o buffer seja enchido pela primeira vez
-				cudaFreeHost(d_resultados);
+				}
+				
+				for(i=0;i<buffer_size;i++)
+					free(local_data[i]);
+				free(local_data);
+				cudaFree(d_resultados);
+				cudaFree(d_gap);
+				for(i=0;i<buffer_size;i++)
+					cudaFreeHost(h_founded[i]);
+				cudaFreeHost(h_founded);
+				free(h_resultados);
+				free(h_gap);
 				THREAD_DONE[THREAD_SEARCH] = TRUE;
 				return;
 }
