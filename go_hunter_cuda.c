@@ -12,7 +12,7 @@
 #include "log.h"
 #include "fila.h"
 
-#define OMP_NTHREADS 4
+#define OMP_NTHREADS 3
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
 #define THREAD_RESULTS 2
@@ -113,7 +113,9 @@ void search_manager(int *buffer_load,
 							short int **d_matrix_senso,
 							short int **d_matrix_antisenso,
 							char **h_data,
-							char **d_data){
+							char **d_data,
+							Fila *f_sensos,
+							Fila *f_antisensos){
 								
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				int i;
@@ -164,7 +166,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stop,0);
 						cudaEventSynchronize(stop);
 						cudaEventElapsedTime(&elapsedTime,start,stop);
-						//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+						printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 						iteration_time += elapsedTime;
 						//fprintf(retorno,"%f\n",elapsedTime);
 						cudaEventRecord(startK,0);
@@ -174,7 +176,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-						//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+						printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						iteration_time += elapsedTimeK;
 						//fprintf(busca,"%f\n",elapsedTimeK);
 						cudaEventRecord(start,0);
@@ -197,11 +199,27 @@ void search_manager(int *buffer_load,
 								else hold = bloco2 + h_gap[i] - 1;
 								h_founded[i] = local_data[i]+hold;
 								h_founded[i][blocoV]= '\0';
-								omp_set_lock(&DtH_copy_lock);
+								/*omp_set_lock(&DtH_copy_lock);
 								//printf("Sequencia: %s - tipo: %3d\n",h_founded[i],h_resultados[i]);
 								enfileirar(founded,h_founded[i]);
 								enfileirar(tipo_founded,convertResultToChar(h_resultados[i]));
-								omp_unset_lock(&DtH_copy_lock);
+								omp_unset_lock(&DtH_copy_lock);*/
+								switch(h_resultados[i]){
+									case SENSO:
+										//if(verbose && !silent)
+										//	printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										omp_set_lock(&MC_copy_lock);
+										enfileirar(f_sensos,h_founded[i]);
+										omp_unset_lock(&MC_copy_lock);
+									break;
+									case ANTISENSO:
+										//if(verbose && !silent)
+										//	printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										omp_set_lock(&MC_copy_lock);
+										enfileirar(f_antisensos,get_antisenso(h_founded[i]));
+										omp_unset_lock(&MC_copy_lock);
+									break;
+								}
 							}
 						checkCudaError();
 						if(verbose && !silent)
@@ -291,7 +309,7 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 						}//Aguarda para que o buffer seja enchido pela primeira vez
 						
 
-					  while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_RESULTS]){
+					  while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_SEARCH]){
 						if(tamanho_da_fila(f_sensos) > FILA_MIN){
 							omp_set_lock(&MC_copy_lock);
 							hold = desenfileirar(f_sensos);
@@ -388,12 +406,12 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso,h_data,d_data);
+				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso,h_data,d_data,f_sensos,f_antisensos);
 			}		
-			#pragma omp section
-			{
-				results_manager(&buffer_load,processadas,tipo_founded,founded,f_sensos,f_antisensos);
-			}
+			//#pragma omp section
+			//{
+				//results_manager(&buffer_load,processadas,tipo_founded,founded,f_sensos,f_antisensos);
+			//}
 			#pragma omp section
 			{
 				memory_cleaner_manager(hash_table,&buffer_load,f_sensos,f_antisensos);

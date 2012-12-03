@@ -40,12 +40,7 @@ void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d
 void load_buffer_NONCuda(Buffer *b,int n){
 	
 	if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-		fill_buffer(b);//Enche o buffer e guarda a quantidade de sequências carregadas.
-		if(b->load != -1){
-			//print_seqs_carregadas(b->load);
-			//printf("%s\n",b->seq[0]);	
-		}
-			
+		fill_buffer(b);//Enche o buffer e guarda a quantidade de sequências carregadas.			
 	}
 		
 	
@@ -168,13 +163,13 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 				cudaEventRecord(start,0);
-			while(buffer.load != -1){
+			while(buffer.load != GATHERING_DONE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
 				cudaEventRecord(stop,0);
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
 				iteration_time += elapsedTime;
-				//printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+				printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				//fprintf(retorno,"%f\n",elapsedTime);
 					
 				cudaEventRecord(startK,0);
@@ -184,7 +179,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
-				//printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+				printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 				//fprintf(busca_,"%f\n",elapsedTimeK);
 				cudaEventRecord(start,0);
 						
