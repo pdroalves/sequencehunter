@@ -42,7 +42,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 										int seqSize_an,
 										char **data,
 										short int *resultados,
-										short int *gap,
+										char **founded,
 										short int **matrix_senso,
 										short int **matrix_antisenso,
 										int bloco1,
@@ -67,8 +67,9 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int alarmS;
   short int alarmAS;
   short int fase;
+  short int i;
   short int j;
-  __shared__ short int seqSize_bu;
+  short int seqSize_bu;
   char *seq;
   
   
@@ -132,21 +133,24 @@ __global__ void k_buscador_analyse(int totalseqs,
 			fase++;   
 		}			
 		
-		// Se encontrou algo, guarda o tipo
+	
 		if(!alarmS){
 			 tipo = SENSO;
+			 for(i=0;i<blocoV;i++)
+					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];;
 		}else  
 			if(!alarmAS){
 				tipo = ANTISENSO;	
-			}					
+				for(i=0;i<blocoV;i++)
+					founded[seqId][i] = data[seqId][fase + bloco2 + i - 1];
+			}				
 					 
-		resultados[seqId] = tipo;	 	 
-		gap[seqId] = fase; 		
+		resultados[seqId] = tipo;	 
 	}
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,short int *gap,short int **d_matrix_senso,short int **d_matrix_antisenso,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,char **founded,short int **d_matrix_senso,short int **d_matrix_antisenso,cudaStream_t stream){
 	int num_threads;
 	int num_blocks;
 	
@@ -161,7 +165,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,gap,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV);
+	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,founded,d_matrix_senso,d_matrix_antisenso,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
