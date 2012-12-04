@@ -64,12 +64,14 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int baseId;// id da base analisada
   short int tipo;
   short int linha[N_COL];// Cada thread cuida de uma linha
+  __shared__ short int senso[N_COL];// Cada thread cuida de uma linha
+  __shared__ short int antisenso[N_COL];// Cada thread cuida de uma linha
   short int alarmS;
   short int alarmAS;
   short int fase;
   short int i;
   short int j;
-  short int seqSize_bu;
+  __shared__ short int seqSize_bu;
   char *seq;
   
   
@@ -90,12 +92,14 @@ __global__ void k_buscador_analyse(int totalseqs,
 			    for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
-					// Carrega a linha relativa a base analisada					  
-					  linha[0] = 0;
-					  linha[1] = 0;
-					  linha[2] = 0;
-					  linha[3] = 0;
-					  linha[4] = 0;
+					// Carrega a linha relativa a base analisada		
+					  #pragma unroll 5
+					  for(i=0;i<N_COL;i++) linha[i] = 0;
+					  if(threadIdx.x == 0)
+						for(i=0;i<N_COL;i++){
+							senso[i] = matrix_senso[baseId][i];
+							antisenso[i] = matrix_antisenso[baseId][i];
+					} 
 					  //linha[getLine(seq[baseId])] = 1;
 					  
 					  switch(seq[baseId]){
@@ -120,14 +124,14 @@ __global__ void k_buscador_analyse(int totalseqs,
 					{  
 						#pragma unroll 5
 						for(j=0; j < N_COL && !alarmS;j++)
-								 alarmS = (linha[j]-matrix_senso[baseId][j]);
+								 alarmS = (linha[j]-senso[j]);
 					}
 					
 					if(!matrix_antisenso[baseId][N])
 					{	
 						#pragma unroll 5		   		
 						for(j=0; j < N_COL && !alarmAS;j++)
-								 alarmAS = (linha[j]-matrix_antisenso[baseId][j]);
+								 alarmAS = (linha[j]-antisenso[j]);
 					}
 			}
 			fase++;   
