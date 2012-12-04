@@ -173,7 +173,8 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stop,0);
 						cudaEventSynchronize(stop);
 						cudaEventElapsedTime(&elapsedTime,start,stop);
-						printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+						if(verbose && !silent)
+							printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 						iteration_time += elapsedTime;
 						//fprintf(retorno,"%f\n",elapsedTime);
 						cudaEventRecord(startK,0);
@@ -183,7 +184,8 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-						printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+						if(verbose && !silent)
+							printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						iteration_time += elapsedTimeK;
 						//fprintf(busca,"%f\n",elapsedTimeK);
 						cudaEventRecord(start,0);
