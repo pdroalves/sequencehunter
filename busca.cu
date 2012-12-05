@@ -132,7 +132,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 					}
 					
 					if(!antisenso[N])
-					{	
+					{
 						#pragma unroll 5		   		
 						for(j=0; j < N_COL-1 && !alarmAS;j++)
 							 alarmAS = linha[j]-antisenso[j];
