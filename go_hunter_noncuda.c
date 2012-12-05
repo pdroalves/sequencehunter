@@ -169,7 +169,8 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
 				iteration_time += elapsedTime;
-				printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+				if(verbose == TRUE && silent != TRUE)	
+					printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				//fprintf(retorno,"%f\n",elapsedTime);
 					
 				cudaEventRecord(startK,0);
@@ -179,7 +180,8 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
-				printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+				if(verbose == TRUE && silent != TRUE)	
+					printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 				//fprintf(busca_,"%f\n",elapsedTimeK);
 				cudaEventRecord(start,0);
 						
@@ -237,7 +239,11 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				//fclose(busca_);
 				//fclose(retorno);
 				
-				printf("Busca realizada em %.2f ms.\n",iteration_time);
+			
+				if(iteration_time > 10000)
+					printf("Busca realizada em %.2f s.\n",iteration_time/(float)60000);
+				else 
+					printf("Busca realizada em %.2f ms.\n",iteration_time);
 	
 		//////////////////////////////////////////
 		//////////////////////////////////////////
