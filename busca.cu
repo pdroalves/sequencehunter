@@ -49,7 +49,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 										int bloco2,
 										int blocoV){
 
-  ////////		UM THREAD POR SEQUENCIA
+  ////////		UMA SEQUENCIA POR THREAD
   ////////
   ////////
   ////////
@@ -97,13 +97,8 @@ __global__ void k_buscador_analyse(int totalseqs,
 							linha[i] = 0;
 						}
 					
-					if(threadIdx.x == 0){
-					  #pragma unroll 5
-						for(i=0;i<N_COL;i++){	
-							senso[i] = matrix_senso[baseId][i];
-							antisenso[i] = matrix_antisenso[baseId][i];	
-						}
-					}
+						senso[seqId%N_COL] = matrix_senso[baseId][seqId%N_COL];
+						antisenso[seqId%N_COL] = matrix_antisenso[baseId][seqId%N_COL];	
 						 		
 					  switch(seq[baseId]){
 						case 'A':
@@ -137,7 +132,6 @@ __global__ void k_buscador_analyse(int totalseqs,
 						for(j=0; j < N_COL-1 && !alarmAS;j++)
 							 alarmAS = linha[j]-antisenso[j];
 					}
-					  __syncthreads();	
 				}
 			if(!alarmS) tipo = SENSO;
 			else if(!alarmAS) tipo = ANTISENSO;
