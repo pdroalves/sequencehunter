@@ -64,23 +64,21 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int baseId;// id da base analisada
   short int tipo;
   short int linha[N_COL];// Cada thread cuida de uma linha
-  __shared__ short int senso[N_COL];// Cada thread cuida de uma linha
+ __shared__  short int senso[N_COL];// Cada thread cuida de uma linha
   __shared__ short int antisenso[N_COL];// Cada thread cuida de uma linha
   short int alarmS;
   short int alarmAS;
   short int fase;
   short int i;
   short int j;
-  __shared__ short int seqSize_bu;
+  const short int seqSize_bu = bloco1+bloco2+blocoV;
   char *seq;
   
   
 	if(seqId < totalseqs){
-	  seqSize_bu = bloco1+bloco2+blocoV;
 	  tipo = 0;
 	  fase = 0;
-	  alarmS = alarmAS = 1;
-	  while(fase + seqSize_bu <= seqSize_an && alarmS && alarmAS){
+	  while(fase + seqSize_bu <= seqSize_an && !tipo){
 			   /////////////////////////////////////////////////////////
 			   ///////////////////////// SENSO /////////////////////////
 			   /////////////////////////////////////////////////////////
@@ -88,20 +86,25 @@ __global__ void k_buscador_analyse(int totalseqs,
 			   seq = data[seqId]+fase;	
 			   alarmS = 0;
 			   alarmAS = 0;
-			    // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
-			    for(baseId=0; 
+			   // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
+			   for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
+			   //__syncthreads();
 					// Carrega a linha relativa a base analisada		
 					  #pragma unroll 5
-					  for(i=0;i<N_COL;i++) linha[i] = 0;
-					  if(threadIdx.x == 0)
 						for(i=0;i<N_COL;i++){
+							linha[i] = 0;
+						}
+					
+					if(threadIdx.x == 0){
+					  #pragma unroll 5
+						for(i=0;i<N_COL;i++){	
 							senso[i] = matrix_senso[baseId][i];
-							antisenso[i] = matrix_antisenso[baseId][i];
-					} 
-					  //linha[getLine(seq[baseId])] = 1;
-					  
+							antisenso[i] = matrix_antisenso[baseId][i];	
+						}
+					}
+						 		
 					  switch(seq[baseId]){
 						case 'A':
 							linha[A] = 1;	
@@ -120,33 +123,40 @@ __global__ void k_buscador_analyse(int totalseqs,
 						break;
 					  }
 					
-					if(!matrix_senso[baseId][N])
+					  __syncthreads();	
+					if(!senso[N])
 					{  
 						#pragma unroll 5
-						for(j=0; j < N_COL && !alarmS;j++)
-								 alarmS = (linha[j]-senso[j]);
+						for(j=0; j < N_COL-1 && !alarmS;j++)
+							 alarmS = linha[j]-senso[j];
 					}
 					
-					if(!matrix_antisenso[baseId][N])
+					if(!antisenso[N])
 					{	
 						#pragma unroll 5		   		
-						for(j=0; j < N_COL && !alarmAS;j++)
-								 alarmAS = (linha[j]-antisenso[j]);
+						for(j=0; j < N_COL-1 && !alarmAS;j++)
+							 alarmAS = linha[j]-antisenso[j];
 					}
-			}
+					  __syncthreads();	
+				}
+			if(!alarmS) tipo = SENSO;
+			else if(!alarmAS) tipo = ANTISENSO;
 			fase++;   
 		}			
 		
 	
-		if(!alarmS){
-			 tipo = SENSO;
-			 for(i=0;i<blocoV;i++)
-					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];;
+		if(tipo == SENSO){
+			 for(i=0;i<blocoV;i++){
+					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];		
+						__syncthreads();  			
+				}
 		}else  
-			if(!alarmAS){
-				tipo = ANTISENSO;	
-				for(i=0;i<blocoV;i++)
+			if(tipo == ANTISENSO){
+				for(i=0;i<blocoV;i++){
 					founded[seqId][i] = data[seqId][fase + bloco2 + i - 1];
+					
+						__syncthreads();  
+				}
 			}				
 					 
 		resultados[seqId] = tipo;	 

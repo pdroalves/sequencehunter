@@ -144,6 +144,7 @@ void search_manager(int *buffer_load,
 				cudaEventCreate(&startK);
 				cudaEventCreate(&stopK);
 				
+				h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(short int));
 				
 				cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
@@ -157,7 +158,6 @@ void search_manager(int *buffer_load,
 				cudaMalloc((void**)&d_founded,buffer_size*sizeof(char**));
 				cudaMemcpy(d_founded,d_tmp_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice);
 				
-				h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
 				local_data = (char**)malloc(buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
 					local_data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -194,7 +194,7 @@ void search_manager(int *buffer_load,
 						cudaStreamSynchronize(stream1);
 						*processadas += loaded;
 							
-						cudaMemcpyAsync(h_resultados,d_resultados,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost,stream2);
+						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
 						for(i=0;i<buffer_size;i++)
 							if(h_resultados[i] != 0)
 								cudaMemcpyAsync(h_founded[i],d_tmp_founded[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost,stream2);
@@ -226,9 +226,11 @@ void search_manager(int *buffer_load,
 						//print_fila(founded);
 						while(*buffer_load==0){}
 				}
-				
-				printf("Busca realizada em %.2f ms.\n",iteration_time);
-				
+				if(iteration_time > 10000)
+					printf("Busca realizada em %.2f s.\n",iteration_time/(float)60000);
+				else 
+					printf("Busca realizada em %.2f ms.\n",iteration_time);
+			
 				for(i=0;i<buffer_size;i++)
 					free(local_data[i]);
 				free(local_data);

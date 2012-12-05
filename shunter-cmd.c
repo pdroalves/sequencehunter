@@ -156,7 +156,7 @@
 	else{
 		hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
 	}
-	//processar(hash_table,bv_size);
+	processar(hash_table,bv_size);
 	  
 	  if(!silent)
 		printf("Algoritmo concluído.\n");
