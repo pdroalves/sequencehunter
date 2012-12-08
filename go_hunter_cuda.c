@@ -21,8 +21,6 @@
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
-__constant__ short int **d_matrix_senso;
-__constant__ short int **d_matrix_antisenso;
 __constant__ char **data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
@@ -110,8 +108,6 @@ void search_manager(int *buffer_load,
 							int blocoV,
 							cudaStream_t stream1,
 							cudaStream_t stream2,
-							short int **d_matrix_senso,
-							short int **d_matrix_antisenso,
 							char **h_data,
 							char **d_data,
 							Fila *f_sensos,
@@ -180,7 +176,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(startK,0);
 						
 						loaded = *buffer_load;
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,d_founded,d_matrix_senso,d_matrix_antisenso,stream1);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,d_founded,stream1);//Kernel de busca
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
@@ -247,55 +243,6 @@ void search_manager(int *buffer_load,
 				return;
 }
 
-void results_manager(int *buffer_load,int processadas,Fila* tipo_founded,Fila *founded,Fila *f_sensos,Fila *f_antisensos){
-	//////////////////////////////////////////
-				// Realiza o processamento das iteracoes//
-				//////////////////////////////////////////
-				THREAD_DONE[THREAD_RESULTS] = FALSE;
-				int i;
-				int resultado;
-				char *tmp;
-				
-				
-				while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_SEARCH]){
-						// Essa parte pode ser feita em paralelo
-						i=0;
-						while(tamanho_da_fila(founded) > 0){//Copia sequências senso e antisenso encontradas
-							omp_set_lock(&DtH_copy_lock);
-							resultado = convertResultToInt(desenfileirar(tipo_founded)); 
-							tmp = desenfileirar(founded);
-							omp_unset_lock(&DtH_copy_lock);
-							switch(resultado){
-								case SENSO:
-									//if(verbose && !silent)
-									//	printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
-									omp_set_lock(&MC_copy_lock);
-									enfileirar(f_sensos,tmp);
-									omp_unset_lock(&MC_copy_lock);
-								break;
-								case ANTISENSO:
-									//if(verbose && !silent)
-									//	printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
-									omp_set_lock(&MC_copy_lock);
-									enfileirar(f_antisensos,get_antisenso(tmp));
-									omp_unset_lock(&MC_copy_lock);
-								break;
-							}
-							i++;
-						}
-											
-						/*if(seqsToProcess != 0 || buffer_load !=0)
-						{
-							//printf("Erro! Buffer não foi totalmente esvaziado.\n");
-							seqsToProcess = 0;
-							buffer_load = 0;
-						}*/
-										
-						}
-				THREAD_DONE[THREAD_RESULTS] = TRUE;
-				return ;
-}
-
 void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sensos,Fila *f_antisensos){
 					//////////////////////////////////////////
 					// Libera memoria ////////////////////////
@@ -346,7 +293,7 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 }
 
 
-GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu,short int **d_matrix_senso,short int **d_matrix_antisenso){
+GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu){
 	
 	
 	Buffer buffer;
@@ -405,12 +352,8 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,d_matrix_senso,d_matrix_antisenso,h_data,d_data,f_sensos,f_antisensos);
+				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,h_data,d_data,f_sensos,f_antisensos);
 			}		
-			//#pragma omp section
-			//{
-				//results_manager(&buffer_load,processadas,tipo_founded,founded,f_sensos,f_antisensos);
-			//}
 			#pragma omp section
 			{
 				memory_cleaner_manager(hash_table,&buffer_load,f_sensos,f_antisensos);
@@ -439,42 +382,6 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 
 
 
-void setup_for_cuda(char *seq,short int **d_matrix_senso,short int **d_matrix_antisenso){
-	// Recebe um vetor de caracteres com o padrão a ser procurado
-	// As matrizes precisam estar alocadas
-	char *senso;
-	char *antisenso;
-	int **h_matrix_senso;
-	int **h_matrix_antisenso;
-	int size = strlen(seq);
-	int i;
-	
-	h_matrix_senso = (int**)malloc(size*sizeof(short int*));
-	h_matrix_antisenso = (int**)malloc(size*sizeof(short int*));
-	
-	// Aloca memória na GPU
-	for(i = 0; i < size ; i++){
-		cudaMalloc((void**)&h_matrix_senso[i],N_COL*sizeof(short int));
-		cudaMalloc((void**)&h_matrix_antisenso[i],N_COL*sizeof(short int));
-	}
-	cudaMalloc((void**)&senso,(size+1)*sizeof(char));
-	cudaMalloc((void**)&antisenso,(size+1)*sizeof(char));
-	
-	// Copia dados
-    cudaMemcpy(d_matrix_senso,h_matrix_senso,size*sizeof(short int*),cudaMemcpyHostToDevice);
-    cudaMemcpy(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int*),cudaMemcpyHostToDevice);
-      
-    cudaMemcpy(senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
-    cudaMemcpy(antisenso,(const void*)get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
-    
-    //Configura grafos direto na memória da GPU
-	set_grafo_helper(senso,antisenso,d_matrix_senso,d_matrix_antisenso);
-	printString("Grafo de busca contigurado.",NULL);
-	cudaFree(senso);
-	cudaFree(antisenso);
-	return;
-}
-
 GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,gboolean verb,gboolean sil){
 	GHashTable* hash_table;
 	float tempo;
@@ -486,18 +393,15 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
 	silent = sil;
 	
 	get_setup(&seqSize_an);
-    
-	// Aloca memória na CPU
-	cudaMalloc((void**)&d_matrix_senso,seqSize_an*sizeof(short int*));
-	cudaMalloc((void**)&d_matrix_antisenso,seqSize_an*sizeof(short int*));
+	
 	//Inicializa
-	setup_for_cuda(c,d_matrix_senso,d_matrix_antisenso);
+	setup_for_cuda(c);
 	
 	printString("Dados inicializados.\n",NULL);
 	printSet(seqSize_an);
 	printString("Iniciando iterações:\n",NULL);
 	
-	hash_table = cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu,d_matrix_senso,d_matrix_antisenso);
+	hash_table = cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
     
 	cudaThreadExit();
 	
