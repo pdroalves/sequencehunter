@@ -14,8 +14,8 @@ extern "C" {
 #include "cuda_functions.h"
 #include "log.h"
 
-__constant__ short int d_matrix_senso[N_COL*MAX_SEQ_SIZE];
-__constant__ short int d_matrix_antisenso[N_COL*MAX_SEQ_SIZE];
+__constant__ short int d_matrix_senso[MAX_SEQ_SIZE];
+__constant__ short int d_matrix_antisenso[MAX_SEQ_SIZE];
 
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)//Toma cuidado de não usar printf sem que a máquina suporte.
@@ -65,15 +65,13 @@ __global__ void k_buscador_analyse(int totalseqs,
   const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
   short int baseId;// id da base analisada
   short int tipo;
-  short int linha[N_COL];// Cada thread cuida de uma linha
- __shared__  short int senso[N_COL];// Cada thread cuida de uma linha
-  __shared__ short int antisenso[N_COL];// Cada thread cuida de uma linha
-  short int local[N_COL];
+  short int linha;// Cada thread cuida de uma linha
+  short int senso;
+  short int antisenso;
   short int alarmS;
   short int alarmAS;
   short int fase;
   short int i;
-  short int j;
   const short int seqSize_bu = bloco1+bloco2+blocoV;
   char *seq;
   
@@ -82,10 +80,6 @@ __global__ void k_buscador_analyse(int totalseqs,
 	  tipo = 0;
 	  fase = 0;
 	  while(fase + seqSize_bu <= seqSize_an && !tipo){
-			   /////////////////////////////////////////////////////////
-			   ///////////////////////// SENSO /////////////////////////
-			   /////////////////////////////////////////////////////////
-			   // Subtrai a linha do thread da linha da matriz de busca senso
 			   seq = data[seqId]+fase;	
 			   alarmS = 0;
 			   alarmAS = 0;
@@ -94,58 +88,36 @@ __global__ void k_buscador_analyse(int totalseqs,
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
 					// Carrega a linha relativa a base analisada		
-					  #pragma unroll 5
-						for(i=0;i<N_COL;i++){
-							linha[i] = 0;
-						}
+					linha = 0;
 					
-					if(threadIdx.x == 0){
-					  #pragma unroll 5
-						for(i=0;i<N_COL;i++){	
-							senso[i] = d_matrix_senso[baseId*N_COL + i];
-							antisenso[i] = d_matrix_antisenso[baseId*N_COL + i];	
-							printf("[baseId*N_COL = %d] senso: %d\nantisenso: %d\n",baseId*N_COL,senso[i],antisenso[i]);
-						}
-					}
+					senso = d_matrix_senso[baseId];
+					antisenso = d_matrix_antisenso[baseId];						
 					 				 		
 					  switch(seq[baseId]){
 						case 'A':
-							linha[A] = 1;	
+							linha = A;	
 						break;
 						case 'C':
-							linha[C] = 1;		
+							linha = C;		
 						break;
 						case 'G':
-							linha[G] = 1;	
+							linha = G;	
 						break;
 						case 'T':
-							linha[T] = 1;
+							linha = T;
 						break;
 						default:
-							linha[N] = 1;
+							linha = N;
 						break;
 					  }
-					
-					#pragma unroll 5
-					for(i=0;i<N_COL;i++) local[i] = senso[i];
-					
-					if(!local[N])
-					{  
-						#pragma unroll 5
-						for(j=0; j < N_COL-1 && !alarmS;j++)
-							 alarmS = linha[j]-local[j];
+								
+					if(senso != N){  
+						alarmS += linha-senso;
 					}
 					
-					#pragma unroll 5
-					for(i=0;i<N_COL;i++) local[i] = antisenso[i];
-					
-					if(!local[N])
-					{
-						#pragma unroll 5		   		
-						for(j=0; j < N_COL-1 && !alarmAS;j++)
-							 alarmAS = linha[j]-local[j];
+					if(antisenso != N){
+						alarmAS += linha-antisenso;
 					}	
-					__syncthreads();
 				}
 			if(!alarmS) tipo = SENSO;
 			else if(!alarmAS) tipo = ANTISENSO;
@@ -483,32 +455,27 @@ int getLine(char c){
 	}
 }
 
-void getMatrix(short int **matrix,char *str,int n){
+void getMatrix(short int *matrix,char *str){
 	// Matrix já deve vir alocada
 	int size_y;
 	int i;
-	int j;
 
-	size_y = n;
+	size_y = strlen(str);
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		//printf("Marcando %d - %c\n",i+1,str[i]);
-		#pragma unroll 5
-		for(j=0;j<N_COL;j++) matrix[i][j] = 0;
-		matrix[i][getLine(str[i])] = 1;
+		matrix[i] = getLine(str[i]);
 	}	
 
 	return;
 }
 
- void set_grafo_CUDA(char *senso,char *antisenso,short int **matrix_senso,short int **matrix_antisenso){
+ void set_grafo_CUDA(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
   // As matrizes já devem vir alocadas
-  int size;
-  											
-  size = strlen(senso);
-  getMatrix(matrix_senso,senso,size);
-  getMatrix(matrix_antisenso,antisenso,size);
+  
+  getMatrix(matrix_senso,senso);
+  getMatrix(matrix_antisenso,antisenso);
+  
   return;
 }
 
@@ -545,34 +512,132 @@ char* get_antisenso(char *s){
 	return antisenso;
 }
 
+__global__ void check_matrix(char *senso,char *antisenso){
+	// Verifica se a matriz montada corresponde a sequencia desejada
+	// Devem haver N threads e 1 bloco para uma sequencia de tamanho N
+	
+	__shared__ int alarmS;
+	__shared__ int alarmAS;
+	char cS;
+	char cAS;
+	int id = threadIdx.x;
+	int e;
+	
+	cS = senso[threadIdx.x];
+	cAS = antisenso[threadIdx.x];
+	alarmS = 0;
+	alarmAS = 0;
+	
+    switch(cS){
+		case 'A':
+			e = A;	
+		break;
+		case 'C':
+			e = C;		
+		break;
+		case 'G':
+			e = G;	
+		break;
+		case 'T':
+			e = T;
+		break;
+		default:
+			e = N;
+		break;
+	}	
+	
+	// Confere Senso
+	if(d_matrix_senso[id] != e) alarmS = 1;
+	
+	switch(cAS){
+		case 'A':
+			e = A;	
+		break;
+		case 'C':
+			e = C;		
+		break;
+		case 'G':
+			e = G;	
+		break;
+		case 'T':
+			e = T;
+		break;
+		default:
+			e = N;
+		break;
+	}	
+	
+	// Confere Antisenso	
+	if(d_matrix_antisenso[id] != e) alarmAS = 1;	
+			
+	__syncthreads();
+	
+	if(threadIdx.x == 0){
+		if(alarmS)
+			printf("Erro! Matriz senso montada incorretamente.\n");					
+		else
+			printf("Matriz senso montada corretamente.\n");
+			
+		if(alarmAS)
+			printf("Erro! Matriz antisenso montada incorretamente.\n");
+		else
+			printf("Matriz antisenso montada corretamente.\n");
+	}
+		
+	return;
+}
+
 extern "C" void setup_for_cuda(char *seq){
 	// Recebe um vetor de caracteres com o padrão a ser procurado
-	// As matrizes precisam estar alocadas
-	short int **h_matrix_senso;
-	short int **h_matrix_antisenso;
+	short int *h_matrix_senso;
+	short int *h_matrix_antisenso;
 	int size = strlen(seq);
 	int i;
+	int j;
+	char *d_senso;
+	char *d_antisenso;
 	
-	h_matrix_senso = (short int**)malloc(size*sizeof(short int*));
-	h_matrix_antisenso = (short int**)malloc(size*sizeof(short int*));
-	
-	// Aloca memória na GPU
-	for(i = 0; i < size ; i++){
-		h_matrix_senso[i] = (short int*)malloc(N_COL*sizeof(short int));
-		h_matrix_antisenso[i] = (short int*)malloc(N_COL*sizeof(short int));
-	}
-    
+	h_matrix_senso = (short int*)malloc(size*sizeof(short int));
+	h_matrix_antisenso = (short int*)malloc(size*sizeof(short int));
+	    
     //Configura grafos direto na memória da GPU
 	set_grafo_CUDA(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
 	
-	// Copia dados
+	printf("Matriz senso:\n");
 	for(i=0;i<size;i++){
-		cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso[i],N_COL*sizeof(short int),i*N_COL,cudaMemcpyHostToDevice);
-		cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso[i],N_COL*sizeof(short int),i*N_COL,cudaMemcpyHostToDevice);
-		free(h_matrix_senso[i]);
-		free(h_matrix_antisenso[i]);
+		for(j=0;j<N_COL;j++)
+			if(h_matrix_senso[i] == j)
+				printf("1 ");
+			else
+				printf("0 ");
+		printf("\n");
 	}
-	//printString("Grafo de busca contigurado.",NULL);
+	printf("Matriz antisenso:\n");
+	for(i=0;i<size;i++){
+		for(j=0;j<N_COL;j++)
+			if(h_matrix_antisenso[i] == j)
+				printf("1 ");
+			else
+				printf("0 ");
+		printf("\n");
+	}
+	
+	// Copia dados
+	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
+	free(h_matrix_senso);
+	free(h_matrix_antisenso);
+	
+	cudaMalloc((void**)&d_senso,(size+1)*sizeof(char));
+	cudaMalloc((void**)&d_antisenso,(size+1)*sizeof(char));
+	
+	cudaMemcpy(d_senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
+	cudaMemcpy(d_antisenso,get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
+	
+	printf("Verificando matrizes:...\n");
+	check_matrix<<<1,size,0>>>(d_senso,d_antisenso);
+	
+	//printString("Grafo de busca configurado.",NULL);
 	return;
 }
 
