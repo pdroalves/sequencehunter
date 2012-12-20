@@ -51,7 +51,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 										int bloco2,
 										int blocoV){
 
-  ////////		UMA SEQUENCIA POR THREAD
+  ////////		UM THREAD POR SEQUENCIA
   ////////
   ////////
   ////////
@@ -66,8 +66,10 @@ __global__ void k_buscador_analyse(int totalseqs,
   short int baseId;// id da base analisada
   short int tipo;
   short int linha;// Cada thread cuida de uma linha
-  short int senso;
-  short int antisenso;
+  __shared__ short int senso;
+  __shared__ short int antisenso;
+  short int lsenso;
+  short int lantisenso;
   short int alarmS;
   short int alarmAS;
   short int fase;
@@ -90,15 +92,13 @@ __global__ void k_buscador_analyse(int totalseqs,
 					// Carrega a linha relativa a base analisada		
 					linha = 0;
 					
-<<<<<<< HEAD
-					senso = d_matrix_senso[baseId];
-					antisenso = d_matrix_antisenso[baseId];						
-					 				 		
-=======
-						senso[seqId%N_COL] = matrix_senso[baseId][seqId%N_COL];
-						antisenso[seqId%N_COL] = matrix_antisenso[baseId][seqId%N_COL];	
-						 		
->>>>>>> ed3a7c92d2ca579999d7525e72fed7675edbc39b
+					if(threadIdx.x == 0){
+						senso = d_matrix_senso[baseId];
+						antisenso = d_matrix_antisenso[baseId];						
+					 }	
+					__syncthreads();  
+					lsenso = senso;
+					lantisenso = antisenso;							
 					  switch(seq[baseId]){
 						case 'A':
 							linha = A;	
@@ -117,22 +117,8 @@ __global__ void k_buscador_analyse(int totalseqs,
 						break;
 					  }
 								
-					if(senso != N){  
-						alarmS += linha-senso;
-					}
-					
-<<<<<<< HEAD
-					if(antisenso != N){
-						alarmAS += linha-antisenso;
-					}	
-=======
-					if(!antisenso[N])
-					{
-						#pragma unroll 5		   		
-						for(j=0; j < N_COL-1 && !alarmAS;j++)
-							 alarmAS = linha[j]-antisenso[j];
-					}
->>>>>>> ed3a7c92d2ca579999d7525e72fed7675edbc39b
+					alarmS += (linha-lsenso)*(lsenso-N);		
+					alarmAS += (linha-lantisenso)*(lantisenso-N);		
 				}
 			if(!alarmS) tipo = SENSO;
 			else if(!alarmAS) tipo = ANTISENSO;
@@ -142,8 +128,7 @@ __global__ void k_buscador_analyse(int totalseqs,
 	
 		if(tipo == SENSO){
 			 for(i=0;i<blocoV;i++){
-					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];		
-						__syncthreads();  			
+					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];	
 				}
 		}else  
 			if(tipo == ANTISENSO){
