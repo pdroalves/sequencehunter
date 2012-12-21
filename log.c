@@ -44,7 +44,7 @@ void print_time(){
  struct tm *local;
  time_t t;
  
- t = time(NULL);
+ time(&t);
  local = localtime(&t);
  
  fprintf(logfile,"%s\n",asctime(local));

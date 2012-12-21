@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "estruturas.h"
 #include "log.h"
 #include "operacoes.h"
@@ -189,10 +190,27 @@ void imprimir_lista_ligada(lista_ligada *resultados){
 	lista_ligada *p;
 	int i = 0;
 	
-	p = resultados->prox;
+	time_t t;
 	
+	FILE *out;
+	char outname[50];
+	char *tempo;
+	
+	time(&t);
+	tempo = ctime(&t);
+	tempo[strlen(tempo)-1] = '\0';
+	
+	strcpy(outname,"resultados - ");
+	strcat(outname,tempo);
+	strcat(outname,".txt");
+	out = fopen(outname,"a");
+	
+	fprintf(out,"################### %s ###################\n\n",tempo); 
+	
+	p = resultados->prox;
 	while(p != NULL){
 		printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+		fprintf(out,"%s		%d\n",p->senso,p->pares);
 		print_resultado(p);
 		p = p->prox;
 	}

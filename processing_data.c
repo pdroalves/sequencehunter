@@ -46,7 +46,7 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-void processar(GHashTable* hash_table,int n,int max_events){
+lista_ligada* processar(GHashTable* hash_table,int n,int max_events){
 	
 	Despareados *desp;
 	lista_ligada *l;
@@ -75,8 +75,15 @@ void processar(GHashTable* hash_table,int n,int max_events){
 	
 	// Ordena os max_events maiores elementos
 	resultados = ordena_pares(l,max_events);
+	
+	return resultados;
+}
+
+void imprimir(lista_ligada *resultados,int max_events){
+	
 	printf("Frequencias estimadas:\n");
 	imprimir_lista_ligada(resultados);
+	
 	return;
 }
 

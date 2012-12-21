@@ -20,6 +20,7 @@
 	#include "log.h"
 	#include "load_data.h"
 	#include "processing_data.h"
+	#include "linkedlist.h"
 	#include "version.h"
 	#define SEQ_BUSCA_TAM 1000
 
@@ -65,6 +66,7 @@
 	  int bv_size;
 	  int is_cuda_available = 1;
 	  int bibliotecas_validas;
+	  lista_ligada *resultados;
 	  GHashTable* hash_table;
 
 	  
@@ -158,8 +160,11 @@
 	else{
 		hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
 	}
-	processar(hash_table,bv_size,max_events);
-	  
+	
+	resultados = processar(hash_table,bv_size,max_events);
+	
+	imprimir(resultados,max_events);
+	
 	  if(!silent)
 		printf("Algoritmo concluído.\n");
 	 close_file();
