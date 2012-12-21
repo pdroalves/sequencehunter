@@ -46,85 +46,38 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-lista_ligada* processar(GHashTable* hash_table,int n){
+void processar(GHashTable* hash_table,int n,int max_events){
 	
-//	lista_ligada *l;
-//	lista_ligada **resultados;
-	//Despareados *desp;
-	FILE *sensos;
-	FILE *antisensos;
+	Despareados *desp;
+	lista_ligada *l;
+	lista_ligada *resultados;
 	int s_tipos = 0;
 	int as_tipos = 0;
-	int retorno;
-	int i;
-	char *hold;
-	//GTimer *timer;
 	
-	//timer = g_timer_new();
-	//g_timer_start(timer);
+	//print_all(hash_table);
 	
-	//g_timer_stop(timer);
-	//printf("Pilha de antisensos esvaziada em %f ms.\n",g_timer_elapsed(timer,NULL));
-	
-	print_all(hash_table);
-	
+	// To-do: Funcao para contar tipos de senso e antisenso
 	printf("Tipos de senso encontrados: %d.\n",s_tipos);
 	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
 	
-	
 	printf("Procurando sensos despareados...\n");
 	
-	//g_timer_reset(timer);
-	//g_timer_start(timer);
-	//desp = recupera_despareados_ht(hash_table);
-	//print_despareadas_seqs(desp->sensos,desp->antisensos);
-	//printf("Sensos despareados: %d.\n",desp->sensos);
-	//printf("Antisensos despareados: %d.\n",desp->antisensos);
-	//printf("Processando.\n");
+	desp = recupera_despareados_ht(hash_table);
+	print_despareadas_seqs(desp->sensos,desp->antisensos);
+	printf("Sensos despareados: %d.\n",desp->sensos);
+	printf("Antisensos despareados: %d.\n",desp->antisensos);
 	
-	//g_timer_stop(timer);
-	//printf("Sequências despareadas encontradas em %f ms.\n",g_timer_elapsed(timer,NULL));
-	
-	//g_timer_reset(timer);
-	//g_timer_start(timer);
-	//qnt_relativa_ht(hash_table);
-	//g_timer_stop(timer);
-	//printf("Calculo da distribuição feita em %f ms.\n",g_timer_elapsed(timer,NULL));
-	
-	//Salva resultado:
-	//g_timer_reset(timer);
-	//g_timer_start(timer);
-	//write_ht_to_file(hash_table);
-	//g_timer_stop(timer);
-	//printf("Resultados salvos em %f ms.\n",g_timer_elapsed(timer,NULL));
-	
+	// Calcula quantidade relativa dos elementos
+	qnt_relativa_ht(hash_table);
+
 	//LinkedList
-	//g_timer_reset(timer);
-	//g_timer_start(timer);	
-	//l = converter_para_lista_ligada(hash_table);
-	//g_timer_stop(timer);
-	//printf("Conversão para Linked List em %f ms.\n",g_timer_elapsed(timer,NULL));
+	l = converter_para_lista_ligada(hash_table);
 	
-	//g_timer_reset(timer);
-	//g_timer_start(timer);
-	//resultados = ordena_pares(l);
-	//printf("Frequencias estimadas:\n");
-	//g_timer_stop(timer);
-	//printf("Sequências ordenadas em %f ms.\n",g_timer_elapsed(timer,NULL));
-	//imprimir_sensos(resultados);
-	
-	
-	//g_timer_destroy(timer);
-	
-	i = 0;
-/*	while(resultados[i]->pares != -1){
-		free(resultados[i]);
-		i++;
-	}
-	free(resultados[i]);
-	free(resultados);	*/
-	//free(timer);
-	return NULL;
+	// Ordena os max_events maiores elementos
+	resultados = ordena_pares(l,max_events);
+	printf("Frequencias estimadas:\n");
+	imprimir_lista_ligada(resultados);
+	return;
 }
 
 void swap(lista_ligada** a, lista_ligada** b) {

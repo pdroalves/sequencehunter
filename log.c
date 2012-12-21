@@ -15,7 +15,6 @@ void prepareLog();
 void print_time();
 void printString(char*,char*);
 void printSet(int);
-void print_matchs(int,int);
 void print_tempo(float);
 void closeLog();
 
@@ -98,21 +97,6 @@ void print_tipos_seqs(int sensos,int antisensos){
 	fprintf(logfileDetalhado,"Tipos de sensos encontradas: %d.\nTipos de antisensos encontradas: %d.",sensos,antisensos);	
 }
 
-void print_resultados(lista_ligada** resultados){
-	int i;
-	i = 0;
-	
-	fprintf(logfile,"Pares encontrados:\n\n");
-	while(resultados[i]->pares != -1){
-		if(resultados[i]->pares != 0){
-			fprintf(logfile,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
-			fprintf(logfileDetalhado,"	%s x%d => %.3f %\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
-		}
-			i++;
-	}
-	
-}
-
 void print_tempo(float tempo){
 	if(tempo > 0.5)
 		fprintf(logfile,"Tempo decorrido: %fs\n",tempo/1000.0);
@@ -129,6 +113,12 @@ void print_sequencias_validas(int seqs_validas){
 	}else{	
 		printf("Sequências válidas encontradas: %d.\n",seqs_validas);
 	}
+}
+
+void print_resultado(lista_ligada *p){
+	fprintf(logfile,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+	fprintf(logfileDetalhado,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+	return;
 }
 
 //##########################

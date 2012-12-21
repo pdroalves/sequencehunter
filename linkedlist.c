@@ -70,7 +70,7 @@ lista_ligada* adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 }
 
 void g_hash_table_adapter_to_linked_list(char *seq,value *entry,lista_ligada *l){
-	if(entry->qnt_relativa > 0 + 1e-7){
+	if(entry->qnt_relativa > 1e-7){
 		lista_ligada* novo;
 		
 		novo = criar_elemento_senso(seq);
@@ -92,36 +92,70 @@ void remover_elemento(lista_ligada *atual, lista_ligada *anterior){
 	return;
 }
 
-lista_ligada** ordena_pares(lista_ligada* l){
-	//Recebe lista com resultados encontrados, ordena e retorna vetor com os elementos de maior e menor frequencia
-	lista_ligada* p;
-	lista_ligada** vetor;
-	int tam = 0;
-	int i;
+lista_ligada* get_biggest(lista_ligada *l){
+	// Suponhe a lista l nao vazia, retorna o elemento com a maior quantidade de pares e o remove da lista original
+	lista_ligada *tmp,*dir_tmp,*esq_tmp;
+	lista_ligada *maior,*dir_maior,*esq_maior;
 	
-	//Calcula tamanho da lista ligada e adiciona elemento no vetor
-	p = l->prox;
-	while(p != NULL){
-		tam++;
-		p = p->prox;
+	if(l->prox == NULL) return NULL;
+	
+	// Toma o primeiro elemento como o com mais pares e marca os elementos a direita e a esquerda
+	maior = l->prox;
+	dir_maior = NULL;
+	esq_maior = maior->prox;	
+	
+	// Se houver apenas um elemento na lista, retorna ele mesmo
+	if(maior->prox == NULL){
+		l->prox = NULL;
+		return maior;
 	}
 	
-	vetor = (lista_ligada**)malloc((tam+1)*sizeof(lista_ligada*));
+	// Itera ateh o final da lista
+	tmp = maior->prox;
+	dir_tmp = maior;
+	esq_tmp = tmp->prox;
 	
-	//Adiciona ponteiro para cada elemento em um vetor
-	p = l->prox;
-	for(i=0;i<tam;i++){
-		vetor[i] = p;
-		p = p->prox;
+	while(tmp->prox != NULL){
+		if(tmp->pares > maior->pares){
+			// Achei um maior do que o maior
+			maior = tmp;
+			dir_maior = dir_tmp;
+			esq_maior = esq_tmp;
+		}
+		dir_tmp = tmp;
+		tmp = tmp->prox;
+		if(tmp->prox != NULL)
+			esq_tmp = tmp->prox;
+		else
+			esq_tmp = NULL;
 	}
 	
-	//Ordena
-		
-	quicksort(vetor,0,tam-1);
+	if(tmp->pares > maior->pares){
+		maior = tmp;
+		dir_maior = dir_tmp;
+		esq_maior = esq_tmp;
+	}
 	
-	vetor[tam] = (lista_ligada*)malloc(sizeof(lista_ligada));
-	vetor[tam]->pares = -1;
-	return vetor;
+	dir_maior->prox = esq_maior;
+	
+	return maior;
+}
+
+lista_ligada* ordena_pares(lista_ligada* l,int max_events){
+	// Recebe lista com resultados encontrados, ordena e retorna uma lista ligada ordenada
+	// Lida apenas com os max_events maiores resultados
+	
+	lista_ligada *resultados;
+	int i=0;
+	
+	resultados = criar_lista();
+	
+	while(i < max_events && get_size(l) > 0){
+		adicionar_elemento(resultados,get_biggest(l));
+		i++;
+	}
+	
+	return resultados;
 }
 	
 Despareados* recupera_despareados(lista_ligada *l){
@@ -151,19 +185,32 @@ Despareados* recupera_despareados(lista_ligada *l){
 	return desp;
 }
 
-void imprimir_sensos(lista_ligada **resultados){
-	int i;
-	char string_fim[4] = "FIM";
-	i=0;
+void imprimir_lista_ligada(lista_ligada *resultados){
+	lista_ligada *p;
+	int i = 0;
 	
-	if(resultados[0]->senso != NULL){
-		print_resultados(resultados);
-		while(resultados[i]->pares != -1){
-			if(resultados[i]->pares != 0)
-			printf("	%s x%d => %.3f \%\n",resultados[i]->senso,resultados[i]->pares,resultados[i]->qnt_relativa*100);
-			i++;
-		}
+	p = resultados->prox;
+	
+	while(p != NULL){
+		printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+		print_resultado(p);
+		p = p->prox;
 	}
+	
 	return;
+}
+
+int get_size(lista_ligada *l){
+	lista_ligada *p;
+	int tam = 0;
+		
+	//Calcula tamanho da lista ligada e adiciona elemento no vetor
+	p = l->prox;
+	while(p != NULL){
+		tam++;
+		p = p->prox;
+	}
+	
+	return tam;
 }
 

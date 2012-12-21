@@ -12,7 +12,7 @@ OPENMP_CUDA = -Xcompiler $(OPENMP)
 CUDA = -L/usr/local/cuda/lib64 -lcudart 
 CUDA_ARCH = -arch=sm_21
 
-INSTALL = /home/pedro/Dropbox/Estagio/LNBio/Codigos/bin
+INSTALL = /home/pedro/Projetos/bin
 
 all:cmd gui
 

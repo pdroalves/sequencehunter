@@ -28,17 +28,19 @@
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
 	gboolean check_build = FALSE;
+	gint max_events = 20;
 	//###############
 	static GOptionEntry entries[] = 
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
-		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento através da arquitetura CUDA", NULL },
-		{ "fromFile", 'f', 0, G_OPTION_ARG_NONE, &fromFile, "Carrega a configuração de busca do arquivo shset.dat", NULL },
-		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca", NULL },
-		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execução silenciosa", NULL },
-		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL },
-		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o número da build", NULL },
+		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
+		{ "fromFile", 'f', 0, G_OPTION_ARG_NONE, &fromFile, "Carrega a configuracao de busca do arquivo shset.dat.", NULL },
+		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
+		{ "events", 'e', 0, G_OPTION_ARG_INT, &max_events, "Quantidade maxima de eventos a serem exportados. Padrao: 20.", NULL},
+		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execucao silenciosa.", NULL },
+		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose.", NULL },
+		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o numero da build.", NULL },
 		
 		{ NULL }
 	  };
@@ -156,7 +158,7 @@
 	else{
 		hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
 	}
-	processar(hash_table,bv_size);
+	processar(hash_table,bv_size,max_events);
 	  
 	  if(!silent)
 		printf("Algoritmo concluído.\n");

@@ -104,7 +104,7 @@ void recupera_despareados_func(gchar *seq,value *entry,Despareados *desp){
 	int diff;
 	diff = entry->qsenso - entry->qasenso;
 	//printf("%s - S:%d - As:%d\n",atual->senso,atual->qsenso,atual->qasenso);
-	print_despareadas(seq,entry->qsenso,entry->qasenso);
+	//print_despareadas(seq,entry->qsenso,entry->qasenso);
 	if(diff != 0){
 		 if(diff > 0) desp->sensos+=diff;
 		 else desp->antisensos+=-diff;

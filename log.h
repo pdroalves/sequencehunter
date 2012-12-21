@@ -18,5 +18,6 @@ void print_seqs_carregadas(int);
 void print_resultados(lista_ligada** resultados);
 void print_tempo(float tempo);
 void print_sequencias_validas(int seqs_validas);
+void print_resultado(lista_ligada *p);
 void closeLog();
 #endif
