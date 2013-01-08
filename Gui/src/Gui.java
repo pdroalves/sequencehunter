@@ -29,7 +29,7 @@ public class Gui implements ActionListener {
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
 		jfrm.setResizable(false);
-		
+	
 		//Gera menu
 		jfrm.setJMenuBar(drawMenuBar());
 		
@@ -109,7 +109,11 @@ public class Gui implements ActionListener {
 		constraints.anchor = GridBagConstraints.PAGE_END;
 		constraints.insets = new Insets(10,5,10,5);  //top padding
 		jfrm.add(drawProgressBarContainer(jprog),constraints);
-		
+	
+		//JPanel cp = ((JPanel) jfrm.getContentPane());
+		//cp.setBorder(BorderFactory.createLineBorder(Color.black));	
+	
+	
 		jfrm.setVisible(true);
 	}
 	
@@ -172,7 +176,8 @@ public class Gui implements ActionListener {
 	
 	private Container drawStatusContainer(JTextArea statusLog){
 		Box vbox = Box.createVerticalBox();
-		
+		Box hbox = Box.createHorizontalBox();
+	
 		// Cria scroll pane e adiciona statusLog dentro
 		statusLog = new JTextArea();
 		statusLog.setEditable(false);
@@ -181,8 +186,9 @@ public class Gui implements ActionListener {
 		jscrlp.setPreferredSize(new Dimension(250,200));
 		
 		// Adiciona tudo na vbox
-		JLabel statusLabel = new JLabel("Status: ");
-		vbox.add(statusLabel);
+		JLabel statusLabel = new JLabel("Status: ",SwingConstants.LEFT);
+		hbox.add(statusLabel);
+		vbox.add(hbox);
 		vbox.add(jscrlp);
 		return vbox;
 	}
@@ -212,7 +218,7 @@ public class Gui implements ActionListener {
 		Box vbox = Box.createVerticalBox();
 		JButton browseButton = new JButton("Browse");
 		
-		hbox.add(new JLabel("Diretório de saída: "));
+		hbox.add(new JLabel("Output Folder: "));
 		outputDir = new JTextField(20);
 		hbox.add(outputDir);
 		hbox.add(browseButton);
