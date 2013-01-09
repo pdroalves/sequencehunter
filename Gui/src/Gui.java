@@ -25,6 +25,7 @@ public class Gui implements ActionListener {
 	Gui(){
 		seqOriginal = new JBaseTextField(25);
 		seqBusca = new JLabel();
+		statusLog = new JTextArea();
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -37,21 +38,77 @@ public class Gui implements ActionListener {
 		//jfrm.setLocationRelativeTo(null);
 		
 		// Seta FlowLayout para o content pane
-		jfrm.getContentPane().setLayout(new GridBagLayout());
-		GridBagConstraints constraints = new GridBagConstraints();
+		jfrm.getContentPane().setLayout(new BorderLayout());
 				
 		jfrm.setSize(ySize,xSize);
 		jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		// Cria tabbed pane
+		JTabbedPane jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		
 		// Monta searchContainer
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 0;
-		constraints.weightx = 0.5;
-		constraints.weighty = 0.0;
-		constraints.anchor = GridBagConstraints.ABOVE_BASELINE;
-		constraints.insets = new Insets(0,5,0,5); 
-		jfrm.add(drawSearchContainer(),constraints);
+		jtp.addTab("Setup",drawSearchContainer());
+		
+		// Monta summaryContainer
+		jtp.addTab("Summary",Box.createVerticalBox());
+		
+		// Monta reportContainer
+		jtp.addTab("Report",Box.createVerticalBox());
+		
+		jfrm.add(jtp,BorderLayout.CENTER);
+		
+		// Monta statusContainer
+		jfrm.add(drawStatusContainer(),BorderLayout.SOUTH);
+				
+		jfrm.setVisible(true);
+	}
+	
+	private JMenuBar drawMenuBar(){
+		// Barra do menu
+		JMenuBar menuBar = new JMenuBar();
+		
+		// Novo Menu  
+		JMenu menuFile = new JMenu("File"); 
+		JMenu menuHelp = new JMenu("Help");   
+		
+		// Item do menu  
+		JMenuItem menuItemExit = new JMenuItem("Exit");  		
+		JMenuItem menuItemAbout = new JMenuItem("About");
+				
+		menuFile.add(menuItemExit);
+		menuHelp.add(menuItemAbout);
+		menuBar.add(menuFile); 
+		menuBar.add(menuHelp);
+		
+		return menuBar;
+	}
+	
+	private Container drawSearchContainer(){				
+		// Cria panels
+		JPanel seqBuscaPanel = new JPanel();
+		JPanel libs = new JPanel();
+		
+		// Configura tab para sequencias
+		seqBuscaPanel.setLayout(new GridLayout(2,1));
+		
+		Box hbox = Box.createHorizontalBox();
+		setSeqButton = new JButton("Set");
+		setSeqButton.addActionListener(this);
+		
+		hbox.add(new JLabel("Sequence: "));
+		hbox.add(seqOriginal);
+		hbox.add(setSeqButton);
+		seqBuscaPanel.add(hbox);
+		hbox = Box.createHorizontalBox();
+		hbox.add(new JLabel("Target Sequence: "));
+		hbox.add(seqBusca);
+		seqBuscaPanel.add(hbox);
+		
+		
+		// Configura tab para libs
+		libs.setLayout(new GridLayout(1,1));
+		libs.add(new JLabel("To-do"));
+		
 		
 		// Monta libContainer
 		ArrayList<Object[][]> tmp = new ArrayList<Object[][]>();
@@ -70,111 +127,22 @@ public class Gui implements ActionListener {
 		tmp.add(hold1);
 		tmp.add(hold2);
 		tmp.add(hold3);
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 1;
-		constraints.gridy = 0;
-		constraints.weightx = 0.5;
-		constraints.weighty = 0.45;
-		constraints.anchor = GridBagConstraints.ABOVE_BASELINE;
-		constraints.insets = new Insets(0,5,0,5); 
-		jfrm.add(drawLibContainer(tmp,3),constraints);
 		
-		// Monta statusContainer
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 1;
-		constraints.weightx = 0.5;
-		constraints.weighty = 0.45;
-		constraints.anchor = GridBagConstraints.ABOVE_BASELINE;
-		constraints.insets = new Insets(0,5,0,5); 
-		jfrm.add(drawStatusContainer(statusLog),constraints);
-		
-		// Monta startContainer
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 1;
-		constraints.gridy = 1;
-		constraints.weightx = 0.5;
-		constraints.weighty = 0.45;
-		constraints.anchor = GridBagConstraints.ABOVE_BASELINE;
-		constraints.insets = new Insets(0,5,0,5); 
-		jfrm.add(drawStartContainer(outputDir,startstopButton),constraints);
-		
-		// Monta progressBarContainer
-		constraints.fill = GridBagConstraints.HORIZONTAL;
-		constraints.gridx = 0;
-		constraints.gridy = 2;
-		constraints.gridwidth = 2;
-		constraints.weightx = 1;
-		constraints.weighty = 0.1;
-		constraints.anchor = GridBagConstraints.PAGE_END;
-		constraints.insets = new Insets(10,5,10,5);  //top padding
-		jfrm.add(drawProgressBarContainer(jprog),constraints);
-		
-		jfrm.setVisible(true);
-	}
-	
-	private JMenuBar drawMenuBar(){
-		// Barra do menu
-		JMenuBar menuBar = new JMenuBar();
-		
-		// Novo Menu  
-		JMenu menuFile = new JMenu("File"); 
-		JMenu menuHelp = new JMenu("Help");   
-		
-		// Item do menu  
-		JMenuItem menuItemExit = new JMenuItem("Exit");  		
-		JMenuItem menuItemAbout = new JMenuItem("About");
-		
-		menuFile.add(menuItemExit);
-		menuHelp.add(menuItemAbout);
-		menuBar.add(menuFile); 
-		menuBar.add(menuHelp);
-		
-		return menuBar;
-	}
-	
-	private Container drawSearchContainer(){		
-		// Cria tabbed pane
-		JTabbedPane jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
-		
-		// Cria panels
-		JPanel seqBuscaPanel = new JPanel();
-		JPanel libs = new JPanel();
-		
-		// Configura tab para sequencias
-		seqBuscaPanel.setLayout(new GridLayout(2,1));
-		
-		Box hbox = Box.createHorizontalBox();
-		setSeqButton = new JButton("Set");
-		setSeqButton.addActionListener(this);
-		
-		hbox.add(new JLabel("Sequência: "));
-		hbox.add(seqOriginal);
-		hbox.add(setSeqButton);
-		seqBuscaPanel.add(hbox);
-		hbox = Box.createHorizontalBox();
-		hbox.add(new JLabel("Sequência configurada: "));
-		hbox.add(seqBusca);
-		seqBuscaPanel.add(hbox);
-		
-		
-		// Configura tab para libs
-		libs.setLayout(new GridLayout(1,1));
-		libs.add(new JLabel("To-do"));
 
 		// Adiciona tabs
-		jtp.addTab("Seq Busca", seqBuscaPanel);
-		jtp.addTab("Bibliotecas", libs);		
+		Box vbox = Box.createVerticalBox();
+		vbox.add(seqBuscaPanel);
+		vbox.add(libs);
+		vbox.add(drawLibContainer(tmp,3));
 		
 		
-		return jtp;
+		return vbox;
 	}
 	
-	private Container drawStatusContainer(JTextArea statusLog){
+	private Container drawStatusContainer(){
 		Box vbox = Box.createVerticalBox();
 		
 		// Cria scroll pane e adiciona statusLog dentro
-		statusLog = new JTextArea();
 		statusLog.setEditable(false);
 		statusLog.append("Sequence Hunter started...");
 		JScrollPane jscrlp = new JScrollPane(statusLog);	
@@ -184,6 +152,9 @@ public class Gui implements ActionListener {
 		JLabel statusLabel = new JLabel("Status: ");
 		vbox.add(statusLabel);
 		vbox.add(jscrlp);
+
+		// Monta progressBarContainer
+		vbox.add(drawProgressBarContainer(jprog));
 		return vbox;
 	}
 	
@@ -199,33 +170,14 @@ public class Gui implements ActionListener {
 			JPanel jp = new JPanel();
 			jtabPreviewLibs = new JTable(new DefaultTableModel(data.get(i),headings));
 			jscrlp  = new JScrollPane(jtabPreviewLibs);
-			jscrlp.setPreferredSize(new Dimension(400,200));
+			jscrlp.setPreferredSize(new Dimension(900,200));
 			jp.add(jscrlp);
 			jtp.addTab(new String("Lib "+i),jp);
 		}
 		
 		return jtp;
 	}
-	
-	private Container drawStartContainer(JTextField outputDir,JButton startstopbutton){
-		Box hbox = Box.createHorizontalBox();
-		Box vbox = Box.createVerticalBox();
-		JButton browseButton = new JButton("Browse");
 		
-		hbox.add(new JLabel("Diretório de saída: "));
-		outputDir = new JTextField(20);
-		hbox.add(outputDir);
-		hbox.add(browseButton);
-		hbox.setMaximumSize(new Dimension(600,20));
-		vbox.add(hbox);
-		
-		hbox = Box.createHorizontalBox();
-		hbox.add(startstopbutton);
-		vbox.add(hbox);
-		
-		return vbox;
-	}
-	
 	private Container drawProgressBarContainer(JProgressBar jprog){
 		Box vbox = Box.createVerticalBox();
 		
@@ -245,6 +197,7 @@ public class Gui implements ActionListener {
 		if(ae.getActionCommand().equals("Set")){
 			searchSeq = new String(seqOriginal.getSelectedText());
 			seqBusca.setText(searchSeq);
+			statusLog.append("\n"+"Target sequence: " + searchSeq);
 		}
 	}
 	
