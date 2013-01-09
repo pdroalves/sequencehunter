@@ -1,7 +1,9 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -19,6 +21,10 @@ public class Gui implements ActionListener {
 	JTextField outputDir;
 	JButton startstopButton = new JButton("Start");
 	JProgressBar jprog;
+	JList<String> jl ;
+	DefaultListModel<String> listModel;
+	ArrayList<String> libs = new ArrayList<String>();
+	int listModelSelectId;
 	int xSize = 700;
 	int ySize = 1000;
 	
@@ -26,6 +32,8 @@ public class Gui implements ActionListener {
 		seqOriginal = new JBaseTextField(25);
 		seqBusca = new JLabel();
 		statusLog = new JTextArea();
+		jl = new JList<String>();
+		listModel = new DefaultListModel<String>();  
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -73,8 +81,7 @@ public class Gui implements ActionListener {
 		
 		// Item do menu  
 		JMenuItem menuItemExit = new JMenuItem("Exit");  		
-		JMenuItem menuItemAbout = new JMenuItem("About");
-				
+		JMenuItem menuItemAbout = new JMenuItem("About");		
 		menuFile.add(menuItemExit);
 		menuHelp.add(menuItemAbout);
 		menuBar.add(menuFile); 
@@ -102,12 +109,23 @@ public class Gui implements ActionListener {
 		hbox = Box.createHorizontalBox();
 		hbox.add(new JLabel("Target Sequence: "));
 		hbox.add(seqBusca);
-		seqBuscaPanel.add(hbox);
-		
+		seqBuscaPanel.add(hbox);		
 		
 		// Configura tab para libs
-		libs.setLayout(new GridLayout(1,1));
-		libs.add(new JLabel("To-do"));
+		libs.setLayout(new GridLayout(2,2));
+		libs.add(new JLabel("Libraries loaded: "));
+		JScrollPane jscrlp = new JScrollPane(jl);
+		JButton loadLib = new JButton("Load");
+		JButton unloadLib = new JButton("Unload");
+		loadLib.addActionListener(this);
+		unloadLib.addActionListener(this);
+		jl.setModel(listModel);
+		
+		hbox = Box.createHorizontalBox();
+		hbox.add(loadLib);
+		hbox.add(unloadLib);
+		libs.add(jscrlp);		
+		libs.add(hbox);
 		
 		
 		// Monta libContainer
@@ -138,6 +156,8 @@ public class Gui implements ActionListener {
 		
 		return vbox;
 	}
+	
+	
 	
 	private Container drawStatusContainer(){
 		Box vbox = Box.createVerticalBox();
@@ -197,9 +217,34 @@ public class Gui implements ActionListener {
 		if(ae.getActionCommand().equals("Set")){
 			searchSeq = new String(seqOriginal.getSelectedText());
 			seqBusca.setText(searchSeq);
-			statusLog.append("\n"+"Target sequence: " + searchSeq);
+			writeToLog("Target sequence: " + searchSeq);
 		}
+		if(ae.getActionCommand().equals("Load")){
+			JFileChooser jfc = new JFileChooser();
+			jfc.setMultiSelectionEnabled(true);
+			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+				for(File f: jfc.getSelectedFiles()){
+					String txt = f.getAbsolutePath();
+					libs.add(txt);
+					listModel.addElement(txt);
+					writeToLog("File "+txt+" loaded.");
+				}
+			}
+		}
+		if(ae.getActionCommand().equals("Unload")){
+			List<String> elements =jl.getSelectedValuesList();
+			for(String ele: elements){
+				libs.remove(ele);
+				listModel.removeElement(ele);
+				writeToLog("File "+ele+" unloaded.");
+			}
+		}
+		
 	}
 	
+	public void writeToLog(String txt){
+		statusLog.append("\n"+txt);
+		return;
+	}
 
 }
