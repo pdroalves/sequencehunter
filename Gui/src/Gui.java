@@ -1,32 +1,40 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 import Auxiliares.JBaseTextField;
+import Auxiliares.JLazyTableModel;
+import Auxiliares.JTxtFileFilter;
+import Auxiliares.Library;
 
 public class Gui implements ActionListener {
 	
-	JFrame jfrm;
-	JBaseTextField seqOriginal;
-	String searchSeq;
-	JLabel seqBusca;
-	JButton setSeqButton;
-	JTextArea statusLog;
-	JTextField outputDir;
-	JButton startstopButton = new JButton("Start");
-	JProgressBar jprog;
-	JList<String> jl ;
-	DefaultListModel<String> listModel;
-	ArrayList<String> libs = new ArrayList<String>();
-	int listModelSelectId;
-	int xSize = 700;
-	int ySize = 1000;
+	private JFrame jfrm;
+	private JBaseTextField seqOriginal;
+	private String searchSeq;
+	private JLabel seqBusca;
+	private JButton setSeqButton;
+	private JTextArea statusLog;
+	private JTextField outputDir;
+	private JButton startstopButton = new JButton("Start");
+	private JProgressBar jprog;
+	private JList<String> jl ;
+	private DefaultListModel<String> listModel;
+	private ArrayList<String> libs = new ArrayList<String>();
+	private JTabbedPane libContainer;
+	private JPanel summaryContainer;
+	private int xSize = 700;
+	private int ySize = 1000;
 	
 	Gui(){
 		seqOriginal = new JBaseTextField(25);
@@ -34,6 +42,9 @@ public class Gui implements ActionListener {
 		statusLog = new JTextArea();
 		jl = new JList<String>();
 		listModel = new DefaultListModel<String>();  
+		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		libContainer.setPreferredSize(new Dimension(900,300));
+		summaryContainer = new JPanel();
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -58,7 +69,7 @@ public class Gui implements ActionListener {
 		jtp.addTab("Setup",drawSearchContainer());
 		
 		// Monta summaryContainer
-		jtp.addTab("Summary",Box.createVerticalBox());
+		jtp.addTab("Summary",drawSummaryContainer());
 		
 		// Monta reportContainer
 		jtp.addTab("Report",Box.createVerticalBox());
@@ -129,6 +140,7 @@ public class Gui implements ActionListener {
 		
 		
 		// Monta libContainer
+		/*
 		ArrayList<Object[][]> tmp = new ArrayList<Object[][]>();
 		String[][] hold1 = {{
 				"Seq0"},
@@ -144,19 +156,48 @@ public class Gui implements ActionListener {
 					{"Seq8"}};
 		tmp.add(hold1);
 		tmp.add(hold2);
-		tmp.add(hold3);
+		tmp.add(hold3);*/
 		
 
 		// Adiciona tabs
 		Box vbox = Box.createVerticalBox();
 		vbox.add(seqBuscaPanel);
 		vbox.add(libs);
-		vbox.add(drawLibContainer(tmp,3));
+		vbox.add(libContainer);
 		
 		
 		return vbox;
 	}
 	
+	private Container drawSummaryContainer(){
+		Box vbox = Box.createVerticalBox();
+		Box hbox;
+		
+		hbox = Box.createHorizontalBox();
+		hbox.add(new Label("Target sequence: "));
+		hbox.add(new Label(searchSeq));
+		vbox.add(hbox);
+		
+		vbox.add(new Label());
+		vbox.add(new Label("Loaded librarys: "));
+		for(String s : libs){
+			vbox.add(new Label(" "+s));
+		}
+		
+		// Start cancel buttons
+		JButton start = new JButton("Start");
+		JButton stop = new JButton("Cancel");
+		start.addActionListener(this);
+		stop.addActionListener(this);
+		
+		hbox = Box.createHorizontalBox();
+		hbox.add(start);
+		hbox.add(stop);
+		vbox.add(hbox);
+		
+		summaryContainer.add(vbox);
+		return summaryContainer;
+	}
 	
 	
 	private Container drawStatusContainer(){
@@ -178,24 +219,56 @@ public class Gui implements ActionListener {
 		return vbox;
 	}
 	
-	private Container drawLibContainer(ArrayList<Object[][]> data,int nLibs){
-		// Cria tabbed pane
-		JTabbedPane jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
-
+	private void fillLibContainer(){
 		JTable jtabPreviewLibs;
 		String[] headings = { "Sequence Preview" };
 		JScrollPane jscrlp;
+		Library lib;
+		Iterator<String> iterator = libs.iterator();
 		
-		for(int i = 0; i < nLibs; i++){
-			JPanel jp = new JPanel();
-			jtabPreviewLibs = new JTable(new DefaultTableModel(data.get(i),headings));
-			jscrlp  = new JScrollPane(jtabPreviewLibs);
-			jscrlp.setPreferredSize(new Dimension(900,200));
-			jp.add(jscrlp);
-			jtp.addTab(new String("Lib "+i),jp);
+		libContainer.removeAll();
+		
+		while(iterator.hasNext()){
+			String libPath = iterator.next();
+			try{
+				lib = new Library(new File(libPath));
+				if(!lib.canRead()){
+					throw new FileNotFoundException();
+				}
+				JPanel jp = new JPanel();
+				final JLazyTableModel jltm = new JLazyTableModel(lib);
+				jtabPreviewLibs = new JTable(jltm);
+				
+				// Insere JTable dentro de JScrollPane
+				jscrlp  = new JScrollPane(jtabPreviewLibs);
+				jscrlp.setPreferredSize(new Dimension(900,150));
+				JScrollBar jsb = jscrlp.getVerticalScrollBar();
+				jsb.addAdjustmentListener(new AdjustmentListener(){
+					@Override
+					public void adjustmentValueChanged(AdjustmentEvent e) {
+						JScrollBar jsb = (JScrollBar) e.getSource();
+						int jsbMax = jsb.getMaximum();
+						int jsbPos = jsb.getValue();
+						if(jsbMax*0.6 <= jsbPos){
+							jltm.loadMore();
+						}
+					}					
+				});
+				
+				// Insere o JScrollPane dentro do JPane
+				jp.add(jscrlp);
+				
+				// Adiciona aba com a lib carregada
+				libContainer.addTab(lib.getFilename(),jp);
+				
+
+				writeToLog("File "+libPath+" has loaded.");
+			}catch(FileNotFoundException e){
+				writeToLog("File "+libPath+" could not be loaded.");
+			}
+			
 		}
-		
-		return jtp;
+		return;
 	}
 		
 	private Container drawProgressBarContainer(JProgressBar jprog){
@@ -221,14 +294,20 @@ public class Gui implements ActionListener {
 		}
 		if(ae.getActionCommand().equals("Load")){
 			JFileChooser jfc = new JFileChooser();
+			jfc.setFileFilter(new JTxtFileFilter());
 			jfc.setMultiSelectionEnabled(true);
 			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
 				for(File f: jfc.getSelectedFiles()){
 					String txt = f.getAbsolutePath();
-					libs.add(txt);
-					listModel.addElement(txt);
-					writeToLog("File "+txt+" loaded.");
+					if(f.canRead()){
+						libs.add(txt);
+						listModel.addElement(txt);
+						writeToLog("File "+txt+" is being loaded.");
+					}else{
+						writeToLog("File "+txt+" can not be read.");
+					}
 				}
+				fillLibContainer();
 			}
 		}
 		if(ae.getActionCommand().equals("Unload")){
@@ -238,8 +317,10 @@ public class Gui implements ActionListener {
 				listModel.removeElement(ele);
 				writeToLog("File "+ele+" unloaded.");
 			}
+			fillLibContainer();
 		}
-		
+		summaryContainer.removeAll();
+		drawSummaryContainer();
 	}
 	
 	public void writeToLog(String txt){

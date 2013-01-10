@@ -19,6 +19,10 @@ public class Library {
 		startDB();
 	}
 	
+	public boolean canRead(){
+		return data.canRead();
+	}
+	
 	public String getPath(){
 		return data.getAbsolutePath();
 	}
@@ -37,10 +41,10 @@ public class Library {
 	}
 		
 	public String getSeq(){
-		String seqRead = new String();
+		String seqRead = new String("");
 		Boolean founded = false;
 		try{
-			while(!founded){
+			while(!founded && seqRead != null){
 				seqRead = br.readLine();
 				if(checkValid(seqRead)){
 					founded = true;
@@ -53,6 +57,7 @@ public class Library {
 	}
 	
 	private boolean checkValid(String seq){
+		if(seq != null){
 		for(int i=0;i<seq.length();i++){
 			if(!(seq.charAt(i) == 'A' ||
 					seq.charAt(i) == 'C' ||
@@ -61,6 +66,9 @@ public class Library {
 					seq.charAt(i) == 'N')){
 				return false;
 			}
+		}
+		}else{
+			return false;
 		}
 		return true;
 	}

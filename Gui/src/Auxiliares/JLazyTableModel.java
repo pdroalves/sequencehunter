@@ -32,8 +32,12 @@ public class JLazyTableModel extends AbstractTableModel{
 	}
 	
 	public void loadMore(){
-		for(int i = 0; i < defaultLoad;i++)
-			seqs.add(data.getSeq());
+		(new JLazyLoadMore(data,defaultLoad,seqs)).start();
+		/*for(int i = 0; i < defaultLoad;i++){
+			String seq = data.getSeq();
+			if(seq != null) seqs.add(seq);
+			else return;
+		}*/
 		return;
 	}
 
