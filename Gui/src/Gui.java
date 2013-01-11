@@ -24,7 +24,7 @@ public class Gui implements ActionListener {
 	private String searchSeq;
 	private JLabel seqBusca;
 	private JButton setSeqButton;
-	private JTextArea statusLog;
+	private static JTextArea statusLog;
 	private JTextField outputDir;
 	private JButton startstopButton = new JButton("Start");
 	private JProgressBar jprog;
@@ -44,7 +44,7 @@ public class Gui implements ActionListener {
 		listModel = new DefaultListModel<String>();  
 		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		libContainer.setPreferredSize(new Dimension(900,300));
-		summaryContainer = new JPanel();
+		summaryContainer = new JPanel(new BorderLayout());
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -137,27 +137,6 @@ public class Gui implements ActionListener {
 		hbox.add(unloadLib);
 		libs.add(jscrlp);		
 		libs.add(hbox);
-		
-		
-		// Monta libContainer
-		/*
-		ArrayList<Object[][]> tmp = new ArrayList<Object[][]>();
-		String[][] hold1 = {{
-				"Seq0"},
-				{"Seq1"},
-					{"Seq2"}};
-		String[][] hold2 = {{
-				"Seq3"},
-				{"Seq4"},
-					{"Seq5"}};
-		String[][] hold3 = {{
-				"Seq6"},
-				{"Seq7"},
-					{"Seq8"}};
-		tmp.add(hold1);
-		tmp.add(hold2);
-		tmp.add(hold3);*/
-		
 
 		// Adiciona tabs
 		Box vbox = Box.createVerticalBox();
@@ -180,6 +159,7 @@ public class Gui implements ActionListener {
 		
 		vbox.add(new Label());
 		vbox.add(new Label("Loaded librarys: "));
+		vbox.setMaximumSize(new Dimension(xSize,40));
 		for(String s : libs){
 			vbox.add(new Label(" "+s));
 		}
@@ -193,10 +173,21 @@ public class Gui implements ActionListener {
 		hbox = Box.createHorizontalBox();
 		hbox.add(start);
 		hbox.add(stop);
-		vbox.add(hbox);
+
+		JPanel jp = new JPanel(new BorderLayout());
+		jp.add(vbox,BorderLayout.CENTER);
+		jp.add(hbox,BorderLayout.SOUTH);
 		
-		summaryContainer.add(vbox);
+		JScrollPane jscrp = new JScrollPane(jp);
+		
+		summaryContainer.add(jscrp,BorderLayout.CENTER);
 		return summaryContainer;
+	}
+	
+	private Container drawReportContainer(){
+		JPanel jp = new JPanel();
+		JTable jte = new JTable(); 
+		return jp;
 	}
 	
 	
@@ -249,7 +240,7 @@ public class Gui implements ActionListener {
 						JScrollBar jsb = (JScrollBar) e.getSource();
 						int jsbMax = jsb.getMaximum();
 						int jsbPos = jsb.getValue();
-						if(jsbMax*0.6 <= jsbPos){
+						if(jsbMax*0.8 <= jsbPos){
 							jltm.loadMore();
 						}
 					}					
@@ -323,7 +314,7 @@ public class Gui implements ActionListener {
 		drawSummaryContainer();
 	}
 	
-	public void writeToLog(String txt){
+	static public void writeToLog(String txt){
 		statusLog.append("\n"+txt);
 		return;
 	}
