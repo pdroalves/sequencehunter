@@ -59,15 +59,9 @@ lista_ligada* criar_elemento_antisenso(char *seq){
 
 lista_ligada* adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 	//Recebe ultimo elemento da lista ligada
-	lista_ligada *tmp;
-	
-	tmp = lista;
-	while(tmp->prox != NULL){
-		tmp = tmp->prox;//Procura o ultimo elemento da fila
-	}
-	tmp->prox = novo;
-
-	return tmp;
+	novo->prox = lista->prox;
+	lista->prox = novo;
+	return lista;
 }
 
 void g_hash_table_adapter_to_linked_list(char *seq,value *entry,lista_ligada *l){
