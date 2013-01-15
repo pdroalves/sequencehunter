@@ -29,6 +29,7 @@
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
 	gboolean check_build = FALSE;
+	gboolean just_process = FALSE;
 	gint max_events = 20;
 	//###############
 	static GOptionEntry entries[] = 
@@ -42,6 +43,7 @@
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execucao silenciosa.", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose.", NULL },
 		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o numero da build.", NULL },
+		{ "process", 'p', 0, G_OPTION_ARG_NONE, &just_process, "Carrega e apenas processa dados já existentes.", NULL },
 		
 		{ NULL }
 	  };
@@ -93,83 +95,91 @@
 	  //Inicializa
 	  prepareLog();	 
 	  
-	  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
-	  nome = (char*)malloc((100)*sizeof(char));
+	  if(just_process){
+		  printf("Iniciando em modo de processamento...\n");
+		  FILE *f;
+		  f = fopen(argv[1],"r");
+		  hash_table = read_binary_to_ht(f);
+	  }else{
 	  
-	  if(c == NULL){
-		  printf("Erro alocando memória.\n");
-		  exit(1);
-	  }
-	 
-	////////////////////////////////////////////////////////
-	////////////////// Abre arquivos de bibliotecas/////////
-	////////////////////////////////////////////////////////
-	if(argc == 1){
-		printf("Por favor, entre uma biblioteca válida.\n");
-		exit(1);
-	}
-	  bibliotecas_validas = open_file(argv,argc);
-	if(bibliotecas_validas == 0){
-		printf("Por favor, entre uma biblioteca válida.\n");
-		exit(1);
-	}
-	  seqs_validas = check_sequencias_validas();
-	  
-	//////////////////////////////////
-	////////////////////////////////////////////////////////
-	if(fromFile){
-		FILE *set;
-		set = fopen("shset.dat","r");
-		if(set == NULL){
-			printf("Arquivo shset.dat não encontrado.\n");
+		  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
+		  nome = (char*)malloc((100)*sizeof(char));
+		  
+		  if(c == NULL){
+			  printf("Erro alocando memória.\n");
+			  exit(1);
+		  }
+		 
+		////////////////////////////////////////////////////////
+		////////////////// Abre arquivos de bibliotecas/////////
+		////////////////////////////////////////////////////////
+		if(argc == 1){
+			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
 		}
-		fscanf(set,"%s",c);
-		if(c == NULL){
-			printf("Erro na leitura\n");
+		  bibliotecas_validas = open_file(argv,argc);
+		if(bibliotecas_validas == 0){
+			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
 		}
-		fscanf(set,"%s",nome);
-		
-	}else{
-	  printf("Entre a sequência: ");
-	  scanf("%s",c);
-	  if(c == NULL){
-		  printf("Erro na leitura\n");
-		  exit(1);
-	  }
+		  seqs_validas = check_sequencias_validas();
+		  
+		//////////////////////////////////
+		////////////////////////////////////////////////////////
+		if(fromFile){
+			FILE *set;
+			set = fopen("shset.dat","r");
+			if(set == NULL){
+				printf("Arquivo shset.dat não encontrado.\n");
+				exit(1);
+			}
+			fscanf(set,"%s",c);
+			if(c == NULL){
+				printf("Erro na leitura\n");
+				exit(1);
+			}
+			fscanf(set,"%s",nome);
+			
+		}else{
+		  printf("Entre a sequência: ");
+		  scanf("%s",c);
+		  if(c == NULL){
+			  printf("Erro na leitura\n");
+			  exit(1);
+		  }
 
-	printf("Entre uma identificação para essa busca: ");
-	scanf("%s",nome);
+		printf("Entre uma identificação para essa busca: ");
+		scanf("%s",nome);
+		}
+		
+		 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
+			 printf("Sequência de busca inválida\n");
+			 exit(1);
+		}  
+		printString("Identificação da busca: ",nome);
+		  printString("Sequência de busca: ",c);
+		  
+		 c_size = b1_size+b2_size+bv_size;
+		 
+		if(disable_cuda){
+			printf("Forçando modo OpenMP.\n");
+			printString(NULL,"Forçando modo OpenMP.");
+			hash_table = aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
+		}
+		else{
+			hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+		}
+		write_ht_to_binary(hash_table);
+		free(c);
 	}
-	
-	 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
-		 printf("Sequência de busca inválida\n");
-		 exit(1);
-	}  
-	printString("Identificação da busca: ",nome);
-	  printString("Sequência de busca: ",c);
-	  
-	 c_size = b1_size+b2_size+bv_size;
-	 
-	if(disable_cuda){
-		printf("Forçando modo OpenMP.\n");
-		printString(NULL,"Forçando modo OpenMP.");
-		hash_table = aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
-	}
-	else{
-		hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
-	}
-	
 	resultados = processar(hash_table,bv_size,max_events);
 	
 	imprimir(resultados,max_events);
 	
-	  if(!silent)
+	if(!silent)
 		printf("Algoritmo concluído.\n");
-	 close_file();
-	free(c);
+	close_file();
 	if(hash_table != NULL)
 		destroir_ghash_table(hash_table);
 	return 0;
-	}
+}
