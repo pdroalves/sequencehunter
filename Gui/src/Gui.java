@@ -14,12 +14,14 @@ import javax.swing.table.DefaultTableModel;
 
 import Auxiliares.JBaseTextField;
 import Auxiliares.JLazyTableModel;
+import Auxiliares.JReportTableModel;
 import Auxiliares.JTxtFileFilter;
 import Auxiliares.Library;
 
 public class Gui implements ActionListener {
 	
 	private JFrame jfrm;
+	private JTabbedPane jtp;
 	private JBaseTextField seqOriginal;
 	private String searchSeq;
 	private JLabel seqBusca;
@@ -63,16 +65,13 @@ public class Gui implements ActionListener {
 		jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		// Cria tabbed pane
-		JTabbedPane jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		
 		// Monta searchContainer
-		jtp.addTab("Setup",drawSearchContainer());
+		jtp.addTab("Setup",null,drawSearchContainer(),"Set what you want to search");
 		
 		// Monta summaryContainer
-		jtp.addTab("Summary",drawSummaryContainer());
-		
-		// Monta reportContainer
-		jtp.addTab("Report",Box.createVerticalBox());
+		jtp.addTab("Summary",null,drawSummaryContainer(),"Confirm the configuration and start the hunt");
 		
 		jfrm.add(jtp,BorderLayout.CENTER);
 		
@@ -184,9 +183,12 @@ public class Gui implements ActionListener {
 		return summaryContainer;
 	}
 	
-	private Container drawReportContainer(){
+	private Container drawReportContainer(File f){
 		JPanel jp = new JPanel();
-		JTable jte = new JTable(); 
+		JTable jte = new JTable(new JReportTableModel(f)); 
+		JTabbedPane jtp= new JTabbedPane(JTabbedPane.RIGHT);
+		jtp.addTab("Tteste",jte);
+		jp.add(jtp);
 		return jp;
 	}
 	
@@ -310,8 +312,13 @@ public class Gui implements ActionListener {
 			}
 			fillLibContainer();
 		}
-		summaryContainer.removeAll();
-		drawSummaryContainer();
+		if(ae.getActionCommand().equals("Start")){
+			// Monta reportContainer
+			jtp.addTab("Report",null,drawReportContainer(new File("resultados")),"Check the results after a hunt");
+		}else{
+			summaryContainer.removeAll();
+			drawSummaryContainer();
+		}
 	}
 	
 	static public void writeToLog(String txt){

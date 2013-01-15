@@ -25,12 +25,16 @@ public class JReportTableModel extends AbstractTableModel{
 
 	@Override
 	public int getColumnCount() {
-		return 1;
+		return 2;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		return seqs.get(rowIndex);
+		if(columnIndex == 0){
+			return seqs.get(rowIndex);
+		}else{
+			return freqs.get(rowIndex);
+		}
 	}
 	
 	public void loadData(){
