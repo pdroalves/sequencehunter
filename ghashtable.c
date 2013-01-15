@@ -196,3 +196,7 @@ void write_ht_to_file(GHashTable *hash_table){
 	
 	return;
 }
+
+int tamanho_ht(GHashTable *hash_table){
+	return g_hash_table_size(hash_table);
+}

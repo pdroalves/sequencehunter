@@ -169,6 +169,7 @@
 		printf("Algoritmo concluído.\n");
 	 close_file();
 	free(c);
-	destroir_ghash_table(hash_table);
+	if(hash_table != NULL)
+		destroir_ghash_table(hash_table);
 	return 0;
 	}
