@@ -90,4 +90,5 @@ clean:
 	rm -f *.o *.{c,h}~ shunter-cmd shunter-gui shunter-cmd.exe shunter-gui.exe
 
 install:
+	rm $(INSTALL)/shunter-cmd
 	cp shunter-cmd $(INSTALL)

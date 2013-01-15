@@ -55,27 +55,35 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events){
 	int as_tipos = 0;
 	
 	//print_all(hash_table);
-	
-	// To-do: Funcao para contar tipos de senso e antisenso
-	printf("Tipos de senso encontrados: %d.\n",s_tipos);
-	printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
-	
-	printf("Procurando sensos despareados...\n");
-	
-	desp = recupera_despareados_ht(hash_table);
-	print_despareadas_seqs(desp->sensos,desp->antisensos);
-	printf("Sensos despareados: %d.\n",desp->sensos);
-	printf("Antisensos despareados: %d.\n",desp->antisensos);
-	
-	// Calcula quantidade relativa dos elementos
-	qnt_relativa_ht(hash_table);
+	if(hash_table == NULL){
+		printf("Nao foram encontradas sequências com pareamento.\n");
+		resultados = criar_lista();
+	}else{
+		if(tamanho_ht(hash_table) == 0){
+			printf("Nao foram encontradas sequências com pareamento.\n");
+			resultados = criar_lista();
+		}else{
+			// To-do: Funcao para contar tipos de senso e antisenso
+			printf("Tipos de senso encontrados: %d.\n",s_tipos);
+			printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
+			
+			printf("Procurando sensos despareados...\n");
+			
+			desp = recupera_despareados_ht(hash_table);
+			print_despareadas_seqs(desp->sensos,desp->antisensos);
+			printf("Sensos despareados: %d.\n",desp->sensos);
+			printf("Antisensos despareados: %d.\n",desp->antisensos);
+			
+			// Calcula quantidade relativa dos elementos
+			qnt_relativa_ht(hash_table);
 
-	//LinkedList
-	l = converter_para_lista_ligada(hash_table);
-	
-	// Ordena os max_events maiores elementos
-	resultados = ordena_pares(l,max_events);
-	
+			//LinkedList
+			l = converter_para_lista_ligada(hash_table);
+			
+			// Ordena os max_events maiores elementos
+			resultados = ordena_pares(l,max_events);
+		}
+	}
 	return resultados;
 }
 

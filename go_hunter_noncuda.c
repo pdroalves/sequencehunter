@@ -13,11 +13,18 @@
 #include "log.h"
 #include "fila.h"
 
+#define OMP_NTHREADS 3
+#define THREAD_BUFFER_LOADER 0
+#define THREAD_SEARCH 1
+#define THREAD_CLEANER 2
+
+gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 omp_lock_t MC_copy_lock;
 
+const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
 const char tmp_ncuda_as_name[15] = "tmp_antisensos";
 
@@ -34,9 +41,6 @@ void setup_without_cuda(char *seq,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g, vgrafo *d
 	return;
 }
 
-
-
-
 void load_buffer_NONCuda(Buffer *b,int n){
 	
 	if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
@@ -47,60 +51,37 @@ void load_buffer_NONCuda(Buffer *b,int n){
 	return;
 }
 
-GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
-	
-	Buffer buffer;
-	char *tmp;
-	int blocoV = blocos - bloco1 - bloco2+1;
-	int buffer_size_NC = buffer_size;
-	int i;
-	int tam;
-	int p=0;
-	Fila *f_sensos;
-	Fila *f_antisensos;
-	GHashTable* hash_table;
-	
-	//Inicializa buffer
-	prepare_buffer(&buffer,buffer_size_NC);
-	f_sensos = criar_fila();
-	f_antisensos = criar_fila();
-	omp_init_lock(&MC_copy_lock);
-	
-			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
-	{	
-		
-		#pragma omp sections
-		{
-		#pragma omp section
-		{
+void nc_buffer_manager(Buffer *b,int n){
 		//////////////////////////////////////////
 		// Carrega o buffer //////////////////////
 		//////////////////////////////////////////
-			while(buffer.load != -1){//Looping até o final do buffer
+				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
+			while(b->load != -1){//Looping até o final do buffer
 				//printf("%d.\n",buffer.load);
-				if(buffer.load == 0)
-					load_buffer_NONCuda(&buffer,n);
+				if(b->load == 0)
+					load_buffer_NONCuda(b,n);
 			}
 		
+		THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////	
-		}
-		#pragma omp section
-		{
-		//////////////////////////////////////////
+}
+
+GHashTable* nc_memory_cleaner_manager(Buffer *buffer,Fila *f_sensos,Fila *f_antisensos){
+	//////////////////////////////////////////
 		// Libera memoria ////////////////////////
 		//////////////////////////////////////////
+		THREAD_DONE[THREAD_CLEANER] = FALSE;
 		  int retorno;
 		  char *hold;
-			hash_table = criar_ghash_table();
-		  while( buffer.load == 0){
+		  GHashTable *hash_table = criar_ghash_table();
+		  while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
-
-	
-					  while(buffer.load != GATHERING_DONE){
+					  while(buffer->load != GATHERING_DONE && 
+							THREAD_DONE[THREAD_SEARCH] == FALSE){
+								
 						if(tamanho_da_fila(f_sensos) > 0){
 							omp_set_lock(&MC_copy_lock);
 							hold = desenfileirar(f_sensos);
@@ -133,18 +114,24 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
 						}
 				
-					
+		THREAD_DONE[THREAD_CLEANER] = TRUE;
+		return hash_table;			
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
-		}
-		#pragma omp section
-		{
-		//////////////////////////////////////////
+}
+
+void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_sensos,Fila *f_antisensos,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+	//////////////////////////////////////////
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
 		
+		THREAD_DONE[THREAD_SEARCH] = FALSE;
 		int *resultados;
+		int tam;
+		int i;
+		int p=0;
+		char *tmp;
 		cudaEvent_t startK,stopK,start,stop;
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
@@ -153,53 +140,46 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 		cudaEventCreate(&stop);
 		cudaEventCreate(&startK);
 		cudaEventCreate(&stopK);
-			FILE *busca_,*retorno;
-				
-				busca_ = fopen("noncuda_busca.dat","w+");
-				retorno = fopen("noncuda_retorno.dat","w+");
+		
 		iteration_time = 0;
 		
-			while( buffer.load == 0){
+			while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 				cudaEventRecord(start,0);
-			while(buffer.load != GATHERING_DONE){
+			while(buffer->load != GATHERING_DONE && 
+					THREAD_DONE[THREAD_BUFFER_LOADER] == FALSE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
 				cudaEventRecord(stop,0);
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
 				iteration_time += elapsedTime;
-				if(verbose == TRUE && silent != TRUE)	
-					printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+				//if(verbose == TRUE && silent != TRUE)	
+				//	printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				//fprintf(retorno,"%f\n",elapsedTime);
 					
 				cudaEventRecord(startK,0);
-					busca(bloco1,bloco2,blocos,&buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
+					busca(bloco1,bloco2,blocos,buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
 					
 				cudaEventRecord(stopK,0);
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
-				if(verbose == TRUE && silent != TRUE)	
-					printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+				//if(verbose == TRUE && silent != TRUE)	
+				//	printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 				//fprintf(busca_,"%f\n",elapsedTimeK);
 				cudaEventRecord(start,0);
 						
 					
-					tam = buffer.load;
+					tam = buffer->load;
 					p += tam;
-					/*	if(p > 1000000) {
-							
-							fclose(busca_);
-							fclose(retorno);
-							exit(0);
-						}*/
-							
-					//printf("%d\n",p);
+					
+					if(verbose && !silent)		
+						printf("Sequencias processadas: %d\n",p);
 					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case 1:
-								tmp = buffer.seq[i];
+								tmp = buffer->seq[i];
 								//if(verbose == TRUE && silent != TRUE)	
 								//	printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
 								omp_set_lock(&MC_copy_lock);
@@ -207,10 +187,10 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 								omp_unset_lock(&MC_copy_lock);
 								
 								//printString("Senso:",tmp);
-								buffer.load--;
+								buffer->load--;
 							break;
 							case 2:
-								tmp = buffer.seq[i];
+								tmp = buffer->seq[i];
 								//if(verbose == TRUE && silent != TRUE)
 								//	printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								omp_set_lock(&MC_copy_lock);	
@@ -218,22 +198,22 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 								omp_unset_lock(&MC_copy_lock);
 								
 								//printString("Antisenso:",tmp);
-								buffer.load--;
+								buffer->load--;
 							break;
 							default:
-								buffer.load--;
+								buffer->load--;
 							break;
 						}
 					}
 					
 										
-					if(buffer.load != 0)
+					if(buffer->load != 0)
 					{
 						printf("Erro! Buffer não foi totalmente esvaziado.\n");
-						buffer.load = 0;
+						buffer->load = 0;
 					}
 					
-					while(buffer.load==0){}
+					while(buffer->load==0){}
 									
 			}
 				//fclose(busca_);
@@ -245,13 +225,52 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 				else 
 					printf("Busca realizada em %.2f ms.\n",iteration_time);
 	
+	
+	
+		THREAD_DONE[THREAD_SEARCH] = TRUE;
+		return;
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
-		}
 		
-	}
 }
+
+
+
+GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,vgrafo *d_c,vgrafo *d_g,vgrafo *d_t){
+	
+	Buffer buffer;
+	int blocoV = blocos - bloco1 - bloco2+1;
+	Fila *f_sensos;
+	Fila *f_antisensos;
+	GHashTable* hash_table;
+	
+	//Inicializa buffer
+	prepare_buffer(&buffer,buffer_size_NC);
+	f_sensos = criar_fila();
+	f_antisensos = criar_fila();
+	omp_init_lock(&MC_copy_lock);
+	
+			
+	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
+	{	
+		
+		#pragma omp sections
+		{
+			#pragma omp section
+			{
+				nc_buffer_manager(&buffer,n);
+			}
+			#pragma omp section
+			{
+				hash_table = nc_memory_cleaner_manager(&buffer,f_sensos,f_antisensos);
+			}
+			#pragma omp section
+			{
+				nc_search_manager(&buffer,bloco1,bloco2,blocos,f_sensos,f_antisensos,d_a,d_c,d_g,d_t);
+			}
+		}
+	}
 	
 	return hash_table;
 }
