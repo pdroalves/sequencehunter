@@ -135,6 +135,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		cudaEvent_t startK,stopK,start,stop;
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
+		int fsensos,fasensos;
+		fsensos=fasensos=0;
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
 		cudaEventCreate(&start);
 		cudaEventCreate(&stop);
@@ -174,14 +176,13 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 					tam = buffer->load;
 					p += tam;
 					
-					if(verbose && !silent)		
-						printf("Sequencias processadas: %d\n",p);
-					for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
+				for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
-							case 1:
+							case SENSO:
 								tmp = buffer->seq[i];
 								//if(verbose == TRUE && silent != TRUE)	
 								//	printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+								fsensos++;
 								omp_set_lock(&MC_copy_lock);
 								enfileirar(f_sensos,tmp);
 								omp_unset_lock(&MC_copy_lock);
@@ -189,10 +190,11 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 								//printString("Senso:",tmp);
 								buffer->load--;
 							break;
-							case 2:
+							case ANTISENSO:
 								tmp = buffer->seq[i];
 								//if(verbose == TRUE && silent != TRUE)
 								//	printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
+								fasensos++;
 								omp_set_lock(&MC_copy_lock);	
 								enfileirar(f_antisensos,get_antisenso(tmp));
 								omp_unset_lock(&MC_copy_lock);
@@ -206,6 +208,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 						}
 					}
 					
+					if(verbose && !silent)		
+						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
 										
 					if(buffer->load != 0)
 					{

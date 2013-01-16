@@ -156,16 +156,15 @@ void search_manager(int *buffer_load,
 				int hold;
 				int p;
 				float iteration_time;
-				
+				int fsenso;
+				int fasenso;
+				fsenso=fasenso=0;
+	
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				cudaEvent_t startV,stopV;
 				char **local_data;
 				float elapsedTimeK,elapsedTime,elapsedTimeV;
-				FILE *busca,*retorno;
-				
-				busca = fopen("cuda_busca.dat","w");
-				retorno = fopen("cuda_retorno.dat","w");
 				
 				cudaEventCreate(&start);
 				cudaEventCreate(&stop);
@@ -253,6 +252,7 @@ void search_manager(int *buffer_load,
 									case SENSO:
 										//if(verbose && !silent)
 										//	printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										fsenso++;
 										omp_set_lock(&MC_copy_lock);
 										enfileirar(f_sensos,d_tmp_founded[i]);
 										omp_unset_lock(&MC_copy_lock);
@@ -260,6 +260,7 @@ void search_manager(int *buffer_load,
 									case ANTISENSO:
 										//if(verbose && !silent)
 										//	printf("N: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_antisensos));
+										fasenso++;
 										omp_set_lock(&MC_copy_lock);
 										enfileirar(f_antisensos,get_antisenso(d_tmp_founded[i]));
 										omp_unset_lock(&MC_copy_lock);
@@ -269,7 +270,7 @@ void search_manager(int *buffer_load,
 							
 						checkCudaError();
 						if(verbose && !silent)
-							printf("Sequencias analisadas: %d\n",*processadas);
+							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);
 							
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
