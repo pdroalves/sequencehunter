@@ -199,7 +199,7 @@ int fill_buffer_CUDA(char **seqs,int MAX_TO_LOAD){
 					i++;
 				}
 		}
-		if(i < MAX_TO_LOAD && i!=0){ 
+		if(i < MAX_TO_LOAD && i>0){ 
 			i--;
 		}
 		if(feof(f[files-1]) && i == 0) i = -1;//Não ha mais arquivos

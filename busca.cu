@@ -288,7 +288,6 @@ extern "C" void checkCudaError(){
 	strcpy(erro,cudaGetErrorString(cudaGetLastError()));
     if(strcmp(erro,"no error") != 0){
 		printf("%s\n",erro);
-		exit(1);
     }   
 }
 
