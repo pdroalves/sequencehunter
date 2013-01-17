@@ -62,8 +62,8 @@ __global__ void k_buscador_analyse(int totalseqs,
   ////////
   ////////
   
-  const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
-  short int baseId;// id da base analisada
+  const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;// id da sequencia analisada
+  int baseId;// id da base analisada
   short int tipo;
   short int linha;// Cada thread cuida de uma linha
   __shared__ short int senso;
@@ -92,14 +92,16 @@ __global__ void k_buscador_analyse(int totalseqs,
 					// Carrega a linha relativa a base analisada		
 					linha = 0;
 					
-					if(threadIdx.x == 0){
-						senso = d_matrix_senso[baseId];
-						antisenso = d_matrix_antisenso[baseId];						
-					 }	
+					//__syncthreads();  
+					//if(threadIdx.x == 0){
+						lsenso = d_matrix_senso[baseId];
+						lantisenso = d_matrix_antisenso[baseId];						
+					// }	
 					__syncthreads();  
-					lsenso = senso;
-					lantisenso = antisenso;							
-					  switch(seq[baseId]){
+					//lsenso = senso;
+					//lantisenso = antisenso;	
+											
+					switch(seq[baseId]){
 						case 'A':
 							linha = A;	
 						break;
@@ -115,13 +117,20 @@ __global__ void k_buscador_analyse(int totalseqs,
 						default:
 							linha = N;
 						break;
-					  }
+					}
 								
-					alarmS += (linha-lsenso)*(lsenso-N);		
-					alarmAS += (linha-lantisenso)*(lantisenso-N);		
+					alarmS = (linha-lsenso)*(lsenso-N);		
+					alarmAS = (linha-lantisenso)*(lantisenso-N);	
+					
+					//if( fase == 30 && baseId == 2)
+					//	printf("Erro! seq: %s\nseqId: %d,fase: %d,alarmS: %d,alarmAS: %d - base: %c, baseId: %d,linha: %d,lsenso: %d,lantisenso: %d\n",seq,seqId,fase,alarmS,alarmAS,seq[baseId],baseId,linha,lsenso,lantisenso);
 				}
-			if(!alarmS) tipo = SENSO;
-			else if(!alarmAS) tipo = ANTISENSO;
+			if(!alarmS)
+				tipo = SENSO;
+			else 
+				if(!alarmAS) 
+					tipo = ANTISENSO;
+			
 			fase++;   
 		}			
 		
@@ -134,11 +143,10 @@ __global__ void k_buscador_analyse(int totalseqs,
 			if(tipo == ANTISENSO){
 				for(i=0;i<blocoV;i++){
 					founded[seqId][i] = data[seqId][fase + bloco2 + i - 1];
-					
-						__syncthreads();  
 				}
 			}				
-					 
+		
+		__syncthreads();  			 
 		resultados[seqId] = tipo;	 
 	}
 	return;
