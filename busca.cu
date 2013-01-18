@@ -16,6 +16,8 @@ extern "C" {
 
 __constant__ short int d_matrix_senso[MAX_SEQ_SIZE];
 __constant__ short int d_matrix_antisenso[MAX_SEQ_SIZE];
+short int matrix_senso[MAX_SEQ_SIZE];
+short int matrix_antisenso[MAX_SEQ_SIZE];
 
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)//Toma cuidado de não usar printf sem que a máquina suporte.
@@ -42,7 +44,7 @@ extern "C" void checkCudaError();
 ///////////////				Metodo de busca com CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void k_buscador_analyse(int totalseqs,
+__global__ void k_buscador(int totalseqs,
 										int seqSize_an,
 										char **data,
 										short int *resultados,
@@ -55,27 +57,25 @@ __global__ void k_buscador_analyse(int totalseqs,
   ////////
   ////////
   ////////
-  ////////		seqSize_an: o tamanho da sequência analisada
-  ////////		seqSize_busca: o tamanho da sequência de busca
-  ////////		data: o endereço com todo o buffer
+  ////////		seqSize_an: o tamanho da sequencia analisada
+  ////////		seqSize_busca: o tamanho da sequencia alvo
+  ////////		data: o endereco com todo o buffer carregado
   ////////
   ////////
   ////////
   
   const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;// id da sequencia analisada
   int baseId;// id da base analisada
-  short int tipo;
+  short int tipo;// Variavel temporaria para salvar o resultado de uma analise
   short int linha;// Cada thread cuida de uma linha
-  __shared__ short int senso;
-  __shared__ short int antisenso;
-  short int lsenso;
-  short int lantisenso;
-  short int alarmS;
-  short int alarmAS;
-  short int fase;
+  short int lsenso;// Guarda o valor da matriz senso para ser comparado com a sequencia alvo
+  short int lantisenso;// Guarda o valor da matriz antisenso para ser comparado com a sequencia alvo
+  short int alarmS;// Caso a comparacao do valor da matriz senso falhe, essa variavel encerra o loop
+  short int alarmAS;// Caso a comparacao do valor da matriz antisenso falhe, essa variavel encerra o loop
+  short int fase;// Guarda a posicao analisada
+  const short int seqSize_bu = bloco1+bloco2+blocoV;// Tamanho da sequencia alvo
   short int i;
-  const short int seqSize_bu = bloco1+bloco2+blocoV;
-  char *seq;
+  char *seq;// Sequencia sob analise
   
   
 	if(seqId < totalseqs){
@@ -88,19 +88,13 @@ __global__ void k_buscador_analyse(int totalseqs,
 			   // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
 			   for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
-										baseId++){
-					// Carrega a linha relativa a base analisada		
+										baseId++){	
 					linha = 0;
-					
-					//__syncthreads();  
-					//if(threadIdx.x == 0){
-						lsenso = d_matrix_senso[baseId];
-						lantisenso = d_matrix_antisenso[baseId];						
-					// }	
-					__syncthreads();  
-					//lsenso = senso;
-					//lantisenso = antisenso;	
+					// Carrega a linha analisada	
+					lsenso = d_matrix_senso[baseId];
+					lantisenso = d_matrix_antisenso[baseId];	
 											
+					// Conversao de char para inteiro
 					switch(seq[baseId]){
 						case 'A':
 							linha = A;	
@@ -118,35 +112,32 @@ __global__ void k_buscador_analyse(int totalseqs,
 							linha = N;
 						break;
 					}
-								
-					alarmS = (linha-lsenso)*(lsenso-N);		
-					alarmAS = (linha-lantisenso)*(lantisenso-N);	
 					
-					//if( fase == 30 && baseId == 2)
-					//	printf("Erro! seq: %s\nseqId: %d,fase: %d,alarmS: %d,alarmAS: %d - base: %c, baseId: %d,linha: %d,lsenso: %d,lantisenso: %d\n",seq,seqId,fase,alarmS,alarmAS,seq[baseId],baseId,linha,lsenso,lantisenso);
+					// Verifica se algum alarme deve ser ativado			
+					alarmS += (linha-lsenso)*(lsenso-N);		
+					alarmAS += (linha-lantisenso)*(lantisenso-N);
 				}
+				
+			// Guarda resultados
 			if(!alarmS)
 				tipo = SENSO;
 			else 
 				if(!alarmAS) 
 					tipo = ANTISENSO;
 			
+			// Caso nao tenha encontrado nada, tenta pular para a base seguinte
 			fase++;   
 		}			
 		
-	
-		if(tipo == SENSO){
-			 for(i=0;i<blocoV;i++){
-					founded[seqId][i] = data[seqId][fase + bloco1 + i - 1];	
-				}
-		}else  
-			if(tipo == ANTISENSO){
-				for(i=0;i<blocoV;i++){
-					founded[seqId][i] = data[seqId][fase + bloco2 + i - 1];
-				}
-			}				
-		
-		__syncthreads();  			 
+	   
+		if(tipo == SENSO)
+			 for(i=0;i<seqSize_an;i++)
+					founded[seqId][i] = data[seqId][i];	
+		else  
+			if(tipo == ANTISENSO)
+				for(i=0;i<seqSize_an;i++)
+					founded[seqId][i] = data[seqId][i];
+								 
 		resultados[seqId] = tipo;	 
 	}
 	return;
@@ -167,7 +158,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador_analyse<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,founded,bloco1,bloco2,blocoV);
+	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,founded,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
@@ -181,111 +172,69 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 ///////////////				Metodo de busca sem CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,int id,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
- 
-  ////////
-  ////////
-  ////////
-  ////////		Recebe o tamanho dos blocos 1 e 2
-  ////////		Recebe o tamanho total da sequência
-  ////////		Recebe o endereço com todo o buffer
-  ////////		Recebe ponteiros para cada vertice do grafo
-  ////////
-  ////////
-  ////////
-  ////////
-  int size = bloco1 + bloco2;
-  int blocoZ = blocos - size;//Total de bases que queremos encontrar
-  int i;
-  int s_match;
-  int as_match;
-  vgrafo *atual;
-  vgrafo *anterior;
-  vgrafo *ant_anterior;
-  int x0=1;/////Essas variáveis guardam o intervalo onde podemos encontrar os elementos que queremos
-  int x0S=1;
-  int x0A=1;
-  int totalmatchs = blocos;
-  s_match = as_match = 0;
-  int tipo = 0;
-  char *seq;
-  seq = buffer->seq[id];
-  i=0;
-	  
-  ////////////////////
-  ////////////////////										
-  //Iteração inicial//																			
-  ////////////////////
-  ////////////////////
-  if(s_match == bloco1) x0S = i;
-  if(as_match == bloco2) x0A = i;
-  ant_anterior = busca_vertice(seq[i],a,c,g,t);
-  if(ant_anterior != NULL){
-    caminhar(NULL,NULL,ant_anterior,&s_match,&as_match);
-    i++;
-  }
+extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,const int seqId){
+  int baseId;// id da base analisada
+  short int tipo;
+  short int linha;// Cada thread cuida de uma linha
+  short int lsenso;
+  short int lantisenso;
+  short int alarmS;
+  short int alarmAS;
+  short int fase;
+  const short int seqSize_bu = blocos;
+  const short int seqSize_an = strlen(buffer->seq[seqId]);
+  char *seq;  
+  
+	  tipo = 0;
+	  fase = 0;
+	  while(fase + seqSize_bu <= seqSize_an && !tipo){
+			   seq = buffer->seq[seqId]+fase;	
+			   alarmS = 0;
+			   alarmAS = 0;
+			   // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
+			   for(baseId=0; 
+						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
+										baseId++){
+					// Carrega a linha relativa a base analisada		
+					linha = 0;
+					lsenso = matrix_senso[baseId];
+					lantisenso = matrix_antisenso[baseId];
+											
+					switch(seq[baseId]){
+						case 'A':
+							linha = A;	
+						break;
+						case 'C':
+							linha = C;		
+						break;
+						case 'G':
+							linha = G;	
+						break;
+						case 'T':
+							linha = T;
+						break;
+						default:
+							linha = N;
+						break;
+					}
+								
+					alarmS += (linha-lsenso)*(lsenso-N);		
+					alarmAS += (linha-lantisenso)*(lantisenso-N);	
+					
+				}
+			if(!alarmS)
+				tipo = SENSO;
+			else 
+				if(!alarmAS) 
+					tipo = ANTISENSO;
+			
+			fase++;   
+									
 		
-  if(s_match == bloco1) x0S = i;
-  if(as_match == bloco2) x0A = i;
-  anterior = busca_vertice(seq[i],a,c,g,t);
-  caminhar(NULL,ant_anterior,anterior,&s_match,&as_match);
-  i++;
-	  
-																				
-  ///////////////////////
-  ///////////////////////					
-  //Iterações seguintes//																			
-  ///////////////////////
-  ///////////////////////
-						
-  while( seq[i] != '\0' && s_match < totalmatchs && as_match < totalmatchs) {
-    //printf("s_match: %d\n",s_match);
-    //printf("as_match: %d\n",as_match);
-		  
-    if(s_match == bloco1){
-      //printf("Th: %d --> Bloco 1 encontrado na posicao %d, %s-> Sequência senso.\n",posicao,i,seq);
-      x0S = i;
-    }
-    if(as_match == bloco2){
-      //printf("Th: %d --> Bloco 2 encontrado na posicao %d, %s-> Sequência antisenso.\n",posicao,i,seq);
-      x0A = i;
-    }
-    atual = busca_vertice(seq[i],a,c,g,t);
-    if(atual != NULL)
-      caminhar(ant_anterior,anterior,atual,&s_match,&as_match);
-    i++;
-    ant_anterior = anterior;
-    anterior = atual;
-  }
-
-  ///////////////////////////////											
-  //Guarda o que foi encontrado//
-  ///////////////////////////////
-	  
-  //printf("s_match: %d - as_match: %d\n",s_match,as_match);
-
-  if(s_match == totalmatchs){
-    x0 = x0S;
-    tipo = 1;
-  }
-  if(as_match == totalmatchs){
-    x0 = x0A;
-    tipo = 2;
-  }
+		resultados[seqId] = tipo;	
 	
-  resultados[id] = tipo;
-
-  if(s_match == totalmatchs || as_match == totalmatchs){
-    //printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-    for(i=0;i<blocoZ;i++){
-      seq[i] = seq[x0 + i];
-    }
-    seq[i] = '\0';
-  }
-	
-
-	
-return;
+	}
+	return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////   	Auxiliar     ///////////////////////////////////////
@@ -332,7 +281,7 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 	size = buffer->load;
 	
 	for(i=0; i < size; i++)
-		buscador(bloco1,bloco2,blocos,buffer,resultados,i,h_a,h_c,h_g,h_t);//Metodo de busca
+		buscador(bloco1,bloco2,blocos,buffer,resultados,i);//Metodo de busca
 		
 	return;
 }
@@ -359,90 +308,6 @@ extern "C" __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo 
   }
 											
   return NULL;
-}
-
-extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anterior,vgrafo *atual, int *s_match,int *as_match){ 
-  //Recebe o vertice atual e o anterior
-  //Recebe um contador de bases acertadas para a sequencia senso s_match
-  //Recebe um contador de bases acertadas para a sequencia antisenso as_match
-											
-  //OTIMIZAR! Tem muitos IFs
-											
-  //printf("Analisando base %c. %d -> %d\n",atual->vertice,*s_match,atual->s_marcas[(*s_match)]);
-  if(atual->s_marcas[(*s_match)] == 1)//Elemento e posição batem com o que queremos
-    (*s_match)++;
-  else{//Não bate
-    if(anterior != NULL && ant_anterior != NULL)
-      if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-	(*s_match)=0;
-  }
-												
-  if(atual->as_marcas[(*as_match)] == 1)//Elemento e posição batem com o que queremos
-    (*as_match)++;
-  else{//Não bate
-    if(anterior != NULL && ant_anterior != NULL)
-      if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-	(*as_match)=0;
-  }
-  //printf("s_match: %d\n",*s_match);
-  return;	
-}
-
-__device__ __host__ void build_grafo(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-												
-  int i;
-											
-  //Define cada vértice
-  a->vertice = 'A';
-  c->vertice = 'C';
-  g->vertice = 'G';
-  t->vertice = 'T';
-											
-  //Inicializa as marcações
-  a->s_marcas = (int*)malloc(size*sizeof(int));
-  c->s_marcas = (int*)malloc(size*sizeof(int));
-  g->s_marcas = (int*)malloc(size*sizeof(int));
-  t->s_marcas = (int*)malloc(size*sizeof(int));
-													
-  a->as_marcas = (int*)malloc(size*sizeof(int));
-  c->as_marcas = (int*)malloc(size*sizeof(int));
-  g->as_marcas = (int*)malloc(size*sizeof(int));
-  t->as_marcas = (int*)malloc(size*sizeof(int));
-											
-  for(i=0;i<size;i++){
-    a->s_marcas[i] = 0;
-    c->s_marcas[i] = 0;
-    g->s_marcas[i] = 0;
-    t->s_marcas[i] = 0;
-												
-    a->as_marcas[i] = 0;
-    c->as_marcas[i] = 0;
-    g->as_marcas[i] = 0;
-    t->as_marcas[i] = 0;
-  }
-											
-  //Conecta os vértices
-  a->a = a;
-  a->c = c;
-  a->g = g;
-  a->t = t;
-											
-  c->a = a;
-  c->c = c;
-  c->g = g;
-  c->t = t;
-											
-  g->a = a;
-  g->c = c;
-  g->g = g;
-  g->t = t;
-											
-  t->a = a;
-  t->c = c;
-  t->g = g;
-  t->t = t;
-												
-  return;
 }
 
 int getLine(char c){
@@ -632,77 +497,60 @@ extern "C" void setup_for_cuda(char *seq){
 	// Copia dados
 	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
-	free(h_matrix_senso);
-	free(h_matrix_antisenso);
-	
 	cudaMalloc((void**)&d_senso,(size+1)*sizeof(char));
 	cudaMalloc((void**)&d_antisenso,(size+1)*sizeof(char));
 	
 	cudaMemcpy(d_senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
 	cudaMemcpy(d_antisenso,get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
 	
-	printf("Verificando matrizes:...\n");
-	check_matrix<<<1,size,0>>>(d_senso,d_antisenso);
+	//printf("Verificando matrizes:...\n");
+	//check_matrix<<<1,size,0>>>(d_senso,d_antisenso);
 	
 	//printString("Grafo de busca configurado.",NULL);
+	free(h_matrix_senso);
+	free(h_matrix_antisenso);
+	
 	return;
 }
 
-extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-											
-  //Configura grafo
-  int i;
-  int size;
-  vgrafo *atual;
-											
-  size = strlen(senso);//Pega tamanho das sequências
-  build_grafo(size,a,c,g,t);
-											
-  i=0;
- //printf("Configurando senso. -> %s.\n",senso);
-  //Configura sequência senso
-  while(senso[i] != '\0'){
-    atual = busca_vertice(senso[i],a,c,g,t);
-    if(atual != NULL){
-      atual->s_marcas[i]=1;
-      //printf("%c marcado na posicao %d.\n",atual->vertice,i);
-    }else{
-      //printf("Elemento variável encontrado.\n");
-      a->s_marcas[i]=1;
-      c->s_marcas[i]=1;
-      g->s_marcas[i]=1;
-      t->s_marcas[i]=1;
-    }
-    i++;
-  }
-											
-  i=0;
-  //printf("\nConfigurando antisenso. -> %s.\n",antisenso);
-  //Configura sequência antisenso
-  while(antisenso[i] != '\0'){
-    atual = busca_vertice(antisenso[i],a,c,g,t);
-    if(atual != NULL){
-      atual->as_marcas[i]=1;
-      //printf("%c marcado na posicao %d.\n",atual->vertice,i);
-    }else{
-      //printf("Elemento variável encontrado.\n");
-      a->as_marcas[i]=1;
-      c->as_marcas[i]=1;
-      g->as_marcas[i]=1;
-      t->as_marcas[i]=1;
-    }
-    i++;
-  }
-  /*
-    for(i=0;i<size;i++){
-    printf("%c: %d -> %d\n",'A',i,a->s_marcas[i]);
-    printf("%c: %d -> %d\n",'C',i,c->s_marcas[i]);
-    printf("%c: %d -> %d\n",'G',i,g->s_marcas[i]);
-    printf("%c: %d -> %d\n",'T',i,t->s_marcas[i]);
-    }*/
+
+extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){									
+  
+  getMatrix(matrix_senso,senso);
+  getMatrix(matrix_antisenso,antisenso);
   return;
 }
 
+extern "C"  void setup_without_cuda(char *seq){
+// Recebe um vetor de caracteres com o padrão a ser procurado
+	int size = strlen(seq);
+	int i;
+	int j;
+	
+    //Configura grafos direto na memória da GPU
+	set_grafo_NONCuda(seq,get_antisenso(seq),matrix_senso,matrix_antisenso);
+	
+	printf("Matriz senso:\n");
+	for(i=0;i<size;i++){
+		for(j=0;j<N_COL;j++)
+			if(matrix_senso[i] == j)
+				printf("1 ");
+			else
+				printf("0 ");
+		printf("\n");
+	}
+	printf("Matriz antisenso:\n");
+	for(i=0;i<size;i++){
+		for(j=0;j<N_COL;j++)
+			if(matrix_antisenso[i] == j)
+				printf("1 ");
+			else
+				printf("0 ");
+		printf("\n");
+	}
+
+	return;
+}
 
 extern "C" void destroy_grafo(vgrafo *a,vgrafo *c,vgrafo *g,vgrafo *t){
   free(a->s_marcas);

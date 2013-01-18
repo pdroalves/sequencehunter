@@ -8,10 +8,6 @@
 #include "log.h"
 #define TAM_MAX 10000
 
-int check_seq_valida(char *p);
-
-
-
 int check_seq_valida(char *p){
 	int i;
 	int n;
