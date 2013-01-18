@@ -119,8 +119,8 @@ __global__ void k_buscador_analyse(int totalseqs,
 						break;
 					}
 								
-					alarmS = (linha-lsenso)*(lsenso-N);		
-					alarmAS = (linha-lantisenso)*(lantisenso-N);	
+					alarmS += (linha-lsenso)*(lsenso-N);		
+					alarmAS += (linha-lantisenso)*(lantisenso-N);	
 					
 					//if( fase == 30 && baseId == 2)
 					//	printf("Erro! seq: %s\nseqId: %d,fase: %d,alarmS: %d,alarmAS: %d - base: %c, baseId: %d,linha: %d,lsenso: %d,lantisenso: %d\n",seq,seqId,fase,alarmS,alarmAS,seq[baseId],baseId,linha,lsenso,lantisenso);
@@ -373,16 +373,22 @@ extern "C" __host__ __device__ void caminhar(vgrafo *ant_anterior,vgrafo* anteri
     (*s_match)++;
   else{//Não bate
     if(anterior != NULL && ant_anterior != NULL)
-      if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-	(*s_match)=0;
+      //if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
+      if(atual->s_marcas[0] != 1)
+		(*s_match)=0;
+	  else
+	  (*s_match)=1;		
   }
 												
   if(atual->as_marcas[(*as_match)] == 1)//Elemento e posição batem com o que queremos
     (*as_match)++;
   else{//Não bate
     if(anterior != NULL && ant_anterior != NULL)
-      if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
-	(*as_match)=0;
+      //if(anterior->vertice != atual->vertice || anterior->vertice != ant_anterior->vertice)
+      if(atual->as_marcas[0] != 1)
+		(*as_match)=0;
+	  else
+	  (*as_match)=1;		
   }
   //printf("s_match: %d\n",*s_match);
   return;	

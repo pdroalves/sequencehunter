@@ -21,10 +21,10 @@
 #include "go_hunter_cuda.h"
 #include "go_hunter_noncuda.h"
 	
-GHashTable* aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,gboolean disable_cuda,gboolean sil,gboolean verb){
+GHashTable* aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,gboolean disable_cuda,gboolean sil,gboolean verb,gboolean deb){
 	if(CUDA)
-		return auxCUDA(c,bloco1,bloco2,blocos,verb,sil);
+		return auxCUDA(c,bloco1,bloco2,blocos,verb,sil,deb);
 	else
-		return auxNONcuda(c,bloco1,bloco2,blocos,verb,sil);
+		return auxNONcuda(c,bloco1,bloco2,blocos,verb,sil,deb);
 }
 

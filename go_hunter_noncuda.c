@@ -22,6 +22,7 @@ gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
+gboolean debug;
 omp_lock_t MC_copy_lock;
 
 const int buffer_size_NC = buffer_size;
@@ -136,6 +137,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
 		int fsensos,fasensos;
+		FILE *c;
+		c = fopen("ncuda","w");
 		fsensos=fasensos=0;
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
 		cudaEventCreate(&start);
@@ -156,9 +159,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				cudaEventSynchronize(stop);
 				cudaEventElapsedTime(&elapsedTime,start,stop);
 				iteration_time += elapsedTime;
-				//if(verbose == TRUE && silent != TRUE)	
-				//	printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-				//fprintf(retorno,"%f\n",elapsedTime);
+				if(debug)	
+					printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 					
 				cudaEventRecord(startK,0);
 					busca(bloco1,bloco2,blocos,buffer,resultados,d_a,d_c,d_g,d_t);//Kernel de busca
@@ -167,9 +169,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				cudaEventSynchronize(stopK);
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
-				//if(verbose == TRUE && silent != TRUE)	
-				//	printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-				//fprintf(busca_,"%f\n",elapsedTimeK);
+				if(debug)	
+					printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 				cudaEventRecord(start,0);
 						
 					
@@ -182,6 +183,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 								tmp = buffer->seq[i];
 								//if(verbose == TRUE && silent != TRUE)	
 								//	printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
+							 	if(debug)
+									fprintf(c,"%s\n",tmp);
 								fsensos++;
 								omp_set_lock(&MC_copy_lock);
 								enfileirar(f_sensos,tmp);
@@ -214,7 +217,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 					if(buffer->load != 0)
 					{
 						printf("Erro! Buffer não foi totalmente esvaziado.\n");
-						buffer->load = 0;
+						if(buffer->load != -1)
+							buffer->load = 0;
 					}
 					
 					while(buffer->load==0){}
@@ -281,7 +285,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n,vgrafo *d_a,
 
 
 
-GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil){
+GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil,gboolean deb){
 	
 	int n;//Elementos por sequência
 	vgrafo g_a;
@@ -290,6 +294,7 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	vgrafo g_t;
 	verbose = verb;
 	silent = sil;
+	debug = deb;
 	GHashTable* hash_table;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;

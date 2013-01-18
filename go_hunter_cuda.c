@@ -21,6 +21,7 @@
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
+gboolean debug;
 char **data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
@@ -158,6 +159,8 @@ void search_manager(int *buffer_load,
 				float iteration_time;
 				int fsenso;
 				int fasenso;
+				FILE *c;
+				c = fopen("cuda","w");
 				fsenso=fasenso=0;
 	
 				cudaEvent_t startK,stopK;
@@ -208,7 +211,7 @@ void search_manager(int *buffer_load,
 						cudaEventSynchronize(stop);
 						
 						cudaEventElapsedTime(&elapsedTime,start,stop);
-						if(verbose && !silent)
+						if(debug)
 							printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 						iteration_time += elapsedTime;
 						//fprintf(retorno,"%f\n",elapsedTime);
@@ -224,7 +227,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-						if(verbose && !silent)
+						if(debug)
 							printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						iteration_time += elapsedTimeK;
 						
@@ -252,6 +255,8 @@ void search_manager(int *buffer_load,
 									case SENSO:
 										//if(verbose && !silent)
 										//	printf("S: %s - %d - F: %d\n",tmp,processadas,tamanho_da_fila(f_sensos));
+										if(debug)
+											fprintf(c,"%s\n",d_tmp_founded[i]);
 										fsenso++;
 										omp_set_lock(&MC_copy_lock);
 										enfileirar(f_sensos,d_tmp_founded[i]);
@@ -430,7 +435,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 
 
 
-GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,gboolean verb,gboolean sil){
+GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,gboolean verb,gboolean sil,gboolean deb){
 	GHashTable* hash_table;
 	float tempo;
 	int seqSize_an;//Tamanho das sequencias analisadas
@@ -439,6 +444,7 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
 	
 	verbose = verb;
 	silent = sil;
+	debug = deb;
 	
 	get_setup(&seqSize_an);
 	

@@ -30,6 +30,7 @@
 	gboolean silent = FALSE;
 	gboolean check_build = FALSE;
 	gboolean just_process = FALSE;
+	gboolean debug = FALSE;
 	gint max_events = 20;
 	//###############
 	static GOptionEntry entries[] = 
@@ -44,7 +45,7 @@
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose.", NULL },
 		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o numero da build.", NULL },
 		{ "process", 'p', 0, G_OPTION_ARG_NONE, &just_process, "Carrega e apenas processa dados já existentes.", NULL },
-		
+		{ "debug", NULL, 0, G_OPTION_ARG_NONE, &debug, "Modo para debug.", NULL },		
 		{ NULL }
 	  };
 
@@ -74,7 +75,7 @@
 	  
 	  //##########################
 	  //Carrega parametros de entrada
-	  context = g_option_context_new ("Main application");
+	  context = g_option_context_new ("library_file_path");
 	  g_option_context_add_main_entries (context, entries,NULL);
 	  if (!g_option_context_parse (context, &argc, &argv, &error))
 		{
@@ -164,10 +165,10 @@
 		if(disable_cuda){
 			printf("Forçando modo OpenMP.\n");
 			printString(NULL,"Forçando modo OpenMP.");
-			hash_table = aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose); 
+			hash_table = aux(0,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose,debug); 
 		}
 		else{
-			hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose);
+			hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,disable_cuda,silent,verbose,debug);
 		}
 		write_ht_to_binary(hash_table);
 		free(c);
