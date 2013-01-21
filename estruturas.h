@@ -11,7 +11,7 @@
 #define SENSO 1
 #define ANTISENSO 2
 #define GATHERING_DONE -1
-#define buffer_size 8512 // Capacidade máxima do buffer
+#define buffer_size 4096 // Capacidade máxima do buffer
 #define FILA_MIN 5000 // Tamanho minimo da fila antes de começar a esvazia-la
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000
@@ -24,17 +24,6 @@ const enum{
 	N,
 	N_COL
 };
-
-struct vertice_grafo{
-		char vertice;
-		int *s_marcas;
-		int *as_marcas;
-		struct vertice_grafo* a;
-		struct vertice_grafo* c;
-		struct vertice_grafo* g;
-		struct vertice_grafo* t;
-};
-typedef struct vertice_grafo vgrafo;
 
 struct fila_item{
 	char *seq;
@@ -76,19 +65,17 @@ struct buffer{
 typedef struct buffer Buffer;
 
 struct despareados{
-       int sensos;
-       int antisensos;
+    int sensos;
+    int antisensos;
 };
 typedef struct despareados Despareados;
 
-struct resultfiles{
-	FILE *file1;
-	FILE *file299;
-	FILE *file100999;
-	FILE *file10009999;
-	FILE *file10000;
+struct params{
+	int verbose;
+	int silent;
+	int debug;
+	int cut_central;
 };
-typedef struct resultfiles ResultFiles;
-
+typedef struct params Params;
 
 #endif

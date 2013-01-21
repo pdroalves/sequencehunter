@@ -6,25 +6,14 @@
 //
 //		27/03/2012
 
-#include <stdio.h>
-#include <omp.h> 
 #include <glib.h>
-#include <string.h>
-#include "cuda.h"
-#include "cuda_runtime_api.h"
 #include "estruturas.h"
-#include "load_data.h"
-#include "operacoes.h"
-#include "busca.h"
-#include "log.h"
-#include "fila.h"
 #include "go_hunter_cuda.h"
 #include "go_hunter_noncuda.h"
-	
-GHashTable* aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,gboolean disable_cuda,gboolean sil,gboolean verb,gboolean deb){
+GHashTable* aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	if(CUDA)
-		return auxCUDA(c,bloco1,bloco2,blocos,verb,sil,deb);
+		return auxCUDA(c,bloco1,bloco2,blocos,set);
 	else
-		return auxNONcuda(c,bloco1,bloco2,blocos,verb,sil,deb);
+		return auxNONcuda(c,bloco1,bloco2,blocos,set);
 }
 
