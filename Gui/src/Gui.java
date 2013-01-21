@@ -185,10 +185,18 @@ public class Gui implements ActionListener {
 	
 	private Container drawReportContainer(File f){
 		JPanel jp = new JPanel();
+		jp.setLayout(new BorderLayout());
+		JTabbedPane jtp= new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		
+		// Report 1		
 		JTable jte = new JTable(new JReportTableModel(f)); 
-		JTabbedPane jtp= new JTabbedPane(JTabbedPane.RIGHT);
-		jtp.addTab("Tteste",jte);
-		jp.add(jtp);
+		jtp.addTab("Central",jte);
+		Box seqInfo = Box.createVerticalBox();
+		seqInfo.add(new Label("Sequence:"));
+		seqInfo.add(new Label("Sequence frequency:"));
+		jtp.add(seqInfo,BorderLayout.EAST);
+		jp.add(jtp,BorderLayout.CENTER);
+		
 		return jp;
 	}
 	
