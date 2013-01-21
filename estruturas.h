@@ -25,17 +25,6 @@ const enum{
 	N_COL
 };
 
-struct vertice_grafo{
-		char vertice;
-		int *s_marcas;
-		int *as_marcas;
-		struct vertice_grafo* a;
-		struct vertice_grafo* c;
-		struct vertice_grafo* g;
-		struct vertice_grafo* t;
-};
-typedef struct vertice_grafo vgrafo;
-
 struct fila_item{
 	char *seq;
 	struct fila_item *prox;//Ponteiro para o item seguinte
@@ -76,19 +65,17 @@ struct buffer{
 typedef struct buffer Buffer;
 
 struct despareados{
-       int sensos;
-       int antisensos;
+    int sensos;
+    int antisensos;
 };
 typedef struct despareados Despareados;
 
-struct resultfiles{
-	FILE *file1;
-	FILE *file299;
-	FILE *file100999;
-	FILE *file10009999;
-	FILE *file10000;
+struct params{
+	int verbose;
+	int silent;
+	int debug;
+	int cut_central;
 };
-typedef struct resultfiles ResultFiles;
-
+typedef struct params Params;
 
 #endif

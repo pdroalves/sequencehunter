@@ -22,6 +22,7 @@ omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 gboolean debug;
+gboolean cut_central;
 char **data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
@@ -147,18 +148,19 @@ void search_manager(int *buffer_load,
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				int i;
 				short int *h_resultados;
+				short int *d_resultados;
+				short int *h_search_gaps;
+				short int *d_search_gaps;
 				char **h_founded;
 				char **d_founded;
 				char **d_tmp_founded;
-				short int *d_resultados;
+				char *hold_seq;
 				int loaded;
 				int hold;
 				int p;
 				float iteration_time;
 				int fsenso;
 				int fasenso;
-				FILE *c;
-				c = fopen("cuda","w");
 				fsenso=fasenso=0;
 	
 				cudaEvent_t startK,stopK;
@@ -176,7 +178,9 @@ void search_manager(int *buffer_load,
 				
 				// Alloc: resultados de cada iteracao				
 				h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
+				h_search_gaps = (short int*)malloc(buffer_size*sizeof(short int));
 				cudaMalloc((void**)&d_resultados,buffer_size*sizeof(short int));
+				cudaMalloc((void**)&d_search_gaps,buffer_size*sizeof(short int));
 				
 				// Alloc: Seqs encontradas
 				//CPU
@@ -196,6 +200,7 @@ void search_manager(int *buffer_load,
 				local_data = (char**)malloc(buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
 					local_data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
+				hold_seq = (char*)malloc(seqSize_an*sizeof(char));
 				
 				iteration_time = 0;
 				
@@ -217,7 +222,7 @@ void search_manager(int *buffer_load,
 						
 						// Execuca iteracao
 						cudaEventRecord(startK,0);
-						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,d_founded,stream2);//Kernel de busca
+						k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,d_search_gaps,d_founded,stream2);//Kernel de busca
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
@@ -240,6 +245,7 @@ void search_manager(int *buffer_load,
 						// Em casos reais, cada iteracao possuirah poucos eventos. Portanto, a copia de dados para 
 						// o host serah bastante casual e esse trecho nao deve implicar em perda de desempenho.	
 						cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
+						cudaMemcpy(h_search_gaps,d_search_gaps,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
 						//for(i=0;i<buffer_size;i++)
 						//	if(h_resultados[i] != 0)
 						//		cudaMemcpyAsync(h_founded[i],d_tmp_founded[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost,stream2);
@@ -252,18 +258,30 @@ void search_manager(int *buffer_load,
 							if(h_resultados[i] != 0){
 								switch(h_resultados[i]){
 									case SENSO:
-										if(debug)
-											fprintf(c,"%s\n",d_tmp_founded[i]);
 										fsenso++;
-										omp_set_lock(&MC_copy_lock);
-										enfileirar(f_sensos,d_tmp_founded[i]);
-										omp_unset_lock(&MC_copy_lock);
+										if(cut_central){
+											strncpy(hold_seq,d_tmp_founded[i]+h_search_gaps[i],blocoV);
+											omp_set_lock(&MC_copy_lock);
+											enfileirar(f_sensos,hold_seq);
+											omp_unset_lock(&MC_copy_lock);
+										}else{
+											omp_set_lock(&MC_copy_lock);
+											enfileirar(f_sensos,d_tmp_founded[i]);
+											omp_unset_lock(&MC_copy_lock);
+										}
 									break;
 									case ANTISENSO:
 										fasenso++;
-										omp_set_lock(&MC_copy_lock);
-										enfileirar(f_antisensos,get_antisenso(d_tmp_founded[i]));
-										omp_unset_lock(&MC_copy_lock);
+										if(cut_central){
+											strncpy(hold_seq,d_tmp_founded[i]+h_search_gaps[i],blocoV);
+											omp_set_lock(&MC_copy_lock);
+											enfileirar(f_antisensos,get_antisenso(hold_seq));
+											omp_unset_lock(&MC_copy_lock);
+										}else{	
+											omp_set_lock(&MC_copy_lock);
+											enfileirar(f_antisensos,get_antisenso(d_tmp_founded[i]));
+											omp_unset_lock(&MC_copy_lock);
+										}
 									break;
 								}
 							}
@@ -433,16 +451,17 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 
 
 
-GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,gboolean verb,gboolean sil,gboolean deb){
+GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
 	GHashTable* hash_table;
 	float tempo;
 	int seqSize_an;//Tamanho das sequencias analisadas
 	
 	printf("CUDA Mode.\n");
 	printString("CUDA Mode.\n",NULL);
-	verbose = verb;
-	silent = sil;
-	debug = deb;
+	verbose = set.verbose;
+	silent = set.silent;
+	debug = set.debug;
+	cut_central = set.cut_central;
 	
 	get_setup(&seqSize_an);
 	

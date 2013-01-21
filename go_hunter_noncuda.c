@@ -23,6 +23,7 @@ omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 gboolean debug;
+gboolean central_cut;
 omp_lock_t MC_copy_lock;
 
 const int buffer_size_NC = buffer_size;
@@ -118,6 +119,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		//////////////////////////////////////////
 		
 		THREAD_DONE[THREAD_SEARCH] = FALSE;
+		int *search_gaps;
 		int *resultados;
 		int tam;
 		int i;
@@ -127,10 +129,12 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
 		int fsensos,fasensos;
-		FILE *c;
-		c = fopen("ncuda","w");
+		const int blocoV = blocos-bloco1-bloco2;
 		fsensos=fasensos=0;
+		
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
+		search_gaps = (int*)malloc(buffer_size_NC*sizeof(int));
+		
 		cudaEventCreate(&start);
 		cudaEventCreate(&stop);
 		cudaEventCreate(&startK);
@@ -155,7 +159,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 					print_tempo_optional(elapsedTime);
 				}
 				cudaEventRecord(startK,0);
-					busca(bloco1,bloco2,blocos,buffer,resultados);//Kernel de busca
+					busca(bloco1,bloco2,blocos,buffer,resultados,search_gaps);//Kernel de busca
 					
 				cudaEventRecord(stopK,0);
 				cudaEventSynchronize(stopK);
@@ -175,11 +179,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case SENSO:
-								tmp = buffer->seq[i];
+								if(central_cut){
+									tmp = buffer->seq[i] + search_gaps[i];
+									tmp[blocoV] = '\0';
+								}else{
+									tmp = buffer->seq[i];
+								}
 								//if(verbose == TRUE && silent != TRUE)	
 								//	printf("S: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_sensos));
-							 //	if(debug)
-								//	fprintf(c,"%s\n",tmp);
 								fsensos++;
 								omp_set_lock(&MC_copy_lock);
 								enfileirar(f_sensos,tmp);
@@ -189,7 +196,12 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 								buffer->load--;
 							break;
 							case ANTISENSO:
-								tmp = buffer->seq[i];
+								if(central_cut){
+									tmp = buffer->seq[i] + search_gaps[i];
+									tmp[blocoV] =  '\0';
+								}else{
+									tmp = buffer->seq[i];
+								}
 								//if(verbose == TRUE && silent != TRUE)
 								//	printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
 								fasensos++;
@@ -283,12 +295,13 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 
 
 
-GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,gboolean verb,gboolean sil,gboolean deb){
+GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
 	int n;//Elementos por sequência
-	verbose = verb;
-	silent = sil;
-	debug = deb;
+	verbose = set.verbose;
+	silent = set.silent;
+	debug = set.debug;
+	central_cut = set.cut_central;
 	GHashTable* hash_table;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;

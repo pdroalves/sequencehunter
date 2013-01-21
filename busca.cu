@@ -26,8 +26,6 @@ short int matrix_antisenso[MAX_SEQ_SIZE];
 
 #define ABSOLUTO(a) a>=0?a:-a
 
-extern "C" __host__ __device__ void caminhar(vgrafo*,vgrafo*,vgrafo*, int*,int*);
-extern "C" __host__ __device__ vgrafo* busca_vertice(char,vgrafo *,vgrafo *,vgrafo *, vgrafo *);
 __device__ __host__ int getSeqSize(char *seq);
 int getLine(char c);
 __device__ __host__ char* getBase(int *linha,int n);
@@ -48,6 +46,7 @@ __global__ void k_buscador(int totalseqs,
 										int seqSize_an,
 										char **data,
 										short int *resultados,
+										short int *search_gaps,
 										char **founded,
 										int bloco1,
 										int bloco2,
@@ -130,20 +129,23 @@ __global__ void k_buscador(int totalseqs,
 		}			
 		
 	   
-		if(tipo == SENSO)
+		if(tipo == SENSO){
 			 for(i=0;i<seqSize_an;i++)
-					founded[seqId][i] = data[seqId][i];	
-		else  
-			if(tipo == ANTISENSO)
+					founded[seqId][i] = data[seqId][i];
+			 search_gaps[seqId] = fase + bloco1 -1;	
+		}else{  
+			if(tipo == ANTISENSO){
 				for(i=0;i<seqSize_an;i++)
 					founded[seqId][i] = data[seqId][i];
-								 
+				search_gaps[seqId] =fase + bloco2 -1;
+			}
+		}						 
 		resultados[seqId] = tipo;	 
 	}
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,char **founded,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,short int *search_gaps,char **founded,cudaStream_t stream){
 	int num_threads;
 	int num_blocks;
 	
@@ -158,7 +160,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,founded,bloco1,bloco2,blocoV);
+	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,search_gaps,founded,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
@@ -172,7 +174,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 ///////////////				Metodo de busca sem CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,const int seqId){
+extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buffer,int *resultados,int *search_gaps,const int seqId){
   int baseId;// id da base analisada
   short int tipo;
   short int linha;// Cada thread cuida de uma linha
@@ -181,9 +183,10 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int bl
   short int alarmS;
   short int alarmAS;
   short int fase;
-  const short int seqSize_bu = blocos;
   const short int seqSize_an = strlen(buffer->seq[seqId]);
+  const short int blocoZ = seqSize_bu - bloco1 - bloco2 + 1;
   char *seq;  
+  int i;
   
 	  tipo = 0;
 	  fase = 0;
@@ -232,6 +235,19 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int bl
 									
 		
 		resultados[seqId] = tipo;	
+		if(tipo == SENSO){
+			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+			for(i=0;i<blocoZ;i++){
+				  seq[i] = seq[i];
+			}
+			search_gaps[seqId] = fase + bloco1 -1;
+		}else if(tipo == ANTISENSO){
+			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
+			for(i=0;i<blocoZ;i++){
+				  seq[i] = seq[i];
+			}			 
+			search_gaps[seqId] = fase + bloco2 -1;
+		}
 	
 	}
 	return;
@@ -248,67 +264,20 @@ extern "C" void checkCudaError(){
     }   
 }
 
-
-
-extern "C" void cudaCopyCharArrays(char **src,char **dst,int n){
-	int i;
-	for(i=0;i<n;i++){
-		cudaMemcpy(dst[i],src[i],n*sizeof(char),cudaMemcpyHostToDevice);
-		checkCudaError();
-	}
-	return;
-}
-
-extern "C" char** cudaGetArrayOfArraysChar(int narrays,int arrays_size){
-	char **array;
-	int i;
-	cudaMalloc((void**)&array,narrays*sizeof(char*));
-	checkCudaError();
-	for(i=0;i<narrays;i++){ 
-		cudaMalloc((void**)&(array[i]),arrays_size*sizeof(char));
-		checkCudaError();
-	}
-		
-	return array;
-}
-
-
-
-extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,vgrafo *h_a,vgrafo *h_c,vgrafo *h_g,vgrafo *h_t){
+extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer *buffer,int *resultados,int *search_gaps){
 	int i;
 	int size;
 	
 	size = buffer->load;
 	
 	for(i=0; i < size; i++)
-		buscador(bloco1,bloco2,blocos,buffer,resultados,i);//Metodo de busca
+		buscador(bloco1,bloco2,blocos,buffer,resultados,search_gaps,i);//Metodo de busca
 		
 	return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-
-
-extern "C" __host__ __device__ vgrafo* busca_vertice(char base,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-  //Funcao temporária. Ficará aqui até eu pensar em algo melhor
-  switch(base){
-  case 'A':
-    //	printf("Retornei A\n");
-    return a;
-  case 'C':
-    //	printf("Retornei C\n");
-    return c;
-  case 'G':
-    //	printf("Retornei G\n");
-    return g;
-  case 'T':
-    //	printf("Retornei T\n");
-    return t;
-  }
-											
-  return NULL;
-}
 
 int getLine(char c){
 	// Recebe uma base e retorna uma linha de binarios
@@ -550,28 +519,4 @@ extern "C"  void setup_without_cuda(char *seq){
 	}
 
 	return;
-}
-
-extern "C" void destroy_grafo(vgrafo *a,vgrafo *c,vgrafo *g,vgrafo *t){
-  free(a->s_marcas);
-  free(a->as_marcas);
-  //free(a);
-  free(c->s_marcas);
-  free(c->as_marcas);
-  //free(c);
-  free(g->s_marcas);
-  free(g->as_marcas);
-  //free(g);
-  free(t->s_marcas);
-  free(t->as_marcas);
-  //free(t);
-  return;
-}
-
-extern "C" void destroy_grafo_CUDA(int size,vgrafo *a,vgrafo *c,vgrafo *g, vgrafo *t){
-  cudaFree(a);
-  cudaFree(c);
-  cudaFree(g);
-  cudaFree(t);
-  return;
 }
