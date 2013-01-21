@@ -52,17 +52,20 @@ public class Gui implements ActionListener {
 		jfrm = new JFrame("Sequence Hunter");
 		jfrm.setResizable(false);
 		
+		// Seta FlowLayout para o content pane
+		jfrm.getContentPane().setLayout(new BorderLayout());
+				
+		jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		jfrm.setSize(ySize,xSize);
+		jfrm.setLocationByPlatform(true);
+		jfrm.setLocationRelativeTo(null);
+		
 		//Gera menu
 		jfrm.setJMenuBar(drawMenuBar());
 		
 		//Seta posicao inicial para centro da tela
 		//jfrm.setLocationRelativeTo(null);
 		
-		// Seta FlowLayout para o content pane
-		jfrm.getContentPane().setLayout(new BorderLayout());
-				
-		jfrm.setSize(ySize,xSize);
-		jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
@@ -190,13 +193,17 @@ public class Gui implements ActionListener {
 		
 		// Report 1		
 		JTable jte = new JTable(new JReportTableModel(f)); 
-		jtp.addTab("Central",jte);
+		jtp.addTab("Central Cut",jte);
 		Box seqInfo = Box.createVerticalBox();
 		seqInfo.add(new Label("Sequence:"));
 		seqInfo.add(new Label("Sequence frequency:"));
-		jtp.add(seqInfo,BorderLayout.EAST);
-		jp.add(jtp,BorderLayout.CENTER);
 		
+		JPanel insideJp = new JPanel();
+		insideJp.setLayout(new BorderLayout());
+		insideJp.add(seqInfo,BorderLayout.EAST);
+		insideJp.add(jtp,BorderLayout.CENTER);
+		
+		jp.add(insideJp,BorderLayout.CENTER);
 		return jp;
 	}
 	
