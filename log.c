@@ -61,11 +61,15 @@ void print_open_file(char *c){
 	return;
 }
 void printString(char *c,char *s){
-	if(s != NULL)
+	if(s != NULL){
 		fprintf(logfile,"%s %s\n",c,s);
-	else
+		fprintf(logfileDetalhado,"%s %s\n",c,s);		
+	}
+	else{
 		fprintf(logfile,"%s\n",c);
+		fprintf(logfileDetalhado,"%s %s\n",c,s);
 	
+	}
 }
 
 void printSet(int n){
@@ -107,6 +111,13 @@ void print_tempo(float tempo){
 	
 }
 
+void print_tempo_optional(float tempo){
+	if(tempo > 0.5)
+		fprintf(logfile,"Tempo decorrido: %fs\n",tempo/1000.0);
+	else
+		fprintf(logfile,"Tempo decorrido: %fms\n",tempo);	
+}
+
 void print_sequencias_validas(int seqs_validas){
 	if(seqs_validas >= 0){
 		printf("Sequências válidas encontradas: %d.\nAVISO: Sequências de tamanho variável.",-seqs_validas);
@@ -118,6 +129,40 @@ void print_sequencias_validas(int seqs_validas){
 void print_resultado(lista_ligada *p){
 	fprintf(logfile,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
 	fprintf(logfileDetalhado,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+	return;
+}
+
+void print_string_float(char *s,float f){
+	fprintf(logfile,"%s %f",s,f);
+	fprintf(logfileDetalhado,"%s %f",s,f);
+	return;
+}
+
+void print_string_float_optional(char *s,float f){
+	fprintf(logfileDetalhado,"%s %f",s,f);
+	return;
+}
+
+void print_seqs_processadas(int total,int sensos,int antisensos){
+	fprintf(logfile,"Sequencias processadas: %d - S: %d, AS: %d\n",total,sensos,antisensos);
+	fprintf(logfileDetalhado,"Sequencias processadas: %d - S: %d, AS: %d\n",total,sensos,antisensos);
+	return;
+}
+
+void print_seqs_processadas_optional(int total,int sensos,int antisensos){
+	fprintf(logfileDetalhado,"Sequencias processadas: %d - S: %d, AS: %d\n",total,sensos,antisensos);
+	return;
+}
+
+void print_seqs_filas(int sensos,int antisensos){
+	fprintf(logfile,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
+	fprintf(logfileDetalhado,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
+	return;
+}
+
+void print_seqs_filas_optional(int sensos,int antisensos){
+	fprintf(logfile,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
+	fprintf(logfileDetalhado,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
 	return;
 }
 

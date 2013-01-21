@@ -153,48 +153,61 @@ lista_ligada* converter_para_lista_ligada(GHashTable *hash_table){
 	return l;
 }
 
-void write_ht_to_file_func(char *seq,value *entry,ResultFiles *result){
-	if(entry->qsenso == 1){
-		fprintf(result->file1,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);
-	}
-	
-	if(entry->qsenso >= 2 && entry->qsenso <= 99){
-		fprintf(result->file299,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);
-	}
-	
-	if(entry->qsenso >= 100 && entry->qsenso <= 999){
-		fprintf(result->file100999,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
-	}
-	
-	if(entry->qsenso >= 1000 && entry->qsenso <= 9999){
-		fprintf(result->file10009999,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
-	}
-	
-	if(entry->qsenso >= 10000){
-		//fprintf(result->file10000,"%s\n",seq);		
-		
-		fprintf(result->file10000,"%s - S: %d - As: %d -> %f\n",seq,entry->qsenso,entry->qasenso,entry->qnt_relativa);		
-	}
+void ht_to_binary(gchar *seq,value *entry,FILE *f){
+	int size = strlen(seq)+1;
+	fwrite(&size,sizeof(int),1,f);
+	fwrite(seq,sizeof(char),size,f);
+	fwrite(&entry->qsenso,sizeof(int),1,f);
+	fwrite(&entry->qasenso,sizeof(int),1,f);
 }
 
-void write_ht_to_file(GHashTable *hash_table){
+void write_ht_to_binary(GHashTable *hash_table){
+	FILE *f;
+	int size = tamanho_ht(hash_table);
+	char outname[50];
+	char *tempo;	
+	time_t t;
 	
-	ResultFiles result;
-	result.file1 = fopen("senso_seq_1.txt","w");
-	result.file299 = fopen("senso_seq_2-99.txt","w");
-	result.file100999 = fopen("senso_seq_100-999.txt","w");
-	result.file10009999 = fopen("senso_seq_1000-9999.txt","w");
-	result.file10000 = fopen("senso_seq_10000.txt","w");
+	time(&t);
+	tempo = ctime(&t);
+	tempo[strlen(tempo)-1] = '\0';
 	
-	g_hash_table_foreach(hash_table,write_ht_to_file_func,&result);
+	strcpy(outname,"output - ");
+	strcat(outname,tempo);
+	strcat(outname,".shunt");
 	
-	fclose(result.file1);
-	fclose(result.file299);
-	fclose(result.file100999);
-	fclose(result.file10009999);
-	fclose(result.file10000);
-	
+	f = fopen(outname,"w");
+	fwrite(&size,sizeof(int),1,f);
+	g_hash_table_foreach(hash_table,ht_to_binary,f);
+	fclose(f);
+	printf("Filtragem bruta salva em %s\n",outname);
+	printString("Filtragem bruta salva em",outname);
 	return;
+}
+
+GHashTable* read_binary_to_ht(FILE *f){
+	GHashTable *hash_table;
+	int i;
+	int size;
+	int seq_len;
+	int qsenso;
+	int qasenso;
+	float qnt_relativa;
+	char *seq;
+	
+	hash_table = criar_ghash_table();
+	
+	fread(&size,sizeof(int),1,f);
+	for(i=0;i<size;i++){		
+		fread(&seq_len,sizeof(int),1,f);
+		seq = (char*)malloc(seq_len*sizeof(char));
+		fread(seq,sizeof(char),seq_len,f);
+		fread(&qsenso,sizeof(int),1,f);
+		fread(&qasenso,sizeof(int),1,f);
+		adicionar_ht(hash_table,seq,criar_value(0,qsenso,qasenso,0));
+	}
+	
+	return hash_table;
 }
 
 int tamanho_ht(GHashTable *hash_table){

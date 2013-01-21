@@ -18,6 +18,7 @@ int open_file(char **entrada,int);
 FILE **f;
 int files = 0;
 gboolean check_seqs = FALSE;
+char *hold;
 /* converts integer into string */
 
 char* itoaa(unsigned long num) {
@@ -113,6 +114,8 @@ void get_setup(int *n){
 	rewind(f[0]);
 	*n = (int)(strlen(tmp));
 	
+	hold = (char*)malloc(TAM_MAX*sizeof(char));	
+	
 	free(tmp);
 	return;
 }
@@ -137,74 +140,27 @@ void prepare_buffer(Buffer *b,int c){
 	return;
 }
 
-void prepare_buffer_CUDA(Buffer *d_buffer,int n,int c){
-	int i;
-	char *tamanho_do_buffer;
-	
-	d_buffer->seq = (char**)malloc(c*sizeof(char*));
-
-	for(i=0;i<c;i++) 
-		cudaMalloc((void**)&(d_buffer->seq[i]),(n+1)*sizeof(char));
-    
-	printf("Buffer configurado para sequências de até %d posições.\n",n);
-    
-	tamanho_do_buffer = itoaa(c);
-	printString("Buffer configurado para: ",tamanho_do_buffer);
-	
-	free(tamanho_do_buffer);
-	return;
-}
-
-void fill_buffer(Buffer *b){
+int fill_buffer(char **seqs,int MAX_TO_LOAD){
 	int i = 0;
 	int j = 0;
-	char *hold;
-	
-	hold = (char*)malloc(TAM_MAX*sizeof(char));
-	//Enche buffer
-	for(j=0;j < files && i < b->capacidade;j++){		
-		while(i < b->capacidade && !feof(f[j])){
-				fscanf(f[j],"%s",hold);
-				if(check_seq_valida(hold)){
-					strcpy(b->seq[i],hold);
-					i++;
-				}
-		}
-		b->load = i;	
-		if(i < b->capacidade && i!=0){ 
-			b->load--;
-			i = b->load;
-		}
-		if(feof(f[files-1]) && b->load == 0) b->load = -1;//Não há mais arquivos
-	}
-	free(hold);
-	return;
-}
-
-int fill_buffer_CUDA(char **seqs,int MAX_TO_LOAD){
-	int i = 0;
-	int j = 0;
-	char *hold;
-	
-	hold = (char*)malloc(TAM_MAX*sizeof(char));
 	
 	//Enche buffer
 	for(j=0;j < files && i < MAX_TO_LOAD;j++){		
 		while(i < MAX_TO_LOAD && !feof(f[j])){
+				// Le sequencia, verifica se eh valida e incrementa a contagem
 				fscanf(f[j],"%s",hold);
 				if(check_seq_valida(hold)){
-					//printf("Lido: %s\n",hold);
 					strcpy(seqs[i],hold);
-					strcat(seqs[i],"\0");
 					i++;
 				}
 		}
-		if(i < MAX_TO_LOAD && i!=0){ 
+		// Corrige contagem errada
+		if(i < MAX_TO_LOAD && i > 0)
 			i--;
-		}
-		if(feof(f[files-1]) && i == 0) i = -1;//Não ha mais arquivos
+		if(feof(f[files-1]) && i == 0)
+			i = -1;// Nao ha mais arquivos
 	}
-	free(hold);
+	
 	return i;
 }
 

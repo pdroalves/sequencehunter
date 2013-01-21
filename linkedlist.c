@@ -128,11 +128,22 @@ lista_ligada* get_biggest(lista_ligada *l){
 	if(tmp->pares > maior->pares){
 		maior = tmp;
 		dir_maior = dir_tmp;
-		esq_maior = esq_tmp;
+		if(esq_tmp != NULL)
+			esq_maior = esq_tmp;
+		else
+			esq_maior = NULL;
 	}
-	
-	dir_maior->prox = esq_maior;
-	
+	if(dir_maior == NULL){
+		if(esq_maior != NULL)
+			l->prox = esq_maior;
+		else
+			l->prox = NULL;
+	}else{
+		if(esq_maior != NULL)
+			dir_maior->prox = esq_maior;
+		else
+			dir_maior->prox = NULL;
+	}
 	return maior;
 }
 
@@ -184,11 +195,10 @@ void imprimir_lista_ligada(lista_ligada *resultados){
 	lista_ligada *p;
 	int i = 0;
 	
-	time_t t;
-	
 	FILE *out;
 	char outname[50];
-	char *tempo;
+	char *tempo;	
+	time_t t;
 	
 	time(&t);
 	tempo = ctime(&t);

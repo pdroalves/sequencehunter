@@ -19,5 +19,11 @@ void print_resultados(lista_ligada** resultados);
 void print_tempo(float tempo);
 void print_sequencias_validas(int seqs_validas);
 void print_resultado(lista_ligada *p);
+void print_string_float(char *s,float f);
+void print_string_float_optional(char *s,float f);
+void print_seqs_processadas(int total,int sensos,int antisensos);
+void print_seqs_processadas_optional(int total,int sensos,int antisensos);
+void print_seqs_filas(int sensos,int antisensos);
+void print_seqs_filas_optional(int sensos,int antisensos);
 void closeLog();
 #endif
