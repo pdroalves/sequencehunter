@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import Auxiliares.JBaseTextField;
@@ -17,6 +19,7 @@ import Auxiliares.JLazyTableModel;
 import Auxiliares.JReportTableModel;
 import Auxiliares.JTxtFileFilter;
 import Auxiliares.Library;
+import Dialogs.AboutDialog;
 
 public class Gui implements ActionListener {
 	
@@ -35,6 +38,9 @@ public class Gui implements ActionListener {
 	private ArrayList<String> libs = new ArrayList<String>();
 	private JTabbedPane libContainer;
 	private JPanel summaryContainer;
+	private Container reportContainer;
+	private JTabbedPane reportTab;
+	private Boolean noReports = true;
 	private int xSize = 700;
 	private int ySize = 1000;
 	
@@ -47,6 +53,7 @@ public class Gui implements ActionListener {
 		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		libContainer.setPreferredSize(new Dimension(900,300));
 		summaryContainer = new JPanel(new BorderLayout());
+		reportContainer = drawEmptyReportContainer();
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -76,6 +83,9 @@ public class Gui implements ActionListener {
 		// Monta summaryContainer
 		jtp.addTab("Summary",null,drawSummaryContainer(),"Confirm the configuration and start the hunt");
 		
+		// Monta reportContainer
+		jtp.addTab("Report",null,reportContainer,"Check the results after a hunt");
+		
 		jfrm.add(jtp,BorderLayout.CENTER);
 		
 		// Monta statusContainer
@@ -95,6 +105,16 @@ public class Gui implements ActionListener {
 		// Item do menu  
 		JMenuItem menuItemExit = new JMenuItem("Exit");  		
 		JMenuItem menuItemAbout = new JMenuItem("About");		
+		
+		menuItemAbout.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JDialog about = new AboutDialog(jfrm);
+				about.setVisible(true);
+			}
+		});
+		
 		menuFile.add(menuItemExit);
 		menuHelp.add(menuItemAbout);
 		menuBar.add(menuFile); 
@@ -151,20 +171,44 @@ public class Gui implements ActionListener {
 	}
 	
 	private Container drawSummaryContainer(){
+		JPanel jp = new JPanel();
+		jp.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.15;
+	    c.weightx = 0.3;
+	    c.gridx = 0;
+	    c.gridy = 0;
+		jp.add(new JLabel("Target sequence: "),c);
+
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.1;
+	    c.weightx = 0.3;
+	    c.gridx = 1;
+	    c.gridy = 0;
+		jp.add(new JLabel(searchSeq),c);
+		
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weightx = 0.3;
+	    c.gridx = 0;
+	    c.gridy = 1;
+		jp.add(new JLabel("Loaded librarys: "),c);
+		
 		Box vbox = Box.createVerticalBox();
-		Box hbox;
-		
-		hbox = Box.createHorizontalBox();
-		hbox.add(new Label("Target sequence: "));
-		hbox.add(new Label(searchSeq));
-		vbox.add(hbox);
-		
-		vbox.add(new Label());
-		vbox.add(new Label("Loaded librarys: "));
-		vbox.setMaximumSize(new Dimension(xSize,40));
 		for(String s : libs){
-			vbox.add(new Label(" "+s));
+			JLabel lib = new JLabel(s);
+			lib.setAlignmentY(Component.TOP_ALIGNMENT);
+			vbox.add(lib);
 		}
+	    c.fill = GridBagConstraints.BOTH;
+	    c.weighty = 0.75;
+	    c.weightx = 0.7;
+	    c.gridx = 1;
+	    c.gridy = 1;
+		JScrollPane jscrp = new JScrollPane(vbox);
+		jp.add(jscrp,c);
 		
 		// Start cancel buttons
 		JButton start = new JButton("Start");
@@ -172,31 +216,62 @@ public class Gui implements ActionListener {
 		start.addActionListener(this);
 		stop.addActionListener(this);
 		
-		hbox = Box.createHorizontalBox();
-		hbox.add(start);
-		hbox.add(stop);
-
-		JPanel jp = new JPanel(new BorderLayout());
-		jp.add(vbox,BorderLayout.CENTER);
-		jp.add(hbox,BorderLayout.SOUTH);
-		
-		JScrollPane jscrp = new JScrollPane(jp);
-		
-		summaryContainer.add(jscrp,BorderLayout.CENTER);
+		Box hbox = Box.createHorizontalBox();
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.1;
+	    c.weightx = 0.3;
+	    c.gridx = 1;
+	    c.gridy = 2;		
+	    hbox.add(start);
+	    hbox.add(stop);
+		jp.add(hbox,c);
+		summaryContainer.add(jp,BorderLayout.CENTER);
 		return summaryContainer;
 	}
+
+	private Container drawEmptyReportContainer(){
+		JPanel jp = new JPanel();
+		
+		JLabel emptyLabel = new JLabel("No report to show");
+		jp.add(emptyLabel,BorderLayout.CENTER);
+		return jp;
+	}
 	
-	private Container drawReportContainer(File f){
+	private void addReport(File f){
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
-		JTabbedPane jtp= new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		
-		// Report 1		
-		JTable jte = new JTable(new JReportTableModel(f)); 
+		// Report		
+		// Tabela
+		final JTable jte = new JTable(new JReportTableModel(f)); 
+		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
+		final JLabel seqJLabel = new JLabel("");
+		final JLabel seqFreqJLabel = new JLabel("");
+		cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) { 
+				String sequence=null;
+				int sequenceFreq=0;
+
+		        int[] selectedRow = jte.getSelectedRows();
+	
+		        for (int i = 0; i < selectedRow.length; i++) {
+		        	sequence = (String) jte.getValueAt(selectedRow[i], 0);
+		        	sequenceFreq = (int) jte.getValueAt(selectedRow[i], 1);		          
+		        }
+				seqJLabel.setText(sequence);
+				seqFreqJLabel.setText(Integer.toString(sequenceFreq));
+			}
+
+		    });
+		
 		jtp.addTab("Central Cut",jte);
 		Box seqInfo = Box.createVerticalBox();
-		seqInfo.add(new Label("Sequence:"));
-		seqInfo.add(new Label("Sequence frequency:"));
+		seqInfo.add(new JLabel("Sequence: "));
+		seqInfo.add(seqJLabel);
+		seqInfo.add(new JLabel("Sequence frequency: "));
+		seqInfo.add(seqFreqJLabel);
 		
 		JPanel insideJp = new JPanel();
 		insideJp.setLayout(new BorderLayout());
@@ -204,7 +279,17 @@ public class Gui implements ActionListener {
 		insideJp.add(jtp,BorderLayout.CENTER);
 		
 		jp.add(insideJp,BorderLayout.CENTER);
-		return jp;
+		
+		if(noReports){
+			reportContainer.removeAll();
+			reportContainer.setLayout(new BorderLayout());
+			reportTab = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
+			reportContainer.add(reportTab);
+			noReports = false;
+		}
+			reportTab.addTab(f.getName(),jp);
+			reportTab.setSelectedIndex(reportTab.getTabCount()-1);
+		return;
 	}
 	
 	
@@ -329,7 +414,15 @@ public class Gui implements ActionListener {
 		}
 		if(ae.getActionCommand().equals("Start")){
 			// Monta reportContainer
-			jtp.addTab("Report",null,drawReportContainer(new File("resultados")),"Check the results after a hunt");
+			writeToLog("Starting the hunt...");
+			/////////////////////////////////////////
+			/////// Chamada para shunter-cmd////////
+			////////////////////////////////////////
+			writeToLog("Hunt done.");
+			writeToLog("Check Report tab for results...");
+			File libFile = new File("resultados");
+			addReport(libFile);
+			jtp.setSelectedIndex(2);
 		}else{
 			summaryContainer.removeAll();
 			drawSummaryContainer();
