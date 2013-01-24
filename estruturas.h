@@ -75,6 +75,7 @@ struct params{
 	int silent;
 	int debug;
 	int cut_central;
+	int gui_run;
 };
 typedef struct params Params;
 
