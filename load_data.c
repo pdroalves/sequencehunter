@@ -13,7 +13,7 @@
 void get_setup(int*);	
 int check_seq(char*,int*,int*,int*);
 void close_file();
-int open_file(char **entrada,int);
+int open_file(char **entrada,int qnt,gboolean silent);
 
 FILE **f;
 int files = 0;
@@ -58,21 +58,22 @@ int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV){
 		return 0;
 	return 1;
 }
-int open_file(char **entrada,int qnt){
+int open_file(char **entrada,int qnt,gboolean silent){
 	int *checks;
 	int abertos = 0;
 	int tmp = 0;
 
 	checks = (int*)malloc(qnt*sizeof(int));
-	
 	f = (FILE**)malloc(qnt*sizeof(FILE*));
+	
 	while(files < qnt && abertos+1 < qnt){
 		f[files] = fopen(entrada[abertos+1],"r");
 		checks[files] = f[files]!=NULL;
 		if(!checks[files]){
+			if(!silent)
 			printf("Arquivo %s não pode ser aberto.\n",entrada[files+1]);
-			abertos++;
 		}else{
+			if(!silent)
 			printf("Arquivo %s aberto.\n",entrada[abertos+1]);
 			print_open_file(entrada[abertos+1]);
 			files++;
@@ -83,14 +84,16 @@ int open_file(char **entrada,int qnt){
 	return files;
 }
 
-int check_sequencias_validas(){
+int check_sequencias_validas(gboolean silent){
 	int seqs_validas = 0;
 	if(check_seqs && files > 0){
 		seqs_validas = get_sequencias_validas(f,files);
-		if(seqs_validas >=0)
-			printf("Sequencias validas encontradas: %d\n",seqs_validas);
-		else
-			printf("Sequencias validas encontradas: %d\nATENÇÃO: Sequências de tamanho variável.\n",-seqs_validas);
+	  if(!silent){
+			if(seqs_validas >=0)
+				printf("Sequencias validas encontradas: %d\n",seqs_validas);
+			else
+				printf("Sequencias validas encontradas: %d\nATENÇÃO: Sequências de tamanho variável.\n",-seqs_validas);
+		}
 		print_seqs_carregadas(seqs_validas);
 	}
 	return seqs_validas;
@@ -131,7 +134,6 @@ void prepare_buffer(Buffer *b,int c){
 	b->seq = (char**)malloc(c*sizeof(char*));
 	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	
-	printf("Buffer configurado para sequências de até %d posições.\n",n);
 	b->load = 0;
 	tamanho_do_buffer = itoaa(c);
 	printString("Buffer configurado para: ",tamanho_do_buffer);

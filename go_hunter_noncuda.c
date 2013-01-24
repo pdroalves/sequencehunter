@@ -24,6 +24,7 @@ gboolean verbose;
 gboolean silent;
 gboolean debug;
 gboolean central_cut;
+gboolean gui_run;
 omp_lock_t MC_copy_lock;
 
 const int buffer_size_NC = buffer_size;
@@ -156,6 +157,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				//if(verbose == TRUE && silent != TRUE)	
 				//	printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				if(debug){
+					if(!silent)
 					printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 					printString("Retorno da busca:\n",NULL);
 					print_tempo_optional(elapsedTime);
@@ -168,6 +170,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
 				if(debug){
+					if(!silent)
 					printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 					printString("Execucao da busca:\n",NULL);
 					print_tempo_optional(elapsedTimeK);
@@ -220,14 +223,16 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 					
 					if(verbose && !silent)		
 						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
-					if(debug){
+					if(gui_run)
+							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
+					if(debug&&!silent){
 							printf("Filas - S: %d, AS: %d\n\n",tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
 							print_seqs_filas_optional(tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
 					}		
 					
 					if(buffer->load != 0)
 					{
-						if(debug)
+						if(debug&&!silent)
 							printf("Erro! Buffer não foi totalmente esvaziado.\n");
 						if(buffer->load != GATHERING_DONE)
 							buffer->load = 0;
@@ -238,6 +243,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 			}
 				
 			
+	  if(!silent)
 				if(iteration_time > 10000)
 					printf("Busca realizada em %.2f s.\n",iteration_time/(float)60000);
 				else 
@@ -301,6 +307,7 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	silent = set.silent;
 	debug = set.debug;
 	central_cut = set.cut_central;
+	gui_run = set.gui_run;
 	GHashTable* hash_table;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;
@@ -308,6 +315,7 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	//cudaEventCreate(&start);
 	//cudaEventCreate(&stop);
 	float tempo = 0;
+	  if(!silent)
 	printf("OpenMP Mode.\n");
 	printString("OpenMP Mode.\n",NULL);
 	get_setup(&n);

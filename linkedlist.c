@@ -191,7 +191,7 @@ Despareados* recupera_despareados(lista_ligada *l){
 	return desp;
 }
 
-void imprimir_lista_ligada(lista_ligada *resultados){
+void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui_run){
 	lista_ligada *p;
 	int i = 0;
 	
@@ -208,17 +208,19 @@ void imprimir_lista_ligada(lista_ligada *resultados){
 	strcat(outname,tempo);
 	strcat(outname,".txt");
 	out = fopen(outname,"a");
-	
+
 	fprintf(out,"################### %s ###################\n\n",tempo); 
 	
 	p = resultados->prox;
 	while(p != NULL){
-		printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+		if(!silent)
+			printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
 		fprintf(out,"%s		%d\n",p->senso,p->pares);
 		print_resultado(p);
 		p = p->prox;
 	}
-	
+	if(gui_run)
+		printf("R %s\n",outname);
 	return;
 }
 

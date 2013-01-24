@@ -33,6 +33,7 @@
 	gboolean debug = FALSE;
 	gboolean cutmode = FALSE;
 	gboolean keep = FALSE;
+	gboolean gui_run = FALSE;
 	gint max_events = 20;
 	//###############
 	static GOptionEntry entries[] = 
@@ -50,6 +51,7 @@
 		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o numero da build.", NULL },
 		{ "process", 'p', 0, G_OPTION_ARG_NONE, &just_process, "Carrega e apenas processa dados já existentes.", NULL },
 		{ "debug", NULL, 0, G_OPTION_ARG_NONE, &debug, "Modo para debug.", NULL },		
+		{ "gui", NULL, 0, G_OPTION_ARG_NONE, &gui_run, NULL, NULL },		
 		{ NULL }
 	  };
 
@@ -93,16 +95,17 @@
 		  printf("Build: %d\n",get_build());
 		  return 0;
 	  }
-
-	  printf("Iniciando Sequence Hunter...\n\n",get_build());
-	  if(verbose)
+	  if(!silent)
+		printf("Iniciando Sequence Hunter...\n\n",get_build());
+	  if(verbose && !silent)
 		printf("Modo verbose\n");
 	  
 	  //Inicializa
 	  prepareLog();	 
 	  
 	  if(just_process){
-		  printf("Iniciando em modo de processamento...\n");
+		if(!silent || gui_run)
+			printf("Iniciando em modo de processamento...\n");
 		  FILE *f;
 		  f = fopen(argv[1],"r");
 		  hash_table = read_binary_to_ht(f);
@@ -123,12 +126,12 @@
 			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
 		}
-		  bibliotecas_validas = open_file(argv,argc);
+		  bibliotecas_validas = open_file(argv,argc,silent);
 		if(bibliotecas_validas == 0){
 			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
 		}
-		  seqs_validas = check_sequencias_validas();
+		  seqs_validas = check_sequencias_validas(silent);
 		  
 		//////////////////////////////////
 		////////////////////////////////////////////////////////
@@ -147,6 +150,7 @@
 			fscanf(set,"%s",nome);
 			
 		}else{
+			if(!silent)
 		  printf("Entre a sequência: ");
 		  scanf("%s",c);
 		  if(c == NULL){
@@ -154,6 +158,7 @@
 			  exit(1);
 		  }
 
+	  if(!silent)
 		printf("Entre uma identificação para essa busca: ");
 		scanf("%s",nome);
 		}
@@ -172,8 +177,10 @@
 		 set.silent = silent;
 		 set.debug = debug;
 		 set.cut_central = cutmode;
+		 set.gui_run = gui_run;
 		 
 		if(disable_cuda){
+	  if(!silent || gui_run)
 			printf("Forçando modo OpenMP.\n");
 			printString(NULL,"Forçando modo OpenMP.");
 			hash_table = aux(0,c,b1_size,b2_size,c_size,set); 
@@ -184,7 +191,7 @@
 		free(c);
 	}
 	
-	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events)
+	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent)
 	{
 		#pragma omp sections
 		{
@@ -195,12 +202,12 @@
 			}
 			#pragma omp section
 			{
-				resultados = processar(hash_table,bv_size,max_events);
+				resultados = processar(hash_table,bv_size,max_events,silent,gui_run);
 			}
 		}
 	}
 	
-	imprimir(resultados,max_events);
+	imprimir(resultados,max_events,silent,gui_run);
 	
 	if(!silent)
 		printf("Algoritmo concluído.\n");

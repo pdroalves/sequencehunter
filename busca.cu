@@ -431,8 +431,6 @@ extern "C" void setup_for_cuda(char *seq){
 	short int *h_matrix_senso;
 	short int *h_matrix_antisenso;
 	int size = strlen(seq);
-	int i;
-	int j;
 	char *d_senso;
 	char *d_antisenso;
 	
@@ -441,25 +439,6 @@ extern "C" void setup_for_cuda(char *seq){
 	    
     //Configura grafos direto na memória da GPU
 	set_grafo_CUDA(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
-	
-	printf("Matriz senso:\n");
-	for(i=0;i<size;i++){
-		for(j=0;j<N_COL;j++)
-			if(h_matrix_senso[i] == j)
-				printf("1 ");
-			else
-				printf("0 ");
-		printf("\n");
-	}
-	printf("Matriz antisenso:\n");
-	for(i=0;i<size;i++){
-		for(j=0;j<N_COL;j++)
-			if(h_matrix_antisenso[i] == j)
-				printf("1 ");
-			else
-				printf("0 ");
-		printf("\n");
-	}
 	
 	// Copia dados
 	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
@@ -491,30 +470,10 @@ extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,short int *matrix_
 extern "C"  void setup_without_cuda(char *seq){
 // Recebe um vetor de caracteres com o padrão a ser procurado
 	int size = strlen(seq);
-	int i;
-	int j;
 	
     //Configura grafos direto na memória da GPU
 	set_grafo_NONCuda(seq,get_antisenso(seq),matrix_senso,matrix_antisenso);
 	
-	printf("Matriz senso:\n");
-	for(i=0;i<size;i++){
-		for(j=0;j<N_COL;j++)
-			if(matrix_senso[i] == j)
-				printf("1 ");
-			else
-				printf("0 ");
-		printf("\n");
-	}
-	printf("Matriz antisenso:\n");
-	for(i=0;i<size;i++){
-		for(j=0;j<N_COL;j++)
-			if(matrix_antisenso[i] == j)
-				printf("1 ");
-			else
-				printf("0 ");
-		printf("\n");
-	}
 
 	return;
 }

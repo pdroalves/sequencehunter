@@ -42,7 +42,7 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-lista_ligada* processar(GHashTable* hash_table,int n,int max_events){
+lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean silent,gboolean gui_run){
 	
 	Despareados *desp;
 	lista_ligada *l;
@@ -52,24 +52,27 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events){
 	
 	//print_all(hash_table);
 	if(hash_table == NULL){
+	  if(!silent)
 		printf("Nao foram encontradas sequências com pareamento.\n");
 		resultados = criar_lista();
 	}else{
 		if(tamanho_ht(hash_table) == 0){
+	  if(!silent)
 			printf("Nao foram encontradas sequências com pareamento.\n");
 			resultados = criar_lista();
 		}else{
 			// To-do: Funcao para contar tipos de senso e antisenso
+	  if(!silent){
 			printf("Tipos de senso encontrados: %d.\n",s_tipos);
 			printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
-			
 			printf("Procurando sensos despareados...\n");
-			
+		}
 			desp = recupera_despareados_ht(hash_table);
 			print_despareadas_seqs(desp->sensos,desp->antisensos);
+	  if(!silent){
 			printf("Sensos despareados: %d.\n",desp->sensos);
 			printf("Antisensos despareados: %d.\n",desp->antisensos);
-			
+		}
 			// Calcula quantidade relativa dos elementos
 			qnt_relativa_ht(hash_table);
 
@@ -83,10 +86,10 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events){
 	return resultados;
 }
 
-void imprimir(lista_ligada *resultados,int max_events){
-	
+void imprimir(lista_ligada *resultados,int max_events,gboolean silent,gboolean gui_run){
+	if(!silent)
 	printf("Frequencias estimadas:\n");
-	imprimir_lista_ligada(resultados);
+	imprimir_lista_ligada(resultados,silent,gui_run);
 	
 	return;
 }

@@ -23,6 +23,8 @@ gboolean verbose;
 gboolean silent;
 gboolean debug;
 gboolean cut_central;
+gboolean gui_run;
+
 char **data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
@@ -161,8 +163,6 @@ void search_manager(int *buffer_load,
 				float iteration_time;
 				int fsenso;
 				int fasenso;
-				FILE *c;
-				c = fopen("cuda","w");
 				fsenso=fasenso=0;
 	
 				cudaEvent_t startK,stopK;
@@ -216,7 +216,7 @@ void search_manager(int *buffer_load,
 						cudaEventSynchronize(stop);
 						
 						cudaEventElapsedTime(&elapsedTime,start,stop);
-						if(debug)
+						if(debug&&!silent)
 							printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 						iteration_time += elapsedTime;
 						
@@ -228,7 +228,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stopK,0);						
 						cudaEventSynchronize(stopK);
 						cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-						if(debug)
+						if(debug&&!silent)
 							printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						
 						// Libera para o thread buffer_manager carregar mais sequencias
@@ -291,7 +291,10 @@ void search_manager(int *buffer_load,
 						checkCudaError();
 						if(verbose && !silent)
 							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);
-						if(debug)
+						if(gui_run)
+							printf("T%dS%dAS%d\n",*processadas,fsenso,fasenso);
+						
+						if(debug && !silent)
 							printf("Filas - S: %d, AS: %d\n",tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
 							
 						// Aguarda o buffer estar cheio novamente
@@ -301,10 +304,11 @@ void search_manager(int *buffer_load,
 						cudaEventSynchronize(stopV);
 						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
 						
-						if(debug)
+						if(debug && !silent)
 							printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);
 						
 				}
+				if(!silent)
 				if(iteration_time > 10000)
 					printf("Busca realizada em %.2f min.\n",iteration_time/(float)60000);
 				else 
@@ -452,13 +456,15 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
 	GHashTable* hash_table;
 	float tempo;
 	int seqSize_an;//Tamanho das sequencias analisadas
-	
-	printf("CUDA Mode.\n");
-	printString("CUDA Mode.\n",NULL);
 	verbose = set.verbose;
 	silent = set.silent;
 	debug = set.debug;
 	cut_central = set.cut_central;
+	gui_run = set.gui_run;
+	
+	if(!silent || gui_run)
+	printf("CUDA Mode.\n");
+	printString("CUDA Mode.\n",NULL);
 	
 	get_setup(&seqSize_an);
 	
