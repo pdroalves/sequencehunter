@@ -32,8 +32,11 @@ public class Translator extends Thread{
 			process = pb.start();
 			InputStream shellIn = process.getInputStream();
 			read(shellIn);
-			if(!stop && outputFile != null)
-				Drawer.huntDone(new File(outputFile));
+			if(!stop)
+				if(outputFile != null)
+					Drawer.huntDone(new File(outputFile));
+				else
+					Drawer.huntDone(null);
 			shellIn.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

@@ -33,7 +33,7 @@ public class Drawer implements ActionListener {
 	private JButton setSeqButton;
 	private static JTextArea statusLog;
 	private JTextField outputDir;
-	private JButton startstopButton = new JButton("Start");
+	private static JButton startstopButton = new JButton("Start");
 	private JProgressBar jprog;
 	private JList<String> jl ;
 	private DefaultListModel<String> listModel;
@@ -220,10 +220,7 @@ public class Drawer implements ActionListener {
 		jp.add(jscrp,c);
 		
 		// Start cancel buttons
-		JButton start = new JButton("Start");
-		JButton stop = new JButton("Cancel");
-		start.addActionListener(this);
-		stop.addActionListener(this);
+		startstopButton.addActionListener(this);
 		
 		Box hbox = Box.createHorizontalBox();
 	    c.fill = GridBagConstraints.HORIZONTAL;
@@ -231,8 +228,7 @@ public class Drawer implements ActionListener {
 	    c.weightx = 0.3;
 	    c.gridx = 1;
 	    c.gridy = 2;		
-	    hbox.add(start);
-	    hbox.add(stop);
+	    hbox.add(startstopButton);
 		jp.add(hbox,c);
 		summaryContainer.add(jp,BorderLayout.CENTER);
 		return summaryContainer;
@@ -418,7 +414,10 @@ public class Drawer implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		if(ae.getActionCommand().equals("Set")){
-			searchSeq = new String(seqOriginal.getSelectedText());
+			if(seqOriginal.getSelectedText() != null)
+				searchSeq = seqOriginal.getSelectedText();
+			else	
+				searchSeq = seqOriginal.getText();
 			seqBusca.setText(searchSeq);
 			writeToLog("Target sequence: " + searchSeq);
 			summaryContainer.removeAll();
@@ -459,6 +458,7 @@ public class Drawer implements ActionListener {
 		if(ae.getActionCommand().equals("Start")){
 			// Monta reportContainer
 			writeToLog("Starting the hunt...");
+			startstopButton.setText("Cancel");
 			/////////////////////////////////////////
 			/////// Chamada para shunter-cmd////////
 			////////////////////////////////////////
@@ -474,6 +474,7 @@ public class Drawer implements ActionListener {
 		if(ae.getActionCommand().equals("Cancel")){
 			h.stop();
 			writeToLog("Hunt aborted");
+			startstopButton.setText("Start");
 		}
 	}
 	
@@ -483,10 +484,13 @@ public class Drawer implements ActionListener {
 	}
 	
 	static public void huntDone(File libFile){
-		Drawer.writeToLog("Hunt done.");
-		Drawer.writeToLog("Check Report tab for results...");
-		addReport(libFile);
-		jtp.setSelectedIndex(2);
+		if(libFile != null){
+			addReport(libFile);
+			jtp.setSelectedIndex(2);
+			Drawer.writeToLog("Hunt done.");
+			Drawer.writeToLog("Check Report tab for results...");
+		}
+		startstopButton.setText("Start");
 	}
 
 }

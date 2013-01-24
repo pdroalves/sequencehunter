@@ -25,17 +25,14 @@ public class JBaseTextField extends JTextField {
 			for(int i = txt.length()-1; i >= 0; i--){
 				char str = txt.charAt(i);
 				
-				if (str != 'A' && str != 'a' &&
-						str != 'C' && str != 'c' &&
-						str != 'G' && str != 'g' &&
-						str != 'T' && str != 't' &&
-						str != 'N' && str != 'n'){
-					return;
+				if (str == 'A' || str == 'a' ||
+						str == 'C' || str == 'c' ||
+						str == 'G' || str == 'g' ||
+						str == 'T' || str == 't' ||
+						str == 'N' || str == 'n'){
+					char upper = Character.toUpperCase(str);
+					super.insertString(offs, String.valueOf(upper), a);
 				}
-				
-				char upper = Character.toUpperCase(str);
-				
-				super.insertString(offs, String.valueOf(upper), a);
 			}
 		}
 	}

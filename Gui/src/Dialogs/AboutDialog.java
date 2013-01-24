@@ -19,7 +19,7 @@ public class AboutDialog extends JDialog {
 		    b.add(new JLabel("Sequence Hunter - "));
 		    b.add(new JLabel("Developers:"));
 		    b.add(new JLabel("Pedro Alves e Marcio Chain Bjalman"));
-		    b.add(new JLabel("Laboratrio Nacional de Biocincias, Campinas - SP, Brazil"));
+		    b.add(new JLabel("Laboratório Nacional de Biociências, Campinas - SP, Brazil"));
 		    b.add(Box.createGlue());
 		    getContentPane().add(b, "Center");
 
