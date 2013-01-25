@@ -3,7 +3,7 @@
 	//      Copyright 2012 Pedro Alves <pdroalves@gmail.com>
 	//      
 	//		Sequence Hunter 
-	//		ExecuÁ„o via linha de comando
+	//		Execu√ß√£o via linha de comando
 	//
 	//		27/03/2012
 
@@ -24,7 +24,7 @@
 	#include "version.h"
 	#define SEQ_BUSCA_TAM 1000
 
-	gboolean fromFile = FALSE;
+	gchar *fromFile;
 	gboolean disable_cuda = FALSE;
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
@@ -38,10 +38,10 @@
 	//###############
 	static GOptionEntry entries[] = 
 	  {
-		//O comando "r·pido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
+		//O comando "r√°pido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
-		{ "fromFile", 'f', 0, G_OPTION_ARG_NONE, &fromFile, "Carrega a configuracao de busca do arquivo shset.dat.", NULL },
+		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca do arquivo shset.dat.", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
 		{ "events", 'e', 0, G_OPTION_ARG_INT, &max_events, "Quantidade maxima de eventos a serem exportados. Padrao: 20.", NULL},
 		{ "cutseqs", 't', 0, G_OPTION_ARG_NONE, &cutmode, "Guarda apenas o bloco variavel central de cada sequencia apos a filtragem.", NULL },
@@ -49,9 +49,9 @@
 		{ "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Execucao silenciosa.", NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose.", NULL },
 		{ "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Retorna o numero da build.", NULL },
-		{ "process", 'p', 0, G_OPTION_ARG_NONE, &just_process, "Carrega e apenas processa dados j· existentes.", NULL },
-		{ "debug", NULL, 0, G_OPTION_ARG_NONE, &debug, "Modo para debug.", NULL },		
-		{ "gui", NULL, 0, G_OPTION_ARG_NONE, &gui_run, NULL, NULL },		
+		{ "process", 'p', 0, G_OPTION_ARG_NONE, &just_process, "Carrega e apenas processa dados j√° existentes.", NULL },
+		{ "debug", NULL, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &debug, "Modo para debug.", NULL },		
+		{ "gui", NULL, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &gui_run, NULL, NULL },		
 		{ NULL }
 	  };
 
@@ -115,7 +115,7 @@
 		  nome = (char*)malloc((100)*sizeof(char));
 		  
 		  if(c == NULL){
-			  printf("Erro alocando memÛria.\n");
+			  printf("Erro alocando mem√≥ria.\n");
 			  exit(1);
 		  }
 		 
@@ -123,25 +123,27 @@
 		////////////////// Abre arquivos de bibliotecas/////////
 		////////////////////////////////////////////////////////
 		if(argc == 1){
-			printf("Por favor, entre uma biblioteca v·lida.\n");
+			printf("Por favor, entre uma biblioteca v√°lida.\n");
 			exit(1);
 		}
 		  bibliotecas_validas = open_file(argv,argc,silent);
 		if(bibliotecas_validas == 0){
-			printf("Por favor, entre uma biblioteca v·lida.\n");
+			printf("Por favor, entre uma biblioteca v√°lida.\n");
 			exit(1);
 		}
 		  seqs_validas = check_sequencias_validas(silent);
 		  
 		//////////////////////////////////
 		////////////////////////////////////////////////////////
-		if(fromFile){
+		if(fromFile != NULL){
 			FILE *set;
-			set = fopen("shset.dat","r");
+			set = fopen(fromFile,"r");
 			if(set == NULL){
-				printf("Arquivo shset.dat n„o encontrado.\n");
+				printf("Arquivo %s n√£o encontrado.\n",fromFile);
 				exit(1);
 			}
+			if(!silent)
+				printf("Configura√ß√£o de busca recuperada de %s\n",fromFile);
 			fscanf(set,"%s",c);
 			if(c == NULL){
 				printf("Erro na leitura\n");
@@ -151,7 +153,7 @@
 			
 		}else{
 			if(!silent)
-		  printf("Entre a sequÍncia: ");
+		  printf("Entre a sequ√™ncia: ");
 		  scanf("%s",c);
 		  if(c == NULL){
 			  printf("Erro na leitura\n");
@@ -159,16 +161,16 @@
 		  }
 
 	  if(!silent)
-		printf("Entre uma identificaÁ„o para essa busca: ");
+		printf("Entre uma identifica√ß√£o para essa busca: ");
 		scanf("%s",nome);
 		}
 		
 		 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
-			 printf("SequÍncia de busca inv·lida\n");
+			 printf("Sequ√™ncia de busca inv√°lida\n");
 			 exit(1);
 		}  
-		printString("IdentificaÁ„o da busca: ",nome);
-		  printString("SequÍncia de busca: ",c);
+		printString("Identifica√ß√£o da busca: ",nome);
+		  printString("Sequ√™ncia de busca: ",c);
 		  
 		 c_size = b1_size+b2_size+bv_size;
 		 
@@ -181,8 +183,8 @@
 		 
 		if(disable_cuda){
 	  if(!silent || gui_run)
-			printf("ForÁando modo OpenMP.\n");
-			printString(NULL,"ForÁando modo OpenMP.");
+			printf("For√ßando modo OpenMP.\n");
+			printString(NULL,"For√ßando modo OpenMP.");
 			hash_table = aux(0,c,b1_size,b2_size,c_size,set); 
 		}
 		else{
@@ -210,7 +212,7 @@
 	imprimir(resultados,max_events,silent,gui_run);
 	
 	if(!silent)
-		printf("Algoritmo concluÌdo.\n");
+		printf("Algoritmo conclu√≠do.\n");
 	close_file();
 	if(hash_table != NULL)
 		destroir_ghash_table(hash_table);
