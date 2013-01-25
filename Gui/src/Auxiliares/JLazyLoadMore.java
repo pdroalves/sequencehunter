@@ -2,6 +2,8 @@ package Auxiliares;
 
 import java.util.ArrayList;
 
+import Hunt.Library;
+
 public class JLazyLoadMore extends Thread{
 	private Library data;
 	private int defaultLoad;

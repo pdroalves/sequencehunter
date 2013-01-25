@@ -23,7 +23,7 @@ public class Translator extends Thread{
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
-		outputPattern = Pattern.compile("R(.*)");
+		outputPattern = Pattern.compile("R (.*)");
 	}
 	
 	public void run(){

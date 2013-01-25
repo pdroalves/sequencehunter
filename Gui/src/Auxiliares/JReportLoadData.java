@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class JReportLoadData extends Thread{
+public class JReportLoadData{
 	private File data;
  	private ArrayList<String> seqs;
 	private ArrayList<Integer> freqs;
@@ -17,7 +17,7 @@ public class JReportLoadData extends Thread{
 		this.freqs = freqs;
 	}
 	
-	public void run(){
+	public void load(){
 		String seqRead;
 		Integer freqRead;
 		
@@ -35,7 +35,7 @@ public class JReportLoadData extends Thread{
 				}
 			}
 		}catch(FileNotFoundException e){
-			
+			e.printStackTrace();
 		}
 	}
 	

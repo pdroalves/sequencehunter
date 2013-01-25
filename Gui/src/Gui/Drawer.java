@@ -13,15 +13,18 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import Auxiliares.JBaseTextField;
 import Auxiliares.JLazyTableModel;
 import Auxiliares.JReportTableModel;
 import Auxiliares.JTxtFileFilter;
-import Auxiliares.Library;
+import Auxiliares.TableColumnAdjuster;
 import Dialogs.AboutDialog;
 import Hunt.Hunter;
+import Hunt.Library;
 
 public class Drawer implements ActionListener {
 	
@@ -29,12 +32,14 @@ public class Drawer implements ActionListener {
 	private static JTabbedPane jtp;
 	private JBaseTextField seqOriginal;
 	private String searchSeq;
-	private JLabel seqBusca;
+	private static JLabel seqBusca;
 	private JButton setSeqButton;
 	private static JTextArea statusLog;
 	private JTextField outputDir;
-	private static JButton startstopButton = new JButton("Start");
+	private static JButton startButton;
+	private static JButton abortButton;
 	private JProgressBar jprog;
+	private JPanel jpTableList;
 	private JList<String> jl ;
 	private DefaultListModel<String> listModel;
 	private ArrayList<String> libs = new ArrayList<String>();
@@ -63,6 +68,14 @@ public class Drawer implements ActionListener {
 		processedSeqs = new JLabel("");
 		sensosFounded = new JLabel("");
 		antisensosFounded = new JLabel("");
+		jpTableList = new JPanel();
+		drawEmptyLibsContainer();
+		
+		// Start cancel buttons
+		startButton = new JButton("Start");
+		startButton.addActionListener(this);
+		abortButton = new JButton("Abort");
+		abortButton.addActionListener(this);
 		
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -153,20 +166,22 @@ public class Drawer implements ActionListener {
 		hbox.add(seqBusca);
 		seqBuscaPanel.add(hbox);		
 		
-		// Configura tab para libs
-		libs.setLayout(new GridLayout(2,2));
-		libs.add(new JLabel("Libraries loaded: "));
-		JScrollPane jscrlp = new JScrollPane(jl);
 		JButton loadLib = new JButton("Load");
 		JButton unloadLib = new JButton("Unload");
 		loadLib.addActionListener(this);
 		unloadLib.addActionListener(this);
+
+		libs.setLayout(new GridLayout(2,2));
+		libs.add(new JLabel("Libraries loaded: "));
+		JScrollPane jscrlp = new JScrollPane(jl);
 		jl.setModel(listModel);
+		
+		libs.add(jscrlp);
 		
 		hbox = Box.createHorizontalBox();
 		hbox.add(loadLib);
 		hbox.add(unloadLib);
-		libs.add(jscrlp);		
+		
 		libs.add(hbox);
 
 		// Adiciona tabs
@@ -174,7 +189,6 @@ public class Drawer implements ActionListener {
 		vbox.add(seqBuscaPanel);
 		vbox.add(libs);
 		vbox.add(libContainer);
-		
 		
 		return vbox;
 	}
@@ -184,7 +198,6 @@ public class Drawer implements ActionListener {
 		jp.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
-
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.15;
 	    c.weightx = 0.3;
@@ -219,16 +232,14 @@ public class Drawer implements ActionListener {
 		JScrollPane jscrp = new JScrollPane(vbox);
 		jp.add(jscrp,c);
 		
-		// Start cancel buttons
-		startstopButton.addActionListener(this);
-		
 		Box hbox = Box.createHorizontalBox();
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.1;
 	    c.weightx = 0.3;
 	    c.gridx = 1;
 	    c.gridy = 2;		
-	    hbox.add(startstopButton);
+	    hbox.add(startButton);
+	    hbox.add(abortButton);
 		jp.add(hbox,c);
 		summaryContainer.add(jp,BorderLayout.CENTER);
 		return summaryContainer;
@@ -240,6 +251,22 @@ public class Drawer implements ActionListener {
 		JLabel emptyLabel = new JLabel("No report to show");
 		jp.add(emptyLabel,BorderLayout.CENTER);
 		return jp;
+	}
+
+	private void drawTableLibsContainer(){
+
+		JScrollPane jscrlp = new JScrollPane(jl);
+		jl.setModel(listModel);
+		
+		jpTableList.add(jscrlp);
+		return;
+	}
+	
+	private void drawEmptyLibsContainer(){	
+		jpTableList.removeAll();
+		JLabel emptyLabel = new JLabel("Load a library to start...");
+		jpTableList.add(emptyLabel,BorderLayout.CENTER);
+		return;
 	}
 	
 	private static void addReport(File f){
@@ -320,7 +347,6 @@ public class Drawer implements ActionListener {
 	
 	private void fillLibContainer(){
 		JTable jtabPreviewLibs;
-		String[] headings = { "Sequence Preview" };
 		JScrollPane jscrlp;
 		Library lib;
 		Iterator<String> iterator = libs.iterator();
@@ -337,6 +363,16 @@ public class Drawer implements ActionListener {
 				JPanel jp = new JPanel();
 				final JLazyTableModel jltm = new JLazyTableModel(lib);
 				jtabPreviewLibs = new JTable(jltm);
+				TableCellRenderer defaultTableRenderer = jtabPreviewLibs.getDefaultRenderer(Object.class);
+				DefaultTableCellRenderer indexRenderer = new DefaultTableCellRenderer();
+				indexRenderer.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
+				jtabPreviewLibs.getColumnModel().getColumn(0).setCellRenderer(new JTableRenderer(indexRenderer));
+				DefaultTableCellRenderer seqRenderer = new DefaultTableCellRenderer();
+				jtabPreviewLibs.getColumnModel().getColumn(1).setCellRenderer(new JTableRenderer(seqRenderer));
+				jtabPreviewLibs.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+				jtabPreviewLibs.getColumnModel().getColumn(0).setPreferredWidth(40);
+				jtabPreviewLibs.getColumnModel().getColumn(1).setPreferredWidth((int)(ySize*0.84));
+				jtabPreviewLibs.setAutoscrolls(true);
 				
 				// Insere JTable dentro de JScrollPane
 				jscrlp  = new JScrollPane(jtabPreviewLibs);
@@ -410,10 +446,15 @@ public class Drawer implements ActionListener {
 	public static int getAntisensosFounded(){
 		return Integer.parseInt(antisensosFounded.getText());
 	}
+	
+	public static String getTargetSeq(){
+		return seqBusca.getText();
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent ae) {
-		if(ae.getActionCommand().equals("Set")){
+		switch(ae.getActionCommand()){
+		case "Set":
 			if(seqOriginal.getSelectedText() != null)
 				searchSeq = seqOriginal.getSelectedText();
 			else	
@@ -422,15 +463,15 @@ public class Drawer implements ActionListener {
 			writeToLog("Target sequence: " + searchSeq);
 			summaryContainer.removeAll();
 			drawSummaryContainer();
-		}
-		if(ae.getActionCommand().equals("Load")){
+			break;
+		case "Load":
 			JFileChooser jfc = new JFileChooser();
 			jfc.setFileFilter(new JTxtFileFilter());
 			jfc.setMultiSelectionEnabled(true);
 			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
 				for(File f: jfc.getSelectedFiles()){
 					String txt = f.getAbsolutePath();
-					if(f.canRead()){
+					if(f.canRead()){						
 						libs.add(txt);
 						listModel.addElement(txt);
 						writeToLog("File "+txt+" is being loaded.");
@@ -442,8 +483,8 @@ public class Drawer implements ActionListener {
 			}
 			summaryContainer.removeAll();
 			drawSummaryContainer();
-		}
-		if(ae.getActionCommand().equals("Unload")){
+			break;
+		case "Unload":
 			List<String> elements =jl.getSelectedValuesList();
 			for(String ele: elements){
 				libs.remove(ele);
@@ -453,28 +494,24 @@ public class Drawer implements ActionListener {
 			fillLibContainer();
 			summaryContainer.removeAll();
 			drawSummaryContainer();
-		}
-		
-		if(ae.getActionCommand().equals("Start")){
+			break;
+		case "Start":
 			// Monta reportContainer
 			writeToLog("Starting the hunt...");
-			startstopButton.setText("Cancel");
-			/////////////////////////////////////////
-			/////// Chamada para shunter-cmd////////
-			////////////////////////////////////////
+			startButton.setEnabled(false);
+			abortButton.setEnabled(true);
 			ArrayList<String> list = new ArrayList<String>();
 			list.add(searchSeq);
 			list.add("teste");
 			h = new Hunter(list.subList(0, 1),libs);
-			h.start();			
-			////////////////////////////////////////
-			////////////////////////////////////////
-			////////////////////////////////////////			
-		}
-		if(ae.getActionCommand().equals("Cancel")){
+			h.start();				
+			break;
+		case "Abort":
 			h.stop();
 			writeToLog("Hunt aborted");
-			startstopButton.setText("Start");
+			startButton.setEnabled(true);
+			abortButton.setEnabled(false);
+			break;
 		}
 	}
 	
@@ -490,7 +527,8 @@ public class Drawer implements ActionListener {
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");
 		}
-		startstopButton.setText("Start");
+		startButton.setEnabled(true);
+		abortButton.setEnabled(false);
 	}
 
 }

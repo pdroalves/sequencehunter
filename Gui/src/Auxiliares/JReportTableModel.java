@@ -30,15 +30,35 @@ public class JReportTableModel extends AbstractTableModel{
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if(columnIndex == 0){
-			return seqs.get(rowIndex);
-		}else{
-			return freqs.get(rowIndex);
+		Object obj = null;
+		switch(columnIndex){
+		case 0:
+			obj = seqs.get(rowIndex);
+			break;
+		case 1:
+			obj = freqs.get(rowIndex);
+			break;
 		}
+		return obj;
 	}
 	
+	@Override
+	public String getColumnName(int column) {
+		String name = null;
+		switch(column){
+		case 0:
+			name = "Sequences";
+			break;
+		case 1:
+			name = "#Paired";
+			break;
+		}
+		return name;
+	}
+
 	public void loadData(){
-		(new JReportLoadData(data,seqs,freqs)).start();
+		JReportLoadData jrld = new JReportLoadData(data,seqs,freqs);
+		jrld.load();
 		return;
 	}
 
