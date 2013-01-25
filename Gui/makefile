@@ -4,3 +4,7 @@ all:
 	javac -classpath src/ src/Principal.java -d bin/
 	jar cvfm $(DST) manifest -C bin/ .
 	chmod +x $(DST)
+
+clean:
+	rm ./SHunter.jar
+	rm -R bin/*
