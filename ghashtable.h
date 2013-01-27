@@ -14,4 +14,5 @@ void write_ht_to_file(GHashTable *hash_table);
 gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro);
 int tamanho_ht(GHashTable *hash_table);
 void write_ht_to_binary(GHashTable *hash_table);
+GHashTable* read_binary_to_ht(FILE *f);
 #endif

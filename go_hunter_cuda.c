@@ -74,7 +74,6 @@ void buffer_manager(int *buffer_load,
 				//////////////////////////////////////////
 				// Carrega o buffer //////////////////////
 				//////////////////////////////////////////
-				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 				int i;
 				int load1 = 0;
 				int load2 = 0;
@@ -83,6 +82,7 @@ void buffer_manager(int *buffer_load,
 				char **h_data2;
 				char **d_data2;
 				
+				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 				// Buffer 1
 				cudaHostAlloc((void**)&h_data1,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
@@ -147,7 +147,6 @@ void search_manager(int *buffer_load,
 							Fila *f_sensos,
 							Fila *f_antisensos){
 								
-				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				int i;
 				short int *h_resultados;
 				short int *d_resultados;
@@ -162,15 +161,18 @@ void search_manager(int *buffer_load,
 				int p;
 				float iteration_time;
 				int fsenso;
-				int fasenso;
-				fsenso=fasenso=0;
-	
+				int fasenso;	
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				cudaEvent_t startV,stopV;
 				char **local_data;
 				float elapsedTimeK,elapsedTime,elapsedTimeV;
 				
+
+				
+				THREAD_DONE[THREAD_SEARCH] = FALSE;
+				fsenso=fasenso=0;
+
 				cudaEventCreate(&start);
 				cudaEventCreate(&stop);
 				cudaEventCreate(&startK);
@@ -334,10 +336,10 @@ void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sens
 					//////////////////////////////////////////
 					// Libera memoria ////////////////////////
 					//////////////////////////////////////////
-					THREAD_DONE[THREAD_CLEANER] = FALSE;
 					  int retorno;
 					  char *hold;
 					  			  
+					THREAD_DONE[THREAD_CLEANER] = FALSE;
 					  while( *buffer_load == 0){
 						}//Aguarda para que o buffer seja enchido pela primeira vez
 						

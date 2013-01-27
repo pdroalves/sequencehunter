@@ -22,6 +22,7 @@
 	#include "processing_data.h"
 	#include "linkedlist.h"
 	#include "version.h"
+#include "ghashtable.h"
 	#define SEQ_BUSCA_TAM 1000
 
 	gchar *fromFile;
@@ -75,6 +76,7 @@
 	  int bv_size;
 	  int is_cuda_available = 1;
 	  int bibliotecas_validas;
+	  FILE *f;
 	  lista_ligada *resultados;
 	  Params set;
 	  GHashTable* hash_table;
@@ -106,7 +108,6 @@
 	  if(just_process){
 		if(!silent || gui_run)
 			printf("Iniciando em modo de processamento...\n");
-		  FILE *f;
 		  f = fopen(argv[1],"r");
 		  hash_table = read_binary_to_ht(f);
 	  }else{

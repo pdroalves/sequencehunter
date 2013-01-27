@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <omp.h>
+#include "processing_data.h"
 #define TAM_MAX 10000
 
 char* get_antisenso(char *s){
@@ -57,7 +58,7 @@ int get_sequencias_validas(FILE **f,int files){
 	int n = 0;
 	char *tmp;
 	
-	#pragma omp parallels shared(files) shared(seqs_validas)
+	#pragma omp parallel shared(files) shared(seqs_validas)
 	{
 		tmp = (char*)malloc(TAM_MAX*sizeof(char));
 		for(j=0;j < files;j++){		

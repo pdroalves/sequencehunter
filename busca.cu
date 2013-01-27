@@ -8,29 +8,18 @@
 
 #include <stdio.h>
 #include <cuda.h>
-extern "C" {
 #include "estruturas.h"
-}
 #include "cuda_functions.h"
 #include "log.h"
 
-__constant__ short int d_matrix_senso[MAX_SEQ_SIZE];
-__constant__ short int d_matrix_antisenso[MAX_SEQ_SIZE];
+#define ABSOLUTO(a) a>=0?a:-a
 short int matrix_senso[MAX_SEQ_SIZE];
 short int matrix_antisenso[MAX_SEQ_SIZE];
 
+__constant__ short int d_matrix_senso[MAX_SEQ_SIZE];
+__constant__ short int d_matrix_antisenso[MAX_SEQ_SIZE];
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 200)//Toma cuidado de não usar printf sem que a máquina suporte.
-#define printf(f, ...) ((void)(f, __VA_ARGS__),0)
-#endif
 
-#define ABSOLUTO(a) a>=0?a:-a
-
-__device__ __host__ int getSeqSize(char *seq);
-int getLine(char c);
-__device__ __host__ char* getBase(int *linha,int n);
-extern "C" __device__ __host__ int vec_diff(int analise[],int busca[],int fase);
-void getMatrix(int **matrix,char *str,int n);
 extern "C" void checkCudaError();
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +52,7 @@ __global__ void k_buscador(int totalseqs,
   ////////
   ////////
   
-  const unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;// id da sequencia analisada
+  unsigned int seqId;// id da sequencia analisada
   int baseId;// id da base analisada
   short int tipo;// Variavel temporaria para salvar o resultado de uma analise
   short int linha;// Cada thread cuida de uma linha
@@ -72,11 +61,12 @@ __global__ void k_buscador(int totalseqs,
   short int alarmS;// Caso a comparacao do valor da matriz senso falhe, essa variavel encerra o loop
   short int alarmAS;// Caso a comparacao do valor da matriz antisenso falhe, essa variavel encerra o loop
   short int fase;// Guarda a posicao analisada
-  const short int seqSize_bu = bloco1+bloco2+blocoV;// Tamanho da sequencia alvo
+  short int seqSize_bu;// Tamanho da sequencia alvo
   short int i;
   char *seq;// Sequencia sob analise
-  
-  
+  seqId = threadIdx.x + blockIdx.x*blockDim.x;
+  seqSize_bu = bloco1+bloco2+blocoV;
+
 	if(seqId < totalseqs){
 	  tipo = 0;
 	  fase = 0;

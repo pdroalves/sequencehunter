@@ -1,5 +1,3 @@
-/* This file was automatically generated.  Do not edit! */
-
 #ifndef LOG_H
 #define LOG_H
 void prepareLog();
@@ -17,6 +15,7 @@ void print_tipos_seqs(int sensos,int antisensos);
 void print_seqs_carregadas(int);
 void print_resultados(lista_ligada** resultados);
 void print_tempo(float tempo);
+void print_tempo_optional(float tempo);
 void print_sequencias_validas(int seqs_validas);
 void print_resultado(lista_ligada *p);
 void print_string_float(char *s,float f);

@@ -1,5 +1,5 @@
-/* This file was automatically generated.  Do not edit! */
-
+#ifndef LOAD_DATA_H
+#define LOAD_DATA_H
 int open_file(char **entrada,int qnt,gboolean silent);
 char *itoaa(unsigned long num);
 int cuda_supported();
@@ -13,3 +13,4 @@ int check_sequencias_validas(gboolean silent);
 extern gboolean check_seqs;
 void despejar_seq(char *seq,FILE *f);
 char* carrega_do_arquivo(int n,FILE *filename);
+#endif

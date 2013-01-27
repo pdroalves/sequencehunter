@@ -65,10 +65,13 @@ GHashTable* nc_memory_cleaner_manager(Buffer *buffer,Fila *f_sensos,Fila *f_anti
 	//////////////////////////////////////////
 		// Libera memoria ////////////////////////
 		//////////////////////////////////////////
-		THREAD_DONE[THREAD_CLEANER] = FALSE;
 		  int retorno;
 		  char *hold;
-		  GHashTable *hash_table = criar_ghash_table();
+		  GHashTable *hash_table;
+		
+		  THREAD_DONE[THREAD_CLEANER] = FALSE;
+		  hash_table = criar_ghash_table();
+
 		  while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
@@ -119,18 +122,20 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
 		
-		THREAD_DONE[THREAD_SEARCH] = FALSE;
 		int *search_gaps;
 		int *resultados;
 		int tam;
 		int i;
-		int p=0;
+		int p;
 		char *tmp;
 		cudaEvent_t startK,stopK,start,stop;
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
 		int fsensos,fasensos;
 		const int blocoV = blocos-bloco1-bloco2;
+		
+		THREAD_DONE[THREAD_SEARCH] = FALSE;
+		p = 0;
 		fsensos=fasensos=0;
 		
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
@@ -264,15 +269,16 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 	
 	Buffer buffer;
-	int blocoV = blocos - bloco1 - bloco2+1;
+	int blocoV;
 	Fila *f_sensos;
 	Fila *f_antisensos;
 	GHashTable* hash_table;
 	
-	//Inicializa buffer
+	//Inicializa
+	blocoV = blocos - bloco1 - bloco2+1;
 	prepare_buffer(&buffer,buffer_size_NC);
-	f_sensos = criar_fila();
-	f_antisensos = criar_fila();
+	f_sensos = criar_fila("Sensos");
+	f_antisensos = criar_fila("Antisensos");
 	omp_init_lock(&MC_copy_lock);
 	
 			
@@ -303,18 +309,21 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
 	int n;//Elementos por sequência
-	verbose = set.verbose;
-	silent = set.silent;
-	debug = set.debug;
-	central_cut = set.cut_central;
-	gui_run = set.gui_run;
 	GHashTable* hash_table;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;
 	//cudaEvent_t stop;
 	//cudaEventCreate(&start);
 	//cudaEventCreate(&stop);
-	float tempo = 0;
+	float tempo;
+
+	tempo = 0;
+	verbose = set.verbose;
+	silent = set.silent;
+	debug = set.debug;
+	central_cut = set.cut_central;
+	gui_run = set.gui_run;
+
 	  if(!silent)
 	printf("OpenMP Mode.\n");
 	printString("OpenMP Mode.\n",NULL);
