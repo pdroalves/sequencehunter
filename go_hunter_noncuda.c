@@ -31,9 +31,6 @@ const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
 const char tmp_ncuda_as_name[15] = "tmp_antisensos";
 
-
-
-
 void load_buffer_NONCuda(Buffer *b,int n){
 	
 	if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
@@ -81,8 +78,7 @@ GHashTable* nc_memory_cleaner_manager(Buffer *buffer,Fila *f_sensos,Fila *f_anti
 						if(tamanho_da_fila(f_sensos) > 0){
 							omp_set_lock(&MC_copy_lock);
 							hold = desenfileirar(f_sensos);
-							omp_unset_lock(&MC_copy_lock);
-								
+							omp_unset_lock(&MC_copy_lock);								
 								
 							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
 						}
@@ -183,8 +179,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				cudaEventRecord(start,0);
 						
 					
-					tam = buffer->load;
-					p += tam;
+				tam = buffer->load;
+				p += tam;
 					
 				for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){

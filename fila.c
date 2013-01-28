@@ -16,7 +16,7 @@
 #include "estruturas.h"
 #include "operacoes.h"
 #include "load_data.h"
-
+#include "log.h"
 
 Fila* criar_fila(char *nome){
 	Fila *f;
@@ -31,11 +31,17 @@ FilaItem* criar_elemento_fila(char *seq){
 	int n;
 	
 	n = strlen(seq);
+	novo = NULL;
 	novo = (FilaItem*)malloc(sizeof(FilaItem));
-	novo->seq = (char*)malloc((n+1)*sizeof(char));
+	if(novo != NULL){
+		novo->seq = (char*)malloc((n+1)*sizeof(char));
 	
-	strcpy(novo->seq,seq);
-	
+		strcpy(novo->seq,seq);
+	}else{
+		printStringInt("Impossível alocar memória.",sizeof(FilaItem));
+		printString("Encerrando.",NULL);
+		exit(1);
+	}
 	return novo;
 }
 
@@ -43,8 +49,10 @@ FilaItem* criar_elemento_fila(char *seq){
 void enfileirar(Fila *f,char *seq){
 		FilaItem* novo;
 		//printf("Enfileirando: %s\n",seq);
-		novo = criar_elemento_fila(seq);
 		
+		novo = NULL;
+		novo = criar_elemento_fila(seq);
+
 		switch(f->size){
 			case 0:
 				f->first = novo;

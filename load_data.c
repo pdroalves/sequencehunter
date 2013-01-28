@@ -132,7 +132,9 @@ void prepare_buffer(Buffer *b,int c){
 	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
-	for(i=0;i<c;i++) b->seq[i] = (char*)malloc((n+1)*sizeof(char));
+	
+	for(i=0;i<c;i++) 
+		b->seq[i] = (char*)malloc((n+1)*sizeof(char));
 	
 	b->load = 0;
 	tamanho_do_buffer = itoaa(c);

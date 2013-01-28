@@ -5,6 +5,7 @@ void print_time();
 void printToLog_Fim(int tiro,int raio,int fim,float x,float z);
 void printToLog_Mem(float MemUsada,float MemPorIter);
 void printToLog_Runtime(float t);
+void printStringInt(char *c,int n);
 void printString(char*,char*);
 void printSet(int);
 void print_open_file(char *c);

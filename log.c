@@ -60,6 +60,12 @@ void print_open_file(char *c){
 	fprintf(logfileDetalhado,"Arquivo %s aberto.",c);
 	return;
 }
+
+void printStringInt(char *c,int n){
+		fprintf(logfile,"%s %d\n",c,n);
+		fprintf(logfileDetalhado,"%s %d\n",c,n);	
+}
+
 void printString(char *c,char *s){
 	if(s != NULL){
 		fprintf(logfile,"%s %s\n",c,s);
