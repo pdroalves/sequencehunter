@@ -42,9 +42,9 @@ GHashTable* criar_ghash_table(){
 	return g_hash_table_new_full(g_str_hash,g_str_equal,free_key,free_value);
 }
 
-void destroir_ghash_table(GHashTable *hash_table){
+void destroy_ghash_table(GHashTable *hash_table){
 	g_hash_table_destroy (hash_table);
-	free(hash_table); 
+	//free(hash_table); 
 	return;
 }
 
@@ -100,8 +100,38 @@ value* atualizar_parametro(value *novo, value *velho){
 	return atualizacao;
 }
 
-void recupera_despareados_func(gchar *seq,value *entry,Despareados *desp){
+void recupera_tipos_func(gpointer *seqH,gpointer *entryH,gpointer *despH){
+	Pares *desp;
+
+	desp = (Pares*) despH;
+
+	desp->sensos++;
+	desp->antisensos++;
+	return;
+}
+
+Pares* recupera_tipos_ht(GHashTable *hash_table){
+	Pares *desp;
+	
+	desp = (Pares*)malloc(sizeof(Pares));
+	desp->sensos = 0;
+	desp->antisensos = 0;
+
+	g_hash_table_foreach(hash_table,recupera_tipos_func,desp);
+	
+	return desp;
+}
+
+void recupera_despareados_func(gpointer *seqH,gpointer *entryH,gpointer *despH){
 	int diff;
+	gchar *seq;
+	value *entry;
+	Pares *desp;
+
+	seq = (gchar*) seqH;
+	entry = (value*) entryH;
+	desp = (Pares*) despH;
+
 	diff = entry->qsenso - entry->qasenso;
 	//printf("%s - S:%d - As:%d\n",atual->senso,atual->qsenso,atual->qasenso);
 	//print_despareadas(seq,entry->qsenso,entry->qasenso);
@@ -112,11 +142,13 @@ void recupera_despareados_func(gchar *seq,value *entry,Despareados *desp){
 	return;
 }
 
-Despareados* recupera_despareados_ht(GHashTable *hash_table){
-	Despareados *desp;
+Pares* recupera_despareados_ht(GHashTable *hash_table){
+	Pares *desp;
 	
-	desp = (Despareados*)malloc(sizeof(Despareados));
-	
+	desp = (Pares*)malloc(sizeof(Pares));
+	desp->sensos = 0;
+	desp->antisensos = 0;
+
 	g_hash_table_foreach(hash_table,recupera_despareados_func,desp);
 	
 	return desp;

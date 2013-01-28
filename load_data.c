@@ -69,11 +69,12 @@ int open_file(char **entrada,int qnt,gboolean silent){
 	while(files < qnt && abertos+1 < qnt){
 		f[files] = fopen(entrada[abertos+1],"r");
 		checks[files] = f[files]!=NULL;
+
 		if(!checks[files]){
-			if(!silent)
 			printf("Arquivo %s não pode ser aberto.\n",entrada[files+1]);
+			printString("Arquivo não pode ser aberto: ",entrada[files+1]);
+			files++;
 		}else{
-			if(!silent)
 			printf("Arquivo %s aberto.\n",entrada[abertos+1]);
 			print_open_file(entrada[abertos+1]);
 			files++;

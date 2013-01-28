@@ -64,11 +64,11 @@ struct buffer{
 };
 typedef struct buffer Buffer;
 
-struct despareados{
+struct pares{
     int sensos;
     int antisensos;
 };
-typedef struct despareados Despareados;
+typedef struct pares Pares;
 
 struct params{
 	int verbose;

@@ -2,10 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
+#include "linkedlist.h"
 #include "ghashtable.h"
 #include "estruturas.h"
 #include "load_data.h"
 #include "log.h"
+
 #define TAM_MAX 10000
 
 int check_seq_valida(char *p){
@@ -44,12 +46,11 @@ int check_seq_valida(char *p){
 
 lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean silent,gboolean gui_run){
 	
-	Despareados *desp;
+	Pares *desp;
+	Pares *tipos;
 	lista_ligada *l;
 	lista_ligada *resultados;
-	int s_tipos = 0;
-	int as_tipos = 0;
-	
+
 	//print_all(hash_table);
 	if(hash_table == NULL){
 	  if(!silent)
@@ -61,18 +62,21 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean sil
 			printf("Nao foram encontradas sequências com pareamento.\n");
 			resultados = criar_lista();
 		}else{
-			// To-do: Funcao para contar tipos de senso e antisenso
-	  if(!silent){
-			printf("Tipos de senso encontrados: %d.\n",s_tipos);
-			printf("Tipos de antisenso encontrados: %d.\n",as_tipos);
-			printf("Procurando sensos despareados...\n");
-		}
+			tipos = recupera_tipos_ht(hash_table);
 			desp = recupera_despareados_ht(hash_table);
+		  
+			if(!silent){
+				 printf("Tipos de senso encontrados: %d.\n",tipos->sensos);
+				printf("Tipos de antisenso encontrados: %d.\n",tipos->antisensos);
+				printf("Procurando sensos despareados...\n");
+				free(tipos);
+			}
 			print_despareadas_seqs(desp->sensos,desp->antisensos);
-	  if(!silent){
-			printf("Sensos despareados: %d.\n",desp->sensos);
-			printf("Antisensos despareados: %d.\n",desp->antisensos);
-		}
+			if(!silent){
+				printf("Sensos despareados: %d.\n",desp->sensos);
+				printf("Antisensos despareados: %d.\n",desp->antisensos);
+			}
+		
 			// Calcula quantidade relativa dos elementos
 			qnt_relativa_ht(hash_table);
 
@@ -83,6 +87,7 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean sil
 			resultados = ordena_pares(l,max_events);
 		}
 	}
+	free(desp);
 	return resultados;
 }
 

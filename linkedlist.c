@@ -164,13 +164,13 @@ lista_ligada* ordena_pares(lista_ligada* l,int max_events){
 	return resultados;
 }
 	
-Despareados* recupera_despareados(lista_ligada *l){
+Pares* recupera_despareados(lista_ligada *l){
 	lista_ligada *atual,*anterior;
 	int sensos_solitarios = 0;
-	Despareados *desp;
+	Pares *desp;
 	int diff;
 	
-	desp = (Despareados*)malloc(sizeof(Despareados));
+	desp = (Pares*)malloc(sizeof(Pares));
 	
 	anterior = l;
 	if(anterior != NULL){
@@ -193,10 +193,10 @@ Despareados* recupera_despareados(lista_ligada *l){
 
 void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui_run){
 	lista_ligada *p;
-	int i = 0;
-	
+	int i;	
 	FILE *out;
-	char outname[50];
+	char outname_tmp[500];
+	char outname[500];
 	char *tempo;	
 	time_t t;
 	
@@ -204,17 +204,28 @@ void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui
 	tempo = ctime(&t);
 	tempo[strlen(tempo)-1] = '\0';
 	
-	strcpy(outname,"resultados - ");
-	strcat(outname,tempo);
-	strcat(outname,".txt");
+	strcpy(outname_tmp,"resultados - ");
+	strcat(outname_tmp,tempo);
+	strcat(outname_tmp,".txt");
+
+	for(i=0;i <= strlen(outname_tmp); i++){
+		if(outname_tmp[i] == ':')
+			outname[i] = ' ';
+		else
+			outname[i] = outname_tmp[i];
+	}
+
 	out = fopen(outname,"a");
+	if(!out){
+		printString("Resultados não puderam ser salvos em ",outname);
+	}
 
 	fprintf(out,"################### %s ###################\n\n",tempo); 
 	
 	p = resultados->prox;
 	while(p != NULL){
 		if(!silent)
-			printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+			printf("	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qnt_relativa*100,p->qsenso,p->qasenso);
 		fprintf(out,"%s		%d\n",p->senso,p->pares);
 		print_resultado(p);
 		p = p->prox;

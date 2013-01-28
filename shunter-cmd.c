@@ -23,10 +23,12 @@
 	#include "processing_data.h"
 	#include "linkedlist.h"
 	#include "version.h"
-#include "ghashtable.h"
+	#include "ghashtable.h"
+	
 	#define SEQ_BUSCA_TAM 1000
 
 	gchar *fromFile;
+	gchar *target_name;
 	gchar *target_seq;
 	gboolean disable_cuda = FALSE;
 	gboolean verbose = FALSE;
@@ -44,6 +46,7 @@
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
 		{ "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Define a sequencia alvo.", NULL },
+		{ "name", 'n', 0, G_OPTION_ARG_STRING, &target_name, "Define uma identificacao para a sequencia alvo.", NULL },
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
 		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca de um arquivo de texto.", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
@@ -107,6 +110,8 @@
 	  
 	  //Inicializa
 	  prepareLog();	 
+	  c = NULL;
+	  nome = NULL;
 	  
 	  if(just_process){
 		if(!silent || gui_run)
@@ -139,7 +144,7 @@
 		  
 		//////////////////////////////////
 		////////////////////////////////////////////////////////
-		if(fromFile != NULL){
+		if(fromFile){
 			FILE *set;
 			set = fopen(fromFile,"r");
 			if(set == NULL){
@@ -156,28 +161,34 @@
 			fscanf(set,"%s",nome);
 			
 		}else{
-			if(target_seq != NULL){
+			if(target_seq){
 				strcpy(c,target_seq);
+				if(target_name){
+					strcpy(nome,target_name);
+				}
 			}else{
 			  if(!silent)
 				printf("Entre a sequência: ");
 			  scanf("%s",c);
-			  if(c == NULL){
+			  if(!c){
 				  printf("Erro na leitura\n");
 				  exit(1);
-		  }
+				}
+			 if(!silent && !gui_run)
+				printf("Entre uma identificação para essa busca: ");
+				scanf("%s",nome);
+			}
 	   }
 
-	  if(!silent)
-		printf("Entre uma identificação para essa busca: ");
-		scanf("%s",nome);
-		}
+	 
 		
 		 if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
 			 printf("Sequência de busca inválida\n");
 			 exit(1);
 		}  
-		printString("Identificação da busca: ",nome);
+		if(nome)
+			printString("Identificação da busca: ",nome);
+		if(c)
 		  printString("Sequência de busca: ",c);
 		  
 		 c_size = b1_size+b2_size+bv_size;
@@ -223,6 +234,6 @@
 		printf("Algoritmo concluído.\n");
 	close_file();
 	if(hash_table != NULL)
-		destroir_ghash_table(hash_table);
+		destroy_ghash_table(hash_table);
 	return 0;
 }
