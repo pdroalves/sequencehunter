@@ -11,7 +11,8 @@
 	#include <stdlib.h>
 	#include <cuda.h>
 	#include <cuda_runtime_api.h>
-	#include <glib.h>
+	#include <glib.h>	
+	#include <string.h>
 	#include "operacoes.h"
 	#include "cuda_functions.h"
 	//#include "linkedlist.h"
@@ -26,6 +27,7 @@
 	#define SEQ_BUSCA_TAM 1000
 
 	gchar *fromFile;
+	gchar *target_seq;
 	gboolean disable_cuda = FALSE;
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
@@ -41,8 +43,9 @@
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
+		{ "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Define a sequencia alvo.", NULL },
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
-		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca do arquivo shset.dat.", NULL },
+		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca de um arquivo de texto.", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
 		{ "events", 'e', 0, G_OPTION_ARG_INT, &max_events, "Quantidade maxima de eventos a serem exportados. Padrao: 20.", NULL},
 		{ "cutseqs", 't', 0, G_OPTION_ARG_NONE, &cutmode, "Guarda apenas o bloco variavel central de cada sequencia apos a filtragem.", NULL },
@@ -153,13 +156,17 @@
 			fscanf(set,"%s",nome);
 			
 		}else{
-			if(!silent)
-		  printf("Entre a sequência: ");
-		  scanf("%s",c);
-		  if(c == NULL){
-			  printf("Erro na leitura\n");
-			  exit(1);
+			if(target_seq != NULL){
+				strcpy(c,target_seq);
+			}else{
+			  if(!silent)
+				printf("Entre a sequência: ");
+			  scanf("%s",c);
+			  if(c == NULL){
+				  printf("Erro na leitura\n");
+				  exit(1);
 		  }
+	   }
 
 	  if(!silent)
 		printf("Entre uma identificação para essa busca: ");
