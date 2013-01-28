@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +39,7 @@ public class Translator extends Thread{
 				else
 					Drawer.huntDone(null);
 			shellIn.close();
-			process.destroy();
+			killProcess(process);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -80,5 +81,30 @@ public class Translator extends Thread{
 	public void kill(){
 		stop = true;
 		return;
+	}
+	
+	public void killProcess(Process p){
+		String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + "SHunter.exe" + "\"" ;
+		Pattern taskIdPattern = Pattern.compile("(\\d+)");
+		try {
+			Process process = Runtime.getRuntime().exec(processData);
+			InputStream shellIn = process.getInputStream();
+			BufferedReader br = new BufferedReader(new InputStreamReader(shellIn,"UTF-8"));
+			String buffer = br.readLine();
+			while(buffer != null){
+				Matcher taskIdMatcher = taskIdPattern.matcher(buffer);
+				if(taskIdMatcher.find()){
+					String tkProcess = "cmd /c taskkill /PID "+taskIdMatcher.group(1)+" /F";
+					Process taskkill = Runtime.getRuntime().exec(tkProcess);
+				}
+				buffer = br.readLine();
+			}
+			shellIn.close();
+			
+			shellIn.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
 }
