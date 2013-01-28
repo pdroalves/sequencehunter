@@ -38,6 +38,7 @@ public class Translator extends Thread{
 				else
 					Drawer.huntDone(null);
 			shellIn.close();
+			process.destroy();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

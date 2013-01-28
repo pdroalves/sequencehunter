@@ -59,6 +59,8 @@ public class Drawer implements ActionListener {
 		seqOriginal = new JBaseTextField(25);
 		seqBusca = new JLabel();
 		statusLog = new JTextArea();
+		statusLog.setLineWrap(true);
+		statusLog.setWrapStyleWord(true); 
 		jl = new JList<String>();
 		listModel = new DefaultListModel<String>();  
 		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
@@ -75,6 +77,7 @@ public class Drawer implements ActionListener {
 		startButton = new JButton("Start");
 		startButton.addActionListener(this);
 		abortButton = new JButton("Abort");
+		abortButton.setEnabled(false);
 		abortButton.addActionListener(this);
 		
 		// Cria JFrame container
@@ -93,9 +96,7 @@ public class Drawer implements ActionListener {
 		jfrm.setJMenuBar(drawMenuBar());
 		
 		//Seta posicao inicial para centro da tela
-		//jfrm.setLocationRelativeTo(null);
-		
-		
+		//jfrm.setLocationRelativeTo(null);	
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		
@@ -107,13 +108,28 @@ public class Drawer implements ActionListener {
 		
 		// Monta reportContainer
 		jtp.addTab("Report",null,reportContainer,"Check the results after a hunt");
+
 		
-		jfrm.add(jtp,BorderLayout.CENTER);
-		
+		JPanel top = new JPanel(new BorderLayout());
+		top.add(jtp,BorderLayout.CENTER);
 		// Monta statusContainer
-		jfrm.add(drawStatusContainer(),BorderLayout.SOUTH);
+		JPanel bottom = new JPanel(new BorderLayout());
+		bottom.add(drawStatusContainer());		
+		
+		// Cria JSplitPane e adiciona JScrollpane nele
+		top.setMinimumSize(new Dimension(0,0));
+		bottom.setMinimumSize(new Dimension(0,0));
+		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,top,bottom);
+		//jsp.setDividerSize(10);
+		jsp.setOneTouchExpandable(true);
+				
+		jfrm.add(jsp,BorderLayout.CENTER);
 				
 		jfrm.setVisible(true);
+		
+		jsp.setDividerLocation(0.70);
+		jsp.setResizeWeight(0.5);
+		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
 	}
 	
 	private JMenuBar drawMenuBar(){
@@ -253,14 +269,6 @@ public class Drawer implements ActionListener {
 		return jp;
 	}
 
-	private void drawTableLibsContainer(){
-
-		JScrollPane jscrlp = new JScrollPane(jl);
-		jl.setModel(listModel);
-		
-		jpTableList.add(jscrlp);
-		return;
-	}
 	
 	private void drawEmptyLibsContainer(){	
 		jpTableList.removeAll();
@@ -326,23 +334,21 @@ public class Drawer implements ActionListener {
 	}
 	
 	
-	private Container drawStatusContainer(){
-		Box vbox = Box.createVerticalBox();
-		
+	private JPanel drawStatusContainer(){
+		JPanel statusPanel = new JPanel(new BorderLayout());
+
 		// Cria scroll pane e adiciona statusLog dentro
 		statusLog.setEditable(false);
 		statusLog.append("Sequence Hunter started...");
 		JScrollPane jscrlp = new JScrollPane(statusLog);	
-		jscrlp.setPreferredSize(new Dimension(250,200));
-		
-		// Adiciona tudo na vbox
+		//jscrlp.setPreferredSize(new Dimension(250,200));
 		JLabel statusLabel = new JLabel("Status: ");
-		vbox.add(statusLabel);
-		vbox.add(jscrlp);
-
-		// Monta progressBarContainer
-		vbox.add(drawProgressBarContainer(jprog));
-		return vbox;
+				
+		// Adiciona tudo na Panel
+		statusPanel.add(statusLabel,BorderLayout.NORTH);
+		statusPanel.add(jscrlp,BorderLayout.CENTER);
+		statusPanel.add(drawProgressBarContainer(jprog),BorderLayout.SOUTH);
+		return statusPanel;
 	}
 	
 	private void fillLibContainer(){
@@ -363,7 +369,6 @@ public class Drawer implements ActionListener {
 				JPanel jp = new JPanel();
 				final JLazyTableModel jltm = new JLazyTableModel(lib);
 				jtabPreviewLibs = new JTable(jltm);
-				TableCellRenderer defaultTableRenderer = jtabPreviewLibs.getDefaultRenderer(Object.class);
 				DefaultTableCellRenderer indexRenderer = new DefaultTableCellRenderer();
 				indexRenderer.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
 				jtabPreviewLibs.getColumnModel().getColumn(0).setCellRenderer(new JTableRenderer(indexRenderer));
@@ -461,6 +466,7 @@ public class Drawer implements ActionListener {
 				searchSeq = seqOriginal.getText();
 			seqBusca.setText(searchSeq);
 			writeToLog("Target sequence: " + searchSeq);
+			fillLibContainer();
 			summaryContainer.removeAll();
 			drawSummaryContainer();
 			break;
@@ -501,9 +507,7 @@ public class Drawer implements ActionListener {
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
 			ArrayList<String> list = new ArrayList<String>();
-			list.add(searchSeq);
-			list.add("teste");
-			h = new Hunter(list.subList(0, 1),libs);
+			h = new Hunter(searchSeq,libs);
 			h.start();				
 			break;
 		case "Abort":
@@ -517,6 +521,7 @@ public class Drawer implements ActionListener {
 	
 	static public void writeToLog(String txt){
 		statusLog.append("\n"+txt);
+		statusLog.setCaretPosition(statusLog.getDocument().getLength());
 		return;
 	}
 	
