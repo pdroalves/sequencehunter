@@ -1,28 +1,17 @@
 package Hunt;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 import Gui.Drawer;
 
 public class Hunter{
 	
 	private ProcessBuilder pb;
-	private String shuntercmd_win = "SHUNTER";
-	private String CUDA_ENV_WIN = "CUDA_BIN_PATH";
+	private static String appName = "SHunter.exe";
+	private static String shuntercmd = "%SHUNTER%";
+	//private static String CUDA_ENV_WIN = "CUDA_BIN_PATH";
 	private Translator t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 
@@ -37,7 +26,7 @@ public class Hunter{
 			}
 			
 			// Aqui falta um throw exception caso realshuntercmd seja nulo
-			String command = System.getenv("SHUNTER") +" "+ libsPath + " " + parameters;
+			String command = shuntercmd +" "+ libsPath + " " + parameters;
 					
 			Drawer.writeToLog(command);
 			
@@ -51,7 +40,7 @@ public class Hunter{
 			
 			//pb.environment().put("LD_LIBRARY_PATH","/usr/local/cuda/lib64:/usr/local/cuda/lib");
 			pb.redirectErrorStream(true);	
-			//pb.redirectOutput(Redirect.PIPE);
+			pb.redirectOutput(Redirect.PIPE);
 			
 			// Instancia interpretador
 			t = new Translator(pb);
@@ -64,6 +53,10 @@ public class Hunter{
 	
 	public void stop(){
 		t.kill();
+	}
+	
+	static public String getAppName(){
+		return appName;
 	}
 	
 }

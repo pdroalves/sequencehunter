@@ -35,7 +35,6 @@ FilaItem* criar_elemento_fila(char *seq){
 	novo = (FilaItem*)malloc(sizeof(FilaItem));
 	if(novo != NULL){
 		novo->seq = (char*)malloc((n+1)*sizeof(char));
-	
 		strcpy(novo->seq,seq);
 	}else{
 		printStringInt("Impossível alocar memória.",sizeof(FilaItem));
