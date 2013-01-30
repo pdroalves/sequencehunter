@@ -39,7 +39,7 @@ void free_value(value *valor){
 
 GHashTable* criar_ghash_table(){
 	//return g_hash_table_new(g_str_hash,g_str_equal,free,free);
-	return g_hash_table_new_full(g_str_hash,g_str_equal,free_key,free_value);
+	return g_hash_table_new_full(g_str_hash,g_str_equal,(GDestroyNotify) free_key,(GDestroyNotify) free_value);
 }
 
 void destroy_ghash_table(GHashTable *hash_table){
@@ -65,7 +65,7 @@ gboolean adicionar_ht(GHashTable *hash_table,gchar *seq,value* novo_parametro){
 	
 	#pragma omp critical
 	{
-		velho_parametro = g_hash_table_lookup(hash_table,seq);
+		velho_parametro = (value*) g_hash_table_lookup(hash_table,seq);
 		if(velho_parametro == NULL){
 			g_hash_table_insert(hash_table,seq,novo_parametro);
 			answer = TRUE;
@@ -82,7 +82,7 @@ void print_all(GHashTable *hash_table){
 	value *entry;
 	
 	g_hash_table_iter_init(&iter,hash_table);
-	while(g_hash_table_iter_next(&iter,&key,&entry)){
+	while(g_hash_table_iter_next(&iter,(gpointer*)&key,(gpointer*)&entry)){
 		printf("%s\n",key);
 		printf("%d - %d\n",entry->qsenso,entry->qasenso);
 		print_despareadas(key,entry->qsenso,entry->qasenso);

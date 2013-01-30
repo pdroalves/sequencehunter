@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,9 +39,14 @@ public class Translator extends Thread{
 					Drawer.huntDone(null);
 			shellIn.close();
 			killProcess(process);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		}catch(IllegalArgumentException e){
 			e.printStackTrace();
+			Drawer.writeToLog("Hunt fail.");
+			Drawer.huntAbort();
+		}catch (IOException e) {
+			e.printStackTrace();
+			Drawer.writeToLog("Hunt fail.");
+			Drawer.huntAbort();
 		}
 		return;
 	}
@@ -84,7 +88,7 @@ public class Translator extends Thread{
 	}
 	
 	public void killProcess(Process p){
-		String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + "SHunter.exe" + "\"" ;
+		String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + Hunter.getAppName() + "\"" ;
 		Pattern taskIdPattern = Pattern.compile("(\\d+)");
 		try {
 			Process process = Runtime.getRuntime().exec(processData);
@@ -95,7 +99,7 @@ public class Translator extends Thread{
 				Matcher taskIdMatcher = taskIdPattern.matcher(buffer);
 				if(taskIdMatcher.find()){
 					String tkProcess = "cmd /c taskkill /PID "+taskIdMatcher.group(1)+" /F";
-					Process taskkill = Runtime.getRuntime().exec(tkProcess);
+					Runtime.getRuntime().exec(tkProcess);
 				}
 				buffer = br.readLine();
 			}

@@ -14,14 +14,11 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
 
 import Auxiliares.JBaseTextField;
 import Auxiliares.JLazyTableModel;
 import Auxiliares.JReportTableModel;
 import Auxiliares.JTxtFileFilter;
-import Auxiliares.TableColumnAdjuster;
 import Dialogs.AboutDialog;
 import Hunt.Hunter;
 import Hunt.Library;
@@ -35,7 +32,6 @@ public class Drawer implements ActionListener {
 	private static JLabel seqBusca;
 	private JButton setSeqButton;
 	private static JTextArea statusLog;
-	private JTextField outputDir;
 	private static JButton startButton;
 	private static JButton abortButton;
 	private JProgressBar jprog;
@@ -50,7 +46,7 @@ public class Drawer implements ActionListener {
 	private static Boolean noReports = true;
 	private int xSize = 700;
 	private int ySize = 1000;
-	private Hunter h;
+	private static Hunter h;
 	private static JLabel processedSeqs;
 	private static JLabel sensosFounded;
 	private static JLabel antisensosFounded;
@@ -506,15 +502,11 @@ public class Drawer implements ActionListener {
 			writeToLog("Starting the hunt...");
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
-			ArrayList<String> list = new ArrayList<String>();
 			h = new Hunter(searchSeq,libs);
 			h.start();				
 			break;
 		case "Abort":
-			h.stop();
-			writeToLog("Hunt aborted");
-			startButton.setEnabled(true);
-			abortButton.setEnabled(false);
+			huntAbort();
 			break;
 		}
 	}
@@ -532,6 +524,13 @@ public class Drawer implements ActionListener {
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");
 		}
+		startButton.setEnabled(true);
+		abortButton.setEnabled(false);
+	}
+	
+	static public void huntAbort(){
+		h.stop();
+		writeToLog("Hunt aborted");
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
 	}
