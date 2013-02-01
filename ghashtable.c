@@ -13,6 +13,7 @@
 #include <glib.h>
 #include <omp.h>
 #include "estruturas.h"
+#include "ghashtable.h"
 #include "log.h"
 #include "linkedlist.h"
 /*#include <omp.h>
@@ -229,22 +230,17 @@ void ht_to_binary(gchar *seq,value *entry,FILE *f){
 	}
 }
 
-void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l){
+void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,char *tempo){
 	FILE *f;
 	int i;
-	int size = tamanho_ht(hash_table);
-	char outname[50];
-	char outname_tmp[50];
-	char *tempo;	
-	time_t t;
-	
-	time(&t);
-	tempo = ctime(&t);
+	const int size = tamanho_ht(hash_table);
+	char outname[100];
+	char outname_tmp[100];
+
 	tempo[strlen(tempo)-1] = '\0';
-	
-	strcpy(outname_tmp,"output - ");
+	strcpy(outname_tmp,"SHunter Output - ");
 	strcat(outname_tmp,tempo);
-	strcat(outname_tmp,".shunt");
+	strcat(outname_tmp-1,".shunt");
 
 	for(i=0;i <= strlen(outname_tmp); i++){
 		if(outname_tmp[i] == ':')
@@ -252,8 +248,14 @@ void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l){
 		else
 			outname[i] = outname_tmp[i];
 	}
+	outname[i] = '\0';
 	
 	f = fopen(outname,"w");
+	if(f == NULL){
+		perror (outname);
+		printString("Impossivel salvar arquivo binario bruto\n",outname);
+		return;
+	}
 	fwrite(&size,sizeof(int),1,f);
 	fwrite(&regiao5l,sizeof(int),1,f);
 	g_hash_table_foreach(hash_table,(GHFunc) ht_to_binary,f);
@@ -271,13 +273,11 @@ GHashTable* read_binary_to_ht(FILE *f){
 	int seq_len;
 	int qsenso;
 	int qasenso;
-	float qnt_relativa;
 	int sub_size;
 	int sub_seq_len;
 	int sub_qsenso;
 	int sub_qasenso;
 	int sub_status;
-	float sub_qnt_relativa;
 	char *esq_seq;
 	char *seq;
 	gboolean regiao5l;
@@ -296,7 +296,7 @@ GHashTable* read_binary_to_ht(FILE *f){
 			fread(&sub_status,sizeof(int),1,f);
 			sub_hash_table = criar_ghash_table();
 			while(sub_status){
-				fread(&seq_len,sizeof(int),1,f);
+				fread(&sub_seq_len,sizeof(int),1,f);
 				esq_seq = (char*)malloc(seq_len*sizeof(char));
 				fread(esq_seq,sizeof(char),seq_len,f);
 				fread(&sub_qsenso,sizeof(int),1,f);

@@ -13,7 +13,7 @@ void qnt_relativa_ht(GHashTable *hash_table);
 void write_ht_to_file(GHashTable *hash_table);
 gboolean adicionar_ht(GHashTable *hash_table,gchar *central,gchar *cincol,value* novo_parametro);
 int tamanho_ht(GHashTable *hash_table);
-void write_ht_to_binary(GHashTable *hash_table);
+void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,char *tempo);
 GHashTable* read_binary_to_ht(FILE *f);
 lista_ligada* converter_para_lista_ligada(GHashTable *hash_table);
 #endif

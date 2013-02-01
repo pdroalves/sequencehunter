@@ -13,6 +13,7 @@
 	#include <cuda_runtime_api.h>
 	#include <glib.h>	
 	#include <string.h>
+	#include <time.h>
 	#include "operacoes.h"
 	#include "cuda_functions.h"
 	//#include "linkedlist.h"
@@ -91,6 +92,8 @@
 	  lista_ligada *resultados;
 	  Params set;
 	  GHashTable* hash_table;
+	  time_t t;
+	   char *tempo;
 
 	  
 	  //##########################
@@ -114,9 +117,12 @@
 		printf("Modo verbose\n");
 	  
 	  //Inicializa
-	  prepareLog();	 
-	  c = NULL;
-	  nome = NULL;
+	 time(&t);
+	 tempo = ctime(&t);
+
+	 prepareLog(tempo);	 
+	 c = NULL;
+	 nome = NULL;
 	  
 	  if(just_process){
 		if(!silent || gui_run)
@@ -126,7 +132,6 @@
 	  }else{
 	  
 		  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
-		  nome = (char*)malloc((100)*sizeof(char));
 		  
 		  if(c == NULL){
 			  printf("Erro alocando memória.\n");
@@ -164,12 +169,14 @@
 				printf("Erro na leitura\n");
 				exit(1);
 			}
+			nome = (char*)malloc((500)*sizeof(char));
 			fscanf(set,"%s",nome);
 			
 		}else{
 			if(target_seq){
 				strcpy(c,target_seq);
 				if(target_name){
+					nome = (char*)malloc((500)*sizeof(char));
 					strcpy(nome,target_name);
 				}
 			}else{
@@ -182,6 +189,7 @@
 				}
 			 if(!silent && !gui_run)
 				printf("Entre uma identificação para essa busca: ");
+				nome = (char*)malloc((500)*sizeof(char));
 				scanf("%s",nome);
 			}
 	   }
@@ -211,7 +219,7 @@
 		if(disable_cuda){
 	  if(!silent || gui_run)
 			printf("Forçando modo OpenMP.\n");
-			printString(NULL,"Forçando modo OpenMP.");
+			printString("Forçando modo OpenMP.",NULL);
 			hash_table = aux(0,c,b1_size,b2_size,c_size,set); 
 		}
 		else{
@@ -220,14 +228,14 @@
 		free(c);
 	}
 	
-	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent)
+	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent) shared(regiao5l)
 	{
 		#pragma omp sections
 		{
 			#pragma omp section
 			{
 			if(!just_process && keep)
-				write_ht_to_binary(hash_table);			
+				write_ht_to_binary(hash_table,regiao5l,tempo);			
 			}
 			#pragma omp section
 			{
@@ -236,7 +244,7 @@
 		}
 	}
 	
-	imprimir(resultados,max_events,silent,gui_run);
+	imprimir(resultados,tempo,max_events,silent,gui_run);
 	
 	if(!silent)
 		printf("Algoritmo concluído.\n");
