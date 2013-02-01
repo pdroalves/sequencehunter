@@ -82,7 +82,7 @@ int open_file(char **entrada,int qnt,gboolean silent){
 		}
 	}
 	free(checks);
-	return files;
+	return abertos;
 }
 
 int check_sequencias_validas(gboolean silent){

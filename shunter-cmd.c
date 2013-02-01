@@ -30,6 +30,8 @@
 	gchar *fromFile;
 	gchar *target_name;
 	gchar *target_seq;
+	gint dist_regiao_5l = 0;
+	gint tam_regiao_5l = 0;
 	gboolean disable_cuda = FALSE;
 	gboolean verbose = FALSE;
 	gboolean silent = FALSE;
@@ -39,14 +41,17 @@
 	gboolean cutmode = FALSE;
 	gboolean keep = FALSE;
 	gboolean gui_run = FALSE;
+	gboolean regiao5l = FALSE;
 	gint max_events = 20;
 	//###############
 	static GOptionEntry entries[] = 
 	  {
 		//O comando "rápido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
-		{ "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Define a sequencia alvo.", NULL },
+		{ "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Define a sequencia alvo S.", NULL },
 		{ "name", 'n', 0, G_OPTION_ARG_STRING, &target_name, "Define uma identificacao para a sequencia alvo.", NULL },
+		{ "dist5l", NULL, 0, G_OPTION_ARG_INT, &dist_regiao_5l, "Define a quantidade de bases entre o inicio do bloco variavel e o inicio da regiao 5' a esquerda.", NULL },
+		{ "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
 		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca de um arquivo de texto.", NULL },
 		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
@@ -135,7 +140,8 @@
 			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
 		}
-		  bibliotecas_validas = open_file(argv,argc,silent);
+
+		bibliotecas_validas = open_file(argv,argc,silent);
 		if(bibliotecas_validas == 0){
 			printf("Por favor, entre uma biblioteca válida.\n");
 			exit(1);
@@ -199,6 +205,8 @@
 		 set.debug = debug;
 		 set.cut_central = cutmode;
 		 set.gui_run = gui_run;
+		 set.dist_regiao_5l = dist_regiao_5l;
+		 set.tam_regiao_5l = tam_regiao_5l;
 		 
 		if(disable_cuda){
 	  if(!silent || gui_run)

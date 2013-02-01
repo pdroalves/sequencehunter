@@ -12,18 +12,19 @@
 #include "log.h"
 #include "fila.h"
 
-#define OMP_NTHREADS 3
+#define OMP_NTHREADS 2
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
-#define THREAD_RESULTS 2
-#define THREAD_CLEANER 3
 
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
 gboolean debug;
-gboolean cut_central;
+gboolean central_cut;
+gboolean regiao_5l;
 gboolean gui_run;
+int dist_regiao_5l;
+int tam_regiao_5l;
 
 char **data;
 omp_lock_t DtH_copy_lock;
@@ -133,7 +134,7 @@ void buffer_manager(int *buffer_load,
 
 
 
-void search_manager(int *buffer_load,
+GHashTable* search_manager(int *buffer_load,
 							int *processadas,
 							Fila *tipo_founded,
 							Fila *founded,
@@ -143,10 +144,8 @@ void search_manager(int *buffer_load,
 							int bloco2,
 							int blocoV,
 							cudaStream_t stream1,
-							cudaStream_t stream2,
-							Fila *f_sensos,
-							Fila *f_antisensos){
-								
+							cudaStream_t stream2){
+				GHashTable *hash_table;								
 				int i;
 				short int *h_resultados;
 				short int *d_resultados;
@@ -156,21 +155,24 @@ void search_manager(int *buffer_load,
 				char **d_founded;
 				char **d_tmp_founded;
 				char *hold_seq;
+				char *central;
+				char *cincol;
 				int loaded;
 				int hold;
 				int p;
 				float iteration_time;
 				int fsenso;
 				int fasenso;	
+				int gap;
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				cudaEvent_t startV,stopV;
 				char **local_data;
 				float elapsedTimeK,elapsedTime,elapsedTimeV;
-				
-
+				gboolean retorno;
 				
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
+				hash_table = criar_ghash_table();
 				fsenso=fasenso=0;
 
 				cudaEventCreate(&start);
@@ -262,30 +264,56 @@ void search_manager(int *buffer_load,
 							if(h_resultados[i] != 0){
 								switch(h_resultados[i]){
 									case SENSO:
-										fsenso++;
-										if(cut_central){
-											strncpy(hold_seq,d_tmp_founded[i]+h_search_gaps[i]+bloco1,blocoV);
-											omp_set_lock(&MC_copy_lock);
-											enfileirar(f_sensos,hold_seq);
-											omp_unset_lock(&MC_copy_lock);
-										}else{
-											omp_set_lock(&MC_copy_lock);
-											enfileirar(f_sensos,d_tmp_founded[i]);
-											omp_unset_lock(&MC_copy_lock);
+										central = (char*)malloc((seqSize_an+1)*sizeof(char));
+										if(central_cut){
+											gap = h_search_gaps[i];
+											strncpy(central,d_tmp_founded[i]+gap,blocoV);
+											central[blocoV] = '\0';
+										}else{									
+											strncpy(central,d_tmp_founded[i],seqSize_an);
 										}
+
+										if(regiao_5l){
+											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
+
+											gap = h_search_gaps[i] - dist_regiao_5l;
+											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
+											cincol[tam_regiao_5l] = '\0';
+										}
+								
+										fsenso++;
+										if(regiao_5l)
+											retorno = adicionar_ht(hash_table,central,cincol,criar_value(0,1,0,0));
+										else
+											retorno = adicionar_ht(hash_table,central,NULL,criar_value(0,1,0,0));
+
+										*buffer_load--;
 									break;
 									case ANTISENSO:
-										fasenso++;
-										if(cut_central){
-											strncpy(hold_seq,d_tmp_founded[i]+h_search_gaps[i]+bloco2,blocoV);
-											omp_set_lock(&MC_copy_lock);
-											enfileirar(f_antisensos,get_antisenso(hold_seq));
-											omp_unset_lock(&MC_copy_lock);
-										}else{	
-											omp_set_lock(&MC_copy_lock);
-											enfileirar(f_antisensos,get_antisenso(d_tmp_founded[i]));
-											omp_unset_lock(&MC_copy_lock);
+										central = (char*)malloc((seqSize_an+1)*sizeof(char));
+										if(central_cut){
+											gap = h_search_gaps[i];
+											strncpy(central,d_tmp_founded[i]+gap,blocoV);
+											central[blocoV] = '\0';
+										}else{									
+											strncpy(central,d_tmp_founded[i],seqSize_an);
 										}
+
+								
+										if(regiao_5l){
+											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
+											gap = h_search_gaps[i] + dist_regiao_5l;
+											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
+											cincol[tam_regiao_5l] = '\0';
+										}
+
+										fasenso++;
+										if(regiao_5l)
+											retorno = adicionar_ht(hash_table,get_antisenso(central),get_antisenso(cincol),criar_value(0,0,1,0));
+										else
+											retorno = adicionar_ht(hash_table,get_antisenso(central),NULL,criar_value(0,0,1,0));
+								
+										*buffer_load--;
 									break;
 								}
 							}
@@ -295,9 +323,6 @@ void search_manager(int *buffer_load,
 							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);
 						if(gui_run)
 							printf("T%dS%dAS%d\n",*processadas,fsenso,fasenso);
-						
-						if(debug && !silent)
-							printf("Filas - S: %d, AS: %d\n",tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
 							
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
@@ -329,56 +354,7 @@ void search_manager(int *buffer_load,
 				cudaEventDestroy(startK);
 				cudaEventDestroy(stopK);
 				THREAD_DONE[THREAD_SEARCH] = TRUE;
-				return;
-}
-
-void memory_cleaner_manager(GHashTable* hash_table,int *buffer_load,Fila *f_sensos,Fila *f_antisensos){
-					//////////////////////////////////////////
-					// Libera memoria ////////////////////////
-					//////////////////////////////////////////
-					  int retorno;
-					  char *hold;
-					  			  
-					THREAD_DONE[THREAD_CLEANER] = FALSE;
-					  while( *buffer_load == 0){
-						}//Aguarda para que o buffer seja enchido pela primeira vez
-						
-
-					  while(*buffer_load != GATHERING_DONE || !THREAD_DONE[THREAD_SEARCH]){
-						if(tamanho_da_fila(f_sensos) > FILA_MIN){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_sensos);
-							omp_unset_lock(&MC_copy_lock);
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-						}
-						if(tamanho_da_fila(f_antisensos) > FILA_MIN){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_antisensos);
-							omp_unset_lock(&MC_copy_lock);							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-						}
-					  }
-						
-						while(tamanho_da_fila(f_sensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_sensos);
-							omp_unset_lock(&MC_copy_lock);
-							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-						}
-						while(tamanho_da_fila(f_antisensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_antisensos);
-							omp_unset_lock(&MC_copy_lock);
-							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-						}
-						
-					THREAD_DONE[THREAD_CLEANER] = TRUE;
-					return;
-					//////////////////////////////////////////
-					//////////////////////////////////////////
-					//////////////////////////////////////////
+				return hash_table;
 }
 
 
@@ -390,8 +366,6 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	int i;
 	int processadas;
 	int buffer_load;
-	Fila *f_sensos;
-	Fila *f_antisensos;
 	Fila *founded;
 	Fila *tipo_founded;
 	cudaStream_t stream1;
@@ -409,8 +383,6 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 
 	buffer_load = 0;
 	processadas=0;
-	f_sensos = criar_fila("Sensos");
-	f_antisensos = criar_fila("Antisensos");
 	founded = criar_fila("Founded");
 	tipo_founded = criar_fila("Tipo Founded");
 	omp_init_lock(&DtH_copy_lock);
@@ -419,7 +391,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	
 	
 		
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(hash_table) shared(buffer) shared(f_sensos) shared(f_antisensos) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(hash_table) shared(buffer) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
 	{		
 		#pragma omp sections
 		{
@@ -429,12 +401,8 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2,f_sensos,f_antisensos);
-			}		
-			#pragma omp section
-			{
-				memory_cleaner_manager(hash_table,&buffer_load,f_sensos,f_antisensos);
-			}
+				hash_table = search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
+			}	
 		}
 	}
 	//printf("Iterações executadas: %d.\n",iter);
@@ -461,7 +429,7 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
 	verbose = set.verbose;
 	silent = set.silent;
 	debug = set.debug;
-	cut_central = set.cut_central;
+	central_cut = set.cut_central;
 	gui_run = set.gui_run;
 	
 	if(!silent || gui_run)
