@@ -499,8 +499,8 @@ public class Drawer implements ActionListener {
 						writeToLog("File "+txt+" can not be read.");
 					}
 				}
-				fillLibContainer();
 			}
+			fillLibContainer();
 			summaryContainer.removeAll();
 			drawSummaryContainer();
 			break;
