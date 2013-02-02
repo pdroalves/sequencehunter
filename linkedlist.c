@@ -226,8 +226,6 @@ void imprimir_lista_ligada(lista_ligada *resultados,char *tempo,gboolean silent,
 		print_resultado(p);
 		p = p->prox;
 	}
-	if(gui_run)
-		printf("R %s\n",outname);
 	return;
 }
 

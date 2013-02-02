@@ -228,14 +228,14 @@
 		free(c);
 	}
 	
-	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent) shared(regiao5l)
+	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent) shared(regiao5l) shared(gui_run)
 	{
 		#pragma omp sections
 		{
 			#pragma omp section
 			{
 			if(!just_process && keep)
-				write_ht_to_binary(hash_table,regiao5l,tempo);			
+				write_ht_to_binary(hash_table,regiao5l,gui_run,tempo);			
 			}
 			#pragma omp section
 			{

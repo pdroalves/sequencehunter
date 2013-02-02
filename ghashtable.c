@@ -210,33 +210,36 @@ lista_ligada* converter_para_lista_ligada(GHashTable *hash_table){
 
 void ht_interna_to_binary(gchar *seq,value *entry,FILE *f){
 	int size = strlen(seq)+1;
-	fwrite(&INICIO_SUBHT,sizeof(int),1,f);	
-	fwrite(&size,sizeof(int),1,f);
-	fwrite(seq,sizeof(char),size,f);
-	fwrite(&entry->qsenso,sizeof(int),1,f);
-	fwrite(&entry->qasenso,sizeof(int),1,f);
+	fprintf(f,"%d\n",INICIO_SUBHT);
+	fprintf(f,"%d",strlen(seq));
+	fprintf(f,"%s\n",seq);
+	fprintf(f,"%d\n",entry->qsenso);
+	fprintf(f,"%d\n",entry->qasenso);
 }
 
 void ht_to_binary(gchar *seq,value *entry,FILE *f){
 	int size = strlen(seq)+1;
 	int sub_ht_size;
-	fwrite(&size,sizeof(int),1,f);
-	fwrite(seq,sizeof(char),size,f);
-	fwrite(&entry->qsenso,sizeof(int),1,f);
-	fwrite(&entry->qasenso,sizeof(int),1,f);
+	fprintf(f,"%d",strlen(seq));
+	fprintf(f,"%s\n",seq);
+	fprintf(f,"%d\n",entry->qsenso);
+	fprintf(f,"%d\n",entry->qasenso);
 	if(entry->regiao_5l != NULL){
 		g_hash_table_foreach(entry->regiao_5l,(GHFunc) ht_interna_to_binary,f);
-		fwrite(&FINAL_SUBHT,sizeof(int),1,f);
+		fprintf(f,"%d\n",FINAL_SUBHT);
 	}
 }
 
-void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,char *tempo){
+void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,gboolean gui_run,char *tempo){
 	FILE *f;
 	int i;
 	const int size = tamanho_ht(hash_table);
 	char outname[100];
 	char outname_tmp[100];
 
+	
+	//////////////////////////////////////////////
+	// Prepara string e abre arquivo
 	tempo[strlen(tempo)-1] = '\0';
 	strcpy(outname_tmp,"SHunter Output - ");
 	strcat(outname_tmp,tempo);
@@ -249,6 +252,9 @@ void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,char *tempo){
 			outname[i] = outname_tmp[i];
 	}
 	outname[i] = '\0';
+
+	if(gui_run)
+		printf("Bin %s\n",outname);
 	
 	f = fopen(outname,"w");
 	if(f == NULL){
@@ -256,12 +262,18 @@ void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,char *tempo){
 		printString("Impossivel salvar arquivo binario bruto\n",outname);
 		return;
 	}
-	fwrite(&size,sizeof(int),1,f);
-	fwrite(&regiao5l,sizeof(int),1,f);
+	//////////////////////////////////////////////
+
+	//////////////////////////////////////////////
+	// Finalmente escreve dados no arquivo binario
+	fprintf(f,"%d\n",size);
+	fprintf(f,"%d\n",regiao5l);
 	g_hash_table_foreach(hash_table,(GHFunc) ht_to_binary,f);
 	fclose(f);
 	printf("Filtragem bruta salva em %s\n",outname);
 	printString("Filtragem bruta salva em",outname);
+	//////////////////////////////////////////////
+
 	return;
 }
 
@@ -284,25 +296,25 @@ GHashTable* read_binary_to_ht(FILE *f){
 	
 	hash_table = criar_ghash_table();
 	
-	fread(&size,sizeof(int),1,f);
-	fread(&regiao5l,sizeof(int),1,f);
+	fscanf(f,"%d",&size);
+	fscanf(f,"%d",&regiao5l);
 	for(i=0;i<size;i++){		
-		fread(&seq_len,sizeof(int),1,f);
-		seq = (char*)malloc(seq_len*sizeof(char));
-		fread(seq,sizeof(char),seq_len,f);
-		fread(&qsenso,sizeof(int),1,f);
-		fread(&qasenso,sizeof(int),1,f);
+		fscanf(f,"%d",&seq_len);
+		seq = (char*)malloc((seq_len+1)*sizeof(char));
+		fscanf(f,"%s",seq);	
+		fscanf(f,"%d",&qsenso);
+		fscanf(f,"%d",&qasenso);
 		if(regiao5l){
-			fread(&sub_status,sizeof(int),1,f);
+			fscanf(f,"%d",&sub_status);
 			sub_hash_table = criar_ghash_table();
 			while(sub_status){
-				fread(&sub_seq_len,sizeof(int),1,f);
-				esq_seq = (char*)malloc(seq_len*sizeof(char));
-				fread(esq_seq,sizeof(char),seq_len,f);
-				fread(&sub_qsenso,sizeof(int),1,f);
-				fread(&sub_qasenso,sizeof(int),1,f);
+				fscanf(f,"%d",&sub_seq_len);
+				esq_seq = (char*)malloc((seq_len+1)*sizeof(char));
+				fscanf(f,"%s",esq_seq);	
+				fscanf(f,"%d",&sub_qsenso);
+				fscanf(f,"%d",&sub_qasenso);
 				adicionar_ht(sub_hash_table,esq_seq,NULL,criar_value(0,sub_qsenso,sub_qasenso,0));
-				fread(&sub_status,sizeof(int),1,f);
+				fscanf(f,"%d",&sub_status);
 			}
 		}
 		adicionar_ht(hash_table,seq,NULL,criar_value(0,qsenso,qasenso,0));

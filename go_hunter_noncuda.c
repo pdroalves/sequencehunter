@@ -17,6 +17,8 @@
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
 
+#define MIN_LEN_TO_PRINT 100000
+
 gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
 gboolean verbose;
@@ -73,6 +75,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 		int tam;
 		int i;
 		int p;
+		int diff;
 		char *central;
 		char *cincol;
 		char *seqToSave;
@@ -96,6 +99,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 		cudaEventCreate(&stopK);
 		
 		iteration_time = 0;
+		diff = 0;
 		
 			while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -201,8 +205,11 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 					
 					if(verbose && !silent)		
 						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
-					if(gui_run)
+					diff+= p;
+					if(gui_run && diff > MIN_LEN_TO_PRINT){
 							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
+							diff = 0;
+					}
 					
 					if(buffer->load != 0)
 					{

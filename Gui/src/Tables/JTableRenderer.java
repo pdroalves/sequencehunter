@@ -1,4 +1,4 @@
-package Gui;
+package Tables;
 
 import java.awt.Component;
 import java.awt.Font;

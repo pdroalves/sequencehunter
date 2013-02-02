@@ -7,6 +7,7 @@ import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,12 +17,13 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import Auxiliares.JBaseTextField;
-import Auxiliares.JLazyTableModel;
-import Auxiliares.JReportTableModel;
 import Auxiliares.JTxtFileFilter;
 import Dialogs.AboutDialog;
 import Hunt.Hunter;
 import Hunt.Library;
+import Tables.JLazyTableModel;
+import Tables.JReportTableModel;
+import Tables.JTableRenderer;
 
 public class Drawer implements ActionListener {
 	
@@ -50,6 +52,9 @@ public class Drawer implements ActionListener {
 	private static JLabel processedSeqs;
 	private static JLabel sensosFounded;
 	private static JLabel antisensosFounded;
+	private static JLabel calcSPS;
+	private static long startSPS = -1;
+	private static long diffSPS;
 	
 	public Drawer(){
 		seqOriginal = new JBaseTextField(25);
@@ -66,6 +71,7 @@ public class Drawer implements ActionListener {
 		processedSeqs = new JLabel("");
 		sensosFounded = new JLabel("");
 		antisensosFounded = new JLabel("");
+		calcSPS = new JLabel("");
 		jpTableList = new JPanel();
 		drawEmptyLibsContainer();
 		
@@ -420,6 +426,7 @@ public class Drawer implements ActionListener {
 		hbox.add(processedSeqs);
 		hbox.add(sensosFounded);
 		hbox.add(antisensosFounded);
+		hbox.add(calcSPS);
 		hbox.setAlignmentX(Component.CENTER_ALIGNMENT);
 		hbox.setAlignmentY(Component.CENTER_ALIGNMENT);
 		vbox.add(hbox);
@@ -427,8 +434,16 @@ public class Drawer implements ActionListener {
 		
 		return vbox;
 	}
-
+	
 	public static void setProcessedSeqs(int n){
+		Calendar cal = Calendar.getInstance();
+		if(startSPS == -1){
+			startSPS = cal.getTimeInMillis();
+			diffSPS = -1;
+		}else{
+			diffSPS = (cal.getTimeInMillis() - startSPS)/1000;
+			startSPS = cal.getTimeInMillis();
+		}
 		processedSeqs.setText("Total: "+Integer.toString(n)+" ");
 	}
 	public static void setSensosFounded(int n){
@@ -436,6 +451,9 @@ public class Drawer implements ActionListener {
 	}
 	public static void setAntisensosFounded(int n){
 		antisensosFounded.setText("AS: "+Integer.toString(n)+" ");
+	}
+	public static void setSPS(){
+		calcSPS.setText(" - "+diffSPS +" Sps");
 	}
 
 	public static int getProcessedSeqs(){
@@ -526,6 +544,8 @@ public class Drawer implements ActionListener {
 		}
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
+		startSPS = -1;
+		diffSPS = 0;
 	}
 	
 	static public void huntAbort(){
@@ -533,6 +553,8 @@ public class Drawer implements ActionListener {
 		writeToLog("Hunt aborted");
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
+		startSPS = -1;
+		diffSPS = 0;
 	}
 
 }
