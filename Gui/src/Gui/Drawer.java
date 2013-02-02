@@ -24,6 +24,7 @@ import Hunt.Library;
 import Tables.JLazyTableModel;
 import Tables.JReportTableModel;
 import Tables.JTableRenderer;
+import Tables.SelectionListener;
 
 public class Drawer implements ActionListener {
 	
@@ -371,6 +372,8 @@ public class Drawer implements ActionListener {
 				JPanel jp = new JPanel();
 				final JLazyTableModel jltm = new JLazyTableModel(lib);
 				jtabPreviewLibs = new JTable(jltm);
+			    //SelectionListener listener = new SelectionListener(jtabPreviewLibs);
+			    jtabPreviewLibs.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				DefaultTableCellRenderer indexRenderer = new DefaultTableCellRenderer();
 				indexRenderer.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
 				jtabPreviewLibs.getColumnModel().getColumn(0).setCellRenderer(new JTableRenderer(indexRenderer));
@@ -398,6 +401,7 @@ public class Drawer implements ActionListener {
 				});
 				
 				// Insere o JScrollPane dentro do JPane
+				//jp.add(new JLabel(Long.toString(lib.getFileSize())));
 				jp.add(jscrlp);
 				
 				// Adiciona aba com a lib carregada

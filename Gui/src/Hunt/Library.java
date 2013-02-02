@@ -10,11 +10,13 @@ import java.util.ArrayList;
 public class Library {
 	
 	private File data;
+	private long fileSize;
 	private BufferedReader br;
 	private ArrayList<String> db;
 	
 	public Library(File f) throws FileNotFoundException{
 		data = f;
+		fileSize = f.length();
 		br = new BufferedReader(new FileReader(f));
 		startDB();
 	}
@@ -29,6 +31,10 @@ public class Library {
 	
 	public String getFilename(){
 		return data.getName();
+	}
+	
+	public long getFileSize(){
+		return fileSize;
 	}
 	
 	private void startDB(){
@@ -55,8 +61,7 @@ public class Library {
 			return "";
 		}
 	}
-	
-	private boolean checkValid(String seq){
+		private boolean checkValid(String seq){
 		if(seq != null){
 		for(int i=0;i<seq.length();i++){
 			if(!(seq.charAt(i) == 'A' ||
