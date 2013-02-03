@@ -15,7 +15,6 @@
 #define FILA_MIN 5000 // Tamanho minimo da fila antes de começar a esvazia-la
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000
-#include <glib.h>
 
 const enum{
 	A,
@@ -55,7 +54,7 @@ struct Value{
 	int qsenso;
 	int qasenso;
 	float qnt_relativa;
-	GHashTable *regiao_5l;
+	struct _GHashTable *regiao_5l;
 };
 typedef struct Value value;
 

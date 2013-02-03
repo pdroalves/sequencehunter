@@ -27,7 +27,7 @@
 int INICIO_SUBHT = 1;
 int FINAL_SUBHT = 0;
 
-value* atualizar_parametro(value *novo, value *velho);
+value* atualizar_parametro(value *novo, char *seq,value *velho);
 
 
 void free_key(gchar *seq){

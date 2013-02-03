@@ -3,9 +3,6 @@ CC_LINUX = gcc
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
 
-GTK_CFLAGS = `pkg-config --cflags gtk+-2.0`
-GTK_LIBS = `pkg-config --libs gtk+-2.0`
-
 OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
@@ -39,7 +36,7 @@ gui:Gui/makefile
 #LINUX
 
 shunter-gui.o_linux:shunter-gui.c
-	$(CC_LINUX) -g -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS)  -L/usr/local/cuda/lib64
+	$(CC_LINUX) -g -c shunter-gui.c -o shunter-gui.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64
 	
 shunter-cmd.o:shunter-cmd.c
 	$(CC_LINUX) -g -c shunter-cmd.c -o shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
