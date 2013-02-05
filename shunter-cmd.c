@@ -120,7 +120,7 @@
 	 time(&t);
 	 tempo = ctime(&t);
 
-	 prepareLog(tempo);	 
+	 prepareLog(tempo,gui_run);	 
 	 c = NULL;
 	 nome = NULL;
 	  

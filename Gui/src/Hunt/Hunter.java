@@ -33,7 +33,6 @@ public class Hunter{
 		if (getOS().contains("WIN")){
 			//Windows
 			command = appName_win +" "+ libsPath + " " + parameters;
-
 			pb = new ProcessBuilder("cmd","/c",command);
 		}else if (getOS().contains("MAC")){
 			// Mac

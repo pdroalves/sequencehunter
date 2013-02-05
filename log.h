@@ -1,6 +1,6 @@
 #ifndef LOG_H
 #define LOG_H
-void prepareLog(char *tempo);
+void prepareLog(char *tempo,int gui_run);
 void print_time();
 void printToLog_Fim(int tiro,int raio,int fim,float x,float z);
 void printToLog_Mem(float MemUsada,float MemPorIter);

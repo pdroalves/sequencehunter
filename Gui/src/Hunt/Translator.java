@@ -17,13 +17,16 @@ public class Translator extends Thread{
 	private boolean stop;
 	private Pattern seqReadPattern;
 	private Pattern outputPattern;
+	private Pattern logPattern;
 	private String outputFile;
+	private String logFile;
 
 	public Translator(ProcessBuilder p){
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
 		outputPattern = Pattern.compile("Bin (.*)");
+		logPattern = Pattern.compile("Log (.*)");
 	}
 
 	public void run(){
@@ -34,9 +37,9 @@ public class Translator extends Thread{
 			read(shellIn);
 			if(!stop)
 				if(outputFile != null)
-					Drawer.huntDone(new File(outputFile));
+					Drawer.huntDone(new File(outputFile),new File(logFile));
 				else
-					Drawer.huntDone(null);
+					Drawer.huntDone(null,null);
 			shellIn.close();
 			killProcess(process);
 		}catch(IllegalArgumentException e){
@@ -78,7 +81,12 @@ public class Translator extends Thread{
 			if(matcher.matches()){
 				outputFile = matcher.group(1);
 			}else{
+				matcher =logPattern.matcher(s);
+				if(matcher.matches()){
+					logFile = matcher.group(1);
+				}else{
 				Drawer.writeToLog(s);	
+				}
 			}
 		}
 		return;

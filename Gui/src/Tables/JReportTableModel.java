@@ -61,5 +61,6 @@ public class JReportTableModel extends AbstractTableModel{
 		jrld.load();
 		return;
 	}
-
+	
+	
 }
