@@ -11,21 +11,21 @@ import java.util.regex.Pattern;
 import Gui.Drawer;
 
 public class Translator extends Thread{
-	
+
 	private ProcessBuilder pb;
 	private Process process;
 	private boolean stop;
 	private Pattern seqReadPattern;
 	private Pattern outputPattern;
 	private String outputFile;
-	
+
 	public Translator(ProcessBuilder p){
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
 		outputPattern = Pattern.compile("Bin (.*)");
 	}
-	
+
 	public void run(){
 		// Instancia e inicia o processo
 		try {
@@ -50,10 +50,10 @@ public class Translator extends Thread{
 		}
 		return;
 	}
-	
+
 	public void read(InputStream is) throws IOException{
 		if(is != null){
-			
+
 			BufferedReader br = new BufferedReader(new InputStreamReader(is,"UTF-8"));
 			String buffer = br.readLine();
 			while(buffer != null && !stop){
@@ -64,7 +64,7 @@ public class Translator extends Thread{
 		}
 		return;
 	}
-	
+
 	private void translate(String s){
 		Matcher matcher = seqReadPattern.matcher(s);
 		if(matcher.matches()){
@@ -83,37 +83,53 @@ public class Translator extends Thread{
 		}
 		return;
 	}
-	
+
 	public void kill(){
 		stop = true;
 		return;
 	}
-	
+
 	public void killProcess(Process p){
-		String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + Hunter.getAppName() + "\"" ;
-		Pattern taskIdPattern = Pattern.compile("(\\d+)");
-		try {
-			Process process = Runtime.getRuntime().exec(processData);
-			InputStream shellIn = process.getInputStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(shellIn,"UTF-8"));
-			while(!br.ready()){
-				
-			}
-			String buffer = br.readLine();
-			while(buffer != null){
-				Matcher taskIdMatcher = taskIdPattern.matcher(buffer);
-				if(taskIdMatcher.find()){
-					String tkProcess = "cmd /c taskkill /PID "+taskIdMatcher.group(1)+" /F";
-					Runtime.getRuntime().exec(tkProcess);
+		String OS = Hunter.getOS();
+		if (OS.contains("WIN")){
+			//Windows
+			String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + Hunter.getAppName() + "\"" ;
+			Pattern taskIdPattern = Pattern.compile("(\\d+)");
+			try {
+				Process process = Runtime.getRuntime().exec(processData);
+				InputStream shellIn = process.getInputStream();
+				BufferedReader br = new BufferedReader(new InputStreamReader(shellIn,"UTF-8"));
+				while(!br.ready()){
+					
 				}
-				buffer = br.readLine();
+				String buffer = br.readLine();
+				while(buffer != null){
+					Matcher taskIdMatcher = taskIdPattern.matcher(buffer);
+					if(taskIdMatcher.find()){
+						String tkProcess = "cmd /c taskkill /PID "+taskIdMatcher.group(1)+" /F";
+						Runtime.getRuntime().exec(tkProcess);
+					}
+					buffer = br.readLine();
+				}
+				shellIn.close();
+				
+				shellIn.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+		}else if (OS.contains("MAC")){
+			// Mac
+		}else if (OS.contains("NUX")){
+			// Linux
+			String tkProcess = "killall "+Hunter.getAppName()+" -q";
+			try {
+				Runtime.getRuntime().exec(tkProcess);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			shellIn.close();
-			
-			shellIn.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+		}
 	}
+
 }
+

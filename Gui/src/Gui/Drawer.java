@@ -289,6 +289,7 @@ public class Drawer implements ActionListener {
 		
 		// Tabela
 		final JTable jte = new JTable(new JReportTableModel(f)); 
+		jte.setAutoCreateRowSorter(true);
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
 		final JLabel seqJLabel = new JLabel("");
 		final JLabel seqFreqJLabel = new JLabel("");
