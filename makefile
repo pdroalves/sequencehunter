@@ -3,16 +3,16 @@ CC_LINUX = gcc
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
 
-GTK_CFLAGS = `pkg-config --cflags gtk+-2.0`
-GTK_LIBS = `pkg-config --libs gtk+-2.0`
-
 OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
 CUDA = -L/usr/local/cuda/lib64 -lcudart 
 CUDA_ARCH = -arch=sm_21
 
-INSTALL = /home/pedro/Projetos/bin
+CLI_NAME = shunter-cli
+GUI_NAME = shunter-gui.jar
+
+INSTALL = /usr/local/bin
 
 all:cmd gui
 
@@ -24,12 +24,12 @@ all:cmd gui
 #########################################
 cmd:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
 	./build_control version
-	$(CUDA_CC) -G -g -o shunter-cmd shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA)
+	$(CUDA_CC) -G -g -o $(CLI_NAME) shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA)
 	echo "CLI built"	
 	
 gui:Gui/makefile
 	make -C Gui/
-	cp Gui/SHunter.jar ./
+	cp Gui/$(GUI_NAME) ./
 	echo "Gui built"
 
 #########################################
@@ -39,7 +39,7 @@ gui:Gui/makefile
 #LINUX
 
 shunter-gui.o_linux:shunter-gui.c
-	$(CC_LINUX) -g -c shunter-gui.c -o shunter-gui.o $(GTK_CFLAGS)  -L/usr/local/cuda/lib64
+	$(CC_LINUX) -g -c shunter-gui.c -o shunter-gui.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64
 	
 shunter-cmd.o:shunter-cmd.c
 	$(CC_LINUX) -g -c shunter-cmd.c -o shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
@@ -90,11 +90,11 @@ build_control:build_control.c
 	gcc build_control.c -o build_control
 	
 clean:
-	rm -f *.o *.{c,h}~ shunter-cmd shunter-gui
+	rm -f *.o *.{c,h}~ $(CLI_NAME) $(GUI_NAME)
 	make -C Gui/ clean
 	echo "It's clean"
 
 install:
-	rm $(INSTALL)/shunter-cmd $(INSTALL)/SHunter.jar
-	cp ./shunter-cmd ./SHunter.jar $(INSTALL)
+	#sudo rm $(INSTALL)/$(CLI_NAME) $(INSTALL)/$(GUI_NAME)
+	sudo cp ./$(CLI_NAME) ./$(GUI_NAME) $(INSTALL)
 	echo "Done"

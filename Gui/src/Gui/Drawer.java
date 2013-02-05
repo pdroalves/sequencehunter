@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -280,15 +281,15 @@ public class Drawer implements ActionListener {
 		return;
 	}
 	
-	private static void addReport(File f){
+	private static void addReport(File data,File log){
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		
 		// Report		
-		
-		// Tabela
-		final JTable jte = new JTable(new JReportTableModel(f)); 
+		// Central Cut
+		final JTable jte = new JTable(new JReportTableModel(data)); 
+		jte.setAutoCreateRowSorter(true);
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
 		final JLabel seqJLabel = new JLabel("");
 		final JLabel seqFreqJLabel = new JLabel("");
@@ -309,13 +310,33 @@ public class Drawer implements ActionListener {
 			}
 
 		    });
+		JScrollPane jscp = new JScrollPane(jte);
+		jte.setAutoscrolls(true);
 		
-		jtp.addTab("Central Cut",jte);
 		Box seqInfo = Box.createVerticalBox();
 		seqInfo.add(new JLabel("Sequence: "));
 		seqInfo.add(seqJLabel);
 		seqInfo.add(new JLabel("Sequence frequency: "));
 		seqInfo.add(seqFreqJLabel);
+		
+		// Log Report
+		final JTextArea logJTA = new JTextArea();
+		logJTA.setLineWrap(true);
+		logJTA.setWrapStyleWord(true);
+		try {
+			Scanner scLog = new Scanner(log);
+			while(scLog.hasNext()){
+				String linha = scLog.nextLine();
+				if(!linha.equals(""))
+					logJTA.append(scLog.nextLine()+"\n");
+			}
+			JScrollPane jscrlp = new JScrollPane(logJTA);
+			jtp.addTab("Hunt log", logJTA);
+		} catch (FileNotFoundException e1) {
+			writeToLog("File "+log.getAbsolutePath()+" could not be read.");
+		}
+		
+		jtp.addTab("Central Cut",jscp);
 		
 		JPanel insideJp = new JPanel();
 		insideJp.setLayout(new BorderLayout());
@@ -331,7 +352,7 @@ public class Drawer implements ActionListener {
 			reportContainer.add(reportTab);
 			noReports = false;
 		}
-			reportTab.addTab(f.getName(),jp);
+			reportTab.addTab(data.getName(),jp);
 			reportTab.setSelectedIndex(reportTab.getTabCount()-1);
 		return;
 	}
@@ -539,9 +560,9 @@ public class Drawer implements ActionListener {
 		return;
 	}
 	
-	static public void huntDone(File libFile){
+	static public void huntDone(File libFile,File logFile){
 		if(libFile != null){
-			addReport(libFile);
+			addReport(libFile,logFile);
 			jtp.setSelectedIndex(2);
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");

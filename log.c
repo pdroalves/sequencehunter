@@ -23,7 +23,7 @@ void closeLog();
 FILE *logfile;
 FILE *logfileDetalhado;
 
-void prepareLog(char *tempo){
+void prepareLog(char *tempo,gboolean gui){
   //Abre e prepara arquivo log.dat para receber mensagens de log
 	char logfile_name[100];
 	char logfiledetalhado_name[100];
@@ -33,7 +33,7 @@ void prepareLog(char *tempo){
 	tempo[strlen(tempo)-1] = '\0';
 	strcpy(tmp,"SHunter Log - ");
 	strcat(tmp,tempo);
-	strcat(tmp-1,".txt");
+	strcat(tmp,".txt");
 
 	for(i=0;i <= strlen(tmp); i++){
 		if(tmp[i] == ':')
@@ -64,8 +64,12 @@ void prepareLog(char *tempo){
    
   fprintf(logfile,"\n\n-------------------------\n");
   fprintf(logfileDetalhado,"\n\n-------------------------\n");
- 
+
   print_time();
+
+  if(gui)
+	printf("Log %s\n",logfile_name);
+
   return;
 }
 
