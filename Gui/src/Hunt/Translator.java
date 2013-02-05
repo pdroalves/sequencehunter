@@ -23,7 +23,7 @@ public class Translator extends Thread{
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
-		outputPattern = Pattern.compile("R (.*)");
+		outputPattern = Pattern.compile("Bin (.*)");
 	}
 	
 	public void run(){
@@ -71,6 +71,8 @@ public class Translator extends Thread{
 			Drawer.setProcessedSeqs(Integer.parseInt(matcher.group(1)));
 			Drawer.setSensosFounded(Integer.parseInt(matcher.group(2)));
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
+			Drawer.setSPS();
+			System.out.println(s);
 		}else{
 			matcher = outputPattern.matcher(s);
 			if(matcher.matches()){
@@ -94,6 +96,9 @@ public class Translator extends Thread{
 			Process process = Runtime.getRuntime().exec(processData);
 			InputStream shellIn = process.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(shellIn,"UTF-8"));
+			while(!br.ready()){
+				
+			}
 			String buffer = br.readLine();
 			while(buffer != null){
 				Matcher taskIdMatcher = taskIdPattern.matcher(buffer);

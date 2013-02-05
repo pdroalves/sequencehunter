@@ -1,20 +1,20 @@
-package Auxiliares;
+package Tables;
 
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.table.AbstractTableModel;
+import Hunt.Evento;
+
 
 public class JReportTableModel extends AbstractTableModel{
 	
 	private File data;
-	private ArrayList<String> seqs;
-	private ArrayList<Integer> freqs;
+	private ArrayList<Evento> seqs;
 	
 	public JReportTableModel(File f){
 		super();
 		data = f;
-		seqs = new ArrayList<String>();
-		freqs = new ArrayList<Integer>();
+		seqs = new ArrayList<Evento>();
 		loadData();
 	}
 
@@ -33,10 +33,10 @@ public class JReportTableModel extends AbstractTableModel{
 		Object obj = null;
 		switch(columnIndex){
 		case 0:
-			obj = seqs.get(rowIndex);
+			obj = seqs.get(rowIndex).getSeq();
 			break;
 		case 1:
-			obj = freqs.get(rowIndex);
+			obj = seqs.get(rowIndex).getPares();
 			break;
 		}
 		return obj;
@@ -57,7 +57,7 @@ public class JReportTableModel extends AbstractTableModel{
 	}
 
 	public void loadData(){
-		JReportLoadData jrld = new JReportLoadData(data,seqs,freqs);
+		JReportLoadData jrld = new JReportLoadData(data,seqs);
 		jrld.load();
 		return;
 	}
