@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <glib.h>
+#include <string.h>
 #include "estruturas.h"
 void prepareLog();
 void print_time();
@@ -22,11 +23,39 @@ void closeLog();
 FILE *logfile;
 FILE *logfileDetalhado;
 
-void prepareLog(){
+void prepareLog(char *tempo){
   //Abre e prepara arquivo log.dat para receber mensagens de log
+	char logfile_name[100];
+	char logfiledetalhado_name[100];
+	char tmp[100];	
+	int i;	
+	
+	tempo[strlen(tempo)-1] = '\0';
+	strcpy(tmp,"SHunter Log - ");
+	strcat(tmp,tempo);
+	strcat(tmp-1,".txt");
+
+	for(i=0;i <= strlen(tmp); i++){
+		if(tmp[i] == ':')
+			logfile_name[i] = ' ';
+		else
+			logfile_name[i] = tmp[i];
+	}
+
+	strcpy(tmp,"SHunter LogDetalhado - ");
+	strcat(tmp,tempo);
+	strcat(tmp,".txt");
+
+	for(i=0;i <= strlen(tmp); i++){
+		if(tmp[i] == ':')
+			logfiledetalhado_name[i] = ' ';
+		else
+			logfiledetalhado_name[i] = tmp[i];
+	}
+
   
-  logfile = fopen("log.dat","a");
-  logfileDetalhado = fopen("logDetalhado.dat","a");
+  logfile = fopen(logfile_name,"a");
+  logfileDetalhado = fopen(logfiledetalhado_name,"a");
   
 	if(ferror(logfile) != 0 || ferror(logfileDetalhado) !=0){
 		printf("Erro! Impossível salvar log\n");
@@ -37,18 +66,19 @@ void prepareLog(){
   fprintf(logfileDetalhado,"\n\n-------------------------\n");
  
   print_time();
+  return;
 }
 
 void print_time(){
  
- struct tm *local;
  time_t t;
- 
+ char *tempo;
+
  time(&t);
- local = localtime(&t);
+ tempo = ctime(&t);
  
- fprintf(logfile,"%s\n",asctime(local));
- fprintf(logfileDetalhado,"%s\n\n",asctime(local));
+ fprintf(logfile,"%s\n",tempo);
+ fprintf(logfileDetalhado,"%s\n\n",tempo);
 
   return;
 }
@@ -56,8 +86,8 @@ void print_time(){
 //Métodos específicos#######
 
 void print_open_file(char *c){
-	fprintf(logfile,"Arquivo %s aberto.",c);
-	fprintf(logfileDetalhado,"Arquivo %s aberto.",c);
+	fprintf(logfile,"Arquivo %s aberto.\n",c);
+	fprintf(logfileDetalhado,"Arquivo %s aberto.\n",c);
 	return;
 }
 
@@ -70,10 +100,9 @@ void printString(char *c,char *s){
 	if(s != NULL){
 		fprintf(logfile,"%s %s\n",c,s);
 		fprintf(logfileDetalhado,"%s %s\n",c,s);		
-	}
-	else{
+	}else{
 		fprintf(logfile,"%s\n",c);
-		fprintf(logfileDetalhado,"%s %s\n",c,s);
+		fprintf(logfileDetalhado,"%s\n",c);
 	
 	}
 }
@@ -133,8 +162,8 @@ void print_sequencias_validas(int seqs_validas){
 }
 
 void print_resultado(lista_ligada *p){
-	fprintf(logfile,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
-	fprintf(logfileDetalhado,"	%s x%d => %.3f \%, S:%d - AS: %d\n",p->senso,p->pares,p->qsenso,p->qasenso,p->qnt_relativa*100);
+	fprintf(logfile,"	%s x%d => %.3f %%, S:%d - AS: %d\n",p->senso,p->pares,p->qnt_relativa*100,p->qsenso,p->qasenso);
+	fprintf(logfileDetalhado,"	%s x%d => %.3f %%, S:%d - AS: %d\n",p->senso,p->pares,p->qnt_relativa*100,p->qsenso,p->qasenso);
 	return;
 }
 

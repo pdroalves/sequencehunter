@@ -13,10 +13,11 @@
 #include "log.h"
 #include "fila.h"
 
-#define OMP_NTHREADS 3
+#define OMP_NTHREADS 2
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
-#define THREAD_CLEANER 2
+
+#define MIN_LEN_TO_PRINT 100000
 
 gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
@@ -24,7 +25,10 @@ gboolean verbose;
 gboolean silent;
 gboolean debug;
 gboolean central_cut;
+gboolean regiao_5l;
 gboolean gui_run;
+int dist_regiao_5l;
+int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
 
 const int buffer_size_NC = buffer_size;
@@ -58,72 +62,23 @@ void nc_buffer_manager(Buffer *b,int n){
 		//////////////////////////////////////////	
 }
 
-GHashTable* nc_memory_cleaner_manager(Buffer *buffer,Fila *f_sensos,Fila *f_antisensos){
-	//////////////////////////////////////////
-		// Libera memoria ////////////////////////
-		//////////////////////////////////////////
-		  int retorno;
-		  char *hold;
-		  GHashTable *hash_table;
-		
-		  THREAD_DONE[THREAD_CLEANER] = FALSE;
-		  hash_table = criar_ghash_table();
-
-		  while( buffer->load == 0){
-			}//Aguarda para que o buffer seja enchido pela primeira vez
-			
-					  while(buffer->load != GATHERING_DONE || 
-							THREAD_DONE[THREAD_SEARCH] == FALSE){
-								
-						if(tamanho_da_fila(f_sensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_sensos);
-							omp_unset_lock(&MC_copy_lock);								
-								
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-						}
-						if(tamanho_da_fila(f_antisensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_antisensos);
-							omp_unset_lock(&MC_copy_lock);
-							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-						}
-					  }
-						
-						while(tamanho_da_fila(f_sensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_sensos);
-							omp_unset_lock(&MC_copy_lock);
-							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,1,0,0));
-						}
-						while(tamanho_da_fila(f_antisensos) > 0){
-							omp_set_lock(&MC_copy_lock);
-							hold = desenfileirar(f_antisensos);
-							omp_unset_lock(&MC_copy_lock);
-							
-							retorno = adicionar_ht(hash_table,hold,criar_value(0,0,1,0));
-						}
-				
-		THREAD_DONE[THREAD_CLEANER] = TRUE;
-		return hash_table;			
-		//////////////////////////////////////////
-		//////////////////////////////////////////
-		//////////////////////////////////////////
-}
-
-void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_sensos,Fila *f_antisensos){
+GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 	//////////////////////////////////////////
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
 		
+		GHashTable *hash_table;
 		int *search_gaps;
 		int *resultados;
+		gboolean retorno;
+		int gap;
 		int tam;
 		int i;
 		int p;
-		char *tmp;
+		int diff;
+		char *central;
+		char *cincol;
+		char *seqToSave;
 		cudaEvent_t startK,stopK,start,stop;
 		float elapsedTimeK,elapsedTime;
 		float iteration_time;
@@ -131,18 +86,20 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 		const int blocoV = blocos-bloco1-bloco2;
 		
 		THREAD_DONE[THREAD_SEARCH] = FALSE;
+		hash_table = criar_ghash_table();
 		p = 0;
 		fsensos=fasensos=0;
 		
 		resultados = (int*)malloc(buffer_size_NC*sizeof(int));
 		search_gaps = (int*)malloc(buffer_size_NC*sizeof(int));
-		
+				
 		cudaEventCreate(&start);
 		cudaEventCreate(&stop);
 		cudaEventCreate(&startK);
 		cudaEventCreate(&stopK);
 		
 		iteration_time = 0;
+		diff = 0;
 		
 			while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -159,22 +116,24 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				//	printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
 				if(debug){
 					if(!silent)
-					printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
+					printf("Tempo até retornar para busca em %f ms\n",elapsedTime);
 					printString("Retorno da busca:\n",NULL);
-					print_tempo_optional(elapsedTime);
+					//print_tempo_optional(elapsedTime);
 				}
+				cudaEventRecord(start,0);
+
 				cudaEventRecord(startK,0);
-					busca(bloco1,bloco2,blocos,buffer,resultados,search_gaps);//Kernel de busca
-					
+					busca(bloco1,bloco2,blocos,buffer,resultados,search_gaps);//Kernel de busca					
 				cudaEventRecord(stopK,0);
 				cudaEventSynchronize(stopK);
+
 				cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
 				iteration_time += elapsedTimeK;
 				if(debug){
 					if(!silent)
-					printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
+					printf("Execucao da busca em %f ms\n",elapsedTimeK);
 					printString("Execucao da busca:\n",NULL);
-					print_tempo_optional(elapsedTimeK);
+					//print_tempo_optional(elapsedTimeK);
 				}
 				cudaEventRecord(start,0);
 						
@@ -182,38 +141,60 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				tam = buffer->load;
 				p += tam;
 					
-				for(i = 0; i < tam;i++){//Copia sequências senso e antisenso encontradas
+				for(i = 0; i < tam;i++){
+					//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case SENSO:
+								central = (char*)malloc((blocos+1)*sizeof(char));
 								if(central_cut){
-									tmp = buffer->seq[i] + search_gaps[i];
-									tmp[blocoV] = '\0';
-								}else{
-									tmp = buffer->seq[i];
+									gap = search_gaps[i];
+									strncpy(central,buffer->seq[i]+gap,blocoV);
+									central[blocoV] = '\0';
+								}else{									
+									strncpy(central,buffer->seq[i],blocos);
 								}
-								fsensos++;
-								omp_set_lock(&MC_copy_lock);
-								enfileirar(f_sensos,tmp);
-								omp_unset_lock(&MC_copy_lock);
+
+
+								if(regiao_5l){
+									cincol = (char*)malloc((blocos+1)*sizeof(char));
+
+									gap = search_gaps[i] - dist_regiao_5l;
+									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
+									cincol[tam_regiao_5l] = '\0';
+								}
 								
-								//printString("Senso:",tmp);
+							fsensos++;
+								if(regiao_5l)
+									retorno = adicionar_ht(hash_table,central,cincol,criar_value(0,1,0,0));
+								else
+									retorno = adicionar_ht(hash_table,central,NULL,criar_value(0,1,0,0));
+
 								buffer->load--;
 							break;
 							case ANTISENSO:
+								central = (char*)malloc((blocos+1)*sizeof(char));
 								if(central_cut){
-									tmp = buffer->seq[i] + search_gaps[i];
-									tmp[blocoV] =  '\0';
-								}else{
-									tmp = buffer->seq[i];
+									gap = search_gaps[i];
+									strncpy(central,buffer->seq[i]+gap,blocoV);
+									central[blocoV] = '\0';
+								}else{									
+									strncpy(central,buffer->seq[i],blocos);
 								}
-								//if(verbose == TRUE && silent != TRUE)
-								//	printf("N: %s - %d - F: %d\n",tmp,p,tamanho_da_fila(f_antisensos));
-								fasensos++;
-								omp_set_lock(&MC_copy_lock);	
-								enfileirar(f_antisensos,get_antisenso(tmp));
-								omp_unset_lock(&MC_copy_lock);
+
 								
-								//printString("Antisenso:",tmp);
+								if(regiao_5l){
+									cincol = (char*)malloc((blocos+1)*sizeof(char));
+									gap = search_gaps[i] + dist_regiao_5l;
+									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
+									cincol[tam_regiao_5l] = '\0';
+								}
+
+								fasensos++;
+								if(regiao_5l)
+									retorno = adicionar_ht(hash_table,get_antisenso(central),get_antisenso(cincol),criar_value(0,0,1,0));
+								else
+									retorno = adicionar_ht(hash_table,get_antisenso(central),NULL,criar_value(0,0,1,0));
+								
 								buffer->load--;
 							break;
 							default:
@@ -224,12 +205,11 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 					
 					if(verbose && !silent)		
 						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
-					if(gui_run)
+					diff+= p;
+					if(gui_run && diff > MIN_LEN_TO_PRINT){
 							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
-					if(debug&&!silent){
-							printf("Filas - S: %d, AS: %d\n\n",tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
-							print_seqs_filas_optional(tamanho_da_fila(f_sensos),tamanho_da_fila(f_antisensos));
-					}		
+							diff = 0;
+					}
 					
 					if(buffer->load != 0)
 					{
@@ -245,15 +225,10 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,Fila *f_s
 				
 			
 	  if(!silent)
-				if(iteration_time > 10000)
-					printf("Busca realizada em %.2f s.\n",iteration_time/(float)60000);
-				else 
-					printf("Busca realizada em %.2f ms.\n",iteration_time);
-	
-	
+		printf("Busca realizada em %.2f ms.\n",iteration_time);
 	
 		THREAD_DONE[THREAD_SEARCH] = TRUE;
-		return;
+		return hash_table;
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
@@ -266,19 +241,13 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 	
 	Buffer buffer;
 	int blocoV;
-	Fila *f_sensos;
-	Fila *f_antisensos;
 	GHashTable* hash_table;
 	
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
-	prepare_buffer(&buffer,buffer_size_NC);
-	f_sensos = criar_fila("Sensos");
-	f_antisensos = criar_fila("Antisensos");
-	omp_init_lock(&MC_copy_lock);
-	
+	prepare_buffer(&buffer,buffer_size_NC);	
 			
-	#pragma omp parallel num_threads(3) shared(buffer) shared(f_sensos) shared(f_antisensos)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer)
 	{	
 		
 		#pragma omp sections
@@ -289,11 +258,7 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 			}
 			#pragma omp section
 			{
-				hash_table = nc_memory_cleaner_manager(&buffer,f_sensos,f_antisensos);
-			}
-			#pragma omp section
-			{
-				nc_search_manager(&buffer,bloco1,bloco2,blocos,f_sensos,f_antisensos);
+				hash_table = nc_search_manager(&buffer,bloco1,bloco2,blocos);
 			}
 		}
 	}
@@ -319,6 +284,12 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	debug = set.debug;
 	central_cut = set.cut_central;
 	gui_run = set.gui_run;
+	dist_regiao_5l = set.dist_regiao_5l;
+	tam_regiao_5l = set.tam_regiao_5l;
+	if(dist_regiao_5l && tam_regiao_5l)
+		regiao_5l = TRUE;
+	else
+		regiao_5l = FALSE;
 
 	  if(!silent)
 	printf("OpenMP Mode.\n");

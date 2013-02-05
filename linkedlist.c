@@ -191,20 +191,15 @@ Pares* recupera_despareados(lista_ligada *l){
 	return desp;
 }
 
-void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui_run){
+void imprimir_lista_ligada(lista_ligada *resultados,char *tempo,gboolean silent,gboolean gui_run){
 	lista_ligada *p;
 	int i;	
 	FILE *out;
-	char outname_tmp[500];
-	char outname[500];
-	char *tempo;	
-	time_t t;
+	char outname_tmp[100];
+	char outname[100];
 	
-	time(&t);
-	tempo = ctime(&t);
 	tempo[strlen(tempo)-1] = '\0';
-	
-	strcpy(outname_tmp,"resultados - ");
+	strcpy(outname_tmp,"SHunter Resultados - ");
 	strcat(outname_tmp,tempo);
 	strcat(outname_tmp,".txt");
 
@@ -218,6 +213,7 @@ void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui
 	out = fopen(outname,"a");
 	if(!out){
 		printString("Resultados não puderam ser salvos em ",outname);
+		return;
 	}
 
 	fprintf(out,"################### %s ###################\n\n",tempo); 
@@ -230,8 +226,6 @@ void imprimir_lista_ligada(lista_ligada *resultados,gboolean silent,gboolean gui
 		print_resultado(p);
 		p = p->prox;
 	}
-	if(gui_run)
-		printf("R %s\n",outname);
 	return;
 }
 

@@ -91,45 +91,12 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean sil
 	return resultados;
 }
 
-void imprimir(lista_ligada *resultados,int max_events,gboolean silent,gboolean gui_run){
+void imprimir(lista_ligada *resultados,char *tempo,int max_events,gboolean silent,gboolean gui_run){
 	if(!silent)
 	printf("Frequencias estimadas:\n");
-	imprimir_lista_ligada(resultados,silent,gui_run);
+	imprimir_lista_ligada(resultados,tempo,silent,gui_run);
 	
 	return;
 }
-
-void swap(lista_ligada** a, lista_ligada** b) {
-  lista_ligada *tmp;
-  tmp = *a;
-  *a = *b;
-  *b = tmp;
-return;
-}
- 
-int particione(lista_ligada **l, int left, int right) {
-  int i;
-  int j;
- 
-  i = left;
-  for (j = left + 1; j <= right; ++j) {
-    if (&l[j]->qnt_relativa < &l[left]->qnt_relativa){
-      i++;
-      swap(&l[i], &l[j]);
-    }
-  }
-  swap(&l[left], &l[i]);
- 
-  return i;
-}
- 
-void quicksort(lista_ligada **l, int left, int right) {
-  int r;
- 
-  if (right > left) {
-    r = particione(l, left, right);
-    quicksort(l, left, r - 1);
-    quicksort(l, r + 1, right);
-  }
   
-}
+

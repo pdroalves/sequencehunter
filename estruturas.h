@@ -54,6 +54,7 @@ struct Value{
 	int qsenso;
 	int qasenso;
 	float qnt_relativa;
+	struct _GHashTable *regiao_5l;
 };
 typedef struct Value value;
 
@@ -76,6 +77,8 @@ struct params{
 	int debug;
 	int cut_central;
 	int gui_run;
+	int dist_regiao_5l;
+	int tam_regiao_5l;
 };
 typedef struct params Params;
 
