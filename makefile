@@ -12,7 +12,7 @@ CUDA_ARCH = -arch=sm_21
 CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar
 
-INSTALL = /home/pedro/Projetos/bin
+INSTALL = /usr/local/bin
 
 all:cmd gui
 
@@ -95,6 +95,6 @@ clean:
 	echo "It's clean"
 
 install:
-	rm $(INSTALL)/$(CLI_NAME) $(INSTALL)/$(GUI_NAME)
-	cp ./$(CLI_NAME) ./$(GUI_NAME) $(INSTALL)
+	#sudo rm $(INSTALL)/$(CLI_NAME) $(INSTALL)/$(GUI_NAME)
+	sudo cp ./$(CLI_NAME) ./$(GUI_NAME) $(INSTALL)
 	echo "Done"

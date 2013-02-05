@@ -211,7 +211,7 @@ lista_ligada* converter_para_lista_ligada(GHashTable *hash_table){
 void ht_interna_to_binary(gchar *seq,value *entry,FILE *f){
 	int size = strlen(seq)+1;
 	fprintf(f,"%d\n",INICIO_SUBHT);
-	fprintf(f,"%d",strlen(seq));
+	fprintf(f,"%d\n",strlen(seq));
 	fprintf(f,"%s\n",seq);
 	fprintf(f,"%d\n",entry->qsenso);
 	fprintf(f,"%d\n",entry->qasenso);
@@ -220,7 +220,7 @@ void ht_interna_to_binary(gchar *seq,value *entry,FILE *f){
 void ht_to_binary(gchar *seq,value *entry,FILE *f){
 	int size = strlen(seq)+1;
 	int sub_ht_size;
-	fprintf(f,"%d",strlen(seq));
+	fprintf(f,"%d\n",strlen(seq));
 	fprintf(f,"%s\n",seq);
 	fprintf(f,"%d\n",entry->qsenso);
 	fprintf(f,"%d\n",entry->qasenso);
@@ -243,7 +243,7 @@ void write_ht_to_binary(GHashTable *hash_table,gboolean regiao5l,gboolean gui_ru
 	tempo[strlen(tempo)-1] = '\0';
 	strcpy(outname_tmp,"SHunter Output - ");
 	strcat(outname_tmp,tempo);
-	strcat(outname_tmp-1,".shunt");
+	strcat(outname_tmp,".shunt");
 
 	for(i=0;i <= strlen(outname_tmp); i++){
 		if(outname_tmp[i] == ':')

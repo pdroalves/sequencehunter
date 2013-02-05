@@ -244,7 +244,8 @@
 		}
 	}
 	
-	imprimir(resultados,tempo,max_events,silent,gui_run);
+	if(!gui_run)
+		imprimir(resultados,tempo,max_events,silent,gui_run);
 	
 	if(!silent)
 		printf("Algoritmo concluído.\n");
