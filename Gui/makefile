@@ -1,4 +1,4 @@
-DST="SHunter.jar"
+DST="shunter-gui.jar"
 
 all:
 	javac -classpath src/ src/Principal.java -d bin/
@@ -6,5 +6,5 @@ all:
 	chmod +x $(DST)
 
 clean:
-	rm ./SHunter.jar
+	rm ./$(DST)
 	rm -R bin/*
