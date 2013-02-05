@@ -276,7 +276,7 @@ GHashTable* search_manager(int *buffer_load,
 										if(regiao_5l){
 											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 
-											gap = h_search_gaps[i] - dist_regiao_5l;
+											gap = h_search_gaps[i] - bloco1 - dist_regiao_5l;
 											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
 											cincol[tam_regiao_5l] = '\0';
 										}
@@ -302,7 +302,7 @@ GHashTable* search_manager(int *buffer_load,
 								
 										if(regiao_5l){
 											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
-											gap = h_search_gaps[i] + dist_regiao_5l;
+											gap = h_search_gaps[i] + bloco2 + dist_regiao_5l;
 											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
 											cincol[tam_regiao_5l] = '\0';
 										}

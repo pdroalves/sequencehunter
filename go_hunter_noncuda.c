@@ -137,7 +137,6 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 				}
 				cudaEventRecord(start,0);
 						
-					
 				tam = buffer->load;
 				p += tam;
 					
@@ -158,7 +157,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 								if(regiao_5l){
 									cincol = (char*)malloc((blocos+1)*sizeof(char));
 
-									gap = search_gaps[i] - dist_regiao_5l;
+									gap = search_gaps[i] - bloco1 - dist_regiao_5l;
 									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
 									cincol[tam_regiao_5l] = '\0';
 								}
@@ -184,7 +183,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 								
 								if(regiao_5l){
 									cincol = (char*)malloc((blocos+1)*sizeof(char));
-									gap = search_gaps[i] + dist_regiao_5l;
+									gap = search_gaps[i] + bloco2 + dist_regiao_5l;
 									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
 									cincol[tam_regiao_5l] = '\0';
 								}
