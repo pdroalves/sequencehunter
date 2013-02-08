@@ -149,7 +149,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 									strncpy(central,buffer->seq[i]+gap,blocoV);
 									central[blocoV] = '\0';
 								}else{									
-									strncpy(central,buffer->seq[i],blocos);
+									strncpy(central,buffer->seq[i],blocos+1);
 								}
 
 
@@ -176,7 +176,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 									strncpy(central,buffer->seq[i]+gap,blocoV);
 									central[blocoV] = '\0';
 								}else{									
-									strncpy(central,buffer->seq[i],blocos);
+									strncpy(central,buffer->seq[i],blocos+1);
 								}
 
 								

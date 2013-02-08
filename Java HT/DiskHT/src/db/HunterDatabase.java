@@ -1,3 +1,12 @@
+//      SocketManager.java
+//      
+//      Copyright 2013 Pedro Alves <pdroalves@gmail.com>
+//      
+//		Classe que implementa MapDB para armazenamento e leitura de dados do banco de dados com objetos do tipo Event.
+//		Serve de auxilio para o Sequence Hunter.
+//
+//		08/02/2013
+
 package db;
 
 import java.io.File;
@@ -10,6 +19,7 @@ import org.mapdb.*;
 public class HunterDatabase {
 	private DB db;
 	private Map<String, Event> dbMap;
+	private boolean regiaoCincoLSupport = false;
 
 	public HunterDatabase(String dbName,File f){
 		db = DBMaker.newFileDB(f)
@@ -56,6 +66,14 @@ public class HunterDatabase {
 	
 	public void close(){
 		db.close();
+	}
+
+	public boolean getRegiaoCincoLSupport() {
+		return regiaoCincoLSupport;
+	}
+
+	public void setRegiaoCincoLSupport(boolean regiaoCincoLSupport) {
+		this.regiaoCincoLSupport = regiaoCincoLSupport;
 	}
 }
 
