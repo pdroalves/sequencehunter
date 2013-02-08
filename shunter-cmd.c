@@ -91,7 +91,6 @@
 	  FILE *f;
 	  lista_ligada *resultados;
 	  Params set;
-	  GHashTable* hash_table;
 	  time_t t;
 	   char *tempo;
 
@@ -124,11 +123,11 @@
 	 c = NULL;
 	 nome = NULL;
 	  
-	  if(just_process){
+	 /* if(just_process){
 		if(!silent || gui_run)
 			printf("Iniciando em modo de processamento...\n");
-		  f = fopen(argv[1],"r");
-		  hash_table = read_binary_to_ht(f);
+		  f = fopen(argv[1],"r");*/
+		 if(1 == 0){
 	  }else{
 	  
 		  c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
@@ -220,37 +219,23 @@
 	  if(!silent || gui_run)
 			printf("Forçando modo OpenMP.\n");
 			printString("Forçando modo OpenMP.",NULL);
-			hash_table = aux(0,c,b1_size,b2_size,c_size,set); 
+			aux(0,c,b1_size,b2_size,c_size,set); 
 		}
 		else{
-			hash_table = aux(is_cuda_available,c,b1_size,b2_size,c_size,set);
+			aux(is_cuda_available,c,b1_size,b2_size,c_size,set);
 		}
 		free(c);
 	}
 	
-	#pragma omp parallel num_threads(2) shared(hash_table) shared(bv_size) shared(max_events) shared(silent) shared(regiao5l) shared(gui_run)
-	{
-		#pragma omp sections
-		{
-			#pragma omp section
-			{
-			if(!just_process && keep)
-				write_ht_to_binary(hash_table,regiao5l,gui_run,tempo);			
-			}
-			#pragma omp section
-			{
-				resultados = processar(hash_table,bv_size,max_events,silent,gui_run);
-			}
-		}
-	}
+	resultados = processar(bv_size,max_events,silent,gui_run);
 	
-	if(!gui_run)
-		imprimir(resultados,tempo,max_events,silent,gui_run);
+	
+	//if(!gui_run)
+	//	imprimir(resultados,tempo,max_events,silent,gui_run);
 	
 	if(!silent)
 		printf("Algoritmo concluído.\n");
 	close_file();
-	if(hash_table != NULL)
-		destroy_ghash_table(hash_table);
+	destroy_ghash_table();
 	return 0;
 }

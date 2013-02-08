@@ -62,12 +62,11 @@ void nc_buffer_manager(Buffer *b,int n){
 		//////////////////////////////////////////	
 }
 
-GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
+void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 	//////////////////////////////////////////
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
 		
-		GHashTable *hash_table;
 		int *search_gaps;
 		int *resultados;
 		gboolean retorno;
@@ -86,7 +85,6 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 		const int blocoV = blocos-bloco1-bloco2;
 		
 		THREAD_DONE[THREAD_SEARCH] = FALSE;
-		hash_table = criar_ghash_table();
 		p = 0;
 		fsensos=fasensos=0;
 		
@@ -105,7 +103,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
 			
 				cudaEventRecord(start,0);
-			while(buffer->load != GATHERING_DONE && 
+			while(buffer->load != GATHERING_DONE || 
 					THREAD_DONE[THREAD_BUFFER_LOADER] == FALSE){
 				//Realiza loop enquanto existirem sequências para encher o buffer
 				cudaEventRecord(stop,0);
@@ -164,10 +162,10 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 								}
 								
 							fsensos++;
-								if(regiao_5l)
-									retorno = adicionar_ht(hash_table,central,cincol,criar_value(0,1,0,0));
-								else
-									retorno = adicionar_ht(hash_table,central,NULL,criar_value(0,1,0,0));
+										if(regiao_5l)
+											adicionar_ht(central,cincol,"S");
+										else
+											adicionar_ht(central,NULL,"S");
 
 								buffer->load--;
 							break;
@@ -190,10 +188,10 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 								}
 
 								fasensos++;
-								if(regiao_5l)
-									retorno = adicionar_ht(hash_table,get_antisenso(central),get_antisenso(cincol),criar_value(0,0,1,0));
-								else
-									retorno = adicionar_ht(hash_table,get_antisenso(central),NULL,criar_value(0,0,1,0));
+										if(regiao_5l)
+											adicionar_ht(get_antisenso(central),get_antisenso(cincol),"AS");
+										else
+											adicionar_ht(get_antisenso(central),NULL,"AS");
 								
 								buffer->load--;
 							break;
@@ -228,7 +226,7 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 		printf("Busca realizada em %.2f ms.\n",iteration_time);
 	
 		THREAD_DONE[THREAD_SEARCH] = TRUE;
-		return hash_table;
+		return;
 		//////////////////////////////////////////
 		//////////////////////////////////////////
 		//////////////////////////////////////////
@@ -237,15 +235,14 @@ GHashTable* nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 
 
 
-GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 	
 	Buffer buffer;
 	int blocoV;
-	GHashTable* hash_table;
-	
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
 	prepare_buffer(&buffer,buffer_size_NC);	
+	criar_ghash_table();
 			
 	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer)
 	{	
@@ -258,19 +255,18 @@ GHashTable* NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 			}
 			#pragma omp section
 			{
-				hash_table = nc_search_manager(&buffer,bloco1,bloco2,blocos);
+				nc_search_manager(&buffer,bloco1,bloco2,blocos);
 			}
 		}
 	}
 	
-	return hash_table;
+	return;
 }
 
 
-GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
 	int n;//Elementos por sequência
-	GHashTable* hash_table;
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;
 	//cudaEvent_t stop;
@@ -303,7 +299,7 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	printString("Iniciando iterações:\n",NULL);
 	
     //cudaEventRecord(start,0);
-	hash_table = NONcudaIteracoes(bloco1,bloco2,blocos,n);
+	NONcudaIteracoes(bloco1,bloco2,blocos,n);
     //cudaEventRecord(stop,0);
     //cudaEventSynchronize(stop);
     //cudaEventElapsedTime(&tempo,start,stop);
@@ -311,6 +307,6 @@ GHashTable* auxNONcuda(char *c,const int bloco1,const int bloco2,const int bloco
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
 	
-return hash_table;	
+return;	
 }
 

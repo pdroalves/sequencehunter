@@ -3,6 +3,9 @@ CC_LINUX = gcc
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
 
+GIO_CFLAGS = `pkg-config --cflags gio-2.0`
+GIO_LIBS = `pkg-config --libs gio-2.0`
+
 OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
@@ -24,7 +27,7 @@ all:cmd gui
 #########################################
 cmd:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o build_control
 	./build_control version
-	$(CUDA_CC) -G -g -o $(CLI_NAME) shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o $(GLIB_CFLAGS) $(GLIB_LIBS) $(OPENMP_CUDA)
+	$(CUDA_CC) -G -g -o $(CLI_NAME) shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o ghashtable.o  $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
 	echo "CLI built"	
 	
 gui:Gui/makefile
@@ -72,7 +75,7 @@ fila.o:fila.c
 	$(CC_LINUX) -g -c fila.c -o fila.o $(GLIB_CFLAGS)
 	
 ghashtable.o:ghashtable.c
-	$(CC_LINUX) -g -c ghashtable.c -o ghashtable.o $(GLIB_CFLAGS)
+	$(CC_LINUX) -g -c ghashtable.c -o ghashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 
 	
 #########################################

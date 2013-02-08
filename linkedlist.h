@@ -1,6 +1,6 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
-#include "estruturas.h";
+#include "estruturas.h"
 int busca_lista_as(lista_ligada *l,char *seq);
 int busca_lista_s(lista_ligada *l,char *seq);
 int conta_posicoes(char *seq);
@@ -11,5 +11,4 @@ Pares* recupera_despareados(lista_ligada *l);
 void imprimir_lista_ligada(lista_ligada *resultados,char *tempo,gboolean silent,gboolean gui_run);
 int qnt_relativa(lista_ligada* l);
 lista_ligada* ordena_pares(lista_ligada* l,int max);
-void g_hash_table_adapter_to_linked_list(gchar *seq,value *entry,lista_ligada *l);
 #endif

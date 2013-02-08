@@ -134,7 +134,7 @@ void buffer_manager(int *buffer_load,
 
 
 
-GHashTable* search_manager(int *buffer_load,
+void search_manager(int *buffer_load,
 							int *processadas,
 							Fila *tipo_founded,
 							Fila *founded,
@@ -144,8 +144,7 @@ GHashTable* search_manager(int *buffer_load,
 							int bloco2,
 							int blocoV,
 							cudaStream_t stream1,
-							cudaStream_t stream2){
-				GHashTable *hash_table;								
+							cudaStream_t stream2){						
 				int i;
 				short int *h_resultados;
 				short int *d_resultados;
@@ -172,7 +171,6 @@ GHashTable* search_manager(int *buffer_load,
 				gboolean retorno;
 				
 				THREAD_DONE[THREAD_SEARCH] = FALSE;
-				hash_table = criar_ghash_table();
 				fsenso=fasenso=0;
 
 				cudaEventCreate(&start);
@@ -283,9 +281,9 @@ GHashTable* search_manager(int *buffer_load,
 								
 										fsenso++;
 										if(regiao_5l)
-											retorno = adicionar_ht(hash_table,central,cincol,criar_value(0,1,0,0));
+											adicionar_ht(central,cincol,"S");
 										else
-											retorno = adicionar_ht(hash_table,central,NULL,criar_value(0,1,0,0));
+											adicionar_ht(central,NULL,"S");
 
 										*buffer_load--;
 									break;
@@ -309,9 +307,9 @@ GHashTable* search_manager(int *buffer_load,
 
 										fasenso++;
 										if(regiao_5l)
-											retorno = adicionar_ht(hash_table,get_antisenso(central),get_antisenso(cincol),criar_value(0,0,1,0));
+											adicionar_ht(get_antisenso(central),get_antisenso(cincol),"AS");
 										else
-											retorno = adicionar_ht(hash_table,get_antisenso(central),NULL,criar_value(0,0,1,0));
+											adicionar_ht(get_antisenso(central),NULL,"AS");
 								
 										*buffer_load--;
 									break;
@@ -354,11 +352,11 @@ GHashTable* search_manager(int *buffer_load,
 				cudaEventDestroy(startK);
 				cudaEventDestroy(stopK);
 				THREAD_DONE[THREAD_SEARCH] = TRUE;
-				return hash_table;
+				return;
 }
 
 
-GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu){
+void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu){
 	
 	
 	Buffer buffer;
@@ -370,12 +368,11 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	Fila *tipo_founded;
 	cudaStream_t stream1;
 	cudaStream_t stream2;
-	GHashTable* hash_table;
 	
 	//Inicializa buffer
 	cudaStreamCreate(&stream1);
 	cudaStreamCreate(&stream2);
-	hash_table = criar_ghash_table();		
+	criar_ghash_table();		
 	cudaHostAlloc((void**)&founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
 	for(i=0;i<buffer_size;i++)
 		cudaHostAlloc((void**)&founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
@@ -391,7 +388,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	
 	
 		
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(hash_table) shared(buffer) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
 	{		
 		#pragma omp sections
 		{
@@ -401,7 +398,7 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 			}
 			#pragma omp section
 			{
-				hash_table = search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
+				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
 			}	
 		}
 	}
@@ -419,11 +416,10 @@ GHashTable* cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_
 	cudaFreeHost(h_data);
 	cudaFreeHost(d_data);*/
 	cudaFree(data);
-	return hash_table;
+	return;
 }
 
-GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
-	GHashTable* hash_table;
+void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
 	float tempo;
 	int seqSize_an;//Tamanho das sequencias analisadas
 	verbose = set.verbose;
@@ -445,9 +441,9 @@ GHashTable* auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize
 	printSet(seqSize_an);
 	printString("Iniciando iterações:\n",NULL);
 	
-	hash_table = cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
+	cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
     
 	cudaThreadExit();
 	
-	return hash_table;
+	return;
 }

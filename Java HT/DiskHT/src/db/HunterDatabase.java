@@ -1,38 +1,57 @@
 package db;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.io.IOException;
-import java.util.regex.Pattern;
+import java.util.Set;
 import org.mapdb.*;
 
 
 public class HunterDatabase {
-	private HTreeMap<String, SeqEvento> db;
-	private boolean isPrimary;
+	private DB db;
+	private Map<String, Event> dbMap;
 
 	public HunterDatabase(String dbName,File f){
-		db = DBMaker.newFileDB(f).make().getHashMap(dbName);
+		db = DBMaker.newFileDB(f)
+				.asyncWriteDisable()
+				.make();
+		dbMap = db.getHashMap(dbName);
 	}
 	
-	public void addSeq(String key,SeqEvento value){
-		SeqEvento returnSE = db.get(key);
+	public void add(String key,Event value){
+		Event returnSE = dbMap.get(key);
 		if(returnSE != null){
-			db.put(key, updateValue(value,returnSE));
+			dbMap.put(key, updateValue(value,returnSE));
 		}else{
-			db.put(key, value);
+			dbMap.put(key, value);
 		}
 	}
 	
-	private SeqEvento updateValue(SeqEvento novo, SeqEvento velho){
-		SeqEvento atualizado = new SeqEvento();	
+	public void commit(){
+		System.out.println("Commit...");
+		db.commit();
+		System.out.println("Commit done.");
+	}
+	
+	private Event updateValue(Event novo, Event velho){
+		Event atualizado = new Event();	
 		
 		atualizado.setSeq(novo.getSeq());
 		atualizado.setQsensos(novo.getQsensos() + velho.getQsensos());
-		atualizado.setQantisensos(novo.getQantisensos() + velho.getQantisensos());
-		atualizado.setQntRelativa(novo.getQntRelativa() + velho.getQntRelativa());
+		atualizado.setQasensos(novo.getQasensos() + velho.getQasensos());
+		atualizado.setQntRel(novo.getQntRel() + velho.getQntRel());
 		return atualizado;
+	}
+	
+	public void printDB(){
+		Set<String> s = dbMap.keySet();
+		Iterator<String> iterator = s.iterator();
+		
+		while(iterator.hasNext()){
+			String key = iterator.next();
+			Event e = dbMap.get(key);
+			System.out.println(e.getSeq()+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+		}
 	}
 	
 	public void close(){

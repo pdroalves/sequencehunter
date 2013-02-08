@@ -64,21 +64,6 @@ lista_ligada* adicionar_elemento(lista_ligada *lista,lista_ligada *novo){
 	return lista;
 }
 
-void g_hash_table_adapter_to_linked_list(char *seq,value *entry,lista_ligada *l){
-	if(entry->qnt_relativa > 1e-7){
-		lista_ligada* novo;
-		
-		novo = criar_elemento_senso(seq);
-		novo->pares = entry->pares;
-		novo->qsenso = entry->qsenso;
-		novo->qasenso = entry->qasenso;
-		novo->qnt_relativa = entry->qnt_relativa;
-		
-		adicionar_elemento(l,novo);
-	}
-	return;
-}
-
 void remover_elemento(lista_ligada *atual, lista_ligada *anterior){
 	anterior->prox = atual->prox;
 	free(atual->senso);

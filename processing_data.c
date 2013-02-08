@@ -44,13 +44,13 @@ int check_seq_valida(char *p){
 	return 1;
 }
 
-lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean silent,gboolean gui_run){
+lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 	
 	Pares *desp;
 	Pares *tipos;
 	lista_ligada *l;
 	lista_ligada *resultados;
-
+/*
 	//print_all(hash_table);
 	if(hash_table == NULL){
 	  if(!silent)
@@ -88,13 +88,14 @@ lista_ligada* processar(GHashTable* hash_table,int n,int max_events,gboolean sil
 		}
 	}
 	free(desp);
-	return resultados;
+	* */
+	return NULL;
 }
 
 void imprimir(lista_ligada *resultados,char *tempo,int max_events,gboolean silent,gboolean gui_run){
 	if(!silent)
 	printf("Frequencias estimadas:\n");
-	imprimir_lista_ligada(resultados,tempo,silent,gui_run);
+	//imprimir_lista_ligada(resultados,tempo,silent,gui_run);
 	
 	return;
 }
