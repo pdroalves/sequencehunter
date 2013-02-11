@@ -28,9 +28,9 @@ all:cmd gui
 
 ##Linux##################################
 #########################################
-cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)ghashtable.o build_control
+cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o build_control
 	./$(BIN)build_control version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)ghashtable.o  $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
+	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o  $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
 	echo "CLI built"	
 	
 gui:$(SOURCE)Gui/makefile
@@ -57,8 +57,8 @@ $(OBJ)go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
 $(OBJ)load_data.o:$(SOURCE)External/load_data.c
 	$(CC_LINUX) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
-$(OBJ)ghashtable.o:$(SOURCE)External/ghashtable.c
-	$(CC_LINUX) -g -c $(SOURCE)External/ghashtable.c -o $(OBJ)ghashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+$(OBJ)hashtable.o:$(SOURCE)External/hashtable.c
+	$(CC_LINUX) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
 $(OBJ)operacoes.o:$(SOURCE)Assist/operacoes.c
 	$(CC_LINUX) -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 

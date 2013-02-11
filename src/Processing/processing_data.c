@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include "../Headers/linkedlist.h"
-#include "../Headers/ghashtable.h"
+#include "../Headers/hashtable.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 #include "../Headers/log.h"

@@ -24,7 +24,7 @@
 	#include "Headers/processing_data.h"
 	#include "Headers/linkedlist.h"
 	#include "Headers/version.h"
-	#include "Headers/ghashtable.h"
+	#include "Headers/hashtable.h"
 	
 	#define SEQ_BUSCA_TAM 1000
 

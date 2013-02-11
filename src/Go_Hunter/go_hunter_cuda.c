@@ -4,7 +4,7 @@
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include "../Headers/ghashtable.h"
+#include "../Headers/hashtable.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 #include "../Headers/operacoes.h"
