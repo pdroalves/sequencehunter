@@ -8,9 +8,9 @@
 
 #include <stdio.h>
 #include <cuda.h>
-#include "estruturas.h"
-#include "cuda_functions.h"
-#include "log.h"
+#include "../Headers/estruturas.h"
+#include "../Headers/cuda_functions.h"
+#include "../Headers/log.h"
 
 #define ABSOLUTO(a) a>=0?a:-a
 short int matrix_senso[MAX_SEQ_SIZE];

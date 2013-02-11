@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include "busca.h"
+#include "../Headers/busca.h"
 extern "C" int gpuDeviceInit(int devID);
 extern "C" inline int _ConvertSMVer2Cores(int major, int minor);
 extern "C" int gpuGetMaxGflopsDeviceId();

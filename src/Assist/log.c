@@ -11,7 +11,7 @@
 #include <time.h>
 #include <glib.h>
 #include <string.h>
-#include "estruturas.h"
+#include "../Headers/estruturas.h"
 void prepareLog();
 void print_time();
 void printString(char*,char*);

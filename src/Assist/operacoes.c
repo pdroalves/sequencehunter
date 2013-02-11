@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <omp.h>
-#include "processing_data.h"
+#include "../Headers/processing_data.h"
 #define TAM_MAX 10000
 
 char* get_antisenso(char *s){

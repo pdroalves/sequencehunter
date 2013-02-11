@@ -14,17 +14,17 @@
 	#include <glib.h>	
 	#include <string.h>
 	#include <time.h>
-	#include "operacoes.h"
-	#include "cuda_functions.h"
-	//#include "linkedlist.h"
-	#include "estruturas.h"
-	#include "go_hunter.h"
-	#include "log.h"
-	#include "load_data.h"
-	#include "processing_data.h"
-	#include "linkedlist.h"
-	#include "version.h"
-	#include "ghashtable.h"
+	#include "Headers/operacoes.h"
+	#include "Headers/cuda_functions.h"
+	//#include "Headers/linkedlist.h"
+	#include "Headers/estruturas.h"
+	#include "Headers/go_hunter.h"
+	#include "Headers/log.h"
+	#include "Headers/load_data.h"
+	#include "Headers/processing_data.h"
+	#include "Headers/linkedlist.h"
+	#include "Headers/version.h"
+	#include "Headers/ghashtable.h"
 	
 	#define SEQ_BUSCA_TAM 1000
 

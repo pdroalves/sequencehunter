@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
-#include "cuda.h"
-#include "cuda_runtime_api.h"
-#include "estruturas.h"
-#include "log.h"
-#include "processing_data.h"
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include "../Headers/estruturas.h"
+#include "../Headers/log.h"
+#include "../Headers/processing_data.h"
 
 #define TAM_MAX 10000
 

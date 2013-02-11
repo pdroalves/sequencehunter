@@ -12,10 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "estruturas.h"
-#include "log.h"
-#include "operacoes.h"
-#include "processing_data.h"
+#include "../Headers/estruturas.h"
+#include "../Headers/log.h"
+#include "../Headers/operacoes.h"
+#include "../Headers/processing_data.h"
 #define MIN(a,b) a>=b?b:a
 
 lista_ligada* criar_lista(){

@@ -12,8 +12,8 @@
 #include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
-#include "estruturas.h"
-#include "log.h"
+#include "../Headers/estruturas.h"
+#include "../Headers/log.h"
 
 #define SKT_PORT 9332
 #define SKT_MSG_HELLO "hi"

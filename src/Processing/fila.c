@@ -13,10 +13,10 @@
 #include <string.h>
 #include <omp.h>
 #include <glib.h>
-#include "estruturas.h"
-#include "operacoes.h"
-#include "load_data.h"
-#include "log.h"
+#include "../Headers/estruturas.h"
+#include "../Headers/operacoes.h"
+#include "../Headers/load_data.h"
+#include "../Headers/log.h"
 
 Fila* criar_fila(char *nome){
 	Fila *f;

@@ -2,11 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
-#include "linkedlist.h"
-#include "ghashtable.h"
-#include "estruturas.h"
-#include "load_data.h"
-#include "log.h"
+#include "../Headers/linkedlist.h"
+#include "../Headers/ghashtable.h"
+#include "../Headers/estruturas.h"
+#include "../Headers/load_data.h"
+#include "../Headers/log.h"
 
 #define TAM_MAX 10000
 
