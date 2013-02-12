@@ -48,11 +48,12 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	//send_msg_to_socket(SKT_MSG_SND_SEQ);
 	
 	// Monta a msg
-	strcpy(msg,central);
-	strcat(msg," ");
+	strcpy(msg,"1");
+	strcat(msg,central);
+	strcat(msg,"2");
 	if(cincol != NULL){
 		strcat(msg,cincol);
-		strcat(msg," ");		
+		strcat(msg,"3");		
 	}
 	strcat(msg,tipo);
 	strcat(msg," ");
@@ -66,4 +67,12 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	dataSent++;
 	
 	return;
+}
+
+int tamanho_ht(){
+	char *msg_returned;
+	send_msg_to_socket(socket,SKT_MSG_GETSIZE);
+	msg_returned = get_msg_to_socket(socket);	
+	printf("Received: %s\n",msg_returned);
+	return atoi(msg_returned);		
 }

@@ -52,7 +52,8 @@ Socket* criar_socket(int port){
     sock->istream = g_io_stream_get_input_stream (G_IO_STREAM (sock->connection));  
     sock->ostream = g_io_stream_get_output_stream (G_IO_STREAM (sock->connection));  
     
-    send_msg_to_socket(sock,SKT_MSG_HELLO);                                       
+    send_msg_to_socket(sock,SKT_MSG_HELLO); 
+    get_msg_to_socket(sock);                                      
 	return sock;
 }
 

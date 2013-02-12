@@ -50,18 +50,11 @@ lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 	Pares *tipos;
 	lista_ligada *l;
 	lista_ligada *resultados;
-/*
+
 	//print_all(hash_table);
-	if(hash_table == NULL){
-	  if(!silent)
-		printf("Nao foram encontradas sequências com pareamento.\n");
-		resultados = criar_lista();
-	}else{
-		if(tamanho_ht(hash_table) == 0){
-	  if(!silent)
-			printf("Nao foram encontradas sequências com pareamento.\n");
-			resultados = criar_lista();
-		}else{
+	if(tamanho_ht() != 0){	
+			printf("Existem sequencias!\n");
+		/*
 			tipos = recupera_tipos_ht(hash_table);
 			desp = recupera_despareados_ht(hash_table);
 		  
@@ -85,10 +78,14 @@ lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 			
 			// Ordena os max_events maiores elementos
 			resultados = ordena_pares(l,max_events);
-		}
+			free(desp);*/
+		}else{
+		if(!silent)
+			printf("Nao foram encontradas sequências com pareamento.\n");
+			
+			resultados = criar_lista();
 	}
-	free(desp);
-	* */
+	
 	return NULL;
 }
 

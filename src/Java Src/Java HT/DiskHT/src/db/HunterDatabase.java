@@ -92,6 +92,9 @@ public class HunterDatabase implements Serializable{
 		db.close();
 	}
 	
+	public int size(){
+		return dbMap.size();
+	}
 }
 
 

@@ -73,10 +73,12 @@ public class SocketManager {
 		String closeMsg = "bye";
 		String doneMsg = "done";
 		String regiaoCincolMsg = "cincolok";
+		String sizeMsg = "size";
 		byte[] doneMsgBytes = doneMsg.getBytes();
 		byte[] helloMsgBytes = helloMsg.getBytes();
 		byte[] closeMsgBytes = closeMsg.getBytes();
 		byte[] regiaoCincolBytes = regiaoCincolMsg.getBytes();
+		byte[] sizeBytes = sizeMsg.getBytes();
 
 		// Patterns
 		Pattern helloPattern = Pattern.compile(helloMsg);
@@ -84,6 +86,7 @@ public class SocketManager {
 		Pattern incomingSeqWithCincoLSupportPattern = Pattern.compile("1(.+)2(.+)3(.+)\\s"); // SeqCentral + SeqCL + Tipo
 		Pattern closePattern = Pattern.compile(closeMsg);
 		Pattern regiaoCLPattern = Pattern.compile(regiaoCincolMsg);
+		Pattern sizePattern = Pattern.compile(sizeMsg);
 
 		while(!end) {
 			byte[] buf=new byte[1024];
@@ -108,6 +111,7 @@ public class SocketManager {
 				Matcher helloMatcher = helloPattern.matcher(data);
 				Matcher closeMatcher = closePattern.matcher(data);
 				Matcher regiaoCLMatcher = regiaoCLPattern.matcher(data);
+				Matcher sizeMatcher = sizePattern.matcher(data);
 
 				if(helloMatcher.find()){
 					sendMsg(sockOutput,helloMsgBytes,0,helloMsgBytes.length);
@@ -118,7 +122,10 @@ public class SocketManager {
 				}				
 				else if(regiaoCLMatcher.find()){
 					cincoLSupport = true;					
-				}	
+				}else if(sizeMatcher.find()){
+					byte[] sizeSendBytes = Integer.toString(db.size()).getBytes();
+					sendMsg(sockOutput,sizeSendBytes,0,sizeSendBytes.length);
+				}
 				else if(incomingSeqWithCincoLSupportMatcher.find()){
 					boolean hasData = true;
 					while(hasData){
@@ -169,8 +176,8 @@ public class SocketManager {
 								db.add(seq,null, new Event(seq,0,1));					
 							}
 						}
+						hasData = incomingSeqMatcher.find();
 					}
-					hasData = incomingSeqMatcher.find();
 				}
 
 

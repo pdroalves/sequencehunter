@@ -20,6 +20,7 @@
 #define SKT_MSG_HELLO "hi"
 #define SKT_MSG_CLOSE "bye"
 #define SKT_MSG_CINCOL "cincolok"
+#define SKT_MSG_GETSIZE "size"
 
 typedef struct _GSocketConnection GSocketConnection;
 typedef struct _GSocketClient GSocketClient;
