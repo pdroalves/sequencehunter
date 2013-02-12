@@ -16,6 +16,16 @@
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000
 
+// Socket msgs
+#define SKT_MSG_HELLO "hi"
+#define SKT_MSG_CLOSE "bye"
+#define SKT_MSG_CINCOL "cincolok"
+
+typedef struct _GSocketConnection GSocketConnection;
+typedef struct _GSocketClient GSocketClient;
+typedef struct _GInputStream GInputStream;
+typedef struct _GOutputStream GOutputStream;
+
 const enum{
 	A,
 	C,
@@ -72,5 +82,13 @@ struct params{
 	int tam_regiao_5l;
 };
 typedef struct params Params;
+
+struct socket{
+	GSocketConnection * connection;
+	GSocketClient * client;
+	GInputStream * istream;
+	GOutputStream * ostream;	
+};
+typedef struct socket Socket;
 
 #endif

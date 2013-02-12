@@ -40,7 +40,7 @@ public class SocketManager {
 		serverSock = createServerSocket(serverPort);
 		db = new HunterDatabase("central", new File("centralSeq"));
 	}
-	
+
 	public SocketManager(HunterDatabase d){
 		serverPort = 9332;
 		serverSock = createServerSocket(serverPort);
@@ -66,7 +66,8 @@ public class SocketManager {
 
 	public void handleConnection(InputStream sockInput, OutputStream sockOutput) {
 		int dataReceived = 0;
-		
+		boolean cincoLSupport = false;
+
 		// Mensagens
 		String helloMsg = "hello";
 		String closeMsg = "bye";
@@ -76,21 +77,24 @@ public class SocketManager {
 		byte[] helloMsgBytes = helloMsg.getBytes();
 		byte[] closeMsgBytes = closeMsg.getBytes();
 		byte[] regiaoCincolBytes = regiaoCincolMsg.getBytes();
-		
+
 		// Patterns
 		Pattern helloPattern = Pattern.compile(helloMsg);
-		Pattern incomingSeqPattern = Pattern.compile("(.+)\\s(.+)\\s");
+		Pattern incomingSeqPattern = Pattern.compile("1(.+)2(.+)\\s");// Seq + Tipo
+		Pattern incomingSeqWithCincoLSupportPattern = Pattern.compile("1(.+)2(.+)3(.+)\\s"); // SeqCentral + SeqCL + Tipo
 		Pattern closePattern = Pattern.compile(closeMsg);
 		Pattern regiaoCLPattern = Pattern.compile(regiaoCincolMsg);
-		
+
 		while(!end) {
 			byte[] buf=new byte[1024];
 			int bytes_read = 0;
+
 			try {
 				// This call to read() will wait forever, until the
 				// program on the other side either sends some data,
 				// or closes the socket.
 				bytes_read = getMsg(sockInput,buf,0,buf.length);
+				sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 
 				// If the socket is closed, sockInput.read() will return -1.
 				if(bytes_read < 0) {
@@ -98,40 +102,78 @@ public class SocketManager {
 					return;
 				}
 				String data = new String(buf, 0, bytes_read);
-				
+
+				Matcher incomingSeqWithCincoLSupportMatcher = incomingSeqWithCincoLSupportPattern.matcher(data);
 				Matcher incomingSeqMatcher = incomingSeqPattern.matcher(data);
 				Matcher helloMatcher = helloPattern.matcher(data);
 				Matcher closeMatcher = closePattern.matcher(data);
 				Matcher regiaoCLMatcher = regiaoCLPattern.matcher(data);
-				
+
 				if(helloMatcher.find()){
 					sendMsg(sockOutput,helloMsgBytes,0,helloMsgBytes.length);
 				}
-				
-				if(closeMatcher.find()){
+				else if(closeMatcher.find()){
 					sendMsg(sockOutput,closeMsgBytes,0,closeMsgBytes.length);
 					end = true;
-				}
-				
-				if(regiaoCLMatcher.find()){
-					db.setRegiaoCincoLSupport(true);
-				}
-				
-				while(incomingSeqMatcher.find()){
-					dataReceived++;
-					String seq = incomingSeqMatcher.group(1);
-					String seqTipo = incomingSeqMatcher.group(2);
-					if(sensoCode.equals(seqTipo)){
-						db.add(seq, new Event(seq,1,0));
-					}else{
-						if(antisensoCode.equals(seqTipo)){
-							db.add(seq, new Event(seq,0,1));					
+				}				
+				else if(regiaoCLMatcher.find()){
+					cincoLSupport = true;					
+				}	
+				else if(incomingSeqWithCincoLSupportMatcher.find()){
+					boolean hasData = true;
+					while(hasData){
+
+						dataReceived++;
+						String seq = incomingSeqWithCincoLSupportMatcher.group(1);
+						if(cincoLSupport){			
+							String seqCL = incomingSeqWithCincoLSupportMatcher.group(2);
+							String seqTipo = incomingSeqWithCincoLSupportMatcher.group(3);
+							if(sensoCode.equals(seqTipo)){
+								db.add(seq,seqCL, new Event(seq,1,0));
+							}
+							else if(antisensoCode.equals(seqTipo)){
+								db.add(seq,seqCL, new Event(seq,0,1));					
+							}
+						}else{
+							String seqTipo = incomingSeqWithCincoLSupportMatcher.group(2);
+							if(sensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,1,0));
+							}
+							else if(antisensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,0,1));					
+							}
+						}
+						hasData = incomingSeqWithCincoLSupportMatcher.find();
+					}
+				}else if(incomingSeqMatcher.find()){
+					boolean hasData = true;
+					while(hasData){
+
+						dataReceived++;
+						String seq = incomingSeqMatcher.group(1);
+						if(cincoLSupport){			
+							String seqCL = incomingSeqMatcher.group(2);
+							String seqTipo = incomingSeqMatcher.group(3);
+							if(sensoCode.equals(seqTipo)){
+								db.add(seq,seqCL, new Event(seq,1,0));
+							}
+							else if(antisensoCode.equals(seqTipo)){
+								db.add(seq,seqCL, new Event(seq,0,1));					
+							}
+						}else{
+							String seqTipo = incomingSeqMatcher.group(2);
+							if(sensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,1,0));
+							}
+							else if(antisensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,0,1));					
+							}
 						}
 					}
+					hasData = incomingSeqMatcher.find();
 				}
-			
-				
-				sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
+
+
 				// This call to flush() is optional - we're saying go
 				// ahead and send the data now instead of buffering
 				// it.
@@ -146,11 +188,11 @@ public class SocketManager {
 		}
 
 	}
-	
+
 	private void sendMsg(OutputStream sockOutput,byte[] b,int off,int size) throws IOException{
 		sockOutput.write(b,off,size);		
 	}
-	
+
 	private int getMsg(InputStream sockInput,byte[] b,int off,int size) throws IOException{
 		int bytes_read = sockInput.read(b,off,size);
 		return bytes_read;

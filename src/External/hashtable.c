@@ -14,70 +14,21 @@
 #include <gio/gio.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/log.h"
+#include "../Headers/socket.h"
 
+Socket *socket;
 #define SKT_PORT 9332
-#define SKT_MSG_HELLO "hi"
-#define SKT_MSG_CLOSE "bye"
-#define SKT_MSG_CINCOL "cincolok"
-
-GSocketConnection * connection = NULL;
-GSocketClient * client;
-GInputStream * istream = NULL;
-GOutputStream * ostream = NULL;
 int dataSent;
 
-void send_msg_to_socket(char *msg){
-  GError * error = NULL;
-	g_output_stream_write  (ostream,
-							  msg,
-							  strlen(msg),
-							  NULL,
-							  &error);
-}
-
-char* get_msg_to_socket(){
-  GError * error = NULL;
-	char *msg;
-	msg = (char*)malloc(MAX_SEQ_SIZE*sizeof(char));
-	g_input_stream_read(istream,
-						msg,
-						MAX_SEQ_SIZE*sizeof(char),
-						NULL,
-						&error);
-						return msg;
-}
-
 void criar_ghash_table(){
-  GError * error = NULL;
-  
-  g_type_init();
-  
-	client =  g_socket_client_new();
-	connection = g_socket_client_connect_to_host (client,
-                                               (gchar*)"localhost",
-                                                SKT_PORT, /* your port goes here */
-                                                NULL,
-                                                &error);
-    if(error != NULL){
-		printString("ERRO!\n\tNão foi possivel estabelecer conexão com a base de dados:",error->message);
-		printString("Encerrando...",NULL);
-		exit(1);
-	}
-    istream = g_io_stream_get_input_stream (G_IO_STREAM (connection));  
-    ostream = g_io_stream_get_output_stream (G_IO_STREAM (connection));  
-    
-    send_msg_to_socket(SKT_MSG_HELLO);
-    // Falta implementar uma conexao para checar se esta tudo ok
-     
+     socket = criar_socket(SKT_PORT);
      dataSent = 0;                                             
 	return;
 }
 
 void destroy_ghash_table(){
 	// Envia msg para fechar
-  GError * error = NULL;
-	send_msg_to_socket(SKT_MSG_CLOSE);
-	g_socket_client_connect_to_host_finish(client,NULL,&error);
+	destroy_socket(socket);
 	printf("Seqs sent: %d\n",dataSent);
 	return;
 }
@@ -107,8 +58,8 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	strcat(msg," ");
 	
 	// Envia a sequencia
-	send_msg_to_socket(msg);
-	msg_returned = get_msg_to_socket();		
+	send_msg_to_socket(socket,msg);
+	msg_returned = get_msg_to_socket(socket);		
 	printf("Received: %s\n",msg_returned);
 		
 	free(msg);

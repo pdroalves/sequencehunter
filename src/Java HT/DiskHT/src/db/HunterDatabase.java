@@ -10,17 +10,18 @@
 package db;
 
 import java.io.File;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.mapdb.*;
 
 
-public class HunterDatabase {
+public class HunterDatabase implements Serializable{
 	private DB db;
 	private Map<String, Event> dbMap;
-	private boolean regiaoCincoLSupport = false;
-
+	
 	public HunterDatabase(String dbName,File f){
 		db = DBMaker.newFileDB(f)
 				.asyncWriteDisable()
@@ -28,13 +29,23 @@ public class HunterDatabase {
 		dbMap = db.getHashMap(dbName);
 	}
 	
-	public void add(String key,Event value){
-		Event returnSE = dbMap.get(key);
+	public void add(String keyCentral,String keyCL,Event value){
+		// A sequencia deve vir jah segmentada
+		
+		Event returnSE = dbMap.get(keyCentral);
 		if(returnSE != null){
-			dbMap.put(key, updateValue(value,returnSE));
+			dbMap.put(keyCentral, updateValue(value,returnSE,keyCL));
 		}else{
-			dbMap.put(key, value);
+			if(keyCL != null){
+				value.setDbCincoL(new HashMap<String,Event>());
+				value.getDbCincoL().put(keyCL, value);
+			}
+			dbMap.put(keyCentral, value);
 		}
+	}
+	
+	public void removeAll(){
+		dbMap.clear();
 	}
 	
 	public void commit(){
@@ -43,13 +54,25 @@ public class HunterDatabase {
 		System.out.println("Commit done.");
 	}
 	
-	private Event updateValue(Event novo, Event velho){
+	private Event updateValue(Event novo, Event velho,String keyCL){
 		Event atualizado = new Event();	
 		
 		atualizado.setSeq(novo.getSeq());
 		atualizado.setQsensos(novo.getQsensos() + velho.getQsensos());
 		atualizado.setQasensos(novo.getQasensos() + velho.getQasensos());
 		atualizado.setQntRel(novo.getQntRel() + velho.getQntRel());
+		atualizado.setDbCincoL(velho.getDbCincoL());
+		if(keyCL != null){
+			Event cincoL = atualizado.getDbCincoL().get(keyCL);
+			if(cincoL == null){
+				cincoL = new Event(keyCL,novo.getQsensos(),novo.getQasensos(),novo.getQntRel());
+				atualizado.getDbCincoL().put(keyCL,cincoL);
+			}else{
+				cincoL.setQsensos(cincoL.getQsensos()+novo.getQsensos());
+				cincoL.setQasensos(cincoL.getQasensos()+novo.getQasensos());
+				cincoL.setQntRel(cincoL.getQntRel()+novo.getQntRel());
+			}
+		}
 		return atualizado;
 	}
 	
@@ -61,19 +84,14 @@ public class HunterDatabase {
 			String key = iterator.next();
 			Event e = dbMap.get(key);
 			System.out.println(e.getSeq()+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+			e.printDB();
 		}
 	}
 	
 	public void close(){
 		db.close();
 	}
-
-	public boolean getRegiaoCincoLSupport() {
-		return regiaoCincoLSupport;
-	}
-
-	public void setRegiaoCincoLSupport(boolean regiaoCincoLSupport) {
-		this.regiaoCincoLSupport = regiaoCincoLSupport;
-	}
+	
 }
+
 

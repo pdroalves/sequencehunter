@@ -1,22 +1,16 @@
-//      SocketManager.java
-//      
-//      Copyright 2013 Pedro Alves <pdroalves@gmail.com>
-//      
-//		Classe usada para armazenar dados sobre sequencias encontradas pelo Sequence Hunter.
-//
-//		08/02/2013
-
 package db;
-
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class Event implements Serializable{
 	
-	private String seq;
-	private int qsensos;
-	private int qasensos;
-	private double qntRel;
-	private HunterDatabase dbCincoL;
+	private String seq = "";
+	private int qsensos = 0;
+	private int qasensos = 0;
+	private double qntRel = 0;
+	private Map<String,Event> dbCincoL;
 	
 	public Event(){
 		
@@ -63,10 +57,22 @@ public class Event implements Serializable{
 	public void setQntRel(double qntRel) {
 		this.qntRel = qntRel;
 	}
-	public HunterDatabase getDbCincoL() {
+	public Map<String,Event> getDbCincoL() {
 		return dbCincoL;
 	}
-	public void setDbCincoL(HunterDatabase dbCincoL) {
+	public void setDbCincoL(Map<String,Event> dbCincoL) {
 		this.dbCincoL = dbCincoL;
+	}
+	
+	public void printDB(){
+		Set<String> s = dbCincoL.keySet();
+		Iterator<String> iterator = s.iterator();
+		
+		while(iterator.hasNext()){
+			String key = iterator.next();
+			Event e = dbCincoL.get(key);
+			System.out.println("\t"+e.getSeq()+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+			
+		}
 	}
 }
