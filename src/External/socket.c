@@ -7,6 +7,7 @@
 #include "../Headers/log.h"
 
 #define SKT_PORT 9332
+#define DB_MANAGER_APP "database-manager.jar"
 
 void send_msg_to_socket(Socket *sock,char *msg){
   GError * error = NULL;
@@ -39,15 +40,33 @@ Socket* criar_socket(int port){
   g_type_init();
   
   sock->client =  g_socket_client_new();
+  
+  // Inicia database-manager
+  if(fork()==0){
+	system(DB_MANAGER_APP);
+	exit(0);
+  }
+  sleep(1);
   sock->connection = g_socket_client_connect_to_host (sock->client,
                                                (gchar*)"localhost",
                                                 port, /* your port goes here */
                                                 NULL,
                                                 &error);
    if(error != NULL){
-		printString("ERRO!\n\tNão foi possivel estabelecer conexão com a base de dados:",error->message);
-		printString("Encerrando...",NULL);
-		exit(1);
+	   printf("Não foi possível conectar ao database-manager. Tentando de novo...\n");
+	   sleep(5);
+	   sock->connection = g_socket_client_connect_to_host (sock->client,
+                                               (gchar*)"localhost",
+                                                port, /* your port goes here */
+                                                NULL,
+                                                &error);
+       if(error != NULL){
+			printString("\nERRO!\n\tNão foi possivel estabelecer conexão com a base de dados:",error->message);
+			printString("Encerrando...",NULL);
+			printf("ERRO!\n\tNão foi possivel estabelecer conexão com a base de dados:\n\t\t%s\nEncerrando...\n",error->message);
+			
+			exit(1);
+		}
 	}
     
     sock->istream = g_io_stream_get_input_stream (G_IO_STREAM (sock->connection));  

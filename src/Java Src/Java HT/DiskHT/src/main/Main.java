@@ -8,11 +8,17 @@ import db.Event;
 
 public class Main {
 	public static void main(String[] args) {
-		System.out.println("Starting...");
+		int porta;
+		if(args.length > 0)
+			porta = Integer.parseInt(args[0]);
+		else
+			porta = 9332;
+		System.out.println("Starting...\nPort: "+porta);
 		HunterDatabase db = new HunterDatabase("central", new File("centralSeq"));
 		SocketManager sm = new SocketManager(db);
 		sm.waitForConnections();
-		//db.removeAll();
+		//db.removeAll();ls
+		
 		db.printDB();
 		db.commit();
 		System.out.println("Done");	
