@@ -1,5 +1,6 @@
 package db;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -63,16 +64,22 @@ public class Event implements Serializable{
 	public void setDbCincoL(Map<String,Event> dbCincoL) {
 		this.dbCincoL = dbCincoL;
 	}
-	
+	public void setDbCincoL() {
+		if(dbCincoL == null){
+			dbCincoL = new HashMap<String,Event>();
+		}
+	}	
 	public void printDB(){
-		Set<String> s = dbCincoL.keySet();
-		Iterator<String> iterator = s.iterator();
-		
-		while(iterator.hasNext()){
-			String key = iterator.next();
-			Event e = dbCincoL.get(key);
-			System.out.println("\t"+e.getSeq()+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+		if(dbCincoL != null){
+			Set<String> s = dbCincoL.keySet();
+			Iterator<String> iterator = s.iterator();
 			
+			while(iterator.hasNext()){
+				String key = iterator.next();
+				Event e = dbCincoL.get(key);
+				System.out.println("\t"+key+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+				
+			}
 		}
 	}
 }

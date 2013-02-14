@@ -64,7 +64,7 @@ public class SocketManager {
 		return sock;
 	}
 
-	public void handleConnection(InputStream sockInput, OutputStream sockOutput) {
+	private void handleConnection(InputStream sockInput, OutputStream sockOutput) {
 		int dataReceived = 0;
 		boolean cincoLSupport = false;
 
@@ -98,6 +98,7 @@ public class SocketManager {
 				// or closes the socket.
 				bytes_read = getMsg(sockInput,buf,0,buf.length);
 				sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
+				sockOutput.flush();
 
 				// If the socket is closed, sockInput.read() will return -1.
 				if(bytes_read < 0) {
@@ -115,40 +116,28 @@ public class SocketManager {
 
 				if(helloMatcher.find()){
 					sendMsg(sockOutput,helloMsgBytes,0,helloMsgBytes.length);
-				}
-				else if(closeMatcher.find()){
+				}else if(closeMatcher.find()){
 					sendMsg(sockOutput,closeMsgBytes,0,closeMsgBytes.length);
 					end = true;
-				}				
-				else if(regiaoCLMatcher.find()){
+				}else if(regiaoCLMatcher.find()){
 					cincoLSupport = true;					
 				}else if(sizeMatcher.find()){
 					byte[] sizeSendBytes = Integer.toString(db.size()).getBytes();
 					sendMsg(sockOutput,sizeSendBytes,0,sizeSendBytes.length);
-				}
-				else if(incomingSeqWithCincoLSupportMatcher.find()){
+				}else if(incomingSeqWithCincoLSupportMatcher.find()){
 					boolean hasData = true;
 					while(hasData){
 
 						dataReceived++;
 						String seq = incomingSeqWithCincoLSupportMatcher.group(1);
-						if(cincoLSupport){			
-							String seqCL = incomingSeqWithCincoLSupportMatcher.group(2);
-							String seqTipo = incomingSeqWithCincoLSupportMatcher.group(3);
-							if(sensoCode.equals(seqTipo)){
-								db.add(seq,seqCL, new Event(seq,1,0));
-							}
-							else if(antisensoCode.equals(seqTipo)){
-								db.add(seq,seqCL, new Event(seq,0,1));					
-							}
-						}else{
-							String seqTipo = incomingSeqWithCincoLSupportMatcher.group(2);
-							if(sensoCode.equals(seqTipo)){
-								db.add(seq,null, new Event(seq,1,0));
-							}
-							else if(antisensoCode.equals(seqTipo)){
-								db.add(seq,null, new Event(seq,0,1));					
-							}
+						String seqCL = incomingSeqWithCincoLSupportMatcher.group(2);
+						String seqTipo = incomingSeqWithCincoLSupportMatcher.group(3);
+						System.out.println("Seq: "+seq+" seqCL: "+seqCL+" tipo: "+seqTipo);
+						if(sensoCode.equals(seqTipo)){
+							db.add(seq,seqCL, new Event(seq,1,0));
+						}
+						else if(antisensoCode.equals(seqTipo)){
+							db.add(seq,seqCL, new Event(seq,0,1));					
 						}
 						hasData = incomingSeqWithCincoLSupportMatcher.find();
 					}
@@ -186,7 +175,7 @@ public class SocketManager {
 				// it.
 				sockOutput.flush();
 			}
-			catch (Exception e){
+			catch (IOException e){
 				System.err.println("Exception reading from/writing to socket, e="+e);
 				e.printStackTrace(System.err);
 				return;

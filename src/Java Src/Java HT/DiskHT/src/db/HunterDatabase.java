@@ -63,6 +63,7 @@ public class HunterDatabase implements Serializable{
 		atualizado.setQntRel(novo.getQntRel() + velho.getQntRel());
 		atualizado.setDbCincoL(velho.getDbCincoL());
 		if(keyCL != null){
+			atualizado.setDbCincoL();
 			Event cincoL = atualizado.getDbCincoL().get(keyCL);
 			if(cincoL == null){
 				cincoL = new Event(keyCL,novo.getQsensos(),novo.getQasensos(),novo.getQntRel());

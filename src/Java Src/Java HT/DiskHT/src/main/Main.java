@@ -12,7 +12,7 @@ public class Main {
 		HunterDatabase db = new HunterDatabase("central", new File("centralSeq"));
 		SocketManager sm = new SocketManager(db);
 		sm.waitForConnections();
-		
+		//db.removeAll();
 		db.printDB();
 		db.commit();
 		System.out.println("Done");	

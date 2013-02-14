@@ -61,7 +61,7 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	// Envia a sequencia
 	send_msg_to_socket(socket,msg);
 	msg_returned = get_msg_to_socket(socket);		
-	printf("Received: %s\n",msg_returned);
+	printf("Adicionar_ht - Received: %s\n",msg_returned);
 		
 	free(msg);
 	dataSent++;
@@ -73,6 +73,6 @@ int tamanho_ht(){
 	char *msg_returned;
 	send_msg_to_socket(socket,SKT_MSG_GETSIZE);
 	msg_returned = get_msg_to_socket(socket);	
-	printf("Received: %s\n",msg_returned);
+	printf("Tamanho_ht - Received: %s\n",msg_returned);
 	return atoi(msg_returned);		
 }
