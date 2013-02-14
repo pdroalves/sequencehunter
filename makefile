@@ -22,7 +22,7 @@ BIN = bin/
 SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
-all:cmd gui
+all:cmd gui db-manager
 
 #########################################
 ##Executaveis############################
@@ -35,9 +35,9 @@ cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go
 	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
 	echo "CLI built"	
 	
-gui:$(SOURCE)Gui/makefile
-	make -C $(SOURCE)Gui/
-	cp $(SOURCE)Gui/$(GUI_NAME) $(BIN)
+gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
+	make -C $(JAVA_SOURCE)Sequence\ Hunter\ GUI/
+	cp $(JAVA_SOURCE)Sequence\ Hunter\ GUI/$(GUI_NAME) $(BIN)
 	echo "Gui built"
 
 db-manager:$(JAVA_SOURCE)Database\ Manager/makefile
@@ -100,11 +100,11 @@ build_control:$(SOURCE)Assist/build_control.c
 	gcc $(SOURCE)Assist/build_control.c -o $(BIN)build_control
 	
 clean:
-	rm -f $(OBJ)*.o *.{c,h}~ $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME)
+	rm -f $(OBJ)*.o *.{c,h}~ $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(BIN)$(DB_MANAGER_NAME)
 	make -C $(SOURCE)Gui/ clean
 	echo "It's clean"
 
 install:
 	#sudo rm $(INSTALL)/$(CLI_NAME) $(INSTALL)/$(GUI_NAME)
-	sudo cp $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(INSTALL)
+	sudo cp $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(BIN)$(DB_MANAGER_NAME) $(INSTALL)
 	echo "Done"
