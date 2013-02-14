@@ -65,9 +65,8 @@ public class Event implements Serializable{
 		this.dbCincoL = dbCincoL;
 	}
 	public void setDbCincoL() {
-		if(dbCincoL == null){
+		if(dbCincoL == null)
 			dbCincoL = new HashMap<String,Event>();
-		}
 	}	
 	public void printDB(){
 		if(dbCincoL != null){

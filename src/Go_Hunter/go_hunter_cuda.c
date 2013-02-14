@@ -56,7 +56,7 @@ int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t strea
 	int loaded;
 	
 	loaded = fill_buffer(h_seqs,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
-	if(loaded != -1){
+	if(loaded != GATHERING_DONE){
 		print_seqs_carregadas(loaded);
 		//Copia sequencias para GPU
 		for(i=0;i<loaded;i++)
@@ -109,18 +109,25 @@ void buffer_manager(int *buffer_load,
 				while(*buffer_load != GATHERING_DONE){// Looping ateh o final das bibliotecas
 					if(*buffer_load == 0){
 						if(load1 != 0){
-							// Buffer 1 estah carregado entao serah usado
-							cudaMemcpyAsync(data,d_data1,load1*sizeof(char*),cudaMemcpyHostToDevice,stream1);
-							*buffer_load = load1;
-							load1 = 0;
+							if(load1 != GATHERING_DONE){
+								// Buffer 1 estah carregado entao serah usado
+								cudaMemcpyAsync(data,d_data1,load1*sizeof(char*),cudaMemcpyHostToDevice,stream1);
+								*buffer_load = load1;
+								load1 = 0;
+							}
 							load2 = load_buffer_CUDA(h_data2,d_data2,n,stream1);
 						}else{
-							// Buffer 1 jah foi usado e processado. Utiliza o buffer 2 e enche o buffer 1.
-							cudaMemcpyAsync(data,d_data2,load2*sizeof(char*),cudaMemcpyHostToDevice,stream1);
-							*buffer_load = load2;
-							load2 = 0;
-							load1 = load_buffer_CUDA(h_data1,d_data1,n,stream1);
+							if(load2 != GATHERING_DONE){
+								// Buffer 1 jah foi usado e processado. Utiliza o buffer 2 e enche o buffer 1.
+								cudaMemcpyAsync(data,d_data2,load2*sizeof(char*),cudaMemcpyHostToDevice,stream1);
+								*buffer_load = load2;
+								load2 = 0;
+							}
+							if(load1 == 0)
+								load1 = load_buffer_CUDA(h_data1,d_data1,n,stream1);
 						}
+						if(load1 == GATHERING_DONE && load2 == GATHERING_DONE)
+							*buffer_load = GATHERING_DONE;
 					}					
 						
 				}
@@ -260,8 +267,8 @@ void search_manager(int *buffer_load,
 						// Guarda o que foi encontrado
 						for(i=0;i<loaded;i++)
 							if(h_resultados[i] != 0){
-								switch(h_resultados[i]){
-									case SENSO:
+								switch(h_resultados[i]){		
+									case SENSO:									
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
 										if(central_cut){
 											gap = h_search_gaps[i];
@@ -284,8 +291,6 @@ void search_manager(int *buffer_load,
 											adicionar_ht(central,cincol,"S");
 										else
 											adicionar_ht(central,NULL,"S");
-
-										*buffer_load--;
 									break;
 									case ANTISENSO:
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -294,13 +299,13 @@ void search_manager(int *buffer_load,
 											strncpy(central,d_tmp_founded[i]+gap,blocoV);
 											central[blocoV] = '\0';
 										}else{									
-											strncpy(central,d_tmp_founded[i],seqSize_an);
+											strncpy(central,d_tmp_founded[i],seqSize_an+1);
 										}
 
 								
 										if(regiao_5l){
 											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
-											gap = h_search_gaps[i] + dist_regiao_5l;
+											gap = h_search_gaps[i] + dist_regiao_5l-1;
 											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
 											cincol[tam_regiao_5l] = '\0';
 										}
@@ -311,7 +316,6 @@ void search_manager(int *buffer_load,
 										else
 											adicionar_ht(get_antisenso(central),NULL,"AS");
 								
-										*buffer_load--;
 									break;
 								}
 							}
@@ -322,13 +326,18 @@ void search_manager(int *buffer_load,
 						if(gui_run)
 							printf("T%dS%dAS%d\n",*processadas,fsenso,fasenso);
 							
+							
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
-						while(*buffer_load==0){}
+						while(*buffer_load == 0 && !THREAD_DONE[THREAD_BUFFER_LOADER]){}
 						cudaEventRecord(stopV,0);						
 						cudaEventSynchronize(stopV);
 						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
 						
+						// Evita desincronização
+						if(*buffer_load == 0 && THREAD_DONE[THREAD_BUFFER_LOADER]){
+							*buffer_load = GATHERING_DONE;
+						}
 						if(debug && !silent)
 							printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);
 						
@@ -427,6 +436,12 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
 	debug = set.debug;
 	central_cut = set.cut_central;
 	gui_run = set.gui_run;
+	dist_regiao_5l = set.dist_regiao_5l;
+	tam_regiao_5l = set.tam_regiao_5l;
+	if(dist_regiao_5l && tam_regiao_5l)
+		regiao_5l = TRUE;
+	else
+		regiao_5l = FALSE;
 	
 	if(!silent || gui_run)
 	printf("CUDA Mode.\n");

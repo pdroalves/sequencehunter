@@ -99,8 +99,6 @@ public class SocketManager {
 				// program on the other side either sends some data,
 				// or closes the socket.
 				bytes_read = getMsg(sockInput,buf,0,buf.length);
-				sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
-				sockOutput.flush();
 
 				// If the socket is closed, sockInput.read() will return -1.
 				if(bytes_read < 0) {
@@ -123,11 +121,13 @@ public class SocketManager {
 					sendMsg(sockOutput,closeMsgBytes,0,closeMsgBytes.length);
 					end = true;
 				}else if(regiaoCLMatcher.find()){
-					cincoLSupport = true;					
+					cincoLSupport = true;			
+					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);		
 				}else if(sizeMatcher.find()){
 					byte[] sizeSendBytes = Integer.toString(db.size()).getBytes();
 					sendMsg(sockOutput,sizeSendBytes,0,sizeSendBytes.length);
 				}else if(incomingSeqWithCincoLSupportMatcher.find()){
+					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 					boolean hasData = true;
 					while(hasData){
 
@@ -145,6 +145,7 @@ public class SocketManager {
 						hasData = incomingSeqWithCincoLSupportMatcher.find();
 					}
 				}else if(incomingSeqMatcher.find()){
+					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 					boolean hasData = true;
 					while(hasData){
 
@@ -173,6 +174,7 @@ public class SocketManager {
 				}else if(processDBMatcher.find()){
 					Set<String> set = db.keySet();
 					System.out.println("Agora vou processar os dados.");
+					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 				}
 
 

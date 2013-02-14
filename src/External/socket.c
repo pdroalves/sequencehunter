@@ -56,8 +56,7 @@ Socket* criar_socket(int port){
     sock->istream = g_io_stream_get_input_stream (G_IO_STREAM (sock->connection));  
     sock->ostream = g_io_stream_get_output_stream (G_IO_STREAM (sock->connection));  
     
-    send_msg_to_socket(sock,SKT_MSG_HELLO); 
-    msg_returned = get_msg_to_socket(sock);                                      
+    send_msg_to_socket(sock,SKT_MSG_HELLO);                                     
 	return sock;
 }
 
@@ -65,6 +64,5 @@ void destroy_socket(Socket *sock){
   GError * error = NULL;
   char *msg_returned;
 	send_msg_to_socket(sock,SKT_MSG_CLOSE);
-	msg_returned = get_msg_to_socket(sock);
 	g_socket_client_connect_to_host_finish(sock->client,NULL,&error);
 }

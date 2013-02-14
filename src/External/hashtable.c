@@ -89,8 +89,6 @@ int tamanho_ht(){
 	char *msg_returned;
 	int size;
 	send_msg_to_socket(socket,SKT_MSG_GETSIZE);
-	// Recebe done
-	msg_returned = get_msg_to_socket(socket);	
 	// Recebe valor
 	msg_returned = get_msg_to_socket(socket);	
 	size = atoi(msg_returned);

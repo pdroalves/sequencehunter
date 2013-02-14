@@ -119,17 +119,19 @@ __global__ void k_buscador(int totalseqs,
 		}			
 		
 	   
-		if(tipo == SENSO)
+		if(tipo == SENSO){
 			 for(i=0;i<seqSize_an;i++)
 					founded[seqId][i] = data[seqId][i];
-		else  
-			if(tipo == ANTISENSO)
+					
+				search_gaps[seqId] = fase + bloco1 -1;
+		}else  
+			if(tipo == ANTISENSO){
 				for(i=0;i<seqSize_an;i++)
 					founded[seqId][i] = data[seqId][i];
-			
+				search_gaps[seqId] = fase + bloco2 -1;
+			}
 								 
 		resultados[seqId] = tipo;	 
-		search_gaps[seqId] = fase-1;
 	}
 	return;
 }
