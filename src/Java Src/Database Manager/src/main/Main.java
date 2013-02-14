@@ -21,7 +21,7 @@ public class Main {
 		
 		db.printDB();
 		db.commit();
-		System.out.println("Done");	
+		
 	}
 
 }

@@ -14,11 +14,13 @@ CUDA_ARCH = -arch=sm_21
 
 CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar
+DB_MANAGER_NAME = database-manager.jar
 
 INSTALL = /usr/local/bin
 OBJ = obj/
 BIN = bin/
 SOURCE = src/
+JAVA_SOURCE = $(SOURCE)Java\ Src/
 
 all:cmd gui
 
@@ -37,6 +39,11 @@ gui:$(SOURCE)Gui/makefile
 	make -C $(SOURCE)Gui/
 	cp $(SOURCE)Gui/$(GUI_NAME) $(BIN)
 	echo "Gui built"
+
+db-manager:$(JAVA_SOURCE)Database\ Manager/makefile
+	make -C $(JAVA_SOURCE)Database\ Manager/
+	cp $(JAVA_SOURCE)Database\ Manager/$(DB_MANAGER_NAME) $(BIN)
+	echo "Database Manager built"
 
 #########################################
 ############ GCC e MingWW ###############

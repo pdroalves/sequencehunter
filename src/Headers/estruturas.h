@@ -21,6 +21,7 @@
 #define SKT_MSG_CLOSE "bye"
 #define SKT_MSG_CINCOL "cincolok"
 #define SKT_MSG_GETSIZE "size"
+#define SKT_MSG_PROCESS "processDB"
 
 typedef struct _GSocketConnection GSocketConnection;
 typedef struct _GSocketClient GSocketClient;

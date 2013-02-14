@@ -97,3 +97,11 @@ int tamanho_ht(){
 	printf("\nTamanho_ht - Received: %d\n",size);
 	return atoi(msg_returned);		
 }
+
+void process_signal_ht(){
+	// Envia um sinnal para o Database Manager processar os dados
+	char *msg_returned;
+	send_msg_to_socket(socket,SKT_MSG_PROCESS);
+	msg_returned = get_msg_to_socket(socket);	
+	return;
+}

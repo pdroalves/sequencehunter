@@ -10,6 +10,7 @@ package socket;
 
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File;
@@ -74,11 +75,11 @@ public class SocketManager {
 		String doneMsg = "done";
 		String regiaoCincolMsg = "cincolok";
 		String sizeMsg = "size";
+		String processDBMsg = "processDB";
 		byte[] doneMsgBytes = doneMsg.getBytes();
 		byte[] helloMsgBytes = helloMsg.getBytes();
 		byte[] closeMsgBytes = closeMsg.getBytes();
 		byte[] regiaoCincolBytes = regiaoCincolMsg.getBytes();
-		byte[] sizeBytes = sizeMsg.getBytes();
 
 		// Patterns
 		Pattern helloPattern = Pattern.compile(helloMsg);
@@ -87,6 +88,7 @@ public class SocketManager {
 		Pattern closePattern = Pattern.compile(closeMsg);
 		Pattern regiaoCLPattern = Pattern.compile(regiaoCincolMsg);
 		Pattern sizePattern = Pattern.compile(sizeMsg);
+		Pattern processDBPattern = Pattern.compile(processDBMsg);
 
 		while(!end) {
 			byte[] buf=new byte[1024];
@@ -113,6 +115,7 @@ public class SocketManager {
 				Matcher closeMatcher = closePattern.matcher(data);
 				Matcher regiaoCLMatcher = regiaoCLPattern.matcher(data);
 				Matcher sizeMatcher = sizePattern.matcher(data);
+				Matcher processDBMatcher = processDBPattern.matcher(data);
 
 				if(helloMatcher.find()){
 					sendMsg(sockOutput,helloMsgBytes,0,helloMsgBytes.length);
@@ -132,7 +135,7 @@ public class SocketManager {
 						String seq = incomingSeqWithCincoLSupportMatcher.group(1);
 						String seqCL = incomingSeqWithCincoLSupportMatcher.group(2);
 						String seqTipo = incomingSeqWithCincoLSupportMatcher.group(3);
-						System.out.println("Seq: "+seq+" seqCL: "+seqCL+" tipo: "+seqTipo);
+						//System.out.println("Seq: "+seq+" seqCL: "+seqCL+" tipo: "+seqTipo);
 						if(sensoCode.equals(seqTipo)){
 							db.add(seq,seqCL, new Event(seq,1,0));
 						}
@@ -167,6 +170,9 @@ public class SocketManager {
 						}
 						hasData = incomingSeqMatcher.find();
 					}
+				}else if(processDBMatcher.find()){
+					Set<String> set = db.keySet();
+					System.out.println("Agora vou processar os dados.");
 				}
 
 
@@ -180,7 +186,7 @@ public class SocketManager {
 				e.printStackTrace(System.err);
 				return;
 			}
-			System.out.println("Seqs received: "+dataReceived);
+			//System.out.println("Seqs received: "+dataReceived);
 		}
 
 	}

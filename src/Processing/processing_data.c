@@ -54,31 +54,7 @@ lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 	//print_all(hash_table);
 	if(tamanho_ht() != 0){	
 			printf("Existem sequencias!\n");
-		/*
-			tipos = recupera_tipos_ht(hash_table);
-			desp = recupera_despareados_ht(hash_table);
-		  
-			if(!silent){
-				 printf("Tipos de senso encontrados: %d.\n",tipos->sensos);
-				printf("Tipos de antisenso encontrados: %d.\n",tipos->antisensos);
-				printf("Procurando sensos despareados...\n");
-				free(tipos);
-			}
-			print_despareadas_seqs(desp->sensos,desp->antisensos);
-			if(!silent){
-				printf("Sensos despareados: %d.\n",desp->sensos);
-				printf("Antisensos despareados: %d.\n",desp->antisensos);
-			}
-		
-			// Calcula quantidade relativa dos elementos
-			qnt_relativa_ht(hash_table);
-
-			//LinkedList
-			l = converter_para_lista_ligada(hash_table);
-			
-			// Ordena os max_events maiores elementos
-			resultados = ordena_pares(l,max_events);
-			free(desp);*/
+			process_signal_ht();
 		}else{
 		if(!silent)
 			printf("Nao foram encontradas sequências com pareamento.\n");

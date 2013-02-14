@@ -49,9 +49,7 @@ public class HunterDatabase implements Serializable{
 	}
 	
 	public void commit(){
-		System.out.println("Commit...");
 		db.commit();
-		System.out.println("Commit done.");
 	}
 	
 	private Event updateValue(Event novo, Event velho,String keyCL){
@@ -96,6 +94,11 @@ public class HunterDatabase implements Serializable{
 	public int size(){
 		return dbMap.size();
 	}
+
+	public Set<String> keySet(){
+		return dbMap.keySet();
+	}
+
 }
 
 
