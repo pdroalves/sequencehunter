@@ -82,29 +82,12 @@ __global__ void k_buscador(int totalseqs,
 					// Carrega a linha analisada	
 					lsenso = d_matrix_senso[baseId];
 					lantisenso = d_matrix_antisenso[baseId];	
-											
-					// Conversao de char para inteiro
-					switch(seq[baseId]){
-						case 'A':
-							linha = A;	
-						break;
-						case 'C':
-							linha = C;		
-						break;
-						case 'G':
-							linha = G;	
-						break;
-						case 'T':
-							linha = T;
-						break;
-						default:
-							linha = N;
-						break;
-					}
+										
+					linha = seq[baseId];
 					
 					// Verifica se algum alarme deve ser ativado			
-					alarmS += (linha-lsenso)*(lsenso-N);		
-					alarmAS += (linha-lantisenso)*(lantisenso-N);
+					alarmS += (linha-lsenso)*(lsenso-'N');		
+					alarmAS += (linha-lantisenso)*(lantisenso-'N');
 				}
 				
 			// Guarda resultados
@@ -189,31 +172,13 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int se
 			   for(baseId=0; 
 						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
 										baseId++){
-					// Carrega a linha relativa a base analisada		
-					linha = 0;
+					// Carrega a linha relativa a base analisada	
 					lsenso = matrix_senso[baseId];
 					lantisenso = matrix_antisenso[baseId];
 											
-					switch(seq[baseId]){
-						case 'A':
-							linha = A;	
-						break;
-						case 'C':
-							linha = C;		
-						break;
-						case 'G':
-							linha = G;	
-						break;
-						case 'T':
-							linha = T;
-						break;
-						default:
-							linha = N;
-						break;
-					}
-								
-					alarmS += (linha-lsenso)*(lsenso-N);		
-					alarmAS += (linha-lantisenso)*(lantisenso-N);	
+					linha = seq[baseId];	
+					alarmS += (linha-lsenso)*(lsenso-'N');		
+					alarmAS += (linha-lantisenso)*(lantisenso-'N');	
 					
 				}
 			if(!alarmS)
@@ -269,23 +234,6 @@ extern "C" void busca(const int bloco1,const int bloco2,const int blocos,Buffer 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-int getLine(char c){
-	// Recebe uma base e retorna uma linha de binarios
-	
-	switch(c){
-		case 'A':
-			return A;
-		case 'C':
-			return C;
-		case 'G':
-			return G;
-		case 'T':
-			return T;
-		default:
-			return N;
-	}
-}
-
 void getMatrix(short int *matrix,char *str){
 	// Matrix já deve vir alocada
 	int size_y;
@@ -295,13 +243,13 @@ void getMatrix(short int *matrix,char *str){
 
 	// Preenche matriz
 	for(i = 0; i < size_y;i++){
-		matrix[i] = getLine(str[i]);
+		matrix[i] = str[i];
 	}	
 
 	return;
 }
 
- void set_grafo_CUDA(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
+ void set_grafo(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
   // As matrizes já devem vir alocadas
   
   getMatrix(matrix_senso,senso);
@@ -343,81 +291,6 @@ char* get_antisenso(char *s){
 	return antisenso;
 }
 
-__global__ void check_matrix(char *senso,char *antisenso){
-	// Verifica se a matriz montada corresponde a sequencia desejada
-	// Devem haver N threads e 1 bloco para uma sequencia de tamanho N
-	
-	__shared__ int alarmS;
-	__shared__ int alarmAS;
-	char cS;
-	char cAS;
-	int id = threadIdx.x;
-	int e;
-	
-	cS = senso[threadIdx.x];
-	cAS = antisenso[threadIdx.x];
-	alarmS = 0;
-	alarmAS = 0;
-	
-    switch(cS){
-		case 'A':
-			e = A;	
-		break;
-		case 'C':
-			e = C;		
-		break;
-		case 'G':
-			e = G;	
-		break;
-		case 'T':
-			e = T;
-		break;
-		default:
-			e = N;
-		break;
-	}	
-	
-	// Confere Senso
-	if(d_matrix_senso[id] != e) alarmS = 1;
-	
-	switch(cAS){
-		case 'A':
-			e = A;	
-		break;
-		case 'C':
-			e = C;		
-		break;
-		case 'G':
-			e = G;	
-		break;
-		case 'T':
-			e = T;
-		break;
-		default:
-			e = N;
-		break;
-	}	
-	
-	// Confere Antisenso	
-	if(d_matrix_antisenso[id] != e) alarmAS = 1;	
-			
-	__syncthreads();
-	
-	if(threadIdx.x == 0){
-		if(alarmS)
-			printf("Erro! Matriz senso montada incorretamente.\n");					
-		else
-			printf("Matriz senso montada corretamente.\n");
-			
-		if(alarmAS)
-			printf("Erro! Matriz antisenso montada incorretamente.\n");
-		else
-			printf("Matriz antisenso montada corretamente.\n");
-	}
-		
-	return;
-}
-
 extern "C" void setup_for_cuda(char *seq){
 	// Recebe um vetor de caracteres com o padrão a ser procurado
 	short int *h_matrix_senso;
@@ -430,7 +303,7 @@ extern "C" void setup_for_cuda(char *seq){
 	h_matrix_antisenso = (short int*)malloc(size*sizeof(short int));
 	    
     //Configura grafos direto na memória da GPU
-	set_grafo_CUDA(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
+	set_grafo(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
 	
 	// Copia dados
 	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
@@ -450,21 +323,12 @@ extern "C" void setup_for_cuda(char *seq){
 	
 	return;
 }
-
-
-extern "C" void set_grafo_NONCuda(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){									
-  
-  getMatrix(matrix_senso,senso);
-  getMatrix(matrix_antisenso,antisenso);
-  return;
-}
-
 extern "C"  void setup_without_cuda(char *seq){
 // Recebe um vetor de caracteres com o padrão a ser procurado
 	int size = strlen(seq);
 	
     //Configura grafos direto na memória da GPU
-	set_grafo_NONCuda(seq,get_antisenso(seq),matrix_senso,matrix_antisenso);
+	set_grafo(seq,get_antisenso(seq),matrix_senso,matrix_antisenso);
 	
 
 	return;

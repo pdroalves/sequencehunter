@@ -28,15 +28,6 @@ typedef struct _GSocketClient GSocketClient;
 typedef struct _GInputStream GInputStream;
 typedef struct _GOutputStream GOutputStream;
 
-const enum{
-	A,
-	C,
-	G,
-	T,
-	N,
-	N_COL
-};
-
 struct fila_item{
 	char *seq;
 	struct fila_item *prox;//Ponteiro para o item seguinte
