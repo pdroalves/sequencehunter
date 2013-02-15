@@ -275,7 +275,7 @@ void search_manager(int *buffer_load,
 											strncpy(central,d_tmp_founded[i]+gap,blocoV);
 											central[blocoV] = '\0';
 										}else{									
-											strncpy(central,d_tmp_founded[i],seqSize_an);
+											strncpy(central,d_tmp_founded[i],seqSize_an+1);
 										}
 
 										if(regiao_5l){

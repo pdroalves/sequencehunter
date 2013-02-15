@@ -148,6 +148,29 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 ///////////////				Metodo de busca sem CUDA				////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
+/*void failure_function(char *s,short int *table){
+	short int pos = 2;
+	short int cnd = 0;
+	short int seq_size = strlen(s);
+	
+	table[0] = -1;
+	table[1] = 0;
+	
+	while(pos < seq_size){
+		if(s[pos-1] == s[cnd]){
+			cnd++;
+			table[pos] = cnd;
+			pos++;
+		}else if(cnd > 0){
+			cnd = table[cnd];
+		}else{
+			table[pos] = 0;
+			pos++;
+		}
+	} 
+	
+}*/
+
 extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buffer,int *resultados,int *search_gaps,const int seqId){
   int baseId;// id da base analisada
   short int tipo;
@@ -159,6 +182,7 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int se
   short int fase;
   const short int seqSize_an = strlen(buffer->seq[seqId]);
   const short int blocoZ = seqSize_bu - bloco1 - bloco2 + 1;
+  //short int tabela[MAX_SEQ_SIZE];
   char *seq;  
   int i;
   
@@ -166,6 +190,7 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int se
 	  fase = 0;
 	  while(fase + seqSize_bu <= seqSize_an && !tipo){
 			   seq = buffer->seq[seqId]+fase;	
+			   //failure_function(seq,tabela);
 			   alarmS = 0;
 			   alarmAS = 0;
 			   // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
@@ -193,15 +218,9 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int se
 		resultados[seqId] = tipo;	
 		if(tipo == SENSO){
 			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-			for(i=0;i<blocoZ;i++){
-				  seq[i] = seq[i];
-			}
 			search_gaps[seqId] = fase + bloco1 -1;
 		}else if(tipo == ANTISENSO){
 			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
-			for(i=0;i<blocoZ;i++){
-				  seq[i] = seq[i];
-			}			 
 			search_gaps[seqId] = fase + bloco2 -1;
 		}
 	

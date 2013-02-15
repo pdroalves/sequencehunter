@@ -62,7 +62,7 @@ void nc_buffer_manager(Buffer *b,int n){
 		//////////////////////////////////////////	
 }
 
-void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
+void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int seqSize_an){
 	//////////////////////////////////////////
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
@@ -143,13 +143,13 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 					//Copia sequências senso e antisenso encontradas
 						switch(resultados[i]){
 							case SENSO:
-								central = (char*)malloc((blocos+1)*sizeof(char));
+								central = (char*)malloc((seqSize_an+1)*sizeof(char));
 								if(central_cut){
 									gap = search_gaps[i];
 									strncpy(central,buffer->seq[i]+gap,blocoV);
 									central[blocoV] = '\0';
 								}else{									
-									strncpy(central,buffer->seq[i],blocos+1);
+									strncpy(central,buffer->seq[i],seqSize_an+1);
 								}
 
 
@@ -170,13 +170,13 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 								buffer->load--;
 							break;
 							case ANTISENSO:
-								central = (char*)malloc((blocos+1)*sizeof(char));
+								central = (char*)malloc((seqSize_an+1)*sizeof(char));
 								if(central_cut){
 									gap = search_gaps[i];
 									strncpy(central,buffer->seq[i]+gap,blocoV);
 									central[blocoV] = '\0';
 								}else{									
-									strncpy(central,buffer->seq[i],blocos+1);
+									strncpy(central,buffer->seq[i],seqSize_an+1);
 								}
 
 								
@@ -210,13 +210,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 							diff = 0;
 					}
 					
-					if(buffer->load != 0)
-					{
-						if(debug&&!silent)
-							printf("Erro! Buffer não foi totalmente esvaziado.\n");
-						if(buffer->load != GATHERING_DONE)
-							buffer->load = 0;
-					}
 					
 					while(buffer->load==0){}
 									
@@ -236,7 +229,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos){
 
 
 
-void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	
 	Buffer buffer;
 	int blocoV;
@@ -252,11 +245,11 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 		{
 			#pragma omp section
 			{
-				nc_buffer_manager(&buffer,n);
+				nc_buffer_manager(&buffer,seqSize_an);
 			}
 			#pragma omp section
 			{
-				nc_search_manager(&buffer,bloco1,bloco2,blocos);
+				nc_search_manager(&buffer,bloco1,bloco2,blocos,seqSize_an);
 			}
 		}
 	}
@@ -267,7 +260,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,int n){
 
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
-	int n;//Elementos por sequência
+	int seqSize_an;//Elementos por sequência
 	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
 	//cudaEvent_t start;
 	//cudaEvent_t stop;
@@ -291,16 +284,16 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	  if(!silent)
 	printf("OpenMP Mode.\n");
 	printString("OpenMP Mode.\n",NULL);
-	get_setup(&n);
+	get_setup(&seqSize_an);
 	
 	setup_without_cuda(c);
 	
 	printString("Dados inicializados.\n",NULL);
-	printSet(n);
+	printSet(seqSize_an);
 	printString("Iniciando iterações:\n",NULL);
 	
     //cudaEventRecord(start,0);
-	NONcudaIteracoes(bloco1,bloco2,blocos,n);
+	NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an);
     //cudaEventRecord(stop,0);
     //cudaEventSynchronize(stop);
     //cudaEventElapsedTime(&tempo,start,stop);
