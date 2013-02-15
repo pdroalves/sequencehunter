@@ -11,7 +11,6 @@
 #define SENSO 1
 #define ANTISENSO 2
 #define GATHERING_DONE -1
-#define buffer_size 4096 // Capacidade máxima do buffer
 #define FILA_MIN 5000 // Tamanho minimo da fila antes de começar a esvazia-la
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000

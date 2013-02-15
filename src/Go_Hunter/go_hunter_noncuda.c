@@ -16,6 +16,7 @@
 #define OMP_NTHREADS 2
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
+#define buffer_size 4096 // Capacidade máxima do buffer
 
 #define MIN_LEN_TO_PRINT 100000
 

@@ -15,6 +15,7 @@
 #define OMP_NTHREADS 2
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
+#define buffer_size 8192 // Capacidade máxima do buffer
 
 omp_lock_t buffer_lock;
 gboolean verbose;
@@ -27,6 +28,7 @@ int dist_regiao_5l;
 int tam_regiao_5l;
 
 char **data;
+char **h_data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
@@ -58,6 +60,7 @@ int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t strea
 	loaded = fill_buffer(h_seqs,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
 	if(loaded != GATHERING_DONE){
 		print_seqs_carregadas(loaded);
+		
 		//Copia sequencias para GPU
 		for(i=0;i<loaded;i++)
 			//cudaHostGetDevicePointer(&d_seqs[i],h_seqs[i],0);
@@ -112,6 +115,7 @@ void buffer_manager(int *buffer_load,
 							if(load1 != GATHERING_DONE){
 								// Buffer 1 estah carregado entao serah usado
 								cudaMemcpyAsync(data,d_data1,load1*sizeof(char*),cudaMemcpyHostToDevice,stream1);
+								h_data = h_data1;
 								*buffer_load = load1;
 								load1 = 0;
 							}
@@ -120,6 +124,7 @@ void buffer_manager(int *buffer_load,
 							if(load2 != GATHERING_DONE){
 								// Buffer 1 jah foi usado e processado. Utiliza o buffer 2 e enche o buffer 1.
 								cudaMemcpyAsync(data,d_data2,load2*sizeof(char*),cudaMemcpyHostToDevice,stream1);
+								h_data = h_data2;
 								*buffer_load = load2;
 								load2 = 0;
 							}
@@ -240,9 +245,6 @@ void search_manager(int *buffer_load,
 						if(debug&&!silent)
 							printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
 						
-						// Libera para o thread buffer_manager carregar mais sequencias
-						*buffer_load = 0;		
-						
 						// Guarda tempo gasto na iteracao					
 						iteration_time += elapsedTimeK;
 						
@@ -259,7 +261,7 @@ void search_manager(int *buffer_load,
 						cudaMemcpy(h_search_gaps,d_search_gaps,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
 						//for(i=0;i<buffer_size;i++)
 						//	if(h_resultados[i] != 0)
-						//		cudaMemcpyAsync(h_founded[i],d_tmp_founded[i],blocoV*sizeof(char),cudaMemcpyDeviceToHost,stream2);
+						//		cudaMemcpyAsync(h_founded[i],h_data[i],seqSize_an*sizeof(char),cudaMemcpyDeviceToHost,stream2);
 						
 						//cudaStreamSynchronize(stream2);
 						
@@ -272,17 +274,17 @@ void search_manager(int *buffer_load,
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
 										if(central_cut){
 											gap = h_search_gaps[i];
-											strncpy(central,d_tmp_founded[i]+gap,blocoV);
+											strncpy(central,h_data[i]+gap,blocoV);
 											central[blocoV] = '\0';
 										}else{									
-											strncpy(central,d_tmp_founded[i],seqSize_an+1);
+											strncpy(central,h_data[i],seqSize_an+1);
 										}
 
 										if(regiao_5l){
 											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 
 											gap = h_search_gaps[i] - dist_regiao_5l;
-											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
+											strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 											cincol[tam_regiao_5l] = '\0';
 										}
 								
@@ -296,17 +298,17 @@ void search_manager(int *buffer_load,
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
 										if(central_cut){
 											gap = h_search_gaps[i];
-											strncpy(central,d_tmp_founded[i]+gap,blocoV);
+											strncpy(central,h_data[i]+gap,blocoV);
 											central[blocoV] = '\0';
 										}else{									
-											strncpy(central,d_tmp_founded[i],seqSize_an+1);
+											strncpy(central,h_data[i],seqSize_an+1);
 										}
 
 								
 										if(regiao_5l){
 											cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 											gap = h_search_gaps[i] + dist_regiao_5l-1;
-											strncpy(cincol,d_tmp_founded[i] + gap,tam_regiao_5l);
+											strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 											cincol[tam_regiao_5l] = '\0';
 										}
 
@@ -320,6 +322,9 @@ void search_manager(int *buffer_load,
 								}
 							}
 							
+						// Libera para o thread buffer_manager carregar mais sequencias
+						*buffer_load = 0;		
+						
 						checkCudaError();
 						if(verbose && !silent)
 							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);

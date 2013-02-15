@@ -36,7 +36,6 @@ __global__ void k_buscador(int totalseqs,
 										char **data,
 										short int *resultados,
 										short int *search_gaps,
-										char **founded,
 										int bloco1,
 										int bloco2,
 										int blocoV){
@@ -62,7 +61,6 @@ __global__ void k_buscador(int totalseqs,
   short int alarmAS;// Caso a comparacao do valor da matriz antisenso falhe, essa variavel encerra o loop
   short int fase;// Guarda a posicao analisada
   short int seqSize_bu;// Tamanho da sequencia alvo
-  short int i;
   char *seq;// Sequencia sob analise
   seqId = threadIdx.x + blockIdx.x*blockDim.x;
   seqSize_bu = bloco1+bloco2+blocoV;
@@ -103,14 +101,9 @@ __global__ void k_buscador(int totalseqs,
 		
 	   
 		if(tipo == SENSO){
-			 for(i=0;i<seqSize_an;i++)
-					founded[seqId][i] = data[seqId][i];
-					
 				search_gaps[seqId] = fase + bloco1 -1;
 		}else  
 			if(tipo == ANTISENSO){
-				for(i=0;i<seqSize_an;i++)
-					founded[seqId][i] = data[seqId][i];
 				search_gaps[seqId] = fase + bloco2 -1;
 			}
 								 
@@ -134,7 +127,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,data,resultados,search_gaps,founded,bloco1,bloco2,blocoV);
+	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,data,resultados,search_gaps,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
@@ -181,10 +174,8 @@ extern "C" __host__ void buscador(const int bloco1,const int bloco2,const int se
   short int alarmAS;
   short int fase;
   const short int seqSize_an = strlen(buffer->seq[seqId]);
-  const short int blocoZ = seqSize_bu - bloco1 - bloco2 + 1;
   //short int tabela[MAX_SEQ_SIZE];
   char *seq;  
-  int i;
   
 	  tipo = 0;
 	  fase = 0;

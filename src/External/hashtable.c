@@ -54,7 +54,6 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	char *msg;
 	char *msg_returned;
 	int msg_size;
-	
 	msg_size = strlen(central) + 1 + strlen(tipo);
 	if(cincol != NULL)
 		msg_size=+	(strlen(cincol) + 1);
