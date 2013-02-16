@@ -31,7 +31,7 @@ all:cmd gui db-manager
 ##Linux##################################
 #########################################
 cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o build_control
-	./$(BIN)build_control version
+	$(BIN)build_control version
 	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
 	echo "CLI built"	
 	

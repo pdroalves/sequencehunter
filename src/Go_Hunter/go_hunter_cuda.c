@@ -320,6 +320,8 @@ void queue_manager(Fila *toStore){
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 			else
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+		    free(hold->seq_central);
+		    free(hold->seq_cincoL);
 			free(hold);
 		}
 	}
@@ -330,6 +332,8 @@ void queue_manager(Fila *toStore){
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 			else
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+		    free(hold->seq_central);
+		    free(hold->seq_cincoL);
 		   free(hold);
 	}
 	
