@@ -26,16 +26,18 @@ Fila* criar_fila(char *nome){
 	return f;
 }
 
-FilaItem* criar_elemento_fila(char *seq){
+FilaItem* criar_elemento_fila(char *seq_central,char *seq_cincoL,int tipo){
+	// Essa funcao nao aloca memoria para os dados recebidos.
+	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
+	// com free(), vai dar problema.
 	FilaItem* novo;
-	int n;
 	
-	n = strlen(seq);
 	novo = NULL;
 	novo = (FilaItem*)malloc(sizeof(FilaItem));
 	if(novo != NULL){
-		novo->seq = (char*)malloc((n+1)*sizeof(char));
-		strcpy(novo->seq,seq);
+		novo->seq_central = seq_central;
+		novo->seq_cincoL = seq_cincoL;
+		novo->tipo = tipo;
 	}else{
 		printStringInt("Impossível alocar memória.",sizeof(FilaItem));
 		printString("Encerrando.",NULL);
@@ -45,12 +47,16 @@ FilaItem* criar_elemento_fila(char *seq){
 }
 
 
-void enfileirar(Fila *f,char *seq){
+void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
+	// Essa funcao nao aloca memoria para os dados recebidos.
+	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
+	// com free(), vai dar problema.
+	
 		FilaItem* novo;
 		//printf("Enfileirando: %s\n",seq);
 		
 		novo = NULL;
-		novo = criar_elemento_fila(seq);
+		novo = criar_elemento_fila(seq_central,seq_cincoL,tipo);
 
 		switch(f->size){
 			case 0:
@@ -70,60 +76,27 @@ void enfileirar(Fila *f,char *seq){
 	return;
 }
 
-
-void enfileirar_fila(Fila *A,Fila *B){
-	//Adiciona a fila B no final da fila A
-	A->end = B->first;
-	A->size += B->size;
-	return;	
-}
-
-char* desenfileirar(Fila *f){
-		FilaItem *hold;
-		char *seq;
+FilaItem* desenfileirar(Fila *f){
+		FilaItem *to_return;
 		//printf("Desenfileirando\n");
 		
 		if(f->size > 0){
-			hold = f->first;
-			seq = f->first->seq;
+			to_return = f->first;
 			f->first = f->first->prox;
-			free(hold);
 			f->size--;
 		}
 		
-		return seq;
+	return to_return;
 }
 
 gboolean fila_vazia(Fila *f){
 	return (f->size == 0);
 }
 
-void despejar_fila(Fila *f,FILE *file){
-	while(!fila_vazia(f)){
-		despejar_seq(desenfileirar(f),file);
-	}
-	return;
-}
-
 int tamanho_da_fila(Fila *f){
 	int size;
     size = f->size;
 	return size;
-}
-
-void print_fila(Fila *f){
-	int i;
-	char *seq;
-	FilaItem *fi;
-	printf("Imprimindo fila:\n");
-	
-    if(f->size > 0){
-		fi = f->first;
-		for(i=0;i<f->size;i++){
-			printf("%s\n",fi->seq);
-			fi = fi->prox;
-		}
-	}
 }
 
 void destroy(Fila *f){

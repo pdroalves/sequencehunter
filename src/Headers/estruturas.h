@@ -28,7 +28,9 @@ typedef struct _GInputStream GInputStream;
 typedef struct _GOutputStream GOutputStream;
 
 struct fila_item{
-	char *seq;
+	char *seq_central;
+	char *seq_cincoL;
+	int tipo;
 	struct fila_item *prox;//Ponteiro para o item seguinte
 };
 typedef struct fila_item FilaItem;

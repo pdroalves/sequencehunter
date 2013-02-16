@@ -12,10 +12,11 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define OMP_NTHREADS 2
+#define OMP_NTHREADS 3
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
-#define buffer_size 8192 // Capacidade máxima do buffer
+#define THREAD_QUEUE 2
+#define buffer_size 4096 // Capacidade máxima do buffer
 
 omp_lock_t buffer_lock;
 gboolean verbose;
@@ -32,26 +33,6 @@ char **h_data;
 omp_lock_t DtH_copy_lock;
 omp_lock_t MC_copy_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
-
-char* convertResultToChar(int n){
-	char *tipo;
-	tipo = (char*)malloc(10*sizeof(char));
-	
-	switch(n){
-		case SENSO:
-			strcpy(tipo,"SENSO");
-			return tipo;
-		break;
-		case ANTISENSO:
-			strcpy(tipo,"ANTISENSO");
-			return tipo;
-		break;
-	}
-}
-int convertResultToInt(char *tipo){
-	if(strcmp("SENSO",tipo) == 0) return SENSO;
-	else return ANTISENSO;
-}
 
 int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t stream){
 	int i;
@@ -75,81 +56,42 @@ void buffer_manager(int *buffer_load,
 						int n,
 						cudaStream_t stream1){
 							
-				//////////////////////////////////////////
-				// Carrega o buffer //////////////////////
+								
+								// Carrega o buffer //////////////////////
 				//////////////////////////////////////////
 				int i;
-				int load1 = 0;
-				int load2 = 0;
-				char **h_data1;
-				char **d_data1;
-				char **h_data2;
-				char **d_data2;
 				
-				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 				// Buffer 1
-				cudaHostAlloc((void**)&h_data1,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				/*cudaHostAlloc((void**)&h_data,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
-					cudaHostAlloc((void**)&h_data1[i],(n+1)*sizeof(char),cudaHostAllocDefault);				
-								
-				cudaHostAlloc((void**)&d_data1,buffer_size*sizeof(char*),cudaHostAllocDefault);
-				for(i=0;i<buffer_size;i++)
-					cudaMalloc((void**)&d_data1[i],(n+1)*sizeof(char));
+					cudaHostAlloc((void**)&h_data[i],(n+1)*sizeof(char),cudaHostAllocDefault);	*/
 					
-				
-				// Buffer 2
-				cudaHostAlloc((void**)&h_data2,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				h_data = (char**)malloc(buffer_size*sizeof(char*));
 				for(i=0;i<buffer_size;i++)
-					cudaHostAlloc((void**)&h_data2[i],(n+1)*sizeof(char),cudaHostAllocDefault);				
+								h_data[i] = (char*)malloc((n+1)*sizeof(char));
 								
-				cudaHostAlloc((void**)&d_data2,buffer_size*sizeof(char*),cudaHostAllocDefault);
+				cudaHostAlloc((void**)&data,buffer_size*sizeof(char*),cudaHostAllocDefault);
 				for(i=0;i<buffer_size;i++)
-					cudaMalloc((void**)&d_data2[i],(n+1)*sizeof(char));
-					
-				// Enche pela primeira vez o buffer 1
-				load1 = load_buffer_CUDA(h_data1,d_data1,n,stream1);
-														
-				while(*buffer_load != GATHERING_DONE){// Looping ateh o final das bibliotecas
-					if(*buffer_load == 0){
-						if(load1 != 0){
-							if(load1 != GATHERING_DONE){
-								// Buffer 1 estah carregado entao serah usado
-								cudaMemcpyAsync(data,d_data1,load1*sizeof(char*),cudaMemcpyHostToDevice,stream1);
-								h_data = h_data1;
-								*buffer_load = load1;
-								load1 = 0;
-							}
-							load2 = load_buffer_CUDA(h_data2,d_data2,n,stream1);
-						}else{
-							if(load2 != GATHERING_DONE){
-								// Buffer 1 jah foi usado e processado. Utiliza o buffer 2 e enche o buffer 1.
-								cudaMemcpyAsync(data,d_data2,load2*sizeof(char*),cudaMemcpyHostToDevice,stream1);
-								h_data = h_data2;
-								*buffer_load = load2;
-								load2 = 0;
-							}
-							if(load1 == 0)
-								load1 = load_buffer_CUDA(h_data1,d_data1,n,stream1);
-						}
-						if(load1 == GATHERING_DONE && load2 == GATHERING_DONE)
-							*buffer_load = GATHERING_DONE;
-					}					
-						
-				}
-				THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
-				return ;
-				//////////////////////////////////////////
-				//////////////////////////////////////////
-				//////////////////////////////////////////	
+					cudaMalloc((void**)&data[i],(n+1)*sizeof(char));
+		//////////////////////////////////////////
+		// Carrega o buffer //////////////////////
+		//////////////////////////////////////////
+				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
+			while(*buffer_load != -1){//Looping até o final do buffer
+				//printf("%d.\n",buffer.load);
+				if(*buffer_load == 0)
+							*buffer_load = load_buffer_CUDA(h_data,data,n,stream1);
+			}
+		
+		THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
+		//////////////////////////////////////////
+		//////////////////////////////////////////
+		//////////////////////////////////////////	
 }
-
-
-
 
 void search_manager(int *buffer_load,
 							int *processadas,
-							Fila *tipo_founded,
-							Fila *founded,
+							Fila *toStore,
 							const int seqSize_an,
 							const int seqSize_bu,
 							int bloco1,
@@ -182,7 +124,6 @@ void search_manager(int *buffer_load,
 				float elapsedTimeK,elapsedTime,elapsedTimeV;
 				gboolean retorno;
 				
-				THREAD_DONE[THREAD_SEARCH] = FALSE;
 				fsenso=fasenso=0;
 
 				cudaEventCreate(&start);
@@ -290,9 +231,9 @@ void search_manager(int *buffer_load,
 								
 										fsenso++;
 										if(regiao_5l)
-											adicionar_ht(central,cincol,"S");
+											enfileirar(toStore,central,cincol,SENSO);
 										else
-											adicionar_ht(central,NULL,"S");
+											enfileirar(toStore,central,NULL,SENSO);
 									break;
 									case ANTISENSO:
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -313,10 +254,10 @@ void search_manager(int *buffer_load,
 										}
 
 										fasenso++;
-										if(regiao_5l)
-											adicionar_ht(get_antisenso(central),get_antisenso(cincol),"AS");
+										if(regiao_5l)											
+											enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 										else
-											adicionar_ht(get_antisenso(central),NULL,"AS");
+											enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
 								
 									break;
 								}
@@ -369,6 +310,32 @@ void search_manager(int *buffer_load,
 				return;
 }
 
+void queue_manager(Fila *toStore){
+	FilaItem *hold;
+	
+	while(!THREAD_DONE[THREAD_SEARCH]){
+		if(tamanho_da_fila(toStore) > 0){
+			hold = desenfileirar(toStore);
+			if(hold->tipo == SENSO)
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+			else
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+			free(hold);
+		}
+	}
+	
+	while(tamanho_da_fila(toStore) > 0){		
+			hold = desenfileirar(toStore);
+			if(hold->tipo == SENSO)
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+			else
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+		   free(hold);
+	}
+	
+	THREAD_DONE[THREAD_QUEUE] = TRUE;
+	return;
+}
 
 void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu){
 	
@@ -378,31 +345,28 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	int i;
 	int processadas;
 	int buffer_load;
-	Fila *founded;
-	Fila *tipo_founded;
+	Fila *toStore;
 	cudaStream_t stream1;
 	cudaStream_t stream2;
 	
 	//Inicializa buffer
 	cudaStreamCreate(&stream1);
 	cudaStreamCreate(&stream2);
-	criar_ghash_table();		
-	cudaHostAlloc((void**)&founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
-	for(i=0;i<buffer_size;i++)
-		cudaHostAlloc((void**)&founded[i],(blocoV+1)*sizeof(char),cudaHostAllocDefault);
-	
+	criar_ghash_table();			
 
 	buffer_load = 0;
 	processadas=0;
-	founded = criar_fila("Founded");
-	tipo_founded = criar_fila("Tipo Founded");
+	toStore = criar_fila("toStore");
 	omp_init_lock(&DtH_copy_lock);
 	omp_init_lock(&MC_copy_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
 	
 	
+				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
+				THREAD_DONE[THREAD_SEARCH] = FALSE;
+				THREAD_DONE[THREAD_QUEUE] = FALSE;
 		
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(founded) shared(stream1) shared(stream2) shared(tipo_founded)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream1) shared(stream2) shared(toStore)
 	{		
 		#pragma omp sections
 		{
@@ -412,7 +376,11 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,tipo_founded,founded,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
+				search_manager(&buffer_load,&processadas,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
+			}
+			#pragma omp section
+			{
+				queue_manager(toStore);
 			}	
 		}
 	}
@@ -451,6 +419,9 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
 	if(!silent || gui_run)
 	printf("CUDA Mode.\n");
 	printString("CUDA Mode.\n",NULL);
+	
+	printf("Buffer size: %d\n",buffer_size);
+	printStringInt("Buffer size: ",buffer_size);
 	
 	get_setup(&seqSize_an);
 	

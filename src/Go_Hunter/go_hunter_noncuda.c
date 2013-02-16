@@ -13,9 +13,10 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define OMP_NTHREADS 2
+#define OMP_NTHREADS 3
 #define THREAD_BUFFER_LOADER 0
 #define THREAD_SEARCH 1
+#define THREAD_QUEUE 2
 #define buffer_size 4096 // Capacidade máxima do buffer
 
 #define MIN_LEN_TO_PRINT 100000
@@ -63,7 +64,7 @@ void nc_buffer_manager(Buffer *b,int n){
 		//////////////////////////////////////////	
 }
 
-void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int seqSize_an){
+void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int seqSize_an,Fila *toStore){
 	//////////////////////////////////////////
 		// Realiza as iteracoes///////////////////
 		//////////////////////////////////////////
@@ -164,9 +165,9 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 								
 							fsensos++;
 										if(regiao_5l)
-											adicionar_ht(central,cincol,"S");
+											enfileirar(toStore,central,cincol,SENSO);
 										else
-											adicionar_ht(central,NULL,"S");
+											enfileirar(toStore,central,NULL,SENSO);
 
 								buffer->load--;
 							break;
@@ -191,10 +192,9 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
 								fasensos++;
 										if(regiao_5l)
-											adicionar_ht(get_antisenso(central),get_antisenso(cincol),"AS");
+											enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 										else
-											adicionar_ht(get_antisenso(central),NULL,"AS");
-								
+											enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
 								buffer->load--;
 							break;
 							default:
@@ -228,18 +228,47 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		
 }
 
+void nc_queue_manager(Fila *toStore){
+	FilaItem *hold;
+	
+	while(!THREAD_DONE[THREAD_SEARCH]){
+		if(tamanho_da_fila(toStore) > 0){
+			hold = desenfileirar(toStore);
+			if(hold->tipo == SENSO)
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+			else
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+			free(hold);
+		}
+	}
+	
+	while(tamanho_da_fila(toStore) > 0){		
+			hold = desenfileirar(toStore);
+			if(hold->tipo == SENSO)
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+			else
+				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+		   free(hold);
+	}
+	
+	THREAD_DONE[THREAD_QUEUE] = TRUE;
+	return;
+}
+
 
 
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	
 	Buffer buffer;
+	Fila *toStore;
 	int blocoV;
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
 	prepare_buffer(&buffer,buffer_size_NC);	
 	criar_ghash_table();
+	toStore = criar_fila("toStore");
 			
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(toStore)
 	{	
 		
 		#pragma omp sections
@@ -250,7 +279,11 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 			}
 			#pragma omp section
 			{
-				nc_search_manager(&buffer,bloco1,bloco2,blocos,seqSize_an);
+				nc_search_manager(&buffer,bloco1,bloco2,blocos,seqSize_an,toStore);
+			}
+			#pragma omp section
+			{
+				nc_queue_manager(toStore);
 			}
 		}
 	}
@@ -285,6 +318,8 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	  if(!silent)
 	printf("OpenMP Mode.\n");
 	printString("OpenMP Mode.\n",NULL);
+	printf("Buffer size: %d\n",buffer_size);
+	printStringInt("Buffer size: ",buffer_size);
 	get_setup(&seqSize_an);
 	
 	setup_without_cuda(c);
