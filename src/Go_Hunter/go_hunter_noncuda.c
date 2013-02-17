@@ -269,7 +269,6 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
 	prepare_buffer(&buffer,buffer_size_NC);	
-	criar_ghash_table();
 	toStore = criar_fila("toStore");
 			
 	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(toStore)

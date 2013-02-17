@@ -10,6 +10,7 @@ package socket;
 
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,6 +77,7 @@ public class SocketManager {
 		String regiaoCincolMsg = "cincolok";
 		String sizeMsg = "size";
 		String processDBMsg = "processDB";
+		String loadFileMsg = "loadFile";
 		byte[] doneMsgBytes = doneMsg.getBytes();
 		byte[] helloMsgBytes = helloMsg.getBytes();
 		byte[] closeMsgBytes = closeMsg.getBytes();
@@ -89,6 +91,7 @@ public class SocketManager {
 		Pattern regiaoCLPattern = Pattern.compile(regiaoCincolMsg);
 		Pattern sizePattern = Pattern.compile(sizeMsg);
 		Pattern processDBPattern = Pattern.compile(processDBMsg);
+		Pattern loadFilePattern = Pattern.compile(loadFileMsg+"\\s(.+)");
 
 		while(!end) {
 			byte[] buf=new byte[1024];
@@ -114,6 +117,7 @@ public class SocketManager {
 				Matcher regiaoCLMatcher = regiaoCLPattern.matcher(data);
 				Matcher sizeMatcher = sizePattern.matcher(data);
 				Matcher processDBMatcher = processDBPattern.matcher(data);
+				Matcher loadFileMatcher = loadFilePattern.matcher(data);
 
 				if(helloMatcher.find()){
 					sendMsg(sockOutput,helloMsgBytes,0,helloMsgBytes.length);
@@ -175,6 +179,37 @@ public class SocketManager {
 					Set<String> set = db.keySet();
 					System.out.println("Agora vou processar os dados.");
 					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
+				}else if(loadFileMatcher.find()){
+					Scanner sc = new Scanner(new File(loadFileMatcher.group(1)));
+					Matcher loadFileLocalMatcher;
+					
+					while(sc.hasNext()){
+						String scRead = sc.next();
+						if(cincoLSupport){			
+							loadFileLocalMatcher = incomingSeqWithCincoLSupportPattern.matcher(scRead);
+							if(loadFileLocalMatcher.find()){
+								String seq = loadFileLocalMatcher.group(1);
+								String seqCL = loadFileLocalMatcher.group(2);
+								String seqTipo = loadFileLocalMatcher.group(3);
+								if(sensoCode.equals(seqTipo)){
+									db.add(seq,seqCL, new Event(seq,1,0));
+								}
+								else if(antisensoCode.equals(seqTipo)){
+									db.add(seq,seqCL, new Event(seq,0,1));					
+								}
+							}
+						}else{
+							loadFileLocalMatcher = incomingSeqPattern.matcher(scRead);
+							String seq = loadFileLocalMatcher.group(1);
+							String seqTipo = loadFileLocalMatcher.group(2);
+							if(sensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,1,0));
+							}
+							else if(antisensoCode.equals(seqTipo)){
+								db.add(seq,null, new Event(seq,0,1));					
+							}
+						}
+					}
 				}
 
 

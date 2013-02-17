@@ -30,8 +30,6 @@ int tam_regiao_5l;
 
 char **data;
 char **h_data;
-omp_lock_t DtH_copy_lock;
-omp_lock_t MC_copy_lock;
 gboolean THREAD_DONE[OMP_NTHREADS];
 
 int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t stream){
@@ -316,6 +314,11 @@ void queue_manager(Fila *toStore){
 	while(!THREAD_DONE[THREAD_SEARCH]){
 		if(tamanho_da_fila(toStore) > 0){
 			hold = desenfileirar(toStore);
+			if(hold == NULL){
+				printf("Erro alocando memoria.\n");
+				printString("Erro alocando memoria.",NULL);
+				exit(1);
+			}
 			if(hold->tipo == SENSO)
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 			else
@@ -328,6 +331,11 @@ void queue_manager(Fila *toStore){
 	
 	while(tamanho_da_fila(toStore) > 0){		
 			hold = desenfileirar(toStore);
+			if(hold == NULL){
+				printf("Erro alocando memoria.\n");
+				printString("Erro alocando memoria.",NULL);
+				exit(1);
+			}
 			if(hold->tipo == SENSO)
 				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 			else
@@ -356,19 +364,16 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	//Inicializa buffer
 	cudaStreamCreate(&stream1);
 	cudaStreamCreate(&stream2);
-	criar_ghash_table();			
 
 	buffer_load = 0;
 	processadas=0;
 	toStore = criar_fila("toStore");
-	omp_init_lock(&DtH_copy_lock);
-	omp_init_lock(&MC_copy_lock);
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
 	
 	
-				THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
-				THREAD_DONE[THREAD_SEARCH] = FALSE;
-				THREAD_DONE[THREAD_QUEUE] = FALSE;
+	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
+	THREAD_DONE[THREAD_SEARCH] = FALSE;
+	THREAD_DONE[THREAD_QUEUE] = FALSE;
 		
 	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream1) shared(stream2) shared(toStore)
 	{		
@@ -391,7 +396,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	//printf("Iterações executadas: %d.\n",iter);
 	//free(tmp);
 	cudaDeviceReset();
-	omp_destroy_lock(&DtH_copy_lock);
 	//cudaStreamDestroy(stream1);
 	//cudaStreamDestroy(stream2);
 	/*for(i=0;i<buffer_size;i++){

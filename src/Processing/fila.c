@@ -18,6 +18,13 @@
 #include "../Headers/load_data.h"
 #include "../Headers/log.h"
 
+
+omp_lock_t fila_lock;
+
+void init_lock(){
+	omp_init_lock(&fila_lock);
+}
+
 Fila* criar_fila(char *nome){
 	Fila *f;
 	f = (Fila*)malloc(sizeof(Fila));
@@ -58,6 +65,7 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 		novo = NULL;
 		novo = criar_elemento_fila(seq_central,seq_cincoL,tipo);
 
+         omp_set_lock(&fila_lock);
 		switch(f->size){
 			case 0:
 				f->first = novo;
@@ -73,12 +81,14 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 		}
 		
 		f->size = f->size + 1;
+         omp_unset_lock(&fila_lock);
 	return;
 }
 
 FilaItem* desenfileirar(Fila *f){
 		FilaItem *to_return;
 		//printf("Desenfileirando\n");
+         omp_set_lock(&fila_lock);
 		
 		if(f->size > 0){
 			to_return = f->first;
@@ -86,6 +96,7 @@ FilaItem* desenfileirar(Fila *f){
 			f->size--;
 		}
 		
+         omp_unset_lock(&fila_lock);
 	return to_return;
 }
 
@@ -95,19 +106,22 @@ gboolean fila_vazia(Fila *f){
 
 int tamanho_da_fila(Fila *f){
 	int size;
+         omp_set_lock(&fila_lock);
     size = f->size;
+         omp_unset_lock(&fila_lock);
 	return size;
 }
 
 void destroy(Fila *f){
 	if(f->size != 0){
-		char *hold;
+		FilaItem *hold;
 		while(!fila_vazia(f)){
 			hold = desenfileirar(f);
 			free(hold);
 		}
 	}
 	
+	omp_destroy_lock(&fila_lock);
 	free(f);
 	return;
 }

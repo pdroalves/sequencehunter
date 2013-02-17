@@ -20,8 +20,11 @@ Socket *socket;
 #define SKT_PORT 9332
 #define DB_MANAGER_APP "database-manager.jar"
 int dataSent;
+FILE *output_file;
 
-void criar_ghash_table(){
+void criar_ghash_table(char *tempo){
+	char *output_file_name;
+	int i,j;
 	 // Inicia database-manager
 	  if(fork()==0){
 		system(DB_MANAGER_APP);
@@ -39,7 +42,35 @@ void criar_ghash_table(){
 			exit(1);
 		}
 	 }
-     dataSent = 0;                                             
+     dataSent = 0; 
+     
+     // Carrega arquivo temporario
+    /* tempo[strlen(tempo)-1] = '\0';
+     
+  */   
+  output_file_name = (char*)malloc(100*sizeof(char));
+     strcpy(output_file_name,"");
+    // Remove espaco da string tempo 	
+	i = 0;
+	j = 0;
+	while(i<strlen(tempo))
+		if(tempo[i] != ' ' && tempo[i] != ':' && tempo[i] != '\n'){
+			output_file_name[j] = tempo[i];
+			i++;
+			j++;
+		}else i++;
+	
+	 strcat(output_file_name,"_tmp");
+	 strcat(output_file_name,".txt");
+    
+     output_file = fopen(output_file_name,"w+");               
+     if(output_file == NULL){
+		 printf("Impossivel abrir arquivo temporario.\n");
+		 printString("Impossivel abrir arquivo temporario.",NULL);
+		 exit(1);
+	 }    
+	 
+	 free(output_file_name);                        
 	return;
 }
 
@@ -54,14 +85,12 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 	char *msg;
 	char *msg_returned;
 	int msg_size;
+	
 	msg_size = strlen(central) + 1 + strlen(tipo);
 	if(cincol != NULL)
 		msg_size=+	(strlen(cincol) + 1);
 	
-	msg = (char*)malloc((msg_size+1)*sizeof(char));
-	
-	// Avisa sobre o envio de sequencia
-	//send_msg_to_socket(SKT_MSG_SND_SEQ);
+	msg = (char*)malloc((msg_size+5)*sizeof(char));
 	
 	// Monta a msg
 	strcpy(msg,"1");
@@ -72,12 +101,11 @@ void adicionar_ht(char *central,char *cincol,char *tipo){
 		strcat(msg,"3");		
 	}
 	strcat(msg,tipo);
-	strcat(msg," ");
 	
 	// Envia a sequencia
-	send_msg_to_socket(socket,msg);
-	msg_returned = get_msg_to_socket(socket);		
-		
+	//send_msg_to_socket(socket,msg);
+	//msg_returned = get_msg_to_socket(socket);		
+	fprintf(output_file,"%s\n",msg);
 	free(msg);
 	dataSent++;
 	
@@ -96,8 +124,9 @@ int tamanho_ht(){
 }
 
 void process_signal_ht(){
-	// Envia um sinnal para o Database Manager processar os dados
+	// Envia um sinal para o Database Manager processar os dados
 	char *msg_returned;
+	fclose(output_file);
 	send_msg_to_socket(socket,SKT_MSG_PROCESS);
 	msg_returned = get_msg_to_socket(socket);	
 	return;

@@ -121,8 +121,8 @@
 	  //Inicializa
 	 time(&t);
 	 tempo = ctime(&t);
-
 	 prepareLog(tempo,gui_run);	 
+	 criar_ghash_table(tempo);
 	 c = NULL;
 	 nome = NULL;
 	  
@@ -171,14 +171,14 @@
 				printf("Erro na leitura\n");
 				exit(1);
 			}
-			nome = (char*)malloc((500)*sizeof(char));
+			nome = (char*)malloc((1000)*sizeof(char));
 			fscanf(set,"%s",nome);
 			
 		}else{
 			if(target_seq){
 				strcpy(c,target_seq);
 				if(target_name){
-					nome = (char*)malloc((500)*sizeof(char));
+					nome = (char*)malloc((10000)*sizeof(char));
 					strcpy(nome,target_name);
 				}
 			}else{
@@ -191,7 +191,7 @@
 				}
 			 if(!silent && !gui_run)
 				printf("Entre uma identificação para essa busca: ");
-				nome = (char*)malloc((500)*sizeof(char));
+				nome = (char*)malloc((1000)*sizeof(char));
 				scanf("%s",nome);
 			}
 	   }
