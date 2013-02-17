@@ -153,11 +153,15 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD){
 	for(j=0;j < files && i < MAX_TO_LOAD;j++){		
 		while(i < MAX_TO_LOAD && !feof(f[j])){
 				// Le sequencia, verifica se eh valida e incrementa a contagem
+				fscanf(f[j],"%*s");
+				fscanf(f[j],"%*s");
 				fscanf(f[j],"%s",hold);
-				if(check_seq_valida(hold)){
+				fscanf(f[j],"%*s");
+				fscanf(f[j],"%*s");
+				//if(check_seq_valida(hold)){
 					strcpy(seqs[i],hold);
 					i++;
-				}
+				//}
 		}
 		// Corrige contagem errada
 		if(i < MAX_TO_LOAD && i > 0)
