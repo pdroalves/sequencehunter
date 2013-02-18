@@ -16,7 +16,6 @@
 	#include <time.h>
 	#include "Headers/operacoes.h"
 	#include "Headers/cuda_functions.h"
-	//#include "Headers/linkedlist.h"
 	#include "Headers/estruturas.h"
 	#include "Headers/go_hunter.h"
 	#include "Headers/log.h"
@@ -25,6 +24,7 @@
 	#include "Headers/linkedlist.h"
 	#include "Headers/version.h"
 	#include "Headers/hashtable.h"
+	#include "Headers/database.h"
 	
 	#define SEQ_BUSCA_TAM 1000
 
@@ -93,8 +93,7 @@
 	  Params set;
 	  time_t t;
 	   char *tempo;
-
-
+	  
 	  // Necessario para Glib 2.28
 	  g_type_init();
 	  
@@ -121,8 +120,7 @@
 	  //Inicializa
 	 time(&t);
 	 tempo = ctime(&t);
-	 prepareLog(tempo,gui_run);	 
-	 criar_ghash_table(tempo);
+	 prepareLog(tempo,gui_run);	
 	 c = NULL;
 	 nome = NULL;
 	  
@@ -217,7 +215,8 @@
 		 set.gui_run = gui_run;
 		 set.dist_regiao_5l = dist_regiao_5l;
 		 set.tam_regiao_5l = tam_regiao_5l;
-		 
+		  
+	 criar_ghash_table(tempo);
 		if(disable_cuda){
 	  if(!silent || gui_run)
 			printf("Forçando modo OpenMP.\n");

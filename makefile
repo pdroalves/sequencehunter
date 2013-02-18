@@ -1,5 +1,6 @@
 CUDA_CC = nvcc
-CC_LINUX = gcc
+CC = gcc
+CPP = g++
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
 
@@ -16,13 +17,15 @@ CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar
 DB_MANAGER_NAME = database-manager.jar
 
+HAMSTERDB_LIB = /usr/local/lib/libhamsterdb.a
+
 INSTALL = /usr/local/bin
 OBJ = obj/
 BIN = bin/
 SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
-all:cmd gui db-manager
+all:cmd gui
 
 #########################################
 ##Executaveis############################
@@ -30,9 +33,9 @@ all:cmd gui db-manager
 
 ##Linux##################################
 #########################################
-cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o build_control
+cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control
 	$(BIN)build_control version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA)
+	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(HAMSTERDB_LIB)
 	echo "CLI built"	
 	
 gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -40,52 +43,48 @@ gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
 	cp $(JAVA_SOURCE)Sequence\ Hunter\ GUI/$(GUI_NAME) $(BIN)
 	echo "Gui built"
 
-db-manager:$(JAVA_SOURCE)Database\ Manager/makefile
-	make -C $(JAVA_SOURCE)Database\ Manager/
-	cp $(JAVA_SOURCE)Database\ Manager/$(DB_MANAGER_NAME) $(BIN)
-	echo "Database Manager built"
-
 #########################################
 ############ GCC e MingWW ###############
 #########################################
 	
 $(OBJ)shunter-cmd.o:$(SOURCE)shunter-cmd.c
-	$(CC_LINUX) -g -c $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
+	$(CC) -g -c $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
 	
 $(OBJ)go_hunter.o:$(SOURCE)Go_Hunter/go_hunter.c
-	$(CC_LINUX) -g -c $(SOURCE)Go_Hunter/go_hunter.c -o $(OBJ)go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter.c -o $(OBJ)go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)go_hunter_cuda.o:$(SOURCE)Go_Hunter/go_hunter_cuda.c
-	$(CC_LINUX) -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
-	$(CC_LINUX) -g -c $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)load_data.o:$(SOURCE)External/load_data.c
-	$(CC_LINUX) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
+	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 $(OBJ)hashtable.o:$(SOURCE)External/hashtable.c
-	$(CC_LINUX) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+	$(CC) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
 $(OBJ)socket.o:$(SOURCE)External/socket.c
-	$(CC_LINUX) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+	$(CC) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
 $(OBJ)operacoes.o:$(SOURCE)Assist/operacoes.c
-	$(CC_LINUX) -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
+	$(CC) -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
 	
 $(OBJ)log.o:$(SOURCE)Assist/log.c
-	$(CC_LINUX) -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
+	$(CC) -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
 	
 $(OBJ)linkedlist.o:$(SOURCE)Processing/linkedlist.c
-	$(CC_LINUX) -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
+	$(CC) -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
 	
 $(OBJ)processing_data.o:$(SOURCE)Processing/processing_data.c
-	$(CC_LINUX) -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
+	$(CC) -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
 	
 $(OBJ)fila.o:$(SOURCE)Processing/fila.c
-	$(CC_LINUX) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
+	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
-
+$(OBJ)database.o:$(SOURCE)Processing/database.c
+	$(CPP) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o -lhamsterdb
 	
 #########################################
 ############ NVCC LINUX##################
@@ -100,11 +99,11 @@ build_control:$(SOURCE)Assist/build_control.c
 	gcc $(SOURCE)Assist/build_control.c -o $(BIN)build_control
 	
 clean:
-	rm -f $(OBJ)*.o *.{c,h}~ $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(BIN)$(DB_MANAGER_NAME)
+	rm -f $(OBJ)*.o *.{c,h}~ $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME)
 	make -C $(SOURCE)Gui/ clean
 	echo "It's clean"
 
 install:
 	#sudo rm $(INSTALL)/$(CLI_NAME) $(INSTALL)/$(GUI_NAME)
-	sudo cp $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(BIN)$(DB_MANAGER_NAME) $(INSTALL)
+	sudo cp $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME) $(INSTALL)
 	echo "Done"

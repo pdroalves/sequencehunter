@@ -10,7 +10,7 @@
 
 #define TAM_MAX 10000
 
-void get_setup(int*);	
+int get_setup();
 int check_seq(char*,int*,int*,int*);
 void close_file();
 int open_file(char **entrada,int qnt,gboolean silent);
@@ -106,21 +106,24 @@ void close_file(){
 	return;
 }
 
-void get_setup(int *n){
+int get_setup(){
 	char *tmp;
+	int n;
 	
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
 	fscanf(f[0],"%s",tmp);
 	
-	while(!check_seq_valida(tmp)) fscanf(f[0],"%s",tmp);		
+	while(!check_seq_valida(tmp)) 
+		fscanf(f[0],"%s",tmp);		
+	
 	rewind(f[0]);
-	*n = (int)(strlen(tmp));
+	n = (int)(strlen(tmp));
 	
 	hold = (char*)malloc(TAM_MAX*sizeof(char));	
 	
 	free(tmp);
-	return;
+	return n;
 }
 
 void prepare_buffer(Buffer *b,int c){

@@ -87,7 +87,6 @@ void buffer_manager(int *buffer_load,
 }
 
 void search_manager(int *buffer_load,
-							int *processadas,
 							Fila *toStore,
 							const int seqSize_an,
 							const int seqSize_bu,
@@ -110,10 +109,14 @@ void search_manager(int *buffer_load,
 				int loaded;
 				int hold;
 				int p;
+				int last_p;
 				float iteration_time;
 				int fsenso;
 				int fasenso;	
 				int gap;
+				int processadas;
+				int wave_size;
+				int wave_processed_diff;
 				cudaEvent_t startK,stopK;
 				cudaEvent_t start,stop;
 				cudaEvent_t startV,stopV;
@@ -158,6 +161,10 @@ void search_manager(int *buffer_load,
 				
 				iteration_time = 0;
 				
+				processadas = 0;
+				wave_size = 0;
+						wave_processed_diff = 0;
+				
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
 				
@@ -190,7 +197,7 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(start,0);
 						
 						// Inicia processamento dos resultados
-						*processadas += loaded;
+						processadas += loaded;
 						cudaStreamSynchronize(stream2);
 						
 						// Em casos reais, cada iteracao possuirah poucos eventos. Portanto, a copia de dados para 
@@ -227,10 +234,13 @@ void search_manager(int *buffer_load,
 										}
 								
 										fsenso++;
+										wave_size++;
 										if(regiao_5l)
 											enfileirar(toStore,central,cincol,SENSO);
+											//adicionar_ht(central,cincol,"S");
 										else
 											enfileirar(toStore,central,NULL,SENSO);
+											//adicionar_ht(central,NULL,"S");
 									break;
 									case ANTISENSO:
 										central = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -251,10 +261,13 @@ void search_manager(int *buffer_load,
 										}
 
 										fasenso++;
+										wave_size++;
 										if(regiao_5l)											
 											enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+											//adicionar_ht(central,cincol,"AS");
 										else
 											enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
+											//adicionar_ht(central,NULL,"AS");
 								
 									break;
 								}
@@ -265,13 +278,17 @@ void search_manager(int *buffer_load,
 						
 						checkCudaError();
 						if(verbose && !silent)
-							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);
+							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
 						if(gui_run)
-							printf("T%dS%dAS%d\n",*processadas,fsenso,fasenso);
+							printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
 						
 						if(debug && !silent)
-							printf("Fila: %d\n",tamanho_da_fila(toStore));
-							
+							printf("\tFila: %d\n",tamanho_da_fila(toStore));
+						
+						if(debug && !silent)
+							printf("\tWave size: %d - Diff: %d\n",wave_size,wave_size-wave_processed_diff);
+						wave_processed_diff = wave_size;
+						wave_size = 0;
 							
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
@@ -279,6 +296,11 @@ void search_manager(int *buffer_load,
 						cudaEventRecord(stopV,0);						
 						cudaEventSynchronize(stopV);
 						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
+						
+						// Evita consumo muito alto de memoria
+					//	if(tamanho_da_fila(toStore) > MAX_FILA_SIZE){
+					//		sleep(5);
+					//	}
 						
 						// Evita desincronização
 						if(*buffer_load == 0 && THREAD_DONE[THREAD_BUFFER_LOADER]){
@@ -311,41 +333,41 @@ void search_manager(int *buffer_load,
 }
 
 void queue_manager(Fila *toStore){
+	
 	FilaItem *hold;
-	
-	while(!THREAD_DONE[THREAD_SEARCH]){
-		if(tamanho_da_fila(toStore) > 0){
-			hold = desenfileirar(toStore);
-			if(hold == NULL){
-				printf("Erro alocando memoria.\n");
-				printString("Erro alocando memoria.",NULL);
-				exit(1);
+		while(!THREAD_DONE[THREAD_SEARCH]){
+			if(tamanho_da_fila(toStore) > 0){
+				hold = desenfileirar(toStore);
+				if(hold == NULL){
+					printf("Erro alocando memoria.\n");
+					//printString("Erro alocando memoria.",NULL);
+					exit(1);
+				}
+				if(hold->tipo == SENSO)
+					adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+				else
+					adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+				free(hold->seq_central);
+				free(hold->seq_cincoL);
+				free(hold);
 			}
-			if(hold->tipo == SENSO)
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-			else
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-		    free(hold->seq_central);
-		    free(hold->seq_cincoL);
-			free(hold);
 		}
-	}
-	
-	while(tamanho_da_fila(toStore) > 0){		
-			hold = desenfileirar(toStore);
-			if(hold == NULL){
-				printf("Erro alocando memoria.\n");
-				printString("Erro alocando memoria.",NULL);
-				exit(1);
-			}
-			if(hold->tipo == SENSO)
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-			else
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-		    free(hold->seq_central);
-		    free(hold->seq_cincoL);
-		   free(hold);
-	}
+		
+		while(tamanho_da_fila(toStore) > 0){		
+				hold = desenfileirar(toStore);
+				if(hold == NULL){
+					printf("Erro alocando memoria.\n");
+					//printString("Erro alocando memoria.",NULL);
+					exit(1);
+				}
+				if(hold->tipo == SENSO)
+					adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
+				else
+					adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+				free(hold->seq_central);
+				free(hold->seq_cincoL);
+			   free(hold);
+		}
 	
 	THREAD_DONE[THREAD_QUEUE] = TRUE;
 	return;
@@ -357,7 +379,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	Buffer buffer;
 	int blocoV = seqSize_bu - bloco1 - bloco2;
 	int i;
-	int processadas;
 	int buffer_load;
 	Fila *toStore;
 	cudaStream_t stream1;
@@ -368,7 +389,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	cudaStreamCreate(&stream2);
 
 	buffer_load = 0;
-	processadas=0;
 	toStore = criar_fila("toStore");
 	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
 	
@@ -376,6 +396,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
 	THREAD_DONE[THREAD_QUEUE] = FALSE;
+	
 		
 	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream1) shared(stream2) shared(toStore)
 	{		
@@ -387,7 +408,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 			}
 			#pragma omp section
 			{
-				search_manager(&buffer_load,&processadas,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
+				search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream1,stream2);
 			}
 			#pragma omp section
 			{
@@ -433,7 +454,7 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
 	printf("Buffer size: %d\n",buffer_size);
 	printStringInt("Buffer size: ",buffer_size);
 	
-	get_setup(&seqSize_an);
+	seqSize_an = get_setup();
 	
 	//Inicializa
 	setup_for_cuda(c);

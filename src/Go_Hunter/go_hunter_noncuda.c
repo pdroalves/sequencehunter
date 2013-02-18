@@ -76,7 +76,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		int tam;
 		int i;
 		int p;
-		int diff;
 		char *central;
 		char *cincol;
 		char *seqToSave;
@@ -85,6 +84,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		float iteration_time;
 		int fsensos,fasensos;
 		const int blocoV = blocos-bloco1-bloco2;
+		int wave_size;
+		int wave_processed_diff;
 		
 		THREAD_DONE[THREAD_SEARCH] = FALSE;
 		p = 0;
@@ -99,7 +100,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		cudaEventCreate(&stopK);
 		
 		iteration_time = 0;
-		diff = 0;
+		wave_size = 0;
+		wave_processed_diff = 0;
 		
 			while( buffer->load == 0){
 			}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -164,6 +166,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 								}
 								
 							fsensos++;
+							wave_size++;
 										if(regiao_5l)
 											enfileirar(toStore,central,cincol,SENSO);
 										else
@@ -191,6 +194,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 								}
 
 								fasensos++;
+							wave_size++;
 										if(regiao_5l)
 											enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 										else
@@ -205,14 +209,21 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 					
 					if(verbose && !silent)		
 						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
-					diff+= p;
-					if(gui_run && diff > MIN_LEN_TO_PRINT){
+					if(gui_run){
 							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
-							diff = 0;
 					}
+						if(debug && !silent)
+							printf("\tWave size: %d - Diff: %d\n",wave_size,wave_size-wave_processed_diff);
+						wave_processed_diff = wave_size;
+						wave_size = 0;
 					
 					
 					while(buffer->load==0){}
+					
+					// Evita consumo muito alto de memoria
+						if(tamanho_da_fila(toStore) > MAX_FILA_SIZE){
+							sleep(5);
+						}
 									
 			}
 				
@@ -323,7 +334,8 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	printString("OpenMP Mode.\n",NULL);
 	printf("Buffer size: %d\n",buffer_size);
 	printStringInt("Buffer size: ",buffer_size);
-	get_setup(&seqSize_an);
+	
+	seqSize_an = get_setup();
 	
 	setup_without_cuda(c);
 	

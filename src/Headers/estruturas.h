@@ -14,6 +14,7 @@
 #define FILA_MIN 5000 // Tamanho minimo da fila antes de começar a esvazia-la
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000
+#define MAX_FILA_SIZE 100000
 
 // Socket msgs
 #define SKT_MSG_HELLO "hi"
@@ -59,6 +60,14 @@ struct buffer{
 	int load;//Guarda a quantidade de sequências carregadas;
 };
 typedef struct buffer Buffer;
+
+struct value{
+	int qsensos;
+	int qasensos;
+	int qpares;
+	double qrlv;
+};
+typedef struct value Valor;
 
 struct pares{
     int sensos;
