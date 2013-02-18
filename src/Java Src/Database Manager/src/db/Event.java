@@ -7,7 +7,6 @@ import java.util.Set;
 
 public class Event implements Serializable{
 	
-	private String seq = "";
 	private int qsensos = 0;
 	private int qasensos = 0;
 	private double qntRel = 0;
@@ -17,29 +16,17 @@ public class Event implements Serializable{
 		
 	}
 	
-	public Event(String s){
-		setSeq(s);
-	}
-	
-	public Event(String s,int qs,int qas){
-		setSeq(s);
+	public Event(int qs,int qas){
 		setQsensos(qs);
 		setQasensos(qas);
 	}
 
-	public Event(String s,int qs,int qas,double qntRel){
-		setSeq(s);
+	public Event(int qs,int qas,double qntRel){
 		setQsensos(qs);
 		setQasensos(qas);
 		setQntRel(qntRel);
 	}
 	
-	public String getSeq() {
-		return seq;
-	}
-	public void setSeq(String seq) {
-		this.seq = seq;
-	}
 	public int getQsensos() {
 		return qsensos;
 	}
@@ -81,4 +68,19 @@ public class Event implements Serializable{
 			}
 		}
 	}
+	
+	@Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Event e = (Event)o;
+
+        if(qsensos != e.getQsensos()) return false;
+        if(qasensos != e.getQasensos()) return false;
+        if(qntRel != e.getQntRel()) return false;
+        if(!dbCincoL.equals(e.getDbCincoL())) return false;
+
+        return true;
+    }
 }

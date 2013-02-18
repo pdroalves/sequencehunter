@@ -9,7 +9,10 @@
 
 package db;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,14 +27,14 @@ public class HunterDatabase implements Serializable{
 	
 	public HunterDatabase(String dbName,File f){
 		db = DBMaker.newFileDB(f)
-				.asyncWriteDisable()
+				.asyncThreadDaemonEnable()
+				.cacheLRUEnable()
 				.make();
 		dbMap = db.getHashMap(dbName);
 	}
 	
 	public void add(String keyCentral,String keyCL,Event value){
 		// A sequencia deve vir jah segmentada
-		
 		Event returnSE = dbMap.get(keyCentral);
 		if(returnSE != null){
 			dbMap.put(keyCentral, updateValue(value,returnSE,keyCL));
@@ -49,13 +52,20 @@ public class HunterDatabase implements Serializable{
 	}
 	
 	public void commit(){
+		long start = System.currentTimeMillis();
 		db.commit();
+		long elapsedTime = System.currentTimeMillis() - start;
+		System.out.println("Time to commit: "+elapsedTime+" ms");
+	}
+	
+	public void compact(){
+		this.commit();
+		db.compact();
 	}
 	
 	private Event updateValue(Event novo, Event velho,String keyCL){
 		Event atualizado = new Event();	
 		
-		atualizado.setSeq(novo.getSeq());
 		atualizado.setQsensos(novo.getQsensos() + velho.getQsensos());
 		atualizado.setQasensos(novo.getQasensos() + velho.getQasensos());
 		atualizado.setQntRel(novo.getQntRel() + velho.getQntRel());
@@ -64,7 +74,7 @@ public class HunterDatabase implements Serializable{
 			atualizado.setDbCincoL();
 			Event cincoL = atualizado.getDbCincoL().get(keyCL);
 			if(cincoL == null){
-				cincoL = new Event(keyCL,novo.getQsensos(),novo.getQasensos(),novo.getQntRel());
+				cincoL = new Event(novo.getQsensos(),novo.getQasensos(),novo.getQntRel());
 				atualizado.getDbCincoL().put(keyCL,cincoL);
 			}else{
 				cincoL.setQsensos(cincoL.getQsensos()+novo.getQsensos());
@@ -82,7 +92,7 @@ public class HunterDatabase implements Serializable{
 		while(iterator.hasNext()){
 			String key = iterator.next();
 			Event e = dbMap.get(key);
-			System.out.println(e.getSeq()+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
+			System.out.println(key+" S:"+e.getQsensos()+" AS:"+e.getQasensos());
 			e.printDB();
 		}
 	}
@@ -98,6 +108,27 @@ public class HunterDatabase implements Serializable{
 	public Set<String> keySet(){
 		return dbMap.keySet();
 	}
+	
+	/*Serializer<Event> serializer = new Serializer<Event>(){
+
+		@Override
+		public void serialize(DataOutput out, Event value) throws IOException {
+			out.writeUTF(value.getSeq());
+			out.write(value.getQsensos());
+			out.write(value.getQasensos());
+			out.writeDouble(value.getQntRel());
+			Map<String,Event> dbLocal = value.getDbCincoL();
+			out.write
+		}
+
+		@Override
+		public Event deserialize(DataInput in, int available)
+				throws IOException {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	};*/
 
 }
 

@@ -38,7 +38,6 @@ int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t strea
 	
 	loaded = fill_buffer(h_seqs,buffer_size);//Enche o buffer e guarda a quantidade de sequências carregadas.
 	if(loaded != GATHERING_DONE){
-		print_seqs_carregadas(loaded);
 		
 		//Copia sequencias para GPU
 		for(i=0;i<loaded;i++)
@@ -269,6 +268,9 @@ void search_manager(int *buffer_load,
 							printf("Sequencias analisadas: %d - S: %d, AS: %d\n",*processadas,fsenso,fasenso);
 						if(gui_run)
 							printf("T%dS%dAS%d\n",*processadas,fsenso,fasenso);
+						
+						if(debug && !silent)
+							printf("Fila: %d\n",tamanho_da_fila(toStore));
 							
 							
 						// Aguarda o buffer estar cheio novamente

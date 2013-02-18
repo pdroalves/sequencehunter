@@ -95,7 +95,6 @@ int check_sequencias_validas(gboolean silent){
 			else
 				printf("Sequencias validas encontradas: %d\nATENÇÃO: Sequências de tamanho variável.\n",-seqs_validas);
 		}
-		print_seqs_carregadas(seqs_validas);
 	}
 	return seqs_validas;
 }

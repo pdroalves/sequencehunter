@@ -46,21 +46,8 @@ int check_seq_valida(char *p){
 
 lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 	
-	Pares *desp;
-	Pares *tipos;
-	lista_ligada *l;
-	lista_ligada *resultados;
-
-	//print_all(hash_table);
-	if(tamanho_ht() != 0){	
-			printf("Existem sequencias!\n");
-			process_signal_ht();
-		}else{
-		if(!silent)
-			printf("Nao foram encontradas sequências com pareamento.\n");
-			
-			resultados = criar_lista();
-	}
+	// Iniciando processamento dos dados...
+	process_signal_ht();
 	
 	return NULL;
 }

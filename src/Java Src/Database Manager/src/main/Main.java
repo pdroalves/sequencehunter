@@ -21,6 +21,7 @@ public class Main {
 		
 		db.printDB();
 		db.commit();
+		db.close();
 		
 	}
 

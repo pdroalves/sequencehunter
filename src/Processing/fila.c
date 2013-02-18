@@ -94,6 +94,27 @@ FilaItem* desenfileirar(Fila *f){
 			to_return = f->first;
 			f->first = f->first->prox;
 			f->size--;
+		}else{
+			to_return = NULL;
+		}
+		
+         omp_unset_lock(&fila_lock);
+	return to_return;
+}
+
+char* desenfileirar_main(Fila *f){
+		char *to_return;
+		FilaItem *hold_to_return;
+		//printf("Desenfileirando\n");
+         omp_set_lock(&fila_lock);
+		
+		if(f->size > 0){
+			hold_to_return = f->first;
+			to_return = hold_to_return->seq_central;
+			f->first = f->first->prox;
+			f->size--;
+		}else{
+			to_return = NULL;
 		}
 		
          omp_unset_lock(&fila_lock);
