@@ -80,7 +80,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		char *cincol;
 		char *seqToSave;
 		cudaEvent_t startK,stopK,start,stop;
-		float elapsedTimeK,elapsedTime;
+				cudaEvent_t startV,stopV;
+		float elapsedTimeK,elapsedTime,elapsedTimeV;
 		float iteration_time;
 		int fsensos,fasensos;
 		const int blocoV = blocos-bloco1-bloco2;
@@ -98,6 +99,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		cudaEventCreate(&stop);
 		cudaEventCreate(&startK);
 		cudaEventCreate(&stopK);
+				cudaEventCreate(&startV);
+				cudaEventCreate(&stopV);
 		
 		iteration_time = 0;
 		wave_size = 0;
@@ -217,13 +220,17 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 						wave_processed_diff = wave_size;
 						wave_size = 0;
 					
-					
+						
+						// Aguarda o buffer estar cheio novamente
+						cudaEventRecord(startV,0);
 					while(buffer->load==0){}
+						cudaEventRecord(stopV,0);						
+						cudaEventSynchronize(stopV);
+						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
 					
-					// Evita consumo muito alto de memoria
-						if(tamanho_da_fila(toStore) > MAX_FILA_SIZE){
-							sleep(5);
-						}
+						if(debug && !silent)
+							printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);
+				
 									
 			}
 				

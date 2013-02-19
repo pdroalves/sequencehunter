@@ -8,6 +8,8 @@
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
+ham_env_t* env;
+
 void
 error(const char *foo, ham_status_t st)
 {
@@ -30,13 +32,24 @@ error(const char *foo, ham_status_t st)
 extern "C" ham_db_t* ham_create_db(char *filename,const int key_max_size){
 	ham_db_t *db; /* hamsterdb database object */
 	ham_status_t st;       /* status variable */
-	
     const ham_parameter_t params[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
-								{HAM_PARAM_PAGESIZE,1024},
 								 {0,NULL}
 							 };
-    
+							 
+	// Environment
+	st = ham_env_new(&env);
+     if (st!=HAM_SUCCESS){
+        error("ham_env_new", st);
+        exit(1);
+	}
+	
+	st = ham_env_create_ex(env, filename, 0, 0664, params);
+
+     if (st!=HAM_SUCCESS){
+        error("ham_env_create_ex", st);
+        exit(1);
+	}
      st=ham_new(&db); // New db object
      if (st!=HAM_SUCCESS){
         error("ham_new", st);
@@ -49,10 +62,9 @@ extern "C" ham_db_t* ham_create_db(char *filename,const int key_max_size){
 		exit (-1);
      }
 	
-     st=ham_create_ex(db, filename, HAM_CACHE_UNLIMITED, 0664, params);
-     //st=ham_create_ex(db, NULL, HAM_IN_MEMORY_DB, 0664, 0);
+     st=ham_env_create_db(env, db, 1, 0, params);
      if (st!=HAM_SUCCESS){
-        error("ham_create_ex", st);
+        error("ham_env_create_db", st);
         exit(1);
 	}
      return db;
@@ -62,9 +74,9 @@ extern "C" void ham_add(ham_db_t* db,char *seq_central,char *seq_cincoL,char *ti
 	ham_status_t st;       /* status variable */
     ham_key_t key;         /* the structure for a key */
     ham_record_t record;   /* the structure for a record */
+    ham_txn_t *txn; 
+	
 	Valor *v;	
-	
-	
     
 	memset(&key, 0, sizeof(key));
 	memset(&record, 0, sizeof(record));
@@ -73,7 +85,8 @@ extern "C" void ham_add(ham_db_t* db,char *seq_central,char *seq_cincoL,char *ti
     key.size=strlen(seq_central)*sizeof(char)+1;
 	
 	// Verifica se a chave jah estah contida no db
-	if(ham_find(db,NULL,&key,&record,0) != HAM_KEY_NOT_FOUND){
+	st = ham_find(db,NULL,&key,&record,0);
+	if(st != HAM_KEY_NOT_FOUND){
 		// Esta contida e old_record estah atualizado
 		v = (Valor*) record.data;
 		if(strcmp(tipo,"S")){
@@ -103,36 +116,14 @@ extern "C" void ham_add(ham_db_t* db,char *seq_central,char *seq_cincoL,char *ti
 		record.data=v;
 		record.size=sizeof(Valor)+1;
 		
-		st=ham_insert(db, 0, &key, &record, 0);
+		st=ham_insert(db, NULL, &key, &record, 0);
 		if(st != HAM_SUCCESS){
 			error("ham_insert",st);
 			exit(1);
 		}
 	}
-	
-	
  
 	return;
-}
-
-extern "C" void ham_read(ham_db_t* db){
-	int i;
-	ham_status_t st;       /* status variable */
-    ham_key_t key;         /* the structure for a key */
-    ham_record_t record;   /* the structure for a record */
-	for (i=0; i<10; i++) {
-        key.data=&i;
-        key.size=sizeof(i);
-
-        st=ham_find(db, 0, &key, &record, 0);
-
-        /*
-         * check if the value is ok
-         */
-        if (*(int *)record.data!=i) {
-            printf("ham_find() ok, but returned bad value\n");
-        }
-    }
 }
 
 extern "C" void ham_destroy(ham_db_t* db){

@@ -297,11 +297,6 @@ void search_manager(int *buffer_load,
 						cudaEventSynchronize(stopV);
 						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
 						
-						// Evita consumo muito alto de memoria
-					//	if(tamanho_da_fila(toStore) > MAX_FILA_SIZE){
-					//		sleep(5);
-					//	}
-						
 						// Evita desincronização
 						if(*buffer_load == 0 && THREAD_DONE[THREAD_BUFFER_LOADER]){
 							*buffer_load = GATHERING_DONE;
