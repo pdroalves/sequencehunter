@@ -12,7 +12,7 @@
 #include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
-#include <ham/hamsterdb.h>
+#include "../Headers/database.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/log.h"
 #include "../Headers/socket.h"
@@ -24,7 +24,9 @@ Socket *socket;
 
 int dataSent;
 char *db_filename;
-ham_db_t *db;
+
+struct ham_db_t *db; /* hamsterdb database object */
+struct ham_env_t* env;
 
 void criar_ghash_table(char *tempo){
    int i;
@@ -48,19 +50,20 @@ void criar_ghash_table(char *tempo){
 	}
 	 strcat(db_filename,".db");
 	 
-	 db = ham_create_db(db_filename,key_max_size);
+	 db_init_lock();
+	 db_create(db_filename,key_max_size);
 	return;
 }
 
 void destroy_ghash_table(){
 	// Envia msg para fechar
-    ham_destroy(db);
+    db_destroy();
 	printf("Seqs sent: %d\n",dataSent);
 	return;
 }
 
 void adicionar_ht(char *central,char *cincol,char *tipo){
-	ham_add(db,central,cincol,tipo);
+	db_add(central,cincol,tipo);
 	dataSent++;
 	
 	return;

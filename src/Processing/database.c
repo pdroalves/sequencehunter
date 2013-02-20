@@ -5,10 +5,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <omp.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
+ham_db_t *db; /* hamsterdb database object */
 ham_env_t* env;
+ham_txn_t *txn;
+ham_cursor_t *cursor;
+omp_lock_t db_lock;
 
 void
 error(const char *foo, ham_status_t st)
@@ -27,15 +32,40 @@ error(const char *foo, ham_status_t st)
             lhs_length<rhs_length ? lhs_length : rhs_length);
  }
 
+extern "C" void db_init_lock(){
+	omp_init_lock(&db_lock);
+}
 
-
-extern "C" ham_db_t* ham_create_db(char *filename,const int key_max_size){
-	ham_db_t *db; /* hamsterdb database object */
+extern "C" void db_create_txn(){
 	ham_status_t st;       /* status variable */
-    const ham_parameter_t params[] = {
+	// create a new transaction
+	st = ham_txn_begin(&txn, env,"txn",NULL, 0);
+	 if (st!=HAM_SUCCESS){
+        error("ham_txn_begin", st);
+        exit(1);
+	}
+}
+
+extern "C" void db_commit_txn(){
+	ham_status_t st;       /* status variable */
+	st=ham_txn_commit(txn, 0);
+	if (st!=HAM_SUCCESS) {
+		printf("ham_txn_commit failed: %d (%s)\n", st, ham_strerror(st));
+		exit(-1);
+	}
+}
+
+extern "C" void db_create(char *filename,const int key_max_size){
+	ham_status_t st;       /* status variable */
+    //db_count = fopen("db_count.dat","w+");
+    txn = NULL;
+    const ham_parameter_t params_env[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
-								 {0,NULL}
-							 };
+								{HAM_PARAM_PAGESIZE,2048},
+								 {0,NULL} };
+    const ham_parameter_t params_main_db[] = {
+								{HAM_PARAM_KEYSIZE,key_max_size},
+								 {0,NULL} };
 							 
 	// Environment
 	st = ham_env_new(&env);
@@ -44,7 +74,7 @@ extern "C" ham_db_t* ham_create_db(char *filename,const int key_max_size){
         exit(1);
 	}
 	
-	st = ham_env_create_ex(env, filename, 0, 0664, params);
+	st = ham_env_create_ex(env, filename, HAM_CACHE_UNLIMITED, 0664, params_env);
 
      if (st!=HAM_SUCCESS){
         error("ham_env_create_ex", st);
@@ -62,32 +92,38 @@ extern "C" ham_db_t* ham_create_db(char *filename,const int key_max_size){
 		exit (-1);
      }
 	
-     st=ham_env_create_db(env, db, 1, 0, params);
+     st=ham_env_create_db(env, db, 1, 0, params_main_db);
      if (st!=HAM_SUCCESS){
         error("ham_env_create_db", st);
         exit(1);
 	}
-     return db;
+	
+	if ((st=ham_cursor_create(db, txn, 0, &cursor))) {
+        error("ham_cursor_create", st);
+        exit(1);
+	}
+     return;
 }
 
-extern "C" void ham_add(ham_db_t* db,char *seq_central,char *seq_cincoL,char *tipo){
+extern "C" void db_add(char *seq_central,char *seq_cincoL,char *tipo){
 	ham_status_t st;       /* status variable */
     ham_key_t key;         /* the structure for a key */
     ham_record_t record;   /* the structure for a record */
-    ham_txn_t *txn; 
 	
 	Valor *v;	
     
 	memset(&key, 0, sizeof(key));
 	memset(&record, 0, sizeof(record));
-   
+	   
     key.data=seq_central;
     key.size=strlen(seq_central)*sizeof(char)+1;
-	
+    
+	omp_set_lock(&db_lock);
 	// Verifica se a chave jah estah contida no db
-	st = ham_find(db,NULL,&key,&record,0);
+	st = ham_cursor_find(cursor,&key,HAM_FIND_EXACT_MATCH);
 	if(st != HAM_KEY_NOT_FOUND){
 		// Esta contida e old_record estah atualizado
+		ham_cursor_move(cursor,&key,&record,0);
 		v = (Valor*) record.data;
 		if(strcmp(tipo,"S")){
 			v->qsensos++;
@@ -116,17 +152,20 @@ extern "C" void ham_add(ham_db_t* db,char *seq_central,char *seq_cincoL,char *ti
 		record.data=v;
 		record.size=sizeof(Valor)+1;
 		
-		st=ham_insert(db, NULL, &key, &record, 0);
+		st=ham_cursor_insert(cursor,&key, &record, HAM_OVERWRITE);
 		if(st != HAM_SUCCESS){
-			error("ham_insert",st);
+			error("ham_cursor_insert",st);
 			exit(1);
 		}
 	}
+	
+	omp_unset_lock(&db_lock);
  
 	return;
 }
 
-extern "C" void ham_destroy(ham_db_t* db){
+extern "C" void db_destroy(){
+	ham_cursor_close(cursor);
 	ham_close(db, 0);
     ham_delete(db);
 }

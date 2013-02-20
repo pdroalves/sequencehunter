@@ -32,6 +32,9 @@ char **data;
 char **h_data;
 gboolean THREAD_DONE[OMP_NTHREADS];
 
+
+int processadas;
+
 int load_buffer_CUDA(char **h_seqs,char **d_seqs,int seq_size,cudaStream_t stream){
 	int i;
 	int loaded;
@@ -114,7 +117,6 @@ void search_manager(int *buffer_load,
 				int fsenso;
 				int fasenso;	
 				int gap;
-				int processadas;
 				int wave_size;
 				int wave_processed_diff;
 				cudaEvent_t startK,stopK;
@@ -162,8 +164,6 @@ void search_manager(int *buffer_load,
 				iteration_time = 0;
 				
 				processadas = 0;
-				wave_size = 0;
-						wave_processed_diff = 0;
 				
 				while( *buffer_load == 0){
 				}//Aguarda para que o buffer seja enchido pela primeira vez
@@ -282,14 +282,7 @@ void search_manager(int *buffer_load,
 						if(gui_run)
 							printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
 						
-						if(debug && !silent)
-							printf("\tFila: %d\n",tamanho_da_fila(toStore));
 						
-						if(debug && !silent)
-							printf("\tWave size: %d - Diff: %d\n",wave_size,wave_size-wave_processed_diff);
-						wave_processed_diff = wave_size;
-						wave_size = 0;
-							
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
 						while(*buffer_load == 0 && !THREAD_DONE[THREAD_BUFFER_LOADER]){}
@@ -330,11 +323,37 @@ void search_manager(int *buffer_load,
 void queue_manager(Fila *toStore){
 	
 	FilaItem *hold;
+	int queue_size;
+	int data_processed;
+	cudaEvent_t start,stop;
+	float elapsed_time;	
+	int d_processada;
+	FILE *fila_count;
+	FILE *enchimento_count;
+	FILE *esvaziamento_count;
+	int count;
+				
+	count = 0;
+	fila_count = fopen("fila_count.dat","w+");
+	enchimento_count = fopen("enchimento_count.dat","w+");
+	esvaziamento_count = fopen("esvaziamento_count.dat","w+");
+	
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	
 		while(!THREAD_DONE[THREAD_SEARCH]){
-			if(tamanho_da_fila(toStore) > 0){
+			d_processada = processadas;
+			data_processed = queue_size = tamanho_da_fila(toStore);
+			cudaEventRecord(start,0);
+			/*if(queue_size > 100000){		
+				fclose(enchimento_count);
+				fclose(esvaziamento_count);
+				exit(0);
+			}*/
+			while(queue_size > 0){
 				hold = desenfileirar(toStore);
 				if(hold == NULL){
-					printf("Erro alocando memoria.\n");
+					printf("Erro alocando memoria - Queue.\n");
 					//printString("Erro alocando memoria.",NULL);
 					exit(1);
 				}
@@ -342,13 +361,26 @@ void queue_manager(Fila *toStore){
 					adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 				else
 					adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-				free(hold->seq_central);
-				free(hold->seq_cincoL);
+				//free(hold->seq_central);
+				//free(hold->seq_cincoL);
 				free(hold);
+				queue_size--;
 			}
+			cudaEventRecord(stop,0);						
+			cudaEventSynchronize(stop);
+			cudaEventElapsedTime(&elapsed_time,start,stop);
+			if(data_processed > 0){
+				count++;
+				printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
+				printf("\t\tTaxa de esvaziamento da fila: %.2f seq/ms\n",data_processed / (elapsed_time));
+				printf("\t\tTaxa de enchimento da fila: %.2f seq/ms\n\n",(processadas - d_processada) / elapsed_time);
+				fprintf(esvaziamento_count,"%d %f\n",count,data_processed / (elapsed_time));
+				fprintf(enchimento_count,"%d %f\n",count,(processadas - d_processada) / elapsed_time);
+			}		
 		}
 		
-		while(tamanho_da_fila(toStore) > 0){		
+		queue_size = tamanho_da_fila(toStore);
+			while(queue_size > 0){	
 				hold = desenfileirar(toStore);
 				if(hold == NULL){
 					printf("Erro alocando memoria.\n");
@@ -359,14 +391,17 @@ void queue_manager(Fila *toStore){
 					adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
 				else
 					adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-				free(hold->seq_central);
-				free(hold->seq_cincoL);
+				//free(hold->seq_central);
+				//free(hold->seq_cincoL);
 			   free(hold);
+			   queue_size--;
 		}
-	
+	fclose(enchimento_count);
+	fclose(esvaziamento_count);
 	THREAD_DONE[THREAD_QUEUE] = TRUE;
 	return;
 }
+
 
 void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu){
 	

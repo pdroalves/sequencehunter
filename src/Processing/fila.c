@@ -88,16 +88,15 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 FilaItem* desenfileirar(Fila *f){
 		FilaItem *to_return;
 		//printf("Desenfileirando\n");
-         omp_set_lock(&fila_lock);
 		
+         omp_set_lock(&fila_lock);
 		if(f->size > 0){
 			to_return = f->first;
 			f->first = f->first->prox;
 			f->size--;
 		}else{
 			to_return = NULL;
-		}
-		
+		}		
          omp_unset_lock(&fila_lock);
 	return to_return;
 }
@@ -106,8 +105,8 @@ char* desenfileirar_main(Fila *f){
 		char *to_return;
 		FilaItem *hold_to_return;
 		//printf("Desenfileirando\n");
-         omp_set_lock(&fila_lock);
 		
+         omp_set_lock(&fila_lock);
 		if(f->size > 0){
 			hold_to_return = f->first;
 			to_return = hold_to_return->seq_central;
@@ -115,21 +114,21 @@ char* desenfileirar_main(Fila *f){
 			f->size--;
 		}else{
 			to_return = NULL;
-		}
-		
-         omp_unset_lock(&fila_lock);
+		}		
+       omp_unset_lock(&fila_lock);
 	return to_return;
 }
 
 gboolean fila_vazia(Fila *f){
-	return (f->size == 0);
+	return (tamanho_da_fila(f) == 0);
 }
 
 int tamanho_da_fila(Fila *f){
 	int size;
-         omp_set_lock(&fila_lock);
+    
+    omp_set_lock(&fila_lock);
     size = f->size;
-         omp_unset_lock(&fila_lock);
+    omp_unset_lock(&fila_lock);
 	return size;
 }
 
