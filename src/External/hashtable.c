@@ -28,10 +28,9 @@ char *db_filename;
 struct ham_db_t *db; /* hamsterdb database object */
 struct ham_env_t* env;
 
-void criar_ghash_table(char *tempo){
+void criar_ghash_table(char *tempo,const int key_max_size){
    int i;
    int j;
-	const int key_max_size = get_setup();
    
    db_filename = (char*)malloc(100*sizeof(char));
    strcpy(db_filename,"SHunter - DB - ");

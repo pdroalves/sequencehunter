@@ -15,6 +15,8 @@ ham_txn_t *txn;
 ham_cursor_t *cursor;
 omp_lock_t db_lock;
 
+#define MAX_KEY_SIZE 21
+
 void
 error(const char *foo, ham_status_t st)
 {
@@ -61,7 +63,8 @@ extern "C" void db_create(char *filename,const int key_max_size){
     txn = NULL;
     const ham_parameter_t params_env[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
-								{HAM_PARAM_PAGESIZE,2048},
+								{HAM_PARAM_CACHESIZE,500*1024*1024},
+								{HAM_PARAM_PAGESIZE,50*2048},
 								 {0,NULL} };
     const ham_parameter_t params_main_db[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
@@ -74,7 +77,7 @@ extern "C" void db_create(char *filename,const int key_max_size){
         exit(1);
 	}
 	
-	st = ham_env_create_ex(env, filename, HAM_CACHE_UNLIMITED, 0664, params_env);
+	st = ham_env_create_ex(env, filename, 0, 0664, params_env);
 
      if (st!=HAM_SUCCESS){
         error("ham_env_create_ex", st);
@@ -109,6 +112,8 @@ extern "C" void db_add(char *seq_central,char *seq_cincoL,char *tipo){
 	ham_status_t st;       /* status variable */
     ham_key_t key;         /* the structure for a key */
     ham_record_t record;   /* the structure for a record */
+    char *main_key;
+    char *overflow_key;
 	
 	Valor *v;	
     

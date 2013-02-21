@@ -420,8 +420,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 
 	buffer_load = 0;
 	toStore = criar_fila("toStore");
-	cudaMalloc((void**)&data,buffer_size*sizeof(char*));
-	
+	cudaMalloc((void**)&data,buffer_size*sizeof(char*));	
 	
 	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
@@ -472,6 +471,7 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
 	gui_run = set.gui_run;
 	dist_regiao_5l = set.dist_regiao_5l;
 	tam_regiao_5l = set.tam_regiao_5l;
+	
 	if(dist_regiao_5l && tam_regiao_5l)
 		regiao_5l = TRUE;
 	else

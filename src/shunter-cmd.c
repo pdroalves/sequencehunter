@@ -215,8 +215,11 @@
 		 set.gui_run = gui_run;
 		 set.dist_regiao_5l = dist_regiao_5l;
 		 set.tam_regiao_5l = tam_regiao_5l;
-		  
-	 criar_ghash_table(tempo);
+		 
+		if(cutmode)  
+			criar_ghash_table(tempo,bv_size);
+		else
+			criar_ghash_table(tempo,get_setup());
 		if(disable_cuda){
 	  if(!silent || gui_run)
 			printf("Forçando modo OpenMP.\n");
