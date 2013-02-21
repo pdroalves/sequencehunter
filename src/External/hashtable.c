@@ -25,9 +25,6 @@ Socket *socket;
 int dataSent;
 char *db_filename;
 
-struct ham_db_t *db; /* hamsterdb database object */
-struct ham_env_t* env;
-
 void criar_ghash_table(char *tempo,const int key_max_size){
    int i;
    int j;
@@ -48,8 +45,7 @@ void criar_ghash_table(char *tempo,const int key_max_size){
 		i++;
 	}
 	 strcat(db_filename,".db");
-	 
-	 db_init_lock();
+
 	 db_create(db_filename,key_max_size);
 	return;
 }
