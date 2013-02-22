@@ -25,26 +25,28 @@ BIN = bin/
 SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
-all:cmd gui
+all:build_cli build_gui
 
 #########################################
-##Executaveis############################
+#########################################
+#########################################
 #########################################
 
-##Linux##################################
-#########################################
-cmd:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control
+compile_cli:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control	
+	echo "CLI Compiled."
+	
+build_cli:compile_cli
 	$(BIN)build_control $(SOURCE)Headers/version
 	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(HAMSTERDB_LIB)
 	echo "CLI built"	
 	
-gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
+build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
 	make -C $(JAVA_SOURCE)Sequence\ Hunter\ GUI/
 	cp $(JAVA_SOURCE)Sequence\ Hunter\ GUI/$(GUI_NAME) $(BIN)
 	echo "Gui built"
 
 #########################################
-############ GCC e MingWW ###############
+############ GCC ######## ###############
 #########################################
 	
 $(OBJ)shunter-cmd.o:$(SOURCE)shunter-cmd.c
@@ -84,7 +86,7 @@ $(OBJ)fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
 $(OBJ)database.o:$(SOURCE)Processing/database.c
-	$(CPP) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o -lhamsterdb -I/usr/local/cuda/include $(CUDA) $(OPENMP)
+	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o -lhamsterdb -I/usr/local/cuda/include $(CUDA) $(OPENMP)
 	
 #########################################
 ############ NVCC LINUX##################
@@ -99,8 +101,7 @@ build_control:$(SOURCE)Assist/build_control.c
 	gcc $(SOURCE)Assist/build_control.c -o $(BIN)build_control
 	
 clean:
-	rm -f $(OBJ)*.o *.{c,h}~ $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME)
-	make -C $(SOURCE)Gui/ clean
+	rm -f $(OBJ)*.o $(BIN)$(CLI_NAME) $(BIN)$(GUI_NAME)
 	echo "It's clean"
 
 install:
