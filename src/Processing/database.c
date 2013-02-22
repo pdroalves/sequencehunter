@@ -151,9 +151,6 @@ extern "C" void db_add(char *seq_central,char *seq_cincoL,char *tipo){
 			return;
 		}
 		
-		v->qpares = 0;
-		v->qrlv = 0;
-		
 		record.data=v;
 		record.size=sizeof(Valor)+1;
 		

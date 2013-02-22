@@ -64,8 +64,6 @@ typedef struct buffer Buffer;
 struct value{
 	int qsensos;
 	int qasensos;
-	int qpares;
-	double qrlv;
 };
 typedef struct value Valor;
 

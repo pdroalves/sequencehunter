@@ -63,7 +63,7 @@ $(OBJ)load_data.o:$(SOURCE)External/load_data.c
 	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 $(OBJ)hashtable.o:$(SOURCE)External/hashtable.c
-	$(CC) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+	$(CC) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)socket.o:$(SOURCE)External/socket.c
 	$(CC) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
