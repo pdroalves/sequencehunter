@@ -17,7 +17,7 @@ CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar
 DB_MANAGER_NAME = database-manager.jar
 
-HAMSTERDB_LIB = /usr/local/lib/libhamsterdb.a
+SQLITE3 = -lsqlite3
 
 INSTALL = /usr/local/bin
 OBJ = obj/
@@ -25,19 +25,22 @@ BIN = bin/
 SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
-all:build_cli build_gui
+all:build
+
+c:build
+java:build_gui
 
 #########################################
 #########################################
 #########################################
 #########################################
 
-compile_cli:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control	
+compile:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control	
 	echo "CLI Compiled."
 	
-build_cli:compile_cli
+build:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control	
 	$(BIN)build_control $(SOURCE)Headers/version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(HAMSTERDB_LIB)
+	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
 	echo "CLI built"	
 	
 build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -86,7 +89,7 @@ $(OBJ)fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
 $(OBJ)database.o:$(SOURCE)Processing/database.c
-	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o -lhamsterdb -I/usr/local/cuda/include $(CUDA) $(OPENMP)
+	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3) -I/usr/local/cuda/include $(CUDA) $(OPENMP)
 	
 #########################################
 ############ NVCC LINUX##################

@@ -127,9 +127,9 @@ int main (int argc,char *argv[]) {
 	if(just_process){
 		if(!silent || gui_run)
 			printf("Iniciando em modo de processamento...\n");
-		//f = fopen(argv[1],"r");
-		open_and_load_file(argv[1]);
-		exit(0);
+			open_and_load_file(argv[1]);
+			exit(0);
+		f = fopen(argv[1],"r");
 	}else{
 
 		c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));

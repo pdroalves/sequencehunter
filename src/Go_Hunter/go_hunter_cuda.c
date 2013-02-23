@@ -5,6 +5,7 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include "../Headers/hashtable.h"
+#include "../Headers/database.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 #include "../Headers/operacoes.h"
@@ -44,8 +45,8 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
 {
   int i;
   int loaded;
-	
-  loaded = fill_buffer(h_seqs,buffer_size);//Enche o buffer e guarda a quantidade de sequencias carregadas.	
+  //Enche o buffer e guarda a quantidade de sequencias carregadas.	
+  loaded = fill_buffer(h_seqs,buffer_size);
 	
   return loaded;
 }
@@ -401,37 +402,39 @@ void queue_manager(Fila *toStore)
   while(!THREAD_DONE[THREAD_SEARCH]){
     d_processada = processadas;
     data_processed = queue_size = tamanho_da_fila(toStore);
+    db_start_transaction();
+    while(tamanho_da_fila(toStore)> 0){
     cudaEventRecord(start,0);
-    while(queue_size > 0){
+      printf("\t%d - Tamanho da fila: %d\n",count,tamanho_da_fila(toStore));
       hold = desenfileirar(toStore);
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
 	//printString("Erro alocando memoria.",NULL);
 	exit(1);
       }
-      if(hold->tipo == SENSO)
-	adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-      else
-	adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
+	adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
 	if(hold->seq_central != NULL)
       free(hold->seq_central);
 	if(hold->seq_cincoL != NULL)
       free(hold->seq_cincoL);
      free(hold);
-      queue_size--;
-    }
+     count++;
+     if(count % 50000 == 0){
+       db_commit_transaction();
+      db_start_transaction();
+     }
     cudaEventRecord(stop,0);						
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsed_time,start,stop);
+    printf("\t\t%.2f seq/ms\n",1/elapsed_time);
+    }
     if(data_processed > 0){
-      count++;
-      
       printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
-      printf("\t\tTaxa de esvaziamento da fila: %.2f seq/ms\n",data_processed / (elapsed_time));
+    /*  printf("\t\tTaxa de esvaziamento da fila: %.2f seq/ms\n",data_processed / (elapsed_time));
       printf("\t\tTaxa de enchimento da fila: %.2f seq/ms\n\n",(processadas - d_processada) / elapsed_time);
       fprintf(esvaziamento_count,"%d %f\n",count,data_processed / (elapsed_time));
-      fprintf(enchimento_count,"%d %f\n",count,(processadas - d_processada) / elapsed_time);
+      fprintf(enchimento_count,"%d %f\n",count,(processadas - d_processada) / elapsed_time);*/
     }		
   }
 		
@@ -522,6 +525,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
+  
   verbose = set.verbose;
   silent = set.silent;
   debug = set.debug;

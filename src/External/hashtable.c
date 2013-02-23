@@ -25,10 +25,6 @@ Socket *socket;
 
 int dataSent;
 char *db_filename;
-FILE *output;
-
-struct ham_db_t *db; /* hamsterdb database object */
-struct ham_env_t* env;
 
 void criar_ghash_table(char *tempo,const int key_max_size){
    int i;
@@ -49,17 +45,15 @@ void criar_ghash_table(char *tempo,const int key_max_size){
 		}
 		i++;
 	}
-	 strcat(db_filename,".db");
+	 strcat(db_filename,".sqlite3");
 	 
-	 db_init_lock();
-	 db_create(db_filename,key_max_size);
-	//output = fopen(db_filename,"w+");
+	 db_create(db_filename);
 	return;
 }
 
 void open_and_load_file(char *filename){
 	FILE *fp;
-	char db_filename[] = "database.db"; 
+	char db_filename[] = "database.sqlite3"; 
 	char *seq = (char*)malloc(200*sizeof(char));
 	char *tipo = (char*)malloc(10*sizeof(char));
 	int count;
@@ -71,22 +65,25 @@ void open_and_load_file(char *filename){
 	cudaEventCreate(&stop);
 	
 	fp = fopen(filename,"r");
-	db_create(db_filename,NULL);
+	db_create(db_filename);
 	
 	
 	count = 0;
+	db_start_transaction();
 	while(!feof(fp)){
 		fscanf(fp,"%s - %s",seq,tipo);
 		cudaEventRecord(start,0);
-		
 		db_add(seq,NULL,tipo);
 		cudaEventRecord(stop,0);
 		cudaEventSynchronize(stop);
 		cudaEventElapsedTime(&elapsedTime,start,stop);
-			
 		
 		count++;
 		printf("%d - %f seq/ms\n",count,1/elapsedTime);
+		if(count % 10000 == 0){
+			db_commit_transaction();
+			db_start_transaction();
+		}
 	}
 	
 }
@@ -100,7 +97,7 @@ void destroy_ghash_table(){
 	return;
 }
 
-void adicionar_ht(char *central,char *cincol,char *tipo){
+void adicionar_ht(char *central,char *cincol,int tipo){
 	db_add(central,cincol,tipo);
 	//fprintf(output,"%s - %s\n",central,tipo);
 	dataSent++;

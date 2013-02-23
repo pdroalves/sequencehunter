@@ -1,4 +1,4 @@
-#include <ham/hamsterdb.h>
+#include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,165 +6,118 @@
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
-ham_db_t *db; /* hamsterdb database object */
-ham_env_t* env;
-ham_txn_t *txn;
-ham_cursor_t *cursor;
-omp_lock_t db_lock;
+#define q_size 500
+// Create a db for database connection, create a pointer to sqlite3
+sqlite3 *db;
+// The number of query to be dbd,size of each query and pointer
+char *query;
+int count;
 
-#define MAX_KEY_SIZE 21
-
-void
-error(const char *foo, ham_status_t st)
-{
-	printf("%s() returned error %d: %s\n", foo, st, ham_strerror(st));
-	exit(-1);
+void db_start_transaction(){
+	/*		printf("###########################################\n");
+			printf("###########################################\n");
+			printf("################### NOVA TRANSACTION ###### \n");
+			printf("###########################################\n");
+			printf("###########################################\n");*/
+	sqlite3_exec(db, "BEGIN", 0, 0, 0);
+	return;
 }
 
- static int 
- my_string_compare(ham_db_t *db, const ham_u8_t *lhs, ham_size_t lhs_length, 
-				   const ham_u8_t *rhs, ham_size_t rhs_length)
- {
-	 (void)db;
- 
-	 return strncmp((const char *)lhs, (const char *)rhs, 
-			lhs_length<rhs_length ? lhs_length : rhs_length);
- }
-
-void db_init_lock(){
-	omp_init_lock(&db_lock);
+void db_commit_transaction(){
+	sqlite3_exec(db, "COMMIT", 0, 0, 0);
+	return;
 }
 
-void db_create_txn(){
-	ham_status_t st;       /* status variable */
-	// create a new transaction
-	st = ham_txn_begin(&txn, env,"txn",NULL, 0);
-	 if (st!=HAM_SUCCESS){
-		error("ham_txn_begin", st);
-		exit(1);
-	}
-}
-
-void db_commit_txn(){
-	ham_status_t st;       /* status variable */
-	st=ham_txn_commit(txn, 0);
-	if (st!=HAM_SUCCESS) {
-		printf("ham_txn_commit failed: %d (%s)\n", st, ham_strerror(st));
-		exit(-1);
-	}
-}
-
-void db_create(char *filename,const int key_max_size){
-	ham_status_t st;       /* status variable */
-	//db_count = fopen("db_count.dat","w+");
-	txn = NULL;
-	const ham_parameter_t params_env[] = {
-								{HAM_PARAM_KEYSIZE,key_max_size},
-								{HAM_PARAM_CACHESIZE,500*1024*1024},
-								{HAM_PARAM_PAGESIZE,50*2048},
-								 {0,NULL} };
-	const ham_parameter_t params_main_db[] = {
-								{HAM_PARAM_KEYSIZE,key_max_size},
-								 {0,NULL} };
-							 
-	// Environment
-	st = ham_env_new(&env);
-	 if (st!=HAM_SUCCESS){
-		error("ham_env_new", st);
+void db_create(char *filename){
+	int ret;
+	
+	
+	ret = sqlite3_open(filename,&db);
+	
+    if (!db)
+        printf("Not sure why, but the database didn't open.\n");
+        
+	// If connection failed, db returns NULL
+	if(ret)
+	{
+		printf("Database connection failed\n");
 		exit(1);
 	}
 	
-	st = ham_env_create_ex(env, filename, 0, 0664, params_env);
+	printf("Connection successful\n");
+	
+	// Create the SQL query for creating a table
+	char create_table[200] = "CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY,main_seq TEXT UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
 
-	 if (st!=HAM_SUCCESS){
-		error("ham_env_create_ex", st);
-		exit(1);
-	}
-	 st=ham_new(&db); // New db object
-	 if (st!=HAM_SUCCESS){
-		error("ham_new", st);
-		exit(1);
-	}
+	// Execute the query for creating the table
+	ret = sqlite3_exec(db,create_table,0,0,0);
 	
-	 st=ham_set_compare_func(db, my_string_compare);
-	 if (st) {
-	   printf("ham_set_compare_func() failed with error %d\n", st);
-		exit (-1);
-	 }
+	ret = sqlite3_exec(db,"PRAGMA synchronous=OFF",0,0,0);
+	ret = sqlite3_exec(db,"PRAGMA setAutocommit(false)",0,0,0);
+	ret = sqlite3_exec(db,"PRAGMA page_size = 4096",0,0,0);
+	ret = sqlite3_exec(db,"PRAGMA journal_size_limit = 104857600",0,0,0);
+	ret = sqlite3_exec(db,"PRAGMA count_changes = OFF",0,0,0);
+	ret = sqlite3_exec(db,"PRAGMA cache_size = 10000",0,0,0);
 	
-	 st=ham_env_create_db(env, db, 1, 0, params_main_db);
-	 if (st!=HAM_SUCCESS){
-		error("ham_env_create_db", st);
-		exit(1);
-	}
-	
-	if ((st=ham_cursor_create(db, txn, 0, &cursor))) {
-		error("ham_cursor_create", st);
-		exit(1);
-	}
+	query = (char*)malloc(q_size*sizeof(char));
+	count =0;
 	 return;
 }
 
-void db_add(char *seq_central,char *seq_cincoL,char *tipo){
-	ham_status_t st;       /* status variable */
-	ham_key_t key;         /* the structure for a key */
-	ham_record_t record;   /* the structure for a record */
-	char *main_key;
-	char *overflow_key;
+void db_add(char *seq_central,char *seq_cincoL,int tipo){
+	int ret;
+	int cols;
+	char *id;
+	sqlite3_stmt *stmt;
 	
-	Valor *v;	
+	id = (char*)malloc(10*sizeof(char));
+
+	sprintf(id,"%d",count);
 	
-	memset(&key, 0, sizeof(key));
-	memset(&record, 0, sizeof(record));
-	   
-	key.data=seq_central;
-	key.size=strlen(seq_central)*sizeof(char)+1;
+	// Verifica a existencia da seq_central no db
+	strcpy(query,"SELECT EXISTS(SELECT '");
+	strcat(query,seq_central);
+	strcat(query,"' FROM events LIMIT 1");
 	
-	omp_set_lock(&db_lock);
-	// Verifica se a chave jah estah contida no db
-	st = ham_cursor_find(cursor,&key,HAM_FIND_EXACT_MATCH);
-	if(st != HAM_KEY_NOT_FOUND){
-		// Esta contida e old_record estah atualizado
-		ham_cursor_move(cursor,&key,&record,0);
-		v = (Valor*) record.data;
-		if(strcmp(tipo,"S")){
-			v->qsensos++;
-		}else if(strcmp(tipo,"AS")){
-			v->qasensos++;
+	ret = sqlite3_prepare_v2(db,query,-1,&stmt,0);
+	
+	cols = sqlite3_column_count(stmt);;
+	if(cols > 0){
+		// Monta query para update
+		strcpy(query,"UPDATE events SET");
+		if(strcmp(tipo,"S") == 0){
+			strcat(query,"qnt_sensos=qnt_sensos+1 WHERE main_seq='");
 		}else{
-			return;
+			strcat(query,"qnt_antisensos=qnt_antisensos+1 WHERE main_seq='");			
 		}
-	}else{
-		// Nao estah contida
-		v = (Valor*)malloc(sizeof(Valor));
-	
-		if(strcmp(tipo,"S")){
-			v->qsensos = 1;
-			v->qasensos = 0;
-		}else if(strcmp(tipo,"AS")){
-			v->qsensos = 0;
-			v->qasensos = 1;		
+		strcat(query,seq_central);
+		strcat(query,"'");
+		
+	}else{	
+		// Monta query para insert
+		strcpy(query,"INSERT INTO events (id,main_seq,");
+		
+		if(tipo == SENSO){		
+			strcat(query,"qnt_sensos) VALUES(");
 		}else{
-			return;
+			strcat(query,"qnt_antisensos) VALUES('");
 		}
-		
-		record.data=v;
-		record.size=sizeof(Valor)+1;
-		
-		st=ham_cursor_insert(cursor,&key, &record, HAM_OVERWRITE);
-		if(st != HAM_SUCCESS){
-			error("ham_cursor_insert",st);
-			exit(1);
-		}
+		strcat(query,id);
+		strcat(query,",'");
+		strcat(query,seq_central);
+		strcat(query,"',");
+		strcat(query,"1);");
+		count++;
+			
 	}
-	
-	omp_unset_lock(&db_lock);
- 
+
+	// Aplica query
+	//printf("%s\n",query);
+	ret = sqlite3_exec(db,query,0,0,0);
 	return;
 }
 
 void db_destroy(){
-	ham_cursor_close(cursor);
-	ham_close(db, 0);
-	ham_delete(db);
+	sqlite3_close(db);
+	free(query);
 }
