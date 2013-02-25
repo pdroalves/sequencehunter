@@ -379,33 +379,22 @@ void search_manager(int *buffer_load,
 
 void queue_manager(Fila *toStore)
 {
-	
-  FilaItem *hold;
-  int queue_size;
-  int data_processed;
-  cudaEvent_t start,stop;
-  float elapsed_time;	
-  int d_processada;
-  FILE *fila_count;
-  FILE *enchimento_count;
-  FILE *esvaziamento_count;
   int count;
+  float elapsed_time;	
+  FILE *esvaziamento_count;
+  FilaItem *hold;
+  cudaEvent_t start,stop;
 				
   count = 0;
-  fila_count = fopen("fila_count.dat","w+");
-  enchimento_count = fopen("enchimento_count.dat","w+");
   esvaziamento_count = fopen("esvaziamento_count.dat","w+");
 	
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 	
-  while(!THREAD_DONE[THREAD_SEARCH]){
-    d_processada = processadas;
-    data_processed = queue_size = tamanho_da_fila(toStore);
+  while(!THREAD_DONE[THREAD_SEARCH]){    
     db_start_transaction();
-    while(tamanho_da_fila(toStore)> 0){
     cudaEventRecord(start,0);
-      printf("\t%d - Tamanho da fila: %d\n",count,tamanho_da_fila(toStore));
+    while(tamanho_da_fila(toStore)> 0){
       hold = desenfileirar(toStore);
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
@@ -414,50 +403,25 @@ void queue_manager(Fila *toStore)
       }
 	adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
-	if(hold->seq_central != NULL)
-      free(hold->seq_central);
-	if(hold->seq_cincoL != NULL)
-      free(hold->seq_cincoL);
-     free(hold);
-     count++;
-     if(count % 50000 == 0){
-       db_commit_transaction();
-      db_start_transaction();
-     }
-    cudaEventRecord(stop,0);						
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed_time,start,stop);
-    printf("\t\t%.2f seq/ms\n",1/elapsed_time);
-    }
-    if(data_processed > 0){
-      printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
-    /*  printf("\t\tTaxa de esvaziamento da fila: %.2f seq/ms\n",data_processed / (elapsed_time));
-      printf("\t\tTaxa de enchimento da fila: %.2f seq/ms\n\n",(processadas - d_processada) / elapsed_time);
-      fprintf(esvaziamento_count,"%d %f\n",count,data_processed / (elapsed_time));
-      fprintf(enchimento_count,"%d %f\n",count,(processadas - d_processada) / elapsed_time);*/
-    }		
+      if(hold->seq_central != NULL)
+	free(hold->seq_central);
+      if(hold->seq_cincoL != NULL)
+	free(hold->seq_cincoL);
+      free(hold);
+      count++;
+      if(count == 100000){
+	db_commit_transaction();
+	cudaEventRecord(stop,0);						
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&elapsed_time,start,stop);
+	printf("\t\t%.2f seq/ms\n",100000/elapsed_time);
+	printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
+	cudaEventRecord(start,0);
+	db_start_transaction();
+	count = 0;
+      }
+    }	
   }
-		
-  queue_size = tamanho_da_fila(toStore);
-  while(queue_size > 0){	
-    hold = desenfileirar(toStore);
-    if(hold == NULL){
-      printf("Erro alocando memoria.\n");
-      printString("Erro alocando memoria.",NULL);
-      exit(1);
-    }
-    if(hold->tipo == SENSO)
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-    else
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-    if(hold->seq_central != NULL)
-      free(hold->seq_central);
-	if(hold->seq_cincoL != NULL)
-      free(hold->seq_cincoL);
-   free(hold);
-    queue_size--;
-  }
-  fclose(enchimento_count);
   fclose(esvaziamento_count);
   THREAD_DONE[THREAD_QUEUE] = TRUE;
   return;
