@@ -420,7 +420,7 @@ void queue_manager(Fila *toStore)
       free(hold->seq_cincoL);
      free(hold);
      count++;
-     if(count % 200000 == 0){
+     if(count % 50000 == 0){
        db_commit_transaction();
       db_start_transaction();
      }
