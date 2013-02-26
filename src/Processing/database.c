@@ -35,7 +35,7 @@ void db_init_lock(){
 	omp_init_lock(&db_lock);
 }
 
-void db_create_txn(){
+void db_start_transaction(){
 	ham_status_t st;       /* status variable */
 	// create a new transaction
 	st = ham_txn_begin(&txn, env,"txn",NULL, 0);
@@ -45,7 +45,7 @@ void db_create_txn(){
 	}
 }
 
-void db_commit_txn(){
+void db_commit_transaction(){
 	ham_status_t st;       /* status variable */
 	st=ham_txn_commit(txn, 0);
 	if (st!=HAM_SUCCESS) {
@@ -60,8 +60,8 @@ void db_create(char *filename,const int key_max_size){
 	txn = NULL;
 	const ham_parameter_t params_env[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
-								{HAM_PARAM_CACHESIZE,500*1024*1024},
-								{HAM_PARAM_PAGESIZE,50*2048},
+								{HAM_PARAM_CACHESIZE,100*1024*1024},
+								{HAM_PARAM_PAGESIZE,2048},
 								 {0,NULL} };
 	const ham_parameter_t params_main_db[] = {
 								{HAM_PARAM_KEYSIZE,key_max_size},
@@ -74,7 +74,7 @@ void db_create(char *filename,const int key_max_size){
 		exit(1);
 	}
 	
-	st = ham_env_create_ex(env, filename, 0, 0664, params_env);
+	st = ham_env_create_ex(env, filename, HAM_ENABLE_TRANSACTIONS, 0664, params_env);
 
 	 if (st!=HAM_SUCCESS){
 		error("ham_env_create_ex", st);
@@ -105,7 +105,7 @@ void db_create(char *filename,const int key_max_size){
 	 return;
 }
 
-void db_add(char *seq_central,char *seq_cincoL,char *tipo){
+void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	ham_status_t st;       /* status variable */
 	ham_key_t key;         /* the structure for a key */
 	ham_record_t record;   /* the structure for a record */
@@ -120,45 +120,43 @@ void db_add(char *seq_central,char *seq_cincoL,char *tipo){
 	key.data=seq_central;
 	key.size=strlen(seq_central)*sizeof(char)+1;
 	
-	omp_set_lock(&db_lock);
-	// Verifica se a chave jah estah contida no db
+	/*// Verifica se a chave jah estah contida no db
 	st = ham_cursor_find(cursor,&key,HAM_FIND_EXACT_MATCH);
-	if(st != HAM_KEY_NOT_FOUND){
+	if(st == HAM_SUCCESS){
 		// Esta contida e old_record estah atualizado
 		ham_cursor_move(cursor,&key,&record,0);
 		v = (Valor*) record.data;
-		if(strcmp(tipo,"S")){
+		if(tipo == SENSO){
 			v->qsensos++;
-		}else if(strcmp(tipo,"AS")){
+		}else if(tipo == ANTISENSO){
 			v->qasensos++;
 		}else{
 			return;
 		}
-	}else{
+	}else{*/
 		// Nao estah contida
-		v = (Valor*)malloc(sizeof(Valor));
-	
-		if(strcmp(tipo,"S")){
+		/*v = (Valor*)malloc(sizeof(Valor));
+		
+		if(tipo == SENSO){
 			v->qsensos = 1;
 			v->qasensos = 0;
-		}else if(strcmp(tipo,"AS")){
+		}else if(tipo == ANTISENSO){
 			v->qsensos = 0;
 			v->qasensos = 1;		
 		}else{
 			return;
-		}
+		}*/
 		
-		record.data=v;
-		record.size=sizeof(Valor)+1;
+		record.data="Oi";
+		record.size=2*sizeof(char)+1;
 		
 		st=ham_cursor_insert(cursor,&key, &record, HAM_OVERWRITE);
 		if(st != HAM_SUCCESS){
 			error("ham_cursor_insert",st);
 			exit(1);
 		}
-	}
+	//}
 	
-	omp_unset_lock(&db_lock);
  
 	return;
 }

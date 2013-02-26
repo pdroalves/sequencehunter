@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <omp.h> 
 #include <glib.h>
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <time.h>
 #include "../Headers/hashtable.h"
+#include "../Headers/database.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 #include "../Headers/operacoes.h"
@@ -30,6 +33,7 @@ enum threads {
   THREAD_BUFFER_LOADER,
   THREAD_SEARCH,
   THREAD_QUEUE,
+  THREAD_DATABASE,
   OMP_NTHREADS
 };
 
@@ -42,12 +46,8 @@ int processadas;
 
 int load_buffer_CUDA(char **h_seqs,int seq_size)
 {
-  int i;
-  int loaded;
-	
-  loaded = fill_buffer(h_seqs,buffer_size);//Enche o buffer e guarda a quantidade de sequencias carregadas.	
-	
-  return loaded;
+  //Enche o buffer e guarda a quantidade de sequencias carregadas.	
+  return fill_buffer(h_seqs,buffer_size);;
 }
 
 
@@ -135,7 +135,7 @@ void buffer_manager(	int *buffer_load,
 	  
       *buffer_load = load_buffer_CUDA(h_data,seq_size);
       for(i=0;i < *buffer_load;i++)
-			cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+	cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
     }
   }
 		
@@ -181,6 +181,7 @@ void search_manager(int *buffer_load,
   cudaEvent_t startV,stopV;
   char **local_data;
   float elapsedTimeK,elapsedTime,elapsedTimeV;
+  Event *hold_event;
   gboolean retorno;
 				
   fsenso=fasenso=0;
@@ -288,14 +289,14 @@ void search_manager(int *buffer_load,
 	    gap = h_search_gaps[i] - dist_regiao_5l;
 	    strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 	    cincol[tam_regiao_5l] = '\0';
+	  }else{
+	      cincol = NULL;
 	  }
 								
 	  fsenso++;
 	  wave_size++;
-	  if(regiao_5l)
-	    enfileirar(toStore,central,cincol,SENSO);
-	  else
-	    enfileirar(toStore,central,NULL,SENSO);
+	    hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+	  enfileirar(toStore,hold_event);
 	  break;
 	case ANTISENSO:
 	  central = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -313,14 +314,14 @@ void search_manager(int *buffer_load,
 	    gap = h_search_gaps[i] + dist_regiao_5l-1;
 	    strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 	    cincol[tam_regiao_5l] = '\0';
+	  }else{
+	      cincol = NULL;
 	  }
 
 	  fasenso++;
 	  wave_size++;
-	  if(regiao_5l)											
-	    enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-	  else
-	    enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
+	    hold_event = (void*)criar_elemento_fila_event(central,cincol,ANTISENSO);
+	  enfileirar(toStore,hold_event);
 								
 	  break;
 	}
@@ -378,85 +379,77 @@ void search_manager(int *buffer_load,
 
 void queue_manager(Fila *toStore)
 {
-	
-  FilaItem *hold;
-  int queue_size;
-  int data_processed;
-  cudaEvent_t start,stop;
-  float elapsed_time;	
-  int d_processada;
-  FILE *fila_count;
-  FILE *enchimento_count;
-  FILE *esvaziamento_count;
   int count;
+  float elapsed_time;	
+  clock_t cStartClock;
+  Event *hold;
+  float tempo;
 				
   count = 0;
-  fila_count = fopen("fila_count.dat","w+");
-  enchimento_count = fopen("enchimento_count.dat","w+");
-  esvaziamento_count = fopen("esvaziamento_count.dat","w+");
-	
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-	
+		
   while(!THREAD_DONE[THREAD_SEARCH]){
-    d_processada = processadas;
-    data_processed = queue_size = tamanho_da_fila(toStore);
-    cudaEventRecord(start,0);
-    while(queue_size > 0){
+    cStartClock = clock();
+    while(tamanho_da_fila(toStore)> 0){
       hold = desenfileirar(toStore);
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
-	//printString("Erro alocando memoria.",NULL);
 	exit(1);
       }
-      if(hold->tipo == SENSO)
-	adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-      else
-	adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-	
-	if(hold->seq_central != NULL)
-      free(hold->seq_central);
-	if(hold->seq_cincoL != NULL)
-      free(hold->seq_cincoL);
-     free(hold);
-      queue_size--;
-    }
-    cudaEventRecord(stop,0);						
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsed_time,start,stop);
-    if(data_processed > 0){
-      count++;
       
-      printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
-      printf("\t\tTaxa de esvaziamento da fila: %.2f seq/ms\n",data_processed / (elapsed_time));
-      printf("\t\tTaxa de enchimento da fila: %.2f seq/ms\n\n",(processadas - d_processada) / elapsed_time);
-      fprintf(esvaziamento_count,"%d %f\n",count,data_processed / (elapsed_time));
-      fprintf(enchimento_count,"%d %f\n",count,(processadas - d_processada) / elapsed_time);
-    }		
+      adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+	
+      if(hold->seq_central != NULL)
+	free(hold->seq_central);
+      if(hold->seq_cincoL != NULL)
+	free(hold->seq_cincoL);
+      free(hold);
+      
+      count++;
+      if(count % 10000 == 0){
+	tempo = (clock() - cStartClock) / (double)CLOCKS_PER_SEC;
+	printf("\t\tTo tmp file:%.2f seq/s\n",10000.0/tempo);
+	printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
+	cStartClock = clock();
+      }
+    }	
   }
-		
-  queue_size = tamanho_da_fila(toStore);
-  while(queue_size > 0){	
-    hold = desenfileirar(toStore);
-    if(hold == NULL){
-      printf("Erro alocando memoria.\n");
-      printString("Erro alocando memoria.",NULL);
+  
+  
+  /*clock_t cStartClock;
+  int queue_size;
+  int pos_queue_size;
+  int count;
+  FILE* fp;
+  
+  fp = fopen("enchimento.dat","w");
+  count = 0;
+  
+  while(!THREAD_DONE[THREAD_SEARCH]){
+    queue_size = tamanho_da_fila(toStore);
+    sleep(1);
+    pos_queue_size = tamanho_da_fila(toStore);
+    count++;
+    printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
+    fprintf(fp,"%d %d\n",count,pos_queue_size-queue_size);
+    if(count == 600){
+      fclose(fp);
       exit(1);
     }
-    if(hold->tipo == SENSO)
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-    else
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-    if(hold->seq_central != NULL)
-      free(hold->seq_central);
-	if(hold->seq_cincoL != NULL)
-      free(hold->seq_cincoL);
-   free(hold);
-    queue_size--;
   }
-  fclose(enchimento_count);
-  fclose(esvaziamento_count);
+  fclose(fp);*/
   THREAD_DONE[THREAD_QUEUE] = TRUE;
+  return;
+}
+
+void database_manager(){
+  
+  while(!THREAD_DONE[THREAD_QUEUE]){
+    while(tmp_queue_size() > 0){
+      load_from_tmp_file();
+    }
+  }
+  
+  THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
 }
 
@@ -482,26 +475,31 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   THREAD_DONE[THREAD_QUEUE] = FALSE;
+  THREAD_DONE[THREAD_DATABASE] = FALSE;
   
 		
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream) shared(toStore)
-	  {		
-	#pragma omp sections
-		{
-	#pragma omp section
-		  {
-			buffer_manager(&buffer_load,seqSize_an,stream);
-		  }
-	#pragma omp section
-		  {
-			search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
-		  }
-	#pragma omp section
-		  {
-			queue_manager(toStore);
-		  }	
-		}
-   }
+  #pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream) shared(toStore)
+    {		
+	  #pragma omp sections
+	  {
+	  #pragma omp section
+	    {
+		buffer_manager(&buffer_load,seqSize_an,stream);
+	    }
+	  #pragma omp section
+	    {
+		search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
+	    }
+	  #pragma omp section
+	    {
+		queue_manager(toStore);
+	    }
+	  #pragma omp section
+	    {
+		database_manager();
+	    }
+	  }
+  }
 	
   //printf("Iterações executadas: %d.\n",iter);
   //free(tmp);
@@ -522,6 +520,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
+  
   verbose = set.verbose;
   silent = set.silent;
   debug = set.debug;
