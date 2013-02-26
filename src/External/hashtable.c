@@ -25,6 +25,7 @@ Socket *socket;
 
 int dataSent;
 char *db_filename;
+FILE *tmp_file;
 
 void criar_ghash_table(char *tempo,const int key_max_size){
    int i;
@@ -69,20 +70,25 @@ void open_and_load_file(char *filename){
 	
 	
 	count = 0;
+	cudaEventRecord(start,0);
 	db_start_transaction();
 	while(!feof(fp)){
 		fscanf(fp,"%s - %s",seq,tipo);
-		cudaEventRecord(start,0);
-		db_add(seq,NULL,tipo);
-		cudaEventRecord(stop,0);
-		cudaEventSynchronize(stop);
-		cudaEventElapsedTime(&elapsedTime,start,stop);
+		if(strcmp(tipo,"S") == 0)
+			adicionar_ht(seq,NULL,SENSO);
+		else
+			adicionar_ht(seq,NULL,ANTISENSO);
 		
 		count++;
-		printf("%d - %f seq/ms\n",count,1/elapsedTime);
-		if(count % 10000 == 0){
+		if(count == 50000){
 			db_commit_transaction();
+			cudaEventRecord(stop,0);
+			cudaEventSynchronize(stop);
+			cudaEventElapsedTime(&elapsedTime,start,stop);
+			printf("%d - %f seq/ms\n",count,50000/elapsedTime);
+			cudaEventRecord(start,0);
 			db_start_transaction();
+			count = 0;
 		}
 	}
 	

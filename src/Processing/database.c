@@ -64,7 +64,7 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA journal_mode = OFF",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
@@ -95,27 +95,29 @@ void db_create(char *filename){
 }
 
 void db_add(char *seq_central,char *seq_cincoL,int tipo){
-	int ret;
+	int ret=0;
 	int cols;
     char * sErrMsg;
     
+    
     if(tipo == SENSO){
+		sqlite3_reset(stmt_senso);
 		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);	
 		ret = sqlite3_step(stmt_senso);
 		if(ret != SQLITE_DONE){
 			printf("Error on SQLite step 1 - %d. => %s\n",ret,seq_central);
 			exit(1);
 		}
-		sqlite3_reset(stmt_senso);
 	}else{
+		sqlite3_reset(stmt_antisenso);	
 		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
 		ret = sqlite3_step(stmt_antisenso);
 		if(ret != SQLITE_DONE){
 			printf("Error on SQLite step 2 - %d. => %s\n",ret,seq_central);
 			exit(1);
 		}
-		sqlite3_reset(stmt_antisenso);				
 	}
+	
 	count++;
 	return;
 }
