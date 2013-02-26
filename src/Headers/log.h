@@ -1,8 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
-typedef struct lista_ligada lista_ligada;
-typedef int   gboolean;
-void prepareLog(char *tempo,gboolean gui);
+#include "linkedlist.h"
+void prepareLog(char *tempo,int gui);
 void print_open_file(char *c);
 void printStringInt(char *c,int n);
 void printString(char *c,char *s);

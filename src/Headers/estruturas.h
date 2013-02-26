@@ -24,12 +24,6 @@
 #define SKT_MSG_GETSIZE "size"
 #define SKT_MSG_PROCESS "processDB"
 
-typedef struct _GSocketConnection GSocketConnection;
-typedef struct _GSocketClient GSocketClient;
-typedef struct _GInputStream GInputStream;
-typedef struct _GOutputStream GOutputStream;
-typedef void* gpointer;
-
 struct event{
 	char *seq_central;
 	char *seq_cincoL;
@@ -93,10 +87,10 @@ struct params{
 typedef struct params Params;
 
 struct socket{
-	GSocketConnection * connection;
-	GSocketClient * client;
-	GInputStream * istream;
-	GOutputStream * ostream;	
+	struct _GSocketConnection * connection;
+	struct _GSocketClient * client;
+	struct _GInputStream * istream;
+	struct _GOutputStream * ostream;	
 };
 typedef struct socket Socket;
 
