@@ -122,10 +122,10 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 			exit(1);
 		}
 	}else{
-        sqlite3_clear_bindings(stmt_antisenso);
-		sqlite3_reset(stmt_antisenso);	
 		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
 		ret = sqlite3_step(stmt_antisenso);
+		sqlite3_reset(stmt_antisenso);	
+		sqlite3_clear_bindings(stmt_antisenso);
 		if(ret != SQLITE_DONE){
 			printf("Error on SQLite step 2 - %d. => %s\n",ret,seq_central);
 			exit(1);

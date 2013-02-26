@@ -305,11 +305,6 @@ void nc_database_manager(Fila* toStore){
     printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
     fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
     fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
-    if(count == 100){
-      fclose(fp_enchimento);
-      fclose(fp_esvaziamento);
-      exit(1);
-    }
   }
   fclose(fp_enchimento);
   fclose(fp_esvaziamento);

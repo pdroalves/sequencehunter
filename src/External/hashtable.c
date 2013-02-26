@@ -87,7 +87,7 @@ void adicionar_ht(char *central,char *cincol,int tipo){
 		db_commit_transaction();
 		db_start_transaction();
 	}
-	db_add(central,NULL,SENSO);
+	db_add(central,NULL,tipo);
 	data_added++;
 	
 	return;
