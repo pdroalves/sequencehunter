@@ -55,8 +55,7 @@ Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo){
 }
 
 
-
-void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
+void enfileirar(Fila *f,void *data){
 	// Essa funcao nao aloca memoria para os dados recebidos.
 	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
 	// com free(), vai dar problema.
@@ -64,7 +63,7 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 		//printf("Enfileirando: %s\n",seq);
 		
 		novo = (FilaItem*)malloc(sizeof(FilaItem));
-		novo->data = (void*)criar_elemento_fila_event(seq_central,seq_cincoL,tipo);
+		novo->data = data;
 
          omp_set_lock(&f->fila_lock);
 		switch(f->size){
@@ -86,13 +85,13 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 	return;
 }
 
-Event* desenfileirar(Fila *f){
-		Event *to_return;
+void* desenfileirar(Fila *f){
+		void *to_return;
 		//printf("Desenfileirando\n");
          omp_set_lock(&f->fila_lock);
          
 		if(f->size > 0){
-			to_return = (Event*)f->first->data;
+			to_return = f->first->data;
 			f->first = f->first->prox;
 			f->size--;
 		}else{

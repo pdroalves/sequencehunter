@@ -25,6 +25,9 @@ BIN = bin/
 SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
+OPT = -Wall
+OPT_CUDA = -Xcompiler
+
 all:build
 
 c:build
@@ -68,8 +71,7 @@ $(OBJ)load_data.o:$(SOURCE)External/load_data.c
 	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 $(OBJ)hashtable.o:$(SOURCE)External/hashtable.c
-	$(CC) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
-	
+	$(CC) -g -c $(SOURCE)External/hashtable.c -o $(OBJ)hashtable.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 $(OBJ)socket.o:$(SOURCE)External/socket.c
 	$(CC) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
@@ -89,7 +91,7 @@ $(OBJ)fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
 $(OBJ)database.o:$(SOURCE)Processing/database.c
-	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3) -I/usr/local/cuda/include $(CUDA) $(OPENMP)
+	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
 	
 #########################################
 ############ NVCC LINUX##################

@@ -31,6 +31,7 @@ enum threads {
   THREAD_BUFFER_LOADER,
   THREAD_SEARCH,
   THREAD_QUEUE,
+  THREAD_DATABASE,
   OMP_NTHREADS
 };
 
@@ -43,12 +44,8 @@ int processadas;
 
 int load_buffer_CUDA(char **h_seqs,int seq_size)
 {
-  int i;
-  int loaded;
   //Enche o buffer e guarda a quantidade de sequencias carregadas.	
-  loaded = fill_buffer(h_seqs,buffer_size);
-	
-  return loaded;
+  return fill_buffer(h_seqs,buffer_size);;
 }
 
 
@@ -182,6 +179,7 @@ void search_manager(int *buffer_load,
   cudaEvent_t startV,stopV;
   char **local_data;
   float elapsedTimeK,elapsedTime,elapsedTimeV;
+  Event *hold_event;
   gboolean retorno;
 				
   fsenso=fasenso=0;
@@ -289,14 +287,14 @@ void search_manager(int *buffer_load,
 	    gap = h_search_gaps[i] - dist_regiao_5l;
 	    strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 	    cincol[tam_regiao_5l] = '\0';
+	  }else{
+	      cincol = NULL;
 	  }
 								
 	  fsenso++;
 	  wave_size++;
-	  if(regiao_5l)
-	    enfileirar(toStore,central,cincol,SENSO);
-	  else
-	    enfileirar(toStore,central,NULL,SENSO);
+	    hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+	  enfileirar(toStore,hold_event);
 	  break;
 	case ANTISENSO:
 	  central = (char*)malloc((seqSize_an+1)*sizeof(char));
@@ -314,14 +312,14 @@ void search_manager(int *buffer_load,
 	    gap = h_search_gaps[i] + dist_regiao_5l-1;
 	    strncpy(cincol,h_data[i] + gap,tam_regiao_5l);
 	    cincol[tam_regiao_5l] = '\0';
+	  }else{
+	      cincol = NULL;
 	  }
 
 	  fasenso++;
 	  wave_size++;
-	  if(regiao_5l)											
-	    enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-	  else
-	    enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
+	    hold_event = (void*)criar_elemento_fila_event(central,cincol,ANTISENSO);
+	  enfileirar(toStore,hold_event);
 								
 	  break;
 	}
@@ -392,38 +390,47 @@ void queue_manager(Fila *toStore)
   cudaEventCreate(&stop);
 	
   while(!THREAD_DONE[THREAD_SEARCH]){    
-    db_start_transaction();
-    cudaEventRecord(start,0);
     while(tamanho_da_fila(toStore)> 0){
+    cudaEventRecord(start,0);
       hold = desenfileirar(toStore);
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
-	//printString("Erro alocando memoria.",NULL);
 	exit(1);
       }
-	adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+      
+      adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
       if(hold->seq_central != NULL)
 	free(hold->seq_central);
       if(hold->seq_cincoL != NULL)
 	free(hold->seq_cincoL);
       free(hold);
+      
       count++;
-      if(count == 100000){
-	db_commit_transaction();
+      if(count % 100000 == 0){
 	cudaEventRecord(stop,0);						
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&elapsed_time,start,stop);
-	printf("\t\t%.2f seq/ms\n",100000/elapsed_time);
+	printf("\t\tTo tmp file:%.2f seq/ms\n",100000/elapsed_time);
 	printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
 	cudaEventRecord(start,0);
-	db_start_transaction();
-	count = 0;
       }
     }	
   }
   fclose(esvaziamento_count);
   THREAD_DONE[THREAD_QUEUE] = TRUE;
+  return;
+}
+
+void database_manager(){
+  
+  while(!THREAD_DONE[THREAD_QUEUE]){
+    while(tmp_queue_size() > 0){
+      load_from_tmp_file();
+    }
+  }
+  
+  THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
 }
 
@@ -449,26 +456,31 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   THREAD_DONE[THREAD_QUEUE] = FALSE;
+  THREAD_DONE[THREAD_DATABASE] = FALSE;
   
 		
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream) shared(toStore)
-	  {		
-	#pragma omp sections
-		{
-	#pragma omp section
-		  {
-			buffer_manager(&buffer_load,seqSize_an,stream);
-		  }
-	#pragma omp section
-		  {
-			search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
-		  }
-	#pragma omp section
-		  {
-			queue_manager(toStore);
-		  }	
-		}
-   }
+  #pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream) shared(toStore)
+    {		
+	  #pragma omp sections
+	  {
+	  #pragma omp section
+	    {
+		buffer_manager(&buffer_load,seqSize_an,stream);
+	    }
+	  #pragma omp section
+	    {
+		search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
+	    }
+	  #pragma omp section
+	    {
+		queue_manager(toStore);
+	    }
+	  #pragma omp section
+	    {
+		database_manager();
+	    }
+	  }
+  }
 	
   //printf("Iterações executadas: %d.\n",iter);
   //free(tmp);

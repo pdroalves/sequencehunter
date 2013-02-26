@@ -13,10 +13,14 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define OMP_NTHREADS 3
-#define THREAD_BUFFER_LOADER 0
-#define THREAD_SEARCH 1
-#define THREAD_QUEUE 2
+// Lista de threads a serem criados
+enum threads { 
+  THREAD_BUFFER_LOADER,
+  THREAD_SEARCH,
+  THREAD_QUEUE,
+  THREAD_DATABASE,
+  OMP_NTHREADS
+};
 #define buffer_size 4096 // Capacidade máxima do buffer
 
 #define MIN_LEN_TO_PRINT 100000
@@ -87,6 +91,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		const int blocoV = blocos-bloco1-bloco2;
 		int wave_size;
 		int wave_processed_diff;
+		Event *hold_event;
 		
 		THREAD_DONE[THREAD_SEARCH] = FALSE;
 		p = 0;
@@ -166,15 +171,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 									gap = search_gaps[i] - dist_regiao_5l;
 									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
 									cincol[tam_regiao_5l] = '\0';
+								}else{
+									cincol = NULL;
 								}
 								
 							fsensos++;
 							wave_size++;
-										if(regiao_5l)
-											enfileirar(toStore,central,cincol,SENSO);
-										else
-											enfileirar(toStore,central,NULL,SENSO);
-
+								hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+							  enfileirar(toStore,hold_event);
 								buffer->load--;
 							break;
 							case ANTISENSO:
@@ -194,14 +198,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 									gap = search_gaps[i] + dist_regiao_5l-1;
 									strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
 									cincol[tam_regiao_5l] = '\0';
+								}else{
+									cincol = NULL;
 								}
 
 								fasensos++;
 							wave_size++;
-										if(regiao_5l)
-											enfileirar(toStore,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-										else
-											enfileirar(toStore,get_antisenso(central),NULL,ANTISENSO);
+							hold_event = (void*)criar_elemento_fila_event(central,cincol,ANTISENSO);
+						  enfileirar(toStore,hold_event);
 								buffer->load--;
 							break;
 							default:
@@ -247,34 +251,60 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 }
 
 void nc_queue_manager(Fila *toStore){
-	Event *hold;
+
+  int count;
+  float elapsed_time;	
+  Event *hold;
+  cudaEvent_t start,stop;
+				
+  count = 0;
 	
-	while(!THREAD_DONE[THREAD_SEARCH]){
-		if(tamanho_da_fila(toStore) > 0){
-			hold = desenfileirar(toStore);
-			adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
-		    if(hold->seq_central != NULL)
-				free(hold->seq_central);
-		    if(hold->seq_cincoL != NULL)
-				free(hold->seq_cincoL);
-			free(hold);
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+	
+  while(!THREAD_DONE[THREAD_SEARCH]){    
+    while(tamanho_da_fila(toStore)> 0){
+    cudaEventRecord(start,0);
+      hold = desenfileirar(toStore);
+      if(hold == NULL){
+		printf("Erro alocando memoria - Queue.\n");
+		exit(1);
+      }
+      
+      adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+	
+      if(hold->seq_central != NULL)
+		free(hold->seq_central);
+      if(hold->seq_cincoL != NULL)
+		free(hold->seq_cincoL);
+      free(hold);
+      
+      count++;
+      if(count % 1000000 == 0){
+		cudaEventRecord(stop,0);						
+		cudaEventSynchronize(stop);
+		cudaEventElapsedTime(&elapsed_time,start,stop);
+		printf("\t\tTo tmp file:%.2f seq/ms\n",1000000/elapsed_time);
+		printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
+		cudaEventRecord(start,0);
 		}
-	}
-	
-	while(tamanho_da_fila(toStore) > 0){		
-			hold = desenfileirar(toStore);
-			adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
-		    if(hold->seq_central != NULL)
-				free(hold->seq_central);
-		    if(hold->seq_cincoL != NULL)
-				free(hold->seq_cincoL);
-		   free(hold);
-	}
-	
-	THREAD_DONE[THREAD_QUEUE] = TRUE;
-	return;
+    }	
+  }
+  THREAD_DONE[THREAD_QUEUE] = TRUE;
+  return;
 }
 
+void nc_database_manager(){
+  
+  while(!THREAD_DONE[THREAD_QUEUE]){
+    while(tmp_queue_size() > 0){
+      load_from_tmp_file();
+    }
+  }
+  
+  THREAD_DONE[THREAD_DATABASE] = TRUE;
+  return;
+}
 
 
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
@@ -303,6 +333,10 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 			#pragma omp section
 			{
 				nc_queue_manager(toStore);
+			}
+			#pragma omp section
+			{
+				nc_database_manager();
 			}
 		}
 	}

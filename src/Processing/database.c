@@ -53,7 +53,7 @@ void db_create(char *filename){
 	printf("Connection successful\n");
 	
 	// Create the SQL query for creating a table
-	char create_table[200] = "CREATE TABLE IF NOT EXISTS events (main_seq TEXT NOT NULL UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
+	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL UNIQUE PRIMARY KEY,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
 
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,create_table,NULL, NULL,&sErrMsg);
@@ -64,7 +64,22 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA journal_mode = OFF",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
+	if(sErrMsg != NULL){
+		printf("Pragma error: %s\n",sErrMsg);
+		exit(1);
+	}	
+	sqlite3_exec(db,"PRAGMA cache_size = 500000",NULL,NULL,&sErrMsg);
+	if(sErrMsg != NULL){
+		printf("Pragma error: %s\n",sErrMsg);
+		exit(1);
+	}
+	sqlite3_exec(db,"PRAGMA ignore_check_constarints = true",NULL,NULL,&sErrMsg);
+	if(sErrMsg != NULL){
+		printf("Pragma error: %s\n",sErrMsg);
+		exit(1);
+	}	
+	sqlite3_exec(db,"PRAGMA temp_store = 2",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
@@ -101,14 +116,16 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
     
     
     if(tipo == SENSO){
+		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);
+		ret = sqlite3_step(stmt_senso);	
+        sqlite3_clear_bindings(stmt_senso);
 		sqlite3_reset(stmt_senso);
-		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);	
-		ret = sqlite3_step(stmt_senso);
 		if(ret != SQLITE_DONE){
 			printf("Error on SQLite step 1 - %d. => %s\n",ret,seq_central);
 			exit(1);
 		}
 	}else{
+        sqlite3_clear_bindings(stmt_antisenso);
 		sqlite3_reset(stmt_antisenso);	
 		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
 		ret = sqlite3_step(stmt_antisenso);
