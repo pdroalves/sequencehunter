@@ -22,8 +22,7 @@ enum threads {
   OMP_NTHREADS
 };
 #define buffer_size 4096 // Capacidade máxima do buffer
-
-#define MIN_LEN_TO_PRINT 100000
+#define LOADER_QUEUE_MAX_SIZE 1e6
 
 gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
@@ -36,6 +35,7 @@ gboolean gui_run;
 int dist_regiao_5l;
 int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
+int sent_to_db;
 
 const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
@@ -227,7 +227,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 						
 						// Aguarda o buffer estar cheio novamente
 						cudaEventRecord(startV,0);
-					while(buffer->load==0){}
+					while(buffer->load==0 && !THREAD_DONE[THREAD_BUFFER_LOADER]|| tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
 						cudaEventRecord(stopV,0);						
 						cudaEventSynchronize(stopV);
 						cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
@@ -252,55 +252,67 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
 void nc_queue_manager(Fila *toStore){
 
-  int count;
-  float elapsed_time;	
-  Event *hold;
-  cudaEvent_t start,stop;
-				
-  count = 0;
-	
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-	
-  while(!THREAD_DONE[THREAD_SEARCH]){    
+ Event *hold;
+  float tempo;
+  
+  sent_to_db =0;
+		
+  while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
-    cudaEventRecord(start,0);
       hold = desenfileirar(toStore);
+      sent_to_db++;
       if(hold == NULL){
-		printf("Erro alocando memoria - Queue.\n");
-		exit(1);
+	printf("Erro alocando memoria - Queue.\n");
+	exit(1);
       }
       
       adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
       if(hold->seq_central != NULL)
-		free(hold->seq_central);
+	free(hold->seq_central);
       if(hold->seq_cincoL != NULL)
-		free(hold->seq_cincoL);
+	free(hold->seq_cincoL);
       free(hold);
-      
-      count++;
-      if(count % 1000000 == 0){
-		cudaEventRecord(stop,0);						
-		cudaEventSynchronize(stop);
-		cudaEventElapsedTime(&elapsed_time,start,stop);
-		printf("\t\tTo tmp file:%.2f seq/ms\n",1000000/elapsed_time);
-		printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
-		cudaEventRecord(start,0);
-		}
     }	
   }
+  
   THREAD_DONE[THREAD_QUEUE] = TRUE;
   return;
 }
 
-void nc_database_manager(){
+void nc_database_manager(Fila* toStore){
+  clock_t cStartClock;
+  int queue_size;
+  int pos_queue_size;
+  int pre_sent_to_db;
+  int pos_sent_to_db;
+  int count;
+  FILE* fp_enchimento;
+  FILE* fp_esvaziamento;
   
-  while(!THREAD_DONE[THREAD_QUEUE]){
-    while(tmp_queue_size() > 0){
-      load_from_tmp_file();
+  fp_enchimento = fopen("enchimento.dat","w");
+  fp_esvaziamento = fopen("esvaziamento.dat","w");
+  count = 0;
+  
+  while(!THREAD_DONE[THREAD_SEARCH]){
+    queue_size = tamanho_da_fila(toStore);
+    pre_sent_to_db = sent_to_db;
+    sleep(1);
+    pos_queue_size = tamanho_da_fila(toStore);
+    pos_sent_to_db = sent_to_db;
+    count++;
+    printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
+    printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
+    fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
+    fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+    if(count == 100){
+      fclose(fp_enchimento);
+      fclose(fp_esvaziamento);
+      exit(1);
     }
   }
+  fclose(fp_enchimento);
+  fclose(fp_esvaziamento);
   
   THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
@@ -336,7 +348,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 			}
 			#pragma omp section
 			{
-				nc_database_manager();
+				nc_database_manager(toStore);
 			}
 		}
 	}

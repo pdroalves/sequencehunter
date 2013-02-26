@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <omp.h> 
 #include <glib.h>
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <time.h>
 #include "../Headers/hashtable.h"
 #include "../Headers/database.h"
 #include "../Headers/estruturas.h"
@@ -24,6 +26,7 @@ gboolean regiao_5l;
 gboolean gui_run;
 int dist_regiao_5l;
 int tam_regiao_5l;
+int sent_to_db;
 
 
 // Lista de threads a serem criados
@@ -55,7 +58,7 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
 		       int seq_size )
 {
 	
-  ////////////////////////////////////////// 							
+  ////////////////////////////////////////// 		
   // Carrega o buffer //////////////////////
   //////////////////////////////////////////
   int i;
@@ -77,11 +80,11 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
 		while(tamanho_da_fila(loaded_data_queue) < LOADER_QUEUE_MAX_SIZE)
 		{
 		  loaded = load_buffer_CUDA(h_data, seq_size);
-					
+
 		  // Enfileira tudo
 		  for(i=0; i < loaded; i++)
 			enfileirar(loaded_data_queue,h_data[i],NULL,NULL);
-					
+
 		  // Precisa garantir que nada seja sobrescrito
 		  for(i=0;i<buffer_size;i++)
 			h_data[i] = (char*)malloc((seq_size+1)*sizeof(char));
@@ -96,10 +99,10 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
 
 
 void buffer_manager(	int *buffer_load,
-						int seq_size,
-						cudaStream_t stream )
+	int seq_size,
+	cudaStream_t stream )
 {
-							
+		
   int i;
   int loaded;
   //////////////////////////////////////////
@@ -152,7 +155,7 @@ void search_manager(int *buffer_load,
 		    int blocoV,
 		    cudaStream_t stream1,
 		    cudaStream_t stream2)
-{						
+{	
   int i;
   short int *h_resultados;
   short int *d_resultados;
@@ -181,7 +184,7 @@ void search_manager(int *buffer_load,
   float elapsedTimeK,elapsedTime,elapsedTimeV;
   Event *hold_event;
   gboolean retorno;
-				
+
   fsenso=fasenso=0;
 
   cudaEventCreate(&start);
@@ -190,72 +193,71 @@ void search_manager(int *buffer_load,
   cudaEventCreate(&stopK);
   cudaEventCreate(&startV);
   cudaEventCreate(&stopV);
-				
-  // Alloc: resultados de cada iteracao				
+
+  // Alloc: resultados de cada iteracao
   h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
   h_search_gaps = (short int*)malloc(buffer_size*sizeof(short int));
   cudaMalloc((void**)&d_resultados,buffer_size*sizeof(short int));
   cudaMalloc((void**)&d_search_gaps,buffer_size*sizeof(short int));
-				
+
   // Alloc: Seqs encontradas
   //CPU
   cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
   for(i=0;i<buffer_size;i++)
     cudaHostAlloc((void**)&h_founded[i],(seqSize_an+1)*sizeof(char),cudaHostAllocDefault);
-				
+
   //GPU	
   d_tmp_founded = (char**)malloc(buffer_size*sizeof(char*));
   for(i=0;i<buffer_size;i++)
     cudaHostAlloc((void**)&d_tmp_founded[i],(seqSize_an+1)*sizeof(char),cudaHostAllocDefault);
-					
+
   cudaMalloc((void**)&d_founded,buffer_size*sizeof(char**));
   cudaMemcpy(d_founded,d_tmp_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice);
-				
+
   // Alloc: Vetor temporario
   local_data = (char**)malloc(buffer_size*sizeof(char*));
   for(i=0;i<buffer_size;i++)
     local_data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
   hold_seq = (char*)malloc(seqSize_an*sizeof(char));
-				
+
   iteration_time = 0;
-				
+
   processadas = 0;
-				
+
   while( *buffer_load == 0){
   }//Aguarda para que o buffer seja enchido pela primeira vez
-				
+
   cudaEventRecord(start,0);
   while( *buffer_load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequencias para encher o buffer
     cudaEventRecord(stop,0);
     cudaEventSynchronize(stop);
-						
+	
     cudaEventElapsedTime(&elapsedTime,start,stop);
     if(debug&&!silent)
       printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
     iteration_time += elapsedTime;
-						
+	
     loaded = *buffer_load;
-						
     // Execuca iteracao
     cudaEventRecord(startK,0);
     k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,data,d_resultados,d_search_gaps,d_founded,stream2);//Kernel de busca
-    cudaEventRecord(stopK,0);						
+    cudaEventRecord(stopK,0);	
     cudaEventSynchronize(stopK);
     cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
     if(debug&&!silent)
       printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-						
-    // Guarda tempo gasto na iteracao					
+	
+    // Guarda tempo gasto na iteracao
     iteration_time += elapsedTimeK;
-						
-						
+	
+	
     cudaEventRecord(start,0);
-						
+	
     // Inicia processamento dos resultados
     processadas += loaded;
     cudaStreamSynchronize(stream2);
-						
+	
     // Em casos reais, cada iteracao possuirah poucos eventos. Portanto, a copia de dados para 
     // o host serah bastante casual e esse trecho nao deve implicar em perda de desempenho.	
     cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
@@ -263,21 +265,21 @@ void search_manager(int *buffer_load,
     //for(i=0;i<buffer_size;i++)
     //	if(h_resultados[i] != 0)
     //		cudaMemcpyAsync(h_founded[i],h_data[i],seqSize_an*sizeof(char),cudaMemcpyDeviceToHost,stream2);
-						
+	
     //cudaStreamSynchronize(stream2);
-						
-						
+	
+	
     // Guarda o que foi encontrado
     for(i=0;i<loaded;i++)
       if(h_resultados[i] != 0){
 	switch(h_resultados[i]){		
-	case SENSO:									
+	case SENSO:
 	  central = (char*)malloc((seqSize_an+1)*sizeof(char));
 	  if(central_cut){
 	    gap = h_search_gaps[i];
 	    strncpy(central,h_data[i]+gap,blocoV);
 	    central[blocoV] = '\0';
-	  }else{									
+	  }else{
 	    strncpy(central,h_data[i],seqSize_an+1);
 	  }
 
@@ -290,7 +292,7 @@ void search_manager(int *buffer_load,
 	  }else{
 	      cincol = NULL;
 	  }
-								
+			
 	  fsenso++;
 	  wave_size++;
 	    hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
@@ -302,11 +304,11 @@ void search_manager(int *buffer_load,
 	    gap = h_search_gaps[i];
 	    strncpy(central,h_data[i]+gap,blocoV);
 	    central[blocoV] = '\0';
-	  }else{									
+	  }else{
 	    strncpy(central,h_data[i],seqSize_an+1);
 	  }
 
-								
+			
 	  if(regiao_5l){
 	    cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 	    gap = h_search_gaps[i] + dist_regiao_5l-1;
@@ -320,28 +322,28 @@ void search_manager(int *buffer_load,
 	  wave_size++;
 	    hold_event = (void*)criar_elemento_fila_event(central,cincol,ANTISENSO);
 	  enfileirar(toStore,hold_event);
-								
+			
 	  break;
 	}
       }
-							
+		
     // Libera para o thread buffer_manager carregar mais sequencias
     *buffer_load = 0;		
-						
+	
     checkCudaError();
     if(verbose && !silent)
       printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
     if(gui_run)
       printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
-						
-						
+	
+	
     // Aguarda o buffer estar cheio novamente
     cudaEventRecord(startV,0);
-    while(*buffer_load == 0 && !THREAD_DONE[THREAD_BUFFER_LOADER]){}
-    cudaEventRecord(stopV,0);						
+    while(*buffer_load == 0 && !THREAD_DONE[THREAD_BUFFER_LOADER] || tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
+    cudaEventRecord(stopV,0);	
     cudaEventSynchronize(stopV);
     cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
-						
+	
     // Evita desincronização
     if(	*buffer_load == 0 && 
 		THREAD_DONE[THREAD_BUFFER_LOADER])
@@ -351,7 +353,7 @@ void search_manager(int *buffer_load,
     
     if(debug && !silent)
       printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);
-						
+	
   }
   if(!silent)
     if(iteration_time > 10000)
@@ -377,22 +379,15 @@ void search_manager(int *buffer_load,
 
 void queue_manager(Fila *toStore)
 {
-  int count;
-  float elapsed_time;	
-  FILE *esvaziamento_count;
   Event *hold;
-  cudaEvent_t start,stop;
-				
-  count = 0;
-  esvaziamento_count = fopen("esvaziamento_count.dat","w+");
-	
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-	
-  while(!THREAD_DONE[THREAD_SEARCH]){    
+  float tempo;
+  
+  sent_to_db =0;
+		
+  while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
-    cudaEventRecord(start,0);
       hold = desenfileirar(toStore);
+      sent_to_db++;
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
 	exit(1);
@@ -405,30 +400,55 @@ void queue_manager(Fila *toStore)
       if(hold->seq_cincoL != NULL)
 	free(hold->seq_cincoL);
       free(hold);
-      
-      count++;
-      if(count % 100000 == 0){
-	cudaEventRecord(stop,0);						
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&elapsed_time,start,stop);
-	printf("\t\tTo tmp file:%.2f seq/ms\n",100000/elapsed_time);
-	printf("\t\tTamanho da fila: %d\n",tamanho_da_fila(toStore));
-	cudaEventRecord(start,0);
-      }
     }	
   }
-  fclose(esvaziamento_count);
+  
+  
+  
   THREAD_DONE[THREAD_QUEUE] = TRUE;
   return;
 }
 
-void database_manager(){
-  
+void report_manager(Fila *toStore){
+  /*
   while(!THREAD_DONE[THREAD_QUEUE]){
     while(tmp_queue_size() > 0){
       load_from_tmp_file();
     }
+  }*/
+  
+  clock_t cStartClock;
+  int queue_size;
+  int pos_queue_size;
+  int pre_sent_to_db;
+  int pos_sent_to_db;
+  int count;
+  FILE* fp_enchimento;
+  FILE* fp_esvaziamento;
+  
+  fp_enchimento = fopen("enchimento.dat","w");
+  fp_esvaziamento = fopen("esvaziamento.dat","w");
+  count = 0;
+  
+  while(!THREAD_DONE[THREAD_SEARCH]){
+    queue_size = tamanho_da_fila(toStore);
+    pre_sent_to_db = sent_to_db;
+    sleep(1);
+    pos_queue_size = tamanho_da_fila(toStore);
+    pos_sent_to_db = sent_to_db;
+    count++;
+    printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
+    printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
+    fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
+    fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+    if(count == 100){
+      fclose(fp_enchimento);
+      fclose(fp_esvaziamento);
+      exit(1);
+    }
   }
+  fclose(fp_enchimento);
+  fclose(fp_esvaziamento);
   
   THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
@@ -477,7 +497,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	    }
 	  #pragma omp section
 	    {
-		database_manager();
+		report_manager(toStore);
 	    }
 	  }
   }

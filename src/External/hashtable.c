@@ -12,12 +12,13 @@
 #include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <time.h>
 #include "../Headers/database.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define MAX_PER_TMP_FILE 100000
+#define MAX_PER_TMP_FILE 10000
 
 int data_added;
 char *db_filename;
@@ -58,6 +59,7 @@ void criar_ghash_table(char *tempo,const int key_max_size){
 	 db_create(db_filename);
 	 tmp_file_fila = criar_fila("Temp Files");
 	 new_tmp_file();
+		db_start_transaction();
 	return;
 }
 
@@ -70,7 +72,7 @@ void destroy_ghash_table(){
 }
 
 void adicionar_ht(char *central,char *cincol,int tipo){
-	if(data_added > MAX_PER_TMP_FILE){
+	/*if(data_added > MAX_PER_TMP_FILE){
 		enfileirar(tmp_file_fila,tmp_file);
 		new_tmp_file();
 		data_added = 0;
@@ -79,7 +81,13 @@ void adicionar_ht(char *central,char *cincol,int tipo){
 		fprintf(tmp_file,"\t%s\t%s",central,"S");
 	else
 		fprintf(tmp_file,"%s\t%s",central,"AS");
+	*/
 	
+	if(data_added > MAX_PER_TMP_FILE){
+		db_commit_transaction();
+		db_start_transaction();
+	}
+	db_add(central,NULL,SENSO);
 	data_added++;
 	
 	return;

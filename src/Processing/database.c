@@ -53,7 +53,7 @@ void db_create(char *filename){
 	printf("Connection successful\n");
 	
 	// Create the SQL query for creating a table
-	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL UNIQUE PRIMARY KEY,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
+	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
 
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,create_table,NULL, NULL,&sErrMsg);
@@ -79,12 +79,7 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}	
-	sqlite3_exec(db,"PRAGMA temp_store = 2",NULL,NULL,&sErrMsg);
-	if(sErrMsg != NULL){
-		printf("Pragma error: %s\n",sErrMsg);
-		exit(1);
-	}
-	
+
 	count =0;
 	
 	insertSQL = (char*)malloc(500*sizeof(char));
@@ -92,17 +87,19 @@ void db_create(char *filename){
 	// Compile insert-statement
 	// Sensos
 	sprintf(insertSQL, "INSERT OR REPLACE INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,COALESCE((SELECT qnt_sensos FROM events WHERE main_seq=@SEQ)+1,1),(SELECT qnt_antisensos FROM events WHERE main_seq=@SEQ))");
+	//sprintf(insertSQL, "INSERT INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,1,0)");
 	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_senso, 0);
 	if(ret != SQLITE_OK){
-		printf("Error on statement compile - %d.\n",ret);
+		printf("Error on statement compile 1 - %d.\n",ret);
 		exit(1);
 	}
 	
 	// Antisensos
 	sprintf(insertSQL, "INSERT OR REPLACE INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,(SELECT qnt_sensos FROM events WHERE main_seq=@SEQ),COALESCE((SELECT qnt_antisensos FROM events WHERE main_seq=@SEQ)+1,1))");
+	//sprintf(insertSQL, "INSERT INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,0,1)");
 	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_antisenso, 0);
 	if(ret != SQLITE_OK){
-		printf("Error on statement compile - %d.\n",ret);
+		printf("Error on statement compile 2 - %d.\n",ret);
 		exit(1);
 	}
 	
