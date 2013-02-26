@@ -7,6 +7,7 @@
 //		27/03/2012
 
 #ifndef ESTRUTURAS_H
+#include <omp.h>
 #define ESTRUTURAS_H
 #define SENSO 1
 #define ANTISENSO 2
@@ -40,6 +41,7 @@ struct fila{
 	FilaItem *first;//Primeiro elemento da fila
 	FilaItem *end;//Ultimo elemento da fila
 	int size;//Elementos na fila
+	omp_lock_t fila_lock;
 };
 typedef struct fila Fila;
 

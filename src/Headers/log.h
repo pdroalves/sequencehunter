@@ -1,5 +1,6 @@
 #ifndef LOG_H
 #define LOG_H
+typedef int gboolean;
 void prepareLog(char *tempo,gboolean gui);
 void print_open_file(char *c);
 void printStringInt(char *c,int n);
