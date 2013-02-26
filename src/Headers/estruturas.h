@@ -7,6 +7,7 @@
 //		27/03/2012
 
 #ifndef ESTRUTURAS_H
+#include <omp.h>
 #define ESTRUTURAS_H
 #define SENSO 1
 #define ANTISENSO 2
@@ -27,11 +28,17 @@ typedef struct _GSocketConnection GSocketConnection;
 typedef struct _GSocketClient GSocketClient;
 typedef struct _GInputStream GInputStream;
 typedef struct _GOutputStream GOutputStream;
+typedef void* gpointer;
 
-struct fila_item{
+struct event{
 	char *seq_central;
 	char *seq_cincoL;
 	int tipo;
+};
+typedef struct event Event;
+
+struct fila_item{
+	gpointer *elem;
 	struct fila_item *prox;//Ponteiro para o item seguinte
 };
 typedef struct fila_item FilaItem;
@@ -41,6 +48,7 @@ struct fila{
 	FilaItem *first;//Primeiro elemento da fila
 	FilaItem *end;//Ultimo elemento da fila
 	int size;//Elementos na fila
+	omp_lock_t fila_lock;
 };
 typedef struct fila Fila;
 

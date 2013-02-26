@@ -247,29 +247,27 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 }
 
 void nc_queue_manager(Fila *toStore){
-	FilaItem *hold;
+	Event *hold;
 	
 	while(!THREAD_DONE[THREAD_SEARCH]){
 		if(tamanho_da_fila(toStore) > 0){
 			hold = desenfileirar(toStore);
-			if(hold->tipo == SENSO)
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-			else
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-		    free(hold->seq_central);
-		    free(hold->seq_cincoL);
+			adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+		    if(hold->seq_central != NULL)
+				free(hold->seq_central);
+		    if(hold->seq_cincoL != NULL)
+				free(hold->seq_cincoL);
 			free(hold);
 		}
 	}
 	
 	while(tamanho_da_fila(toStore) > 0){		
 			hold = desenfileirar(toStore);
-			if(hold->tipo == SENSO)
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"S");
-			else
-				adicionar_ht(hold->seq_central,hold->seq_cincoL,"AS");
-		    free(hold->seq_central);
-		    free(hold->seq_cincoL);
+			adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+		    if(hold->seq_central != NULL)
+				free(hold->seq_central);
+		    if(hold->seq_cincoL != NULL)
+				free(hold->seq_cincoL);
 		   free(hold);
 	}
 	

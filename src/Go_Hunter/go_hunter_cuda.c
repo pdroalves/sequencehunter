@@ -382,7 +382,7 @@ void queue_manager(Fila *toStore)
   int count;
   float elapsed_time;	
   FILE *esvaziamento_count;
-  FilaItem *hold;
+  Event *hold;
   cudaEvent_t start,stop;
 				
   count = 0;
