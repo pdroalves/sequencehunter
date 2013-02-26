@@ -136,7 +136,7 @@ void buffer_manager(	int *buffer_load,
 	  
       *buffer_load = load_buffer_CUDA(h_data,seq_size);
       for(i=0;i < *buffer_load;i++)
-			cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+	cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
     }
   }
 		

@@ -38,15 +38,15 @@ struct event{
 typedef struct event Event;
 
 struct fila_item{
-	gpointer *elem;
+	void* data;
 	struct fila_item *prox;//Ponteiro para o item seguinte
 };
 typedef struct fila_item FilaItem;
 
 struct fila{
-	char *nome;
 	FilaItem *first;//Primeiro elemento da fila
 	FilaItem *end;//Ultimo elemento da fila
+	char *nome;
 	int size;//Elementos na fila
 	omp_lock_t fila_lock;
 };

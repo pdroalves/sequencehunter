@@ -25,19 +25,22 @@ void init_lock(Fila* f){
 Fila* criar_fila(char *nome){
 	Fila *f;
 	f = (Fila*)malloc(sizeof(Fila));
-	f->nome = nome;
-	f->size = 0;
-	init_lock(f);
+	if(f){
+		f->nome = nome;
+		f->size = 0;
+		init_lock(f);
+		f->first = NULL;
+		f->end = NULL;
+	}
 	return f;
 }
 
-Event* criar_elemento_fila_item(char *seq_central,char *seq_cincoL,int tipo){
+Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo){
 	// Essa funcao nao aloca memoria para os dados recebidos.
 	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
 	// com free(), vai dar problema.
 	Event* novo;
 	
-	novo = NULL;
 	novo = (Event*)malloc(sizeof(Event));
 	if(novo != NULL){
 		novo->seq_central = seq_central;
@@ -57,16 +60,16 @@ void enfileirar(Fila *f,char *seq_central,char *seq_cincoL,int tipo){
 	// Essa funcao nao aloca memoria para os dados recebidos.
 	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
 	// com free(), vai dar problema.
-		Event* novo;
+		FilaItem* novo;
 		//printf("Enfileirando: %s\n",seq);
 		
-		novo = NULL;
-		novo = criar_elemento_fila_item(seq_central,seq_cincoL,tipo);
+		novo = (FilaItem*)malloc(sizeof(FilaItem));
+		novo->data = (void*)criar_elemento_fila_event(seq_central,seq_cincoL,tipo);
 
          omp_set_lock(&f->fila_lock);
 		switch(f->size){
 			case 0:
-				f->first->elem = novo;
+				f->first = novo;
 			break;
 			case 1:
 				f->end = novo;
@@ -89,7 +92,7 @@ Event* desenfileirar(Fila *f){
          omp_set_lock(&f->fila_lock);
          
 		if(f->size > 0){
-			to_return = f->first;
+			to_return = (Event*)f->first->data;
 			f->first = f->first->prox;
 			f->size--;
 		}else{
