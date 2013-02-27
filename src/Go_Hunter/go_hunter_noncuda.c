@@ -42,6 +42,8 @@ int dist_regiao_5l;
 int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
 int sent_to_db;
+int p;
+int fsensos,fasensos;
 
 const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
@@ -85,7 +87,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		int gap;
 		int tam;
 		int i;
-		int p;
 		char *central;
 		char *cincol;
 		char *seqToSave;
@@ -93,7 +94,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 				cudaEvent_t startV,stopV;
 		float elapsedTimeK,elapsedTime,elapsedTimeV;
 		float iteration_time;
-		int fsensos,fasensos;
 		const int blocoV = blocos-bloco1-bloco2;
 		int wave_size;
 		int wave_processed_diff;
@@ -220,8 +220,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 						}
 					}
 					
-					if(verbose && !silent)		
-						printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
 					if(gui_run){
 							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
 					}
@@ -296,8 +294,10 @@ void nc_report_manager(Fila* toStore){
   FILE* fp_enchimento;
   FILE* fp_esvaziamento;
   
+    if(verbose && !silent){
   fp_enchimento = fopen("enchimento.dat","w");
   fp_esvaziamento = fopen("esvaziamento.dat","w");
+	}
   count = 0;
   
   while(!THREAD_DONE[THREAD_SEARCH]){
@@ -307,14 +307,18 @@ void nc_report_manager(Fila* toStore){
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
     count++;
-    printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
-    printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
-    fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
-    fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+	if(verbose && !silent){
+		printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
+		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
+		printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
+		fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
+		fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+	}
   }
-  fclose(fp_enchimento);
-  fclose(fp_esvaziamento);
-  
+    if(verbose && !silent){
+	  fclose(fp_enchimento);
+	  fclose(fp_esvaziamento);
+	}
   THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
 }
