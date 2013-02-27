@@ -112,7 +112,11 @@ int get_setup(){
 	
 	//Suponho que todas as sequências nas bibliotecas tem o mesmo tamanho
 	tmp = (char*)malloc(TAM_MAX*sizeof(char));
+	fscanf(f[0],"%*s");
+	fscanf(f[0],"%*s");
 	fscanf(f[0],"%s",tmp);
+	fscanf(f[0],"%*s");
+	fscanf(f[0],"%*s");
 	
 	while(!check_seq_valida(tmp)) 
 		fscanf(f[0],"%s",tmp);		
@@ -131,7 +135,7 @@ void prepare_buffer(Buffer *b,int c){
 	int n;
 	char* tamanho_do_buffer;
 	
-	get_setup(&n);
+	n = get_setup();
 	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));

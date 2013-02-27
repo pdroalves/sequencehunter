@@ -95,7 +95,7 @@ int main (int argc,char *argv[]) {
 	char *tempo;
 
 	// Necessario para Glib 2.28
-	g_type_init();
+	//g_type_init();
 
 	//##########################
 	//Carrega parametros de entrada

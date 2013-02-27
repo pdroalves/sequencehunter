@@ -4,6 +4,12 @@
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#ifdef _WIN32
+#include <Windows.h>
+#define SLEEP(a) Sleep(1000*a)
+#else
+#define SLEEP(a) sleep(a)
+#endif
 #include "../Headers/hashtable.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/go_hunter_noncuda.h"
@@ -259,7 +265,7 @@ void nc_queue_manager(Fila *toStore){
 		
   while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
-      hold = desenfileirar(toStore);
+      hold = (Event*)desenfileirar(toStore);
       sent_to_db++;
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
@@ -297,7 +303,7 @@ void nc_report_manager(Fila* toStore){
   while(!THREAD_DONE[THREAD_SEARCH]){
     queue_size = tamanho_da_fila(toStore);
     pre_sent_to_db = sent_to_db;
-    sleep(1);
+    SLEEP(1);
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
     count++;
