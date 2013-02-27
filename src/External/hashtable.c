@@ -53,10 +53,10 @@ void criar_ghash_table(char *tempo,const int key_max_size){
 		}
 		i++;
 	}
-	 strcat(db_filename,".sqlite3");
+	 strcat(db_filename,".db");
 	 
 	 // Inicializa db, cria fila para tmp_file e inicia primeiro arquivo temporario
-	 db_create(db_filename);
+	 sh_db_create(db_filename);
 	 tmp_file_fila = criar_fila("Temp Files");
 	 new_tmp_file();
 		db_start_transaction();
@@ -160,7 +160,7 @@ void open_and_load_file(char *filename){
     cStartClock = clock();
 	
 	fp = fopen(filename,"r");
-	db_create(db_filename);
+	sh_db_create(db_filename);
 	
 	count = 0;
 	db_start_transaction();

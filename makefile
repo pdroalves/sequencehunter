@@ -17,7 +17,8 @@ CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar
 DB_MANAGER_NAME = database-manager.jar
 
-SQLITE3 = -lsqlite3
+BERKELEYDB = -I/usr/local/BerkeleyDB.5.3/include /usr/local/BerkeleyDB.5.3/lib/libdb.a -pthread
+BERKELEYDB_CUDA = -I/usr/local/BerkeleyDB.5.3/include /usr/local/BerkeleyDB.5.3/lib/libdb.a -Xcompiler -pthread
 
 INSTALL = /usr/local/bin
 OBJ = obj/
@@ -43,7 +44,7 @@ compile:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OB
 	
 build:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o build_control	
 	$(BIN)build_control $(SOURCE)Headers/version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
+	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)hashtable.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(BERKELEYDB_CUDA)
 	echo "CLI built"	
 	
 build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -91,7 +92,7 @@ $(OBJ)fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
 $(OBJ)database.o:$(SOURCE)Processing/database.c
-	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
+	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(BERKELEYDB)  $(OPENMP)
 	
 #########################################
 ############ NVCC LINUX##################

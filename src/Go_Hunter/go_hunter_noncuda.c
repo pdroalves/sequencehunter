@@ -280,7 +280,7 @@ void nc_queue_manager(Fila *toStore){
   return;
 }
 
-void nc_database_manager(Fila* toStore){
+void nc_report_manager(Fila* toStore){
   clock_t cStartClock;
   int queue_size;
   int pos_queue_size;
@@ -305,11 +305,6 @@ void nc_database_manager(Fila* toStore){
     printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
     fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
     fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
-    if(count == 100){
-      fclose(fp_enchimento);
-      fclose(fp_esvaziamento);
-      exit(1);
-    }
   }
   fclose(fp_enchimento);
   fclose(fp_esvaziamento);
@@ -348,7 +343,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 			}
 			#pragma omp section
 			{
-				nc_database_manager(toStore);
+				nc_report_manager(toStore);
 			}
 		}
 	}

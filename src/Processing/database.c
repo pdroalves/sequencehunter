@@ -1,4 +1,4 @@
-#include <sqlite3.h>
+#include <db.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,100 +6,41 @@
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
-#define q_size 500
-#define DATABASE ":memory:"
-// Create a db for database connection, create a pointer to sqlite3
-sqlite3 *db;
-// The number of query to be dbd,size of each query and pointer
-int count;
-char *insertSQL;
-sqlite3_stmt *stmt_senso;
-sqlite3_stmt *stmt_antisenso;
+
+DB *dbp; // DB handler
 
 void db_start_transaction(){
-    char * sErrMsg;
-	/*		printf("###########################################\n");
-			printf("###########################################\n");
-			printf("################### NOVA TRANSACTION ###### \n");
-			printf("###########################################\n");
-			printf("###########################################\n");*/
-	sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, &sErrMsg);
-	return;
+	int ret; // Retorno
+   return;
 }
 
 void db_commit_transaction(){
-	char *sErrMsg;
-	sqlite3_exec(db, "COMMIT TRANSACTION", 0, 0, &sErrMsg);
+	int ret; // Retorno
 	return;
 }
 
-void db_create(char *filename){
-	int ret;
-    char * sErrMsg;
-    sqlite3_stmt *stmt;
+void sh_db_create(char *filename){
+	int ret; // Retorno
+	u_int32_t flags; // Flags
 	
-	ret = sqlite3_open(filename,&db);
-	
-    if (!db)
-        printf("Not sure why, but the database didn't open.\n");
-        
-	// If connection failed, db returns NULL
-	if(ret)
-	{
-		printf("Database connection failed\n");
+	ret = db_create(&dbp,NULL,0);
+	if(ret != 0){
+		printf("Couldn't create DB!\n");
 		exit(1);
 	}
 	
-	printf("Connection successful\n");
 	
-	// Create the SQL query for creating a table
-	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
-
-	// Execute the query for creating the table
-	ret = sqlite3_exec(db,create_table,NULL, NULL,&sErrMsg);
+	flags = DB_CREATE; // Seta a flag
 	
-	// Setup DB
-	sqlite3_exec(db,"PRAGMA synchronous = OFF", NULL,NULL,&sErrMsg);
-	if(sErrMsg != NULL){
-		printf("Pragma error: %s\n",sErrMsg);
-		exit(1);
-	}
-	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
-	if(sErrMsg != NULL){
-		printf("Pragma error: %s\n",sErrMsg);
-		exit(1);
-	}	
-	sqlite3_exec(db,"PRAGMA cache_size = 500000",NULL,NULL,&sErrMsg);
-	if(sErrMsg != NULL){
-		printf("Pragma error: %s\n",sErrMsg);
-		exit(1);
-	}
-	sqlite3_exec(db,"PRAGMA ignore_check_constarints = true",NULL,NULL,&sErrMsg);
-	if(sErrMsg != NULL){
-		printf("Pragma error: %s\n",sErrMsg);
-		exit(1);
-	}	
-
-	count =0;
-	
-	insertSQL = (char*)malloc(500*sizeof(char));
-	
-	// Compile insert-statement
-	// Sensos
-	sprintf(insertSQL, "INSERT OR REPLACE INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,COALESCE((SELECT qnt_sensos FROM events WHERE main_seq=@SEQ)+1,1),(SELECT qnt_antisensos FROM events WHERE main_seq=@SEQ))");
-	//sprintf(insertSQL, "INSERT INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,1,0)");
-	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_senso, 0);
-	if(ret != SQLITE_OK){
-		printf("Error on statement compile 1 - %d.\n",ret);
-		exit(1);
-	}
-	
-	// Antisensos
-	sprintf(insertSQL, "INSERT OR REPLACE INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,(SELECT qnt_sensos FROM events WHERE main_seq=@SEQ),COALESCE((SELECT qnt_antisensos FROM events WHERE main_seq=@SEQ)+1,1))");
-	//sprintf(insertSQL, "INSERT INTO events (main_seq,qnt_sensos,qnt_antisensos) VALUES (@SEQ,0,1)");
-	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_antisenso, 0);
-	if(ret != SQLITE_OK){
-		printf("Error on statement compile 2 - %d.\n",ret);
+	ret = dbp->open(dbp,
+					NULL,
+					filename,
+					NULL,
+					DB_BTREE,
+					flags,
+					0664);
+	if(ret != 0){
+		printf("Error on DB opening!\n");
 		exit(1);
 	}
 	
@@ -107,37 +48,38 @@ void db_create(char *filename){
 }
 
 void db_add(char *seq_central,char *seq_cincoL,int tipo){
-	int ret=0;
-	int cols;
-    char * sErrMsg;
-    
-    
-    if(tipo == SENSO){
-		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);
-		ret = sqlite3_step(stmt_senso);	
-        sqlite3_clear_bindings(stmt_senso);
-		sqlite3_reset(stmt_senso);
-		if(ret != SQLITE_DONE){
-			printf("Error on SQLite step 1 - %d. => %s\n",ret,seq_central);
-			exit(1);
-		}
+	int ret; // Retorno
+	DBT key,data;
+	Valor record;
+	
+	if(tipo == SENSO){
+		record.qsensos = 1;
+		record.qasensos = 0;
 	}else{
-		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
-		ret = sqlite3_step(stmt_antisenso);
-		sqlite3_reset(stmt_antisenso);	
-		sqlite3_clear_bindings(stmt_antisenso);
-		if(ret != SQLITE_DONE){
-			printf("Error on SQLite step 2 - %d. => %s\n",ret,seq_central);
-			exit(1);
-		}
+		record.qsensos = 0;
+		record.qasensos = 1;
 	}
 	
-	count++;
+	// Zera DBTs antes de usa-las
+	memset(&key,0,sizeof(DBT));
+	memset(&data,0,sizeof(DBT));
+	
+	key.data = seq_central;
+	key.size = strlen(seq_central)*sizeof(char)+1;
+	
+	data.data = &record;
+	data.size = sizeof(record);
+	
+	ret = dbp->put(dbp,NULL,&key,&data,0);
+	if(ret == DB_KEYEXIST){
+		printf("Error on adding data!\n");
+		exit(1);
+	}
+	
 	return;
 }
 
 void db_destroy(){
-	sqlite3_finalize(stmt_senso);
-	sqlite3_finalize(stmt_antisenso);
-	sqlite3_close(db);
+	int ret; // Retorno
+	
 }
