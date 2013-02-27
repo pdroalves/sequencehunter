@@ -29,6 +29,8 @@ void sh_db_create(char *filename){
 		exit(1);
 	}
 	
+	dbp->set_cachesize(dbp,1,3*1e9,1);
+	
 	
 	flags = DB_CREATE; // Seta a flag
 	
@@ -36,7 +38,7 @@ void sh_db_create(char *filename){
 					NULL,
 					filename,
 					NULL,
-					DB_BTREE,
+					DB_HASH,
 					flags,
 					0664);
 	if(ret != 0){
@@ -47,17 +49,23 @@ void sh_db_create(char *filename){
 	 return;
 }
 
+void update_record(Valor *persistente,Valor *atualizacao){
+	persistente->qsensos += atualizacao->qsensos;
+	persistente->qasensos += atualizacao->qasensos;
+	return;
+}
+
 void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	int ret; // Retorno
 	DBT key,data;
-	Valor record;
+	Valor new_record;
 	
 	if(tipo == SENSO){
-		record.qsensos = 1;
-		record.qasensos = 0;
+		new_record.qsensos = 1;
+		new_record.qasensos = 0;
 	}else{
-		record.qsensos = 0;
-		record.qasensos = 1;
+		new_record.qsensos = 0;
+		new_record.qasensos = 1;
 	}
 	
 	// Zera DBTs antes de usa-las
@@ -67,13 +75,18 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	key.data = seq_central;
 	key.size = strlen(seq_central)*sizeof(char)+1;
 	
-	data.data = &record;
-	data.size = sizeof(record);
+	data.data = &new_record;
+	data.size = sizeof(Valor);
 	
-	ret = dbp->put(dbp,NULL,&key,&data,0);
+	ret = dbp->put(dbp,NULL,&key,&data,DB_NOOVERWRITE);
 	if(ret == DB_KEYEXIST){
-		printf("Error on adding data!\n");
-		exit(1);
+		ret = dbp->get(dbp,NULL,&key,&data,0);
+		if(ret == 0){
+			update_record(data.data,&new_record);
+		}else{
+			printf("Error on db update!\n");
+			exit(1);
+		}
 	}
 	
 	return;
@@ -81,5 +94,6 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 
 void db_destroy(){
 	int ret; // Retorno
-	
+	if(dbp != NULL)
+		dbp->close(dbp,0);
 }
