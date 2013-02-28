@@ -6,6 +6,12 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <time.h>
+#ifdef _WIN32
+#include <Windows.h>
+#define SLEEP(a) Sleep(1000*a)
+#else
+#define SLEEP(a) sleep(a)
+#endif
 #include "../Headers/hashtable.h"
 #include "../Headers/database.h"
 #include "../Headers/estruturas.h"
@@ -27,6 +33,11 @@ gboolean gui_run;
 int dist_regiao_5l;
 int tam_regiao_5l;
 int sent_to_db;
+int fsenso;
+int fasenso;	
+char **data;
+char **h_data;
+int processadas;
 
 
 // Lista de threads a serem criados
@@ -37,11 +48,7 @@ enum threads {
   THREAD_DATABASE,
   OMP_NTHREADS
 };
-
-char **data;
-char **h_data;
 gboolean THREAD_DONE[OMP_NTHREADS];
-int processadas;
 
 
 
@@ -172,8 +179,6 @@ void search_manager(int *buffer_load,
   int p;
   int last_p;
   float iteration_time;
-  int fsenso;
-  int fasenso;	
   int gap;
   int wave_size;
   int wave_processed_diff;
@@ -331,10 +336,6 @@ void search_manager(int *buffer_load,
     *buffer_load = 0;		
 	
     checkCudaError();
-    if(verbose && !silent)
-      printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
-    if(gui_run)
-      printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
 	
 	
     // Aguarda o buffer estar cheio novamente
@@ -386,7 +387,7 @@ void queue_manager(Fila *toStore)
 		
   while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
-      hold = desenfileirar(toStore);
+      hold = (Event*)desenfileirar(toStore);
       sent_to_db++;
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
@@ -426,24 +427,34 @@ void report_manager(Fila *toStore){
   FILE* fp_enchimento;
   FILE* fp_esvaziamento;
   
-  fp_enchimento = fopen("enchimento.dat","w");
-  fp_esvaziamento = fopen("esvaziamento.dat","w");
+    if(verbose && !silent){
+	  fp_enchimento = fopen("enchimento.dat","w");
+	  fp_esvaziamento = fopen("esvaziamento.dat","w");
+	}
   count = 0;
   
   while(!THREAD_DONE[THREAD_SEARCH]){
     queue_size = tamanho_da_fila(toStore);
     pre_sent_to_db = sent_to_db;
-    sleep(1);
+    SLEEP(1);
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
     count++;
-    printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
-    printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
-    fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
-    fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+	
+    if(gui_run)
+      printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
+    if(verbose && !silent){
+		printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
+		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
+		printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
+		fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
+		fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+	}
   }
-  fclose(fp_enchimento);
-  fclose(fp_esvaziamento);
+    if(verbose && !silent){
+	  fclose(fp_enchimento);
+	  fclose(fp_esvaziamento);
+	}
   
   THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
