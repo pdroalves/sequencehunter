@@ -18,7 +18,7 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define MAX_PER_TMP_FILE 10000
+#define MAX_PER_TMP_FILE 1000000
 
 int data_added;
 char *db_filename;
@@ -53,18 +53,21 @@ void criar_ghash_table(char *tempo,const int key_max_size){
 		}
 		i++;
 	}
-	 strcat(db_filename,".sqlite3");
+	 strcat(db_filename,".sqlite");
 	 
 	 // Inicializa db, cria fila para tmp_file e inicia primeiro arquivo temporario
 	 db_create(db_filename);
-	 tmp_file_fila = criar_fila("Temp Files");
-	 new_tmp_file();
-		db_start_transaction();
+	db_start_transaction();
+	data_added = 0;
+	 //tmp_file_fila = criar_fila("Temp Files");
+	 //new_tmp_file();
 	return;
 }
 
 void destroy_ghash_table(){
 	// Envia msg para fechar
+	if(data_added > 0)
+		db_commit_transaction();
     db_destroy();
     //fclose(output);
 	printf("Seqs sent: %d\n",data_added);
@@ -86,6 +89,7 @@ void adicionar_ht(char *central,char *cincol,int tipo){
 	if(data_added > MAX_PER_TMP_FILE){
 		db_commit_transaction();
 		db_start_transaction();
+		data_added = 0;
 	}
 	db_add(central,NULL,tipo);
 	data_added++;

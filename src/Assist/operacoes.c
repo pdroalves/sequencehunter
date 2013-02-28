@@ -16,33 +16,35 @@ char* get_antisenso(char *s){
 	int i;
 	char *antisenso;
 	int a_size;
-	
-	a_size = strlen(s);
-	antisenso = (char*)malloc((a_size+1)*sizeof(char));
-	strcpy(antisenso,"");
-	
-	for(i=0;i<a_size;i++){
-		switch(s[a_size - i-1]){
-			case 'A':
-				strcat(antisenso, "T");
-			break;
-			case 'C':
-				strcat(antisenso, "G");
-			break;
-			case 'T':
-				strcat(antisenso, "A");
-			break;
-			case 'G':
-				strcat(antisenso, "C");
-			break;
-			default:
-				strcat(antisenso,"N");
-			break;
-		}	
+	if(s != NULL){
+		a_size = strlen(s);
+		antisenso = (char*)malloc((a_size+1)*sizeof(char));
+		strcpy(antisenso,"");
+		
+		for(i=0;i<a_size;i++){
+			switch(s[a_size - i-1]){
+				case 'A':
+					strcat(antisenso, "T");
+				break;
+				case 'C':
+					strcat(antisenso, "G");
+				break;
+				case 'T':
+					strcat(antisenso, "A");
+				break;
+				case 'G':
+					strcat(antisenso, "C");
+				break;
+				default:
+					strcat(antisenso,"N");
+				break;
+			}	
+		}
+		//strcat(antisenso,'\0');
+		return antisenso;
+	}else{
+		return NULL;
 	}
-	//strcat(antisenso,'\0');
-	
-	return antisenso;
 }
 
 int check_base_valida(char c){
