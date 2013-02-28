@@ -1,4 +1,7 @@
-package Tables;
+package tables;
+
+import gui.Drawer;
+import hunt.Library;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -6,8 +9,6 @@ import java.util.regex.Pattern;
 
 import javax.swing.table.AbstractTableModel;
 
-import Gui.Drawer;
-import Hunt.Library;
 
 public class JLazyTableModel extends AbstractTableModel{
 	

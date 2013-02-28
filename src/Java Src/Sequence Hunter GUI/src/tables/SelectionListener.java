@@ -1,4 +1,4 @@
-package Tables;
+package tables;
 
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;

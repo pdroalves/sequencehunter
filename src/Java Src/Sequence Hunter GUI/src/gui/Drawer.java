@@ -1,4 +1,7 @@
-package Gui;
+package gui;
+import hunt.Hunter;
+import hunt.Library;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,15 +20,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import Auxiliares.JBaseTextField;
-import Auxiliares.JTxtFileFilter;
-import Dialogs.AboutDialog;
-import Hunt.Hunter;
-import Hunt.Library;
-import Tables.JLazyTableModel;
-import Tables.JReportTableModel;
-import Tables.JTableRenderer;
-import Tables.SelectionListener;
+import tables.JLazyTableModel;
+import tables.JReportTableModel;
+import tables.JTableRenderer;
+import tables.SelectionListener;
+
+import dialogs.AboutDialog;
+
+import auxiliares.JBaseTextField;
+import auxiliares.JTxtFileFilter;
+
 
 public class Drawer implements ActionListener {
 	

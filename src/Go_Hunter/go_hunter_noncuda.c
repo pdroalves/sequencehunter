@@ -273,9 +273,9 @@ void nc_queue_manager(Fila *toStore){
       adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
       if(hold->seq_central != NULL)
-	free(hold->seq_central);
+		free(hold->seq_central);
       if(hold->seq_cincoL != NULL)
-	free(hold->seq_cincoL);
+		free(hold->seq_cincoL);
       free(hold);
     }	
   }

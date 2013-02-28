@@ -1,4 +1,4 @@
-package Tables;
+package tables;
 
 import java.awt.Component;
 import java.awt.Font;

@@ -1,4 +1,4 @@
-package Hunt;
+package hunt;
 
 import java.io.BufferedReader;
 import java.io.File;

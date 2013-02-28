@@ -8,6 +8,7 @@
 
 
 DB *dbp; // DB handler
+DB_ENV *envp; // Environment handler
 
 void db_start_transaction(){
 	int ret; // Retorno
@@ -21,25 +22,50 @@ void db_commit_transaction(){
 
 void sh_db_create(char *filename){
 	int ret; // Retorno
-	u_int32_t flags; // Flags
+	u_int32_t db_flags; // Flags
+	u_int32_t env_flags; // Flags
 	
-	ret = db_create(&dbp,NULL,0);
+	// Cria environment
+	ret = db_env_create(&envp,0);
+	if (ret != 0) {
+		printf("Error creating env handle: %s\n", db_strerror(ret));
+		exit(1);
+	}
+	
+	env_flags = DB_CREATE |    /* If the environment does not exist,
+                            * create it. */
+            DB_INIT_MPOOL; /* Initialize the in-memory cache. */
+
+ printf("Definidindo cache size!");
+	envp->set_cachesize(envp,0,2e25,1);        
+
+	// Abre environment
+	ret = envp->open( envp,   /* DB_ENV ptr */
+					  NULL,      /* env home directory */
+					  env_flags,               /* Open flags */
+					  0664);                      /* File mode (default) */
+	if (ret != 0) {
+		fprintf(stderr, "Environment open failed: %s", db_strerror(ret));
+		exit(1);
+}
+	
+	// Cria db
+	ret = db_create(&dbp,envp,0);
 	if(ret != 0){
 		printf("Couldn't create DB!\n");
 		exit(1);
 	}
+	//dbp->set_cachesize(dbp,1,1*1e9,1);
 	
-	dbp->set_cachesize(dbp,1,3*1e9,1);
 	
-	
-	flags = DB_CREATE; // Seta a flag
+	db_flags = DB_CREATE; // Seta a flag
 	
 	ret = dbp->open(dbp,
 					NULL,
 					filename,
 					NULL,
 					DB_HASH,
-					flags,
+					db_flags,
 					0664);
 	if(ret != 0){
 		printf("Error on DB opening!\n");
