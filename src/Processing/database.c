@@ -94,7 +94,7 @@ void db_create(char *filename){
 	}
 
 	// Sensos
-	sprintf(insertSQL, "UPDATE events SET qnt_sensos=qnt_sensos+1 WHERE main_seq LIKE @SEQ;");
+	sprintf(insertSQL, "UPDATE events SET qnt_sensos=qnt_sensos+1 WHERE main_seq = @SEQ");
 	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_senso, 0);
 	if(ret != SQLITE_OK){
 		printf("Error on statement compile 2 - %d.\n",ret);
@@ -102,7 +102,7 @@ void db_create(char *filename){
 	}
 	
 	// Antisensos
-	sprintf(insertSQL, "UPDATE events SET qnt_antisensos=qnt_antisensos+1 WHERE main_seq LIKE @SEQ;");
+	sprintf(insertSQL, "UPDATE events SET qnt_antisensos=qnt_antisensos+1 WHERE main_seq = @SEQ");
 	ret = sqlite3_prepare_v2(db,  insertSQL, -1, &stmt_antisenso, 0);
 	if(ret != SQLITE_OK){
 		printf("Error on statement compile 3 - %d.\n",ret);
@@ -125,7 +125,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 		exit(1);
 	}
     
-   /* if(tipo == SENSO){
+    if(tipo == SENSO){
 		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);
 		ret = sqlite3_step(stmt_senso);	
         sqlite3_clear_bindings(stmt_senso);
@@ -143,7 +143,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 			printf("Error on SQLite step 3 - %d. => %s\n",ret,seq_central);
 			exit(1);
 		}
-	}*/
+	}
 	
 	count++;
 	return;
