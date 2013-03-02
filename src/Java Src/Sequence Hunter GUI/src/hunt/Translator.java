@@ -19,7 +19,7 @@ public class Translator extends Thread{
 	private Pattern seqReadPattern;
 	private Pattern outputPattern;
 	private Pattern logPattern;
-	private String outputFile;
+	private String outputDatabase;
 	private String logFile;
 
 	public Translator(ProcessBuilder p){
@@ -37,8 +37,8 @@ public class Translator extends Thread{
 			InputStream shellIn = process.getInputStream();
 			read(shellIn);
 			if(!stop)
-				if(outputFile != null)
-					Drawer.huntDone(new File(outputFile),new File(logFile));
+				if(outputDatabase != null)
+					Drawer.huntDone(outputDatabase,new File(logFile));
 				else
 					Drawer.huntDone(null,null);
 			shellIn.close();
@@ -80,7 +80,7 @@ public class Translator extends Thread{
 		}else{
 			matcher = outputPattern.matcher(s);
 			if(matcher.matches()){
-				outputFile = matcher.group(1);
+				outputDatabase = matcher.group(1);
 			}else{
 				matcher =logPattern.matcher(s);
 				if(matcher.matches()){

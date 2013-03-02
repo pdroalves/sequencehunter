@@ -9,12 +9,12 @@ import javax.swing.table.AbstractTableModel;
 
 public class JReportTableModel extends AbstractTableModel{
 	
-	private File data;
+	private String database;
 	private ArrayList<Evento> seqs;
 	
-	public JReportTableModel(File f){
+	public JReportTableModel(String db){
 		super();
-		data = f;
+		database = db;
 		seqs = new ArrayList<Evento>();
 		loadData();
 	}
@@ -33,11 +33,11 @@ public class JReportTableModel extends AbstractTableModel{
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Object obj = null;
 		switch(columnIndex){
-		case 0:
-			obj = seqs.get(rowIndex).getSeq();
+			case 0:
+				obj = seqs.get(rowIndex).getSeq();
 			break;
-		case 1:
-			obj = seqs.get(rowIndex).getPares();
+			case 1:
+				obj = seqs.get(rowIndex).getPares();
 			break;
 		}
 		return obj;
@@ -58,7 +58,7 @@ public class JReportTableModel extends AbstractTableModel{
 	}
 
 	public void loadData(){
-		JReportLoadData jrld = new JReportLoadData(data,seqs);
+		JReportLoadData jrld = new JReportLoadData(database,seqs);
 		jrld.load();
 		return;
 	}

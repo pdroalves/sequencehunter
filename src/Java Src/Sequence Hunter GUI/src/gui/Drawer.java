@@ -74,6 +74,7 @@ public class Drawer implements ActionListener {
 		libContainer.setPreferredSize(new Dimension(900,300));
 		summaryContainer = new JPanel(new BorderLayout());
 		reportContainer = drawEmptyReportContainer();
+		addReport("/home/pedro/database.db",null);
 		processedSeqs = new JLabel("");
 		sensosFounded = new JLabel("");
 		antisensosFounded = new JLabel("");
@@ -285,14 +286,14 @@ public class Drawer implements ActionListener {
 		return;
 	}
 	
-	private static void addReport(File data,File log){
+	private static void addReport(String libDatabase,File log){
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		
 		// Report		
 		// Central Cut
-		final JTable jte = new JTable(new JReportTableModel(data)); 
+		final JTable jte = new JTable(new JReportTableModel(libDatabase)); 
 		jte.setAutoCreateRowSorter(true);
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
 		final JLabel seqJLabel = new JLabel("");
@@ -324,20 +325,22 @@ public class Drawer implements ActionListener {
 		seqInfo.add(seqFreqJLabel);
 		
 		// Log Report
-		final JTextArea logJTA = new JTextArea();
-		logJTA.setLineWrap(true);
-		logJTA.setWrapStyleWord(true);
-		try {
-			Scanner scLog = new Scanner(log);
-			while(scLog.hasNext()){
-				String linha = scLog.nextLine();
-				if(!linha.equals(""))
-					logJTA.append(scLog.nextLine()+"\n");
+		if(log != null){
+			final JTextArea logJTA = new JTextArea();
+			logJTA.setLineWrap(true);
+			logJTA.setWrapStyleWord(true);
+			try {
+				Scanner scLog = new Scanner(log);
+				while(scLog.hasNext()){
+					String linha = scLog.nextLine();
+					if(!linha.equals(""))
+						logJTA.append(scLog.nextLine()+"\n");
+				}
+				JScrollPane jscrlp = new JScrollPane(logJTA);
+				jtp.addTab("Hunt log", logJTA);
+			} catch (FileNotFoundException e1) {
+				writeToLog("File "+log.getAbsolutePath()+" could not be read.");
 			}
-			JScrollPane jscrlp = new JScrollPane(logJTA);
-			jtp.addTab("Hunt log", logJTA);
-		} catch (FileNotFoundException e1) {
-			writeToLog("File "+log.getAbsolutePath()+" could not be read.");
 		}
 		
 		jtp.addTab("Central Cut",jscp);
@@ -356,8 +359,8 @@ public class Drawer implements ActionListener {
 			reportContainer.add(reportTab);
 			noReports = false;
 		}
-			reportTab.addTab(data.getName(),jp);
-			reportTab.setSelectedIndex(reportTab.getTabCount()-1);
+		reportTab.addTab(libDatabase,jp);
+		reportTab.setSelectedIndex(reportTab.getTabCount()-1);
 		return;
 	}
 	
@@ -564,9 +567,9 @@ public class Drawer implements ActionListener {
 		return;
 	}
 	
-	static public void huntDone(File libFile,File logFile){
-		if(libFile != null){
-			addReport(libFile,logFile);
+	static public void huntDone(String libDatabse,File logFile){
+		if(libDatabse != null){
+			addReport(libDatabse,logFile);
 			jtp.setSelectedIndex(2);
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");
