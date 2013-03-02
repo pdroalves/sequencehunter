@@ -1,4 +1,4 @@
-package Auxiliares;
+package auxiliares;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;

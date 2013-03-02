@@ -1,4 +1,7 @@
-package Tables;
+package tables;
+
+import gui.Drawer;
+import hunt.Evento;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -10,8 +13,6 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import Gui.Drawer;
-import Hunt.Evento;
 
 public class JReportLoadData{
 	private File data;

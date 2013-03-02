@@ -1,4 +1,6 @@
-package Hunt;
+package hunt;
+
+import gui.Drawer;
 
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.Charset;
@@ -6,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
-import Gui.Drawer;
 
 public class Hunter{
 

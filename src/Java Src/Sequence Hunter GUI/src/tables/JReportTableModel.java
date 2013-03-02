@@ -1,9 +1,10 @@
-package Tables;
+package tables;
+
+import hunt.Evento;
 
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.table.AbstractTableModel;
-import Hunt.Evento;
 
 
 public class JReportTableModel extends AbstractTableModel{

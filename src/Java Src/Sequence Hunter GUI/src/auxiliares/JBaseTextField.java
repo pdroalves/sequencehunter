@@ -1,4 +1,4 @@
-package Auxiliares;
+package auxiliares;
 import javax.swing.JTextField;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
