@@ -54,7 +54,7 @@ void db_create(char *filename){
 	printf("Connection successful\n");
 	
 	// Create the SQL query for creating a table
-	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00)";
+	char create_table[200] = "CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00,pares INTEGER DEFAULT 0)";
 
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,create_table,NULL, NULL,&sErrMsg);
