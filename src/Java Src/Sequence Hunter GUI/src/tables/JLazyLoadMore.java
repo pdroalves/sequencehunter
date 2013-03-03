@@ -5,7 +5,7 @@ import hunt.Library;
 import java.util.ArrayList;
 
 
-public class JLazyLoadMore extends Thread{
+public class JLazyLoadMore{
 	private Library data;
 	private int defaultLoad;
 	private ArrayList<String> seqs;
@@ -17,11 +17,12 @@ public class JLazyLoadMore extends Thread{
 	}
 	
 	public void run(){
-
 		for(int i = 0; i < defaultLoad;i++){
 			String seq = data.getSeq();
-			if(seq != null) seqs.add(seq);
-			else return;
+			if(seq != null) 
+				seqs.add(seq);
+			else 
+				return;
 		}
 	}
 

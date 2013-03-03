@@ -8,21 +8,15 @@ import database.DB;
 public class JReportLoadData{
 	private DB db;
 	private String database;
- 	private ArrayList<Evento> seqs;
 	
-	public JReportLoadData(String databaseFilename,ArrayList<Evento> e){
+	public JReportLoadData(String databaseFilename){
 		this.database = databaseFilename;
 		db = new DB(databaseFilename);
-		seqs = e;
+		db.loadQuery();
 	}
 	
-	public void load(){
-		db.loadQuery();
-		Evento e = db.getEvento();
-		while(e != null){
-			seqs.add(e);
-			e = db.getEvento();
-		}
+	public Evento load(){
+		return db.getEvento();
 	}
 
 }

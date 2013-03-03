@@ -27,6 +27,7 @@ import tables.SelectionListener;
 
 import dialogs.AboutDialog;
 
+import auxiliares.ButtonTabComponent;
 import auxiliares.JBaseTextField;
 import auxiliares.JTxtFileFilter;
 
@@ -361,6 +362,9 @@ public class Drawer implements ActionListener {
 		}
 		reportTab.addTab(libDatabase,jp);
 		reportTab.setSelectedIndex(reportTab.getTabCount()-1);
+
+		initTabsComponents(reportTab);
+		
 		return;
 	}
 	
@@ -434,7 +438,8 @@ public class Drawer implements ActionListener {
 				
 				// Adiciona aba com a lib carregada
 				libContainer.addTab(lib.getFilename(),jp);
-				
+
+				//initTabsComponents(libContainer);
 
 				writeToLog("File "+libPath+" has loaded.");
 			}catch(FileNotFoundException e){
@@ -443,6 +448,12 @@ public class Drawer implements ActionListener {
 			
 		}
 		return;
+	}
+	
+	private static void initTabsComponents(JTabbedPane pane){
+		for(int i=0;i < pane.getTabCount();i++){
+			pane.setTabComponentAt(i, new ButtonTabComponent(pane));
+		}
 	}
 		
 	private Container drawProgressBarContainer(JProgressBar jprog){

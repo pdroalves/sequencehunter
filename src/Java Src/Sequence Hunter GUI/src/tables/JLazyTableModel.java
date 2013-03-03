@@ -15,11 +15,13 @@ public class JLazyTableModel extends AbstractTableModel{
 	private Library data;
 	private ArrayList<String> seqs;
 	private int defaultLoad = 100;
+	private JLazyLoadMore loader;
 	
 	public JLazyTableModel(Library lib){
 		super();
 		data = lib;
 		seqs = new ArrayList<String>();
+		loader = new JLazyLoadMore(data,defaultLoad,seqs);
 		loadMore();
 	}
 
@@ -140,7 +142,7 @@ public class JLazyTableModel extends AbstractTableModel{
 	}
 	
 	public void loadMore(){
-		(new JLazyLoadMore(data,defaultLoad,seqs)).start();
+		loader.run();
 		return;
 	}
 

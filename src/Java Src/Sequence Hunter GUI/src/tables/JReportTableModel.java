@@ -11,12 +11,13 @@ public class JReportTableModel extends AbstractTableModel{
 	
 	private String database;
 	private ArrayList<Evento> seqs;
+	private JReportLoadData jrld;
 	
 	public JReportTableModel(String db){
 		super();
 		database = db;
 		seqs = new ArrayList<Evento>();
-		loadData();
+		jrld = new JReportLoadData(database);
 	}
 
 	@Override
@@ -32,6 +33,11 @@ public class JReportTableModel extends AbstractTableModel{
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Object obj = null;
+		
+		if(seqs.size() < rowIndex){
+			seqs.add(jrld.load());		
+		}
+		
 		switch(columnIndex){
 			case 0:
 				obj = seqs.get(rowIndex).getSeq();
@@ -55,12 +61,6 @@ public class JReportTableModel extends AbstractTableModel{
 			break;
 		}
 		return name;
-	}
-
-	public void loadData(){
-		JReportLoadData jrld = new JReportLoadData(database,seqs);
-		jrld.load();
-		return;
 	}
 	
 	
