@@ -25,12 +25,24 @@
 #include "Headers/version.h"
 #include "Headers/hashtable.h"
 #include "Headers/database.h"
+#ifdef _WIN32
+char* DEFAULT_OUTPUT_DIR = "%HOMEPATH%";
+#else
+#include <wordexp.h>
+const char* expand_tilde(){
+	wordexp_t exp_tilde;
+	wordexp("~/",&exp_tilde,0);
+	return exp_tilde.we_wordv[0];
+}
+#define DEFAULT_OUTPUT_DIR expand_tilde()
+#endif
 
 #define SEQ_BUSCA_TAM 1000
 
 gchar *fromFile;
 gchar *target_name;
 gchar *target_seq;
+gchar *output_dir;
 gint dist_regiao_5l = 0;
 gint tam_regiao_5l = 0;
 gboolean disable_cuda = FALSE;
@@ -50,6 +62,7 @@ static GOptionEntry entries[] =
 		//O comando "rapido" suporta 1 caracter na chamada. Se for usado mais que isso, pode dar pau
 		//Entrada de posicoes
 		{ "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Define a sequencia alvo S.", NULL },
+		{ "output", 'o', 0, G_OPTION_ARG_STRING, &output_dir, "Define o diretorio de saída.", NULL },
 		{ "name", 'n', 0, G_OPTION_ARG_STRING, &target_name, "Define uma identificacao para a sequencia alvo.", NULL },
 		{ "dist5l", NULL, 0, G_OPTION_ARG_INT, &dist_regiao_5l, "Define a quantidade de bases entre o inicio do bloco variavel e o inicio da regiao 5' a esquerda.", NULL },
 		{ "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
@@ -117,19 +130,29 @@ int main (int argc,char *argv[]) {
 	if(verbose && !silent)
 		printf("Modo verbose\n");
 
-	//Inicializa
+	// Inicializa
+	// Seta nome padrao de saida
 	time(&t);
-	tempo = ctime(&t);
-	prepareLog(tempo,gui_run);
+	tempo = (char*)malloc(500*sizeof(char));
+	strcpy(tempo,ctime(&t));	
+	tempo[strlen(tempo)-1] = '\0';
+	if(output_dir != NULL){
+		if(output_dir[strlen(output_dir)-1] == '/')
+			output_dir[strlen(output_dir)-1] = '\0';
+	}else{
+		output_dir = (char*)malloc(100*sizeof(char));
+		strcpy(output_dir,DEFAULT_OUTPUT_DIR);
+	}
+	// Seta log
+	prepareLog(output_dir,tempo,gui_run);
+	printString("Diretório de saída: ",output_dir);		
 	c = NULL;
 	nome = NULL;
 
 	if(just_process){
 		if(!silent || gui_run)
 			printf("Iniciando em modo de processamento...\n");
-			open_and_load_file(argv[1]);
-			exit(0);
-		f = fopen(argv[1],"r");
+			f = fopen(argv[1],"r");
 	}else{
 
 		c = (char*)malloc((SEQ_BUSCA_TAM+1)*sizeof(char));
@@ -208,6 +231,13 @@ int main (int argc,char *argv[]) {
 
 		c_size = b1_size+b2_size+bv_size;
 
+
+		// Seta database
+		if(cutmode)  
+			criar_ghash_table(output_dir,tempo,bv_size);
+		else
+			criar_ghash_table(output_dir,tempo,get_setup());
+
 		//Guarda parametros
 		set.verbose = verbose;
 		set.silent = silent;
@@ -216,11 +246,7 @@ int main (int argc,char *argv[]) {
 		set.gui_run = gui_run;
 		set.dist_regiao_5l = dist_regiao_5l;
 		set.tam_regiao_5l = tam_regiao_5l;
-
-		if(cutmode)  
-			criar_ghash_table(tempo,bv_size);
-		else
-			criar_ghash_table(tempo,get_setup());
+		
 		if(disable_cuda){
 			if(!silent || gui_run)
 				printf("Forçando modo OpenMP.\n");

@@ -10,8 +10,11 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import socket.ISocketUser;
+import socket.SocketManager;
 
-public class Translator extends Thread{
+
+public class Translator extends Thread implements ISocketUser{
 
 	private ProcessBuilder pb;
 	private Process process;
@@ -21,12 +24,13 @@ public class Translator extends Thread{
 	private Pattern logPattern;
 	private String outputDatabase;
 	private String logFile;
+	private SocketManager sm;
 
 	public Translator(ProcessBuilder p){
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
-		outputPattern = Pattern.compile("Bin (.*)");
+		outputPattern = Pattern.compile("DB (.*)");
 		logPattern = Pattern.compile("Log (.*)");
 	}
 
@@ -34,14 +38,14 @@ public class Translator extends Thread{
 		// Instancia e inicia o processo
 		try {
 			process = pb.start();
-			InputStream shellIn = process.getInputStream();
-			read(shellIn);
+			sm = new SocketManager(this);
+			sm.waitForConnections();
+			
 			if(!stop)
 				if(outputDatabase != null)
 					Drawer.huntDone(outputDatabase,new File(logFile));
 				else
 					Drawer.huntDone(null,null);
-			shellIn.close();
 			killProcess(process);
 		}catch(IllegalArgumentException e){
 			e.printStackTrace();
@@ -54,24 +58,10 @@ public class Translator extends Thread{
 		}
 		return;
 	}
-
-	public void read(InputStream is) throws IOException{
-		if(is != null){
-
-			BufferedReader br = new BufferedReader(new InputStreamReader(is,"UTF-8"));
-			String buffer = br.readLine();
-			while(buffer != null && !stop){
-				translate(buffer);
-				buffer = br.readLine();
-			}
-			is.close();
-		}
-		return;
-	}
-
-	private void translate(String s){
+	
+	public void translate(String s){
 		Matcher matcher = seqReadPattern.matcher(s);
-		if(matcher.matches()){
+		if(matcher.find()){
 			Drawer.setProcessedSeqs(Integer.parseInt(matcher.group(1)));
 			Drawer.setSensosFounded(Integer.parseInt(matcher.group(2)));
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
@@ -86,7 +76,7 @@ public class Translator extends Thread{
 				if(matcher.matches()){
 					logFile = matcher.group(1);
 				}else{
-				Drawer.writeToLog(s);	
+					Drawer.writeToLog(s);	
 				}
 			}
 		}
@@ -98,7 +88,7 @@ public class Translator extends Thread{
 		return;
 	}
 
-	public void killProcess(Process p){
+	private void killProcess(Process p){
 		String OS = Hunter.getOS();
 		if (OS.contains("WIN")){
 			//Windows

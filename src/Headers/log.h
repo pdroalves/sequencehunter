@@ -1,7 +1,8 @@
 #ifndef LOG_H
 #define LOG_H
 #include "linkedlist.h"
-void prepareLog(char *tempo,int gui);
+char* get_log_filename();
+void prepareLog(char *output_dir,char *tempo,int gui);
 void print_open_file(char *c);
 void printStringInt(char *c,int n);
 void printString(char *c,char *s);

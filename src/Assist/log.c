@@ -12,48 +12,44 @@
 #include <glib.h>
 #include <string.h>
 #include "../Headers/estruturas.h"
-void prepareLog();
-void print_time();
-void printString(char*,char*);
-void printSet(int);
-void print_tempo(float);
-void closeLog();
-
 
 FILE *logfile;
+char* logfile_name;
 
-void prepareLog(char *tempo,gboolean gui){
+char* get_log_filename(){
+	return logfile_name;
+}
+
+void prepareLog(char* output_dir,char *tempo,gboolean gui){
   //Abre e prepara arquivo log.dat para receber mensagens de log
-	char logfile_name[100];
-	char logfiledetalhado_name[100];
-	char tmp[100];	
+	char tmp[500];	
 	int i;	
 	
-	tempo[strlen(tempo)-1] = '\0';
-	strcpy(tmp,"SHunter Log - ");
-	strcat(tmp,tempo);
-	strcat(tmp,".txt");
-
+	logfile_name = (char*)malloc(500*sizeof(char));
+	if(output_dir != NULL)
+		sprintf(tmp,"%s/SHunter Log - %s.txt",output_dir,tempo);
+	else
+		sprintf(tmp,"SHunter Log - %s.txt",tempo);
 	for(i=0;i <= strlen(tmp); i++){
 		if(tmp[i] == ':')
 			logfile_name[i] = ' ';
 		else
 			logfile_name[i] = tmp[i];
 	}
+
+	logfile = fopen(logfile_name,"a");
   
-  logfile = fopen(logfile_name,"a");
-  
-	if(ferror(logfile) != 0){
+	if(logfile == NULL){
 		printf("Erro! Impossível salvar log\n");
 		exit(1);
 	}
    
-  fprintf(logfile,"\n\n-------------------------\n");
+	  fprintf(logfile,"\n\n-------------------------\n");
 
-  print_time();
+	  print_time();
 
-  if(gui)
-	printf("Log %s\n",logfile_name);
+	  if(gui)
+		printf("Log %s\n",logfile_name);
 
   return;
 }
@@ -157,7 +153,8 @@ void closeLog(){
 
   print_time();
   fprintf(logfile,"\n-------------------------\n");
-  
+  if(logfile_name != NULL)
+	free(logfile_name);
   
    if(logfile != NULL)
       fclose(logfile);

@@ -5,12 +5,12 @@ import hunt.Library;
 import java.util.ArrayList;
 
 
-public class JLazyLoadMore{
+public class JLibPreviewLoadMore{
 	private Library data;
 	private int defaultLoad;
 	private ArrayList<String> seqs;
 	
-	public JLazyLoadMore(Library d,int dl,ArrayList<String> db){
+	public JLibPreviewLoadMore(Library d,int dl,ArrayList<String> db){
 		data = d;
 		defaultLoad = dl;
 		seqs = db;

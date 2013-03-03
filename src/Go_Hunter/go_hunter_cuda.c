@@ -23,6 +23,8 @@
 
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
+#define GUI_SOCKET_PORT 9332
+
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
@@ -38,6 +40,7 @@ int fasenso;
 char **data;
 char **h_data;
 int processadas;
+Socket *gui_socket;
 
 
 // Lista de threads a serem criados
@@ -426,6 +429,8 @@ void report_manager(Fila *toStore){
   int count;
   FILE* fp_enchimento;
   FILE* fp_esvaziamento;
+  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  char *msg_returned;
   
     if(verbose && !silent){
 	  fp_enchimento = fopen("enchimento.dat","w");
@@ -441,8 +446,12 @@ void report_manager(Fila *toStore){
     pos_sent_to_db = sent_to_db;
     count++;
 	
-    if(gui_run)
-      printf("T%dS%dAS%d\n",processadas,fsenso,fasenso);
+    if(gui_run){
+      sprintf(msg,"T%dS%dAS%d\n",processadas,fsenso,fasenso);
+      send_msg_to_socket(gui_socket,msg);
+      msg_returned = get_msg_to_socket(gui_socket);
+    }
+    
     if(verbose && !silent){
 		printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
 		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
@@ -524,9 +533,25 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   return;
 }
 
+void send_setup_to_gui(){
+  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  char *msg_returned;
+  
+  sprintf(msg,"DB %s",get_database_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+
+  sprintf(msg,"Log %s",get_log_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+  
+  return;
+}
+
 void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
+  int port = GUI_SOCKET_PORT;
   
   verbose = set.verbose;
   silent = set.silent;
@@ -551,15 +576,32 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   seqSize_an = get_setup();
 	
   //Inicializa
-  setup_for_cuda(c);
-	
+  setup_for_cuda(c);	
+
+  if(gui_run){
+    gui_socket = criar_socket(port);
+    while(gui_socket == NULL || port > GUI_SOCKET_PORT + 200){
+	    port++;
+	    gui_socket = criar_socket(port);	
+    }
+    
+    if(gui_socket == NULL){
+	    printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
+	    printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
+	    exit(1);
+    }
+    
+    send_setup_to_gui();
+  }
   printString("Dados inicializados.\n",NULL);
   printSet(seqSize_an);
   printString("Iniciando iterações:\n",NULL);
 	
   cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
-    
+  
   cudaThreadExit();
-	
+  if(gui_run)
+    destroy_socket(gui_socket);
+  
   return;
 }

@@ -47,7 +47,6 @@ int check_seq_valida(char *p){
 lista_ligada* processar(int n,int max_events,gboolean silent,gboolean gui_run){
 	
 	// Iniciando processamento dos dados...
-	process_signal_ht();
 	
 	return NULL;
 }

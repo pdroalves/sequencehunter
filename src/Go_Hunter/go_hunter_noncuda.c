@@ -29,6 +29,7 @@ enum threads {
 };
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
+#define GUI_SOCKET_PORT 9332
 
 gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
@@ -44,6 +45,7 @@ omp_lock_t MC_copy_lock;
 int sent_to_db;
 int p;
 int fsensos,fasensos;
+Socket *gui_socket;
 
 const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
@@ -219,10 +221,6 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 							break;
 						}
 					}
-					
-					if(gui_run){
-							printf("T%dS%dAS%d\n",p,fsensos,fasensos);
-					}
 						if(debug && !silent)
 							printf("\tWave size: %d - Diff: %d\n",wave_size,wave_size-wave_processed_diff);
 						wave_processed_diff = wave_size;
@@ -293,6 +291,8 @@ void nc_report_manager(Fila* toStore){
   int count;
   FILE* fp_enchimento;
   FILE* fp_esvaziamento;
+  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  char *msg_returned;
   
     if(verbose && !silent){
   fp_enchimento = fopen("enchimento.dat","w");
@@ -307,13 +307,20 @@ void nc_report_manager(Fila* toStore){
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
     count++;
+    
+    if(gui_run){
+      sprintf(msg,"T%dS%dAS%d\n",p,fsensos,fasensos);
+      send_msg_to_socket(gui_socket,msg);
+      get_msg_to_socket(gui_socket);
+    }
+    
 	if(verbose && !silent){
 		printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
 		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
 		printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
 		fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
 		fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
-	}
+	}	
   }
     if(verbose && !silent){
 	  fclose(fp_enchimento);
@@ -360,17 +367,26 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	
 	return;
 }
-
+void nc_send_setup_to_gui(){
+  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  char *msg_returned;
+  
+  sprintf(msg,"DB %s",get_database_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+  
+  sprintf(msg,"Log %s",get_log_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+  
+  return;
+}
 
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
 	int seqSize_an;//Elementos por sequência
-	//Arrumar nova maneira de contar o tempo sem usar a cuda.h
-	//cudaEvent_t start;
-	//cudaEvent_t stop;
-	//cudaEventCreate(&start);
-	//cudaEventCreate(&stop);
 	float tempo;
+	int port = GUI_SOCKET_PORT;
 
 	tempo = 0;
 	verbose = set.verbose;
@@ -394,7 +410,21 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	seqSize_an = get_setup();
 	
 	setup_without_cuda(c);
-	
+	if(gui_run){
+		gui_socket = criar_socket(port);
+		while(gui_socket == NULL || port > GUI_SOCKET_PORT + 200){
+			port++;
+			gui_socket = criar_socket(port);	
+		}
+
+		if(gui_socket == NULL){
+			printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
+			printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
+			exit(1);
+		}
+
+		nc_send_setup_to_gui();
+	}
 	printString("Dados inicializados.\n",NULL);
 	printSet(seqSize_an);
 	printString("Iniciando iterações:\n",NULL);
@@ -407,7 +437,9 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
+	if(gui_run)
+		destroy_socket(gui_socket);
 	
-return;	
+	return;	
 }
 

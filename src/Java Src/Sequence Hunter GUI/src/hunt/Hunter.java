@@ -23,7 +23,7 @@ public class Hunter{
 	public Hunter(String target,ArrayList<String> libs){	
 
 		// Gera linha de parametros
-		String parameters = new String("--target "+ target+ " -sdkt --gui");
+		String parameters = new String("--target "+ target+ " -sdkt --gui -o /home/pedro");
 		String libsPath = " ";
 		if(!libs.isEmpty()){
 			for(int i=0;i<libs.size();i++)

@@ -16,11 +16,11 @@
 #define MAX_CUDA_THREADS_PER_BLOCK 608
 #define MAX_SEQ_SIZE 1000
 #define MAX_FILA_SIZE 100000
+#define MAX_SOCKET_MSG_SIZE 100
 
 // Socket msgs
-#define SKT_MSG_HELLO "hi"
+#define SKT_MSG_HELLO "hello"
 #define SKT_MSG_CLOSE "bye"
-#define SKT_MSG_CINCOL "cincolok"
 #define SKT_MSG_GETSIZE "size"
 #define SKT_MSG_PROCESS "processDB"
 

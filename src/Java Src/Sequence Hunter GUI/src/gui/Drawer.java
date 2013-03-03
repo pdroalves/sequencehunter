@@ -20,7 +20,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import tables.JLazyTableModel;
+import tables.JLibPreviewTableModel;
 import tables.JReportTableModel;
 import tables.JTableRenderer;
 import tables.SelectionListener;
@@ -75,7 +75,6 @@ public class Drawer implements ActionListener {
 		libContainer.setPreferredSize(new Dimension(900,300));
 		summaryContainer = new JPanel(new BorderLayout());
 		reportContainer = drawEmptyReportContainer();
-		addReport("/home/pedro/database.db",null);
 		processedSeqs = new JLabel("");
 		sensosFounded = new JLabel("");
 		antisensosFounded = new JLabel("");
@@ -294,7 +293,8 @@ public class Drawer implements ActionListener {
 		
 		// Report		
 		// Central Cut
-		final JTable jte = new JTable(new JReportTableModel(libDatabase)); 
+		final JReportTableModel jrtm = new JReportTableModel(libDatabase);
+		final JTable jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(true);
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
 		final JLabel seqJLabel = new JLabel("");
@@ -317,6 +317,18 @@ public class Drawer implements ActionListener {
 
 		    });
 		JScrollPane jscp = new JScrollPane(jte);
+		JScrollBar jsb = jscp.getVerticalScrollBar();
+		jsb.addAdjustmentListener(new AdjustmentListener(){
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				JScrollBar jsb = (JScrollBar) e.getSource();
+				int jsbMax = jsb.getMaximum();
+				int jsbPos = jsb.getValue();
+				if(jsbMax*0.8 <= jsbPos){
+					jrtm.loadData();
+				}
+			}					
+		});
 		jte.setAutoscrolls(true);
 		
 		Box seqInfo = Box.createVerticalBox();
@@ -332,10 +344,9 @@ public class Drawer implements ActionListener {
 			logJTA.setWrapStyleWord(true);
 			try {
 				Scanner scLog = new Scanner(log);
-				while(scLog.hasNext()){
+				while(scLog.hasNextLine()){
 					String linha = scLog.nextLine();
-					if(!linha.equals(""))
-						logJTA.append(scLog.nextLine()+"\n");
+					logJTA.append(linha+"\n");
 				}
 				JScrollPane jscrlp = new JScrollPane(logJTA);
 				jtp.addTab("Hunt log", logJTA);
@@ -352,6 +363,7 @@ public class Drawer implements ActionListener {
 		insideJp.add(jtp,BorderLayout.CENTER);
 		
 		jp.add(insideJp,BorderLayout.CENTER);
+		initTabsComponents(reportTab);
 		
 		if(noReports){
 			reportContainer.removeAll();
@@ -363,7 +375,6 @@ public class Drawer implements ActionListener {
 		reportTab.addTab(libDatabase,jp);
 		reportTab.setSelectedIndex(reportTab.getTabCount()-1);
 
-		initTabsComponents(reportTab);
 		
 		return;
 	}
@@ -402,7 +413,7 @@ public class Drawer implements ActionListener {
 					throw new FileNotFoundException();
 				}
 				JPanel jp = new JPanel();
-				final JLazyTableModel jltm = new JLazyTableModel(lib);
+				final JLibPreviewTableModel jltm = new JLibPreviewTableModel(lib);
 				jtabPreviewLibs = new JTable(jltm);
 			    //SelectionListener listener = new SelectionListener(jtabPreviewLibs);
 			    jtabPreviewLibs.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -451,8 +462,10 @@ public class Drawer implements ActionListener {
 	}
 	
 	private static void initTabsComponents(JTabbedPane pane){
-		for(int i=0;i < pane.getTabCount();i++){
-			pane.setTabComponentAt(i, new ButtonTabComponent(pane));
+		if(pane != null){
+			for(int i=0;i < pane.getTabCount();i++){
+				pane.setTabComponentAt(i, new ButtonTabComponent(pane));
+			}
 		}
 	}
 		
