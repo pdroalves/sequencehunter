@@ -431,12 +431,35 @@ void report_manager(Fila *toStore){
   FILE* fp_esvaziamento;
   char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
   char *msg_returned;
+  int port = GUI_SOCKET_PORT;
+  int diff;
   
     if(verbose && !silent){
 	  fp_enchimento = fopen("enchimento.dat","w");
 	  fp_esvaziamento = fopen("esvaziamento.dat","w");
 	}
   count = 0;
+  
+    if(gui_run){
+    gui_socket = (Socket*)malloc(sizeof(Socket));
+    criar_socket(gui_socket,port);
+    /*while(gui_socket == NULL || port > GUI_SOCKET_PORT + 200){
+	    port++;
+	    gui_socket = criar_socket(port);	
+    }*/
+    
+    if(gui_socket == NULL){
+      SLEEP(2);
+      criar_socket(gui_socket,port);
+      if(gui_socket = NULL){
+	printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
+	printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
+	exit(1);
+      }
+    }
+    
+    send_setup_to_gui();
+  }
   
   while(!THREAD_DONE[THREAD_SEARCH]){
     queue_size = tamanho_da_fila(toStore);
@@ -445,9 +468,11 @@ void report_manager(Fila *toStore){
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
     count++;
+    
+    diff = pos_sent_to_db - pre_sent_to_db;
 	
     if(gui_run){
-      sprintf(msg,"T%dS%dAS%d\n",processadas,fsenso,fasenso);
+      sprintf(msg,"T%dS%dAS%dSPS%d",processadas,fsenso,fasenso,diff);
       send_msg_to_socket(gui_socket,msg);
       msg_returned = get_msg_to_socket(gui_socket);
     }
@@ -551,7 +576,6 @@ void send_setup_to_gui(){
 void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
-  int port = GUI_SOCKET_PORT;
   
   verbose = set.verbose;
   silent = set.silent;
@@ -578,21 +602,6 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   //Inicializa
   setup_for_cuda(c);	
 
-  if(gui_run){
-    gui_socket = criar_socket(port);
-    while(gui_socket == NULL || port > GUI_SOCKET_PORT + 200){
-	    port++;
-	    gui_socket = criar_socket(port);	
-    }
-    
-    if(gui_socket == NULL){
-	    printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
-	    printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
-	    exit(1);
-    }
-    
-    send_setup_to_gui();
-  }
   printString("Dados inicializados.\n",NULL);
   printSet(seqSize_an);
   printString("Iniciando iterações:\n",NULL);

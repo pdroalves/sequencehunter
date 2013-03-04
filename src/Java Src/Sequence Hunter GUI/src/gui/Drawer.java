@@ -450,7 +450,7 @@ public class Drawer implements ActionListener {
 				// Adiciona aba com a lib carregada
 				libContainer.addTab(lib.getFilename(),jp);
 
-				//initTabsComponents(libContainer);
+				initTabsComponents(libContainer);
 
 				writeToLog("File "+libPath+" has loaded.");
 			}catch(FileNotFoundException e){
@@ -492,14 +492,6 @@ public class Drawer implements ActionListener {
 	}
 	
 	public static void setProcessedSeqs(int n){
-		Calendar cal = Calendar.getInstance();
-		if(startSPS == -1){
-			startSPS = cal.getTimeInMillis();
-			diffSPS = -1;
-		}else{
-			diffSPS = (cal.getTimeInMillis() - startSPS)/1000;
-			startSPS = cal.getTimeInMillis();
-		}
 		processedSeqs.setText("Total: "+Integer.toString(n)+" ");
 	}
 	public static void setSensosFounded(int n){
@@ -508,8 +500,8 @@ public class Drawer implements ActionListener {
 	public static void setAntisensosFounded(int n){
 		antisensosFounded.setText("AS: "+Integer.toString(n)+" ");
 	}
-	public static void setSPS(){
-		calcSPS.setText(" - "+diffSPS +" Sps");
+	public static void setSPS(int n){
+		calcSPS.setText(" - "+Integer.toString(n) +" Events/s");
 	}
 
 	public static int getProcessedSeqs(){

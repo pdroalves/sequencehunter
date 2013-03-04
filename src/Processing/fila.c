@@ -109,9 +109,9 @@ gboolean fila_vazia(Fila *f){
 
 int tamanho_da_fila(Fila *f){
 	int size;
-    omp_set_lock(&f->fila_lock);
+    //omp_set_lock(&f->fila_lock);
     size = f->size;
-    omp_unset_lock(&f->fila_lock);
+    //omp_unset_lock(&f->fila_lock);
 	return size;
 }
 

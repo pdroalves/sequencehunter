@@ -120,7 +120,6 @@ int get_setup(){
 	rewind(f[0]);
 	n = (int)(strlen(tmp));
 	
-	hold = (char*)malloc(TAM_MAX*sizeof(char));	
 	
 	free(tmp);
 	return n;
@@ -135,6 +134,7 @@ void prepare_buffer(Buffer *b,int c){
 	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
+	hold = (char*)malloc(MAX_SEQ_SIZE*sizeof(char));	
 	
 	for(i=0;i<c;i++) 
 		b->seq[i] = (char*)malloc((n+1)*sizeof(char));
@@ -154,16 +154,14 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD){
 	//Enche buffer
 	for(j=0;j < files && i < MAX_TO_LOAD;j++){		
 		while(i < MAX_TO_LOAD && !feof(f[j])){
-				// Le sequencia, verifica se eh valida e incrementa a contagem
-				fscanf(f[j],"%*s");
-				fscanf(f[j],"%*s");
-				fscanf(f[j],"%s",hold);
-				fscanf(f[j],"%*s");
-				fscanf(f[j],"%*s");
-				//if(check_seq_valida(hold)){
-					strcpy(seqs[i],hold);
-					i++;
-				//}
+			// Le sequencia, verifica se eh valida e incrementa a contagem
+			fscanf(f[j],"%*s");
+			fscanf(f[j],"%*s");
+			fscanf(f[j],"%s",hold);
+			fscanf(f[j],"%*s");
+			fscanf(f[j],"%*s");
+			strcpy(seqs[i],hold);
+			i++;
 		}
 		// Corrige contagem errada
 		if(i < MAX_TO_LOAD && i > 0)

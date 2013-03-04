@@ -10,6 +10,7 @@ package socket;
 
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.InputStream;
@@ -60,7 +61,7 @@ public class SocketManager {
 		Pattern helloPattern = Pattern.compile(helloMsg);
 		Pattern closePattern = Pattern.compile(closeMsg);
 
-		while(!end) {
+		while(!end && !isu.getKill()) {
 			byte[] buf=new byte[1024];
 			int bytes_read = 0;
 
@@ -116,8 +117,7 @@ public class SocketManager {
 		Socket sock = null;
 		InputStream sockInput = null;
 		OutputStream sockOutput = null;
-		while (!end) {
-			try {
+		try {
 				// This method call, accept(), blocks and waits
 				// (forever if necessary) until some other program
 				// opens a socket connection to our server.  When some
@@ -132,31 +132,26 @@ public class SocketManager {
 
 				sockInput = sock.getInputStream();
 				sockOutput = sock.getOutputStream();
-			}
-			catch (IOException e){
-				e.printStackTrace(System.err);
-			}
-
-			// Do something with the socket - read bytes from the
-			// socket and write them back to the socket until the
-			// other side closes the connection.
-			handleConnection(sockInput, sockOutput);
-
-			// Now we close the socket.
-			try {
+			
+	
+				// Do something with the socket - read bytes from the
+				// socket and write them back to the socket until the
+				// other side closes the connection.
+				handleConnection(sockInput, sockOutput);
+	
+				// Now we close the socket.
 				System.err.println("Closing socket.");
 				sockInput.close();
 				sockOutput.close();
 				sock.close();
 				serverSock.close();
-			}
-			catch (Exception e){
-				System.err.println("Exception while closing socket.");
+			
+		}catch (IOException e){
+				System.err.println("Exception:");
 				e.printStackTrace(System.err);
 			}
 
-			System.err.println("Finished with socket.");
-		}
+			System.err.println("Finished with socket.");	
 	}
 
 }

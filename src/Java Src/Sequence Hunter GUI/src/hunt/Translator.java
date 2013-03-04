@@ -29,7 +29,7 @@ public class Translator extends Thread implements ISocketUser{
 	public Translator(ProcessBuilder p){
 		pb = p;
 		stop = false;
-		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)");
+		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)");
 		outputPattern = Pattern.compile("DB (.*)");
 		logPattern = Pattern.compile("Log (.*)");
 	}
@@ -37,25 +37,28 @@ public class Translator extends Thread implements ISocketUser{
 	public void run(){
 		// Instancia e inicia o processo
 		try {
-			process = pb.start();
+		//	process = pb.start();
 			sm = new SocketManager(this);
 			sm.waitForConnections();
 			
-			if(!stop)
+			if(!stop){
 				if(outputDatabase != null)
 					Drawer.huntDone(outputDatabase,new File(logFile));
 				else
 					Drawer.huntDone(null,null);
-			killProcess(process);
+			}else{
+				killProcess(process);
+				stop = false;
+			}
 		}catch(IllegalArgumentException e){
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
 			Drawer.huntAbort();
-		}catch (IOException e) {
+		}/*catch (IOException e) {
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
 			Drawer.huntAbort();
-		}
+		}*/
 		return;
 	}
 	
@@ -65,7 +68,7 @@ public class Translator extends Thread implements ISocketUser{
 			Drawer.setProcessedSeqs(Integer.parseInt(matcher.group(1)));
 			Drawer.setSensosFounded(Integer.parseInt(matcher.group(2)));
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
-			Drawer.setSPS();
+			Drawer.setSPS(Integer.parseInt(matcher.group(4)));
 			System.out.println(s);
 		}else{
 			matcher = outputPattern.matcher(s);
@@ -86,6 +89,10 @@ public class Translator extends Thread implements ISocketUser{
 	public void kill(){
 		stop = true;
 		return;
+	}
+	
+	public boolean getKill(){
+		return stop;
 	}
 
 	private void killProcess(Process p){
