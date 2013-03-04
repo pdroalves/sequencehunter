@@ -37,7 +37,7 @@ public class Translator extends Thread implements ISocketUser{
 	public void run(){
 		// Instancia e inicia o processo
 		try {
-		//	process = pb.start();
+			process = pb.start();
 			sm = new SocketManager(this);
 			sm.waitForConnections();
 			
@@ -54,11 +54,11 @@ public class Translator extends Thread implements ISocketUser{
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
 			Drawer.huntAbort();
-		}/*catch (IOException e) {
+		}catch (IOException e) {
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
 			Drawer.huntAbort();
-		}*/
+		}
 		return;
 	}
 	

@@ -308,8 +308,8 @@ public class Drawer implements ActionListener {
 		        int[] selectedRow = jte.getSelectedRows();
 	
 		        for (int i = 0; i < selectedRow.length; i++) {
-		        	sequence = (String) jte.getValueAt(selectedRow[i], 0);
-		        	sequenceFreq = (int) jte.getValueAt(selectedRow[i], 1);		          
+		        	sequence = (String) jte.getValueAt(selectedRow[i], 1);
+		        	sequenceFreq = (int) jte.getValueAt(selectedRow[i], 2);		          
 		        }
 				seqJLabel.setText(sequence);
 				seqFreqJLabel.setText(Integer.toString(sequenceFreq));
@@ -324,10 +324,12 @@ public class Drawer implements ActionListener {
 				JScrollBar jsb = (JScrollBar) e.getSource();
 				int jsbMax = jsb.getMaximum();
 				int jsbPos = jsb.getValue();
-				if(jsbMax*0.8 <= jsbPos){
+				System.out.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
+				if(jsbMax*0.6 <= jsbPos){
+					System.out.println("Loading...");
 					jrtm.loadData();
 				}
-			}					
+ 			}					
 		});
 		jte.setAutoscrolls(true);
 		
@@ -569,7 +571,8 @@ public class Drawer implements ActionListener {
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
 			h = new Hunter(searchSeq,libs);
-			h.start();				
+			//h.start();				
+			addReport("/home/pedro/Projetos/LNBIO/SH/Out/eGilboa/FriMar10210002013.sqlite",null);
 			break;
 		case "Abort":
 			huntAbort();

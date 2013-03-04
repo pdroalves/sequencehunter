@@ -17,16 +17,23 @@ public class JReportLoadData{
 		db.loadQuery();
 		seqs = al;
 		defaultLoad = dl;
+
+		for(int i = 0; i < defaultLoad;i++){
+			Evento e = db.getEvento();
+			if(e != null){
+				seqs.add(e);
+			}else{
+				return;
+			}
+		}
 	}
 	
 	public void load(){
-		for(int i = 0; i < defaultLoad;i++){
 			Evento e = db.getEvento();
 			if(e != null) 
 				seqs.add(e);
 			else 
 				return;
-		}
 	}
 
 }

@@ -17,7 +17,7 @@ public class JReportTableModel extends AbstractTableModel{
 		super();
 		database = db;
 		seqs = new ArrayList<Evento>();
-		jrld = new JReportLoadData(database,100,seqs);
+		jrld = new JReportLoadData(database,defaultLoad,seqs);
 	}
 
 	@Override
@@ -27,7 +27,7 @@ public class JReportTableModel extends AbstractTableModel{
 
 	@Override
 	public int getColumnCount() {
-		return 2;
+		return 3;
 	}
 
 	@Override
@@ -40,9 +40,12 @@ public class JReportTableModel extends AbstractTableModel{
 		
 		switch(columnIndex){
 			case 0:
-				obj = seqs.get(rowIndex).getSeq();
+				obj = rowIndex+1;
 			break;
 			case 1:
+				obj = seqs.get(rowIndex).getSeq();
+			break;
+			case 2:
 				obj = seqs.get(rowIndex).getPares();
 			break;
 		}
@@ -54,9 +57,12 @@ public class JReportTableModel extends AbstractTableModel{
 		String name = null;
 		switch(column){
 		case 0:
-			name = "Sequences";
+			name = "#";
 			break;
 		case 1:
+			name = "Sequences";
+			break;
+		case 2:
 			name = "#Paired";
 			break;
 		}
