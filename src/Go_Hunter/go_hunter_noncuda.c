@@ -30,6 +30,7 @@ enum threads {
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
+#define GIGA 1073741824 
 
 gboolean THREAD_DONE[3];
 omp_lock_t buffer_lock;
@@ -183,14 +184,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			      
 		      fsensos++;
 		      wave_size++;
-		      //hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
-		      //enfileirar(toStore,hold_event);
-		      adicionar_ht(central,cincol,SENSO);
+		      hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+		      enfileirar(toStore,hold_event);
+		     /* adicionar_ht(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
 		      if(cincol)
-			free(cincol);
+			free(cincol);*/
 		      buffer->load--;
 		      break;
 		      case ANTISENSO:
@@ -217,14 +218,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
 			      fasensos++;
 		      wave_size++;
-		      //hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-		     // enfileirar(toStore,hold_event);
-		      adicionar_ht(central,cincol,SENSO);
+		      hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+		      enfileirar(toStore,hold_event);
+		      /*adicionar_ht(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
 		      if(cincol)
-			free(cincol);
+			free(cincol);*/
 			      buffer->load--;
 		      break;
 		      default:
@@ -344,6 +345,7 @@ void nc_report_manager(Fila* toStore){
     }
     
     if(verbose && !silent){
+      printf("DB memory used: %.2f GB\n",sqlite3_memory_used()/(float)GIGA);
       printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
       printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
       printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
@@ -389,7 +391,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	      }
 	      #pragma omp section
 	      {
-		      //nc_queue_manager(toStore);
+		      nc_queue_manager(toStore);
 	      }
 	      #pragma omp section
 	      {

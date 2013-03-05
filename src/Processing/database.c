@@ -6,6 +6,7 @@
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
+#define GIGA 1073741824 
 #define q_size 500
 #define DATABASE ":memory:"
 // Create a db for database connection, create a pointer to sqlite3
@@ -60,22 +61,22 @@ void db_create(char *filename){
 	ret = sqlite3_exec(db,create_table,NULL, NULL,&sErrMsg);
 	
 	// Setup DB
-	sqlite3_exec(db,"PRAGMA synchronous = ON", NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA synchronous = OFF", NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA journal_mode = OFF",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}	
-	sqlite3_exec(db,"PRAGMA cache_size = 200000",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA cache_size = 2000000",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA ignore_check_constarints = true",NULL,NULL,&sErrMsg);
+	//sqlite3_exec(db,"PRAGMA ignore_check_constarints = true",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
@@ -108,6 +109,9 @@ void db_create(char *filename){
 		printf("Error on statement compile 3 - %d.\n",ret);
 		exit(1);
 	}
+	
+	sqlite3_soft_heap_limit64(2*GIGA);
+	
 	 return;
 }
 
@@ -116,7 +120,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	int cols;
     char * sErrMsg;
     
-	sqlite3_bind_text(stmt_seq,1,seq_central,-1,SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt_seq,1,seq_central,-1,SQLITE_STATIC);
 	ret = sqlite3_step(stmt_seq);	
 	sqlite3_clear_bindings(stmt_seq);
 	sqlite3_reset(stmt_seq);
@@ -126,7 +130,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	}
     
     if(tipo == SENSO){
-		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt_senso,1,seq_central,-1,SQLITE_STATIC);
 		ret = sqlite3_step(stmt_senso);	
         sqlite3_clear_bindings(stmt_senso);
 		sqlite3_reset(stmt_senso);
@@ -135,7 +139,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 			exit(1);
 		}
 	}else{
-		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt_antisenso,1,seq_central,-1,SQLITE_STATIC);
 		ret = sqlite3_step(stmt_antisenso);
 		sqlite3_reset(stmt_antisenso);	
 		sqlite3_clear_bindings(stmt_antisenso);
