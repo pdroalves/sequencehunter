@@ -26,12 +26,13 @@ public class DB {
 			}
 	}
 	
-	public boolean loadQuery(){
+	public boolean loadQuery(String query){
 		Statement stat;
 		try {
 			stat = databaseConn.createStatement();
-			rows = stat.executeQuery("SELECT main_seq,qnt_sensos,qnt_antisensos FROM events");
-			if(rows != null) return true;
+			rows = stat.executeQuery(query);
+			if(rows != null) 
+				return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

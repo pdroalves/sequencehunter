@@ -70,7 +70,7 @@ public class Hunter{
 			return appName_win;			
 		}else if (getOS().contains("MAC")){
 			return appName_mac;
-		}else if (getOS().contains("NIX")){
+		}else if (getOS().contains("NUX")){
 			return appName_nix;			
 		}else{
 			return null;

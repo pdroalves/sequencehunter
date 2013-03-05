@@ -60,7 +60,6 @@ void destroy_ghash_table(){
 	if(data_added > 0)
 		db_commit_transaction();
     db_destroy();
-    //fclose(output);
 	printf("Seqs sent: %d\n",data_added);
 	return;
 }

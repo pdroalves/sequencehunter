@@ -40,6 +40,7 @@ int fasenso;
 char **data;
 char **h_data;
 int processadas;
+int bytes_read = 0;
 Socket *gui_socket;
 
 
@@ -57,8 +58,10 @@ gboolean THREAD_DONE[OMP_NTHREADS];
 
 int load_buffer_CUDA(char **h_seqs,int seq_size)
 {
-  //Enche o buffer e guarda a quantidade de sequencias carregadas.	
-  return fill_buffer(h_seqs,buffer_size);;
+  //Enche o buffer e guarda a quantidade de sequencias carregadas.
+  int load;
+  bytes_read += fill_buffer(h_seqs,buffer_size,&load);	
+  return load;
 }
 
 
@@ -541,6 +544,9 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	    }
 	  }
   }
+  destroy_ghash_table();
+  if(gui_run)
+	  destroy_socket(gui_socket);
 	
   //printf("Iterações executadas: %d.\n",iter);
   //free(tmp);
@@ -609,8 +615,6 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
   
   cudaThreadExit();
-  if(gui_run)
-    destroy_socket(gui_socket);
   
   return;
 }

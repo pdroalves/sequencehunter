@@ -29,7 +29,7 @@ public class Translator extends Thread implements ISocketUser{
 	public Translator(ProcessBuilder p){
 		pb = p;
 		stop = false;
-		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)");
+		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)BR(\\d+)");
 		outputPattern = Pattern.compile("DB (.*)");
 		logPattern = Pattern.compile("Log (.*)");
 	}
@@ -38,6 +38,7 @@ public class Translator extends Thread implements ISocketUser{
 		// Instancia e inicia o processo
 		try {
 			process = pb.start();
+			Drawer.enableStatusJLabels(true);
 			sm = new SocketManager(this);
 			sm.waitForConnections();
 			
@@ -69,6 +70,7 @@ public class Translator extends Thread implements ISocketUser{
 			Drawer.setSensosFounded(Integer.parseInt(matcher.group(2)));
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
 			Drawer.setSPS(Integer.parseInt(matcher.group(4)));
+			Drawer.updateProgressBar(Integer.parseInt(matcher.group(5)));
 			System.out.println(s);
 		}else{
 			matcher = outputPattern.matcher(s);
@@ -88,6 +90,7 @@ public class Translator extends Thread implements ISocketUser{
 
 	public void kill(){
 		stop = true;
+		killProcess(process);
 		return;
 	}
 	
@@ -128,7 +131,8 @@ public class Translator extends Thread implements ISocketUser{
 			// Mac
 		}else if (OS.contains("NUX")){
 			// Linux
-			String tkProcess = "killall "+Hunter.getAppName()+" -q";
+			String tkProcess = "killall "+Hunter.getAppName();
+			System.out.println(tkProcess);
 			try {
 				Runtime.getRuntime().exec(tkProcess);
 			} catch (IOException e) {

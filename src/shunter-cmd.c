@@ -259,7 +259,7 @@ int main (int argc,char *argv[]) {
 		free(c);
 	}
 
-	resultados = processar(bv_size,max_events,silent,gui_run);
+	//resultados = processar(bv_size,max_events,silent,gui_run);
 
 
 	//if(!gui_run)

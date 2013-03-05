@@ -46,6 +46,7 @@ int sent_to_db;
 int p;
 int fsensos,fasensos;
 Socket *gui_socket;
+unsigned long nc_bytes_read=0;
 
 const int buffer_size_NC = buffer_size;
 const char tmp_ncuda_s_name[11] = "tmp_sensos";
@@ -53,10 +54,8 @@ const char tmp_ncuda_as_name[15] = "tmp_antisensos";
 
 void load_buffer_NONCuda(Buffer *b,int n){
   if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-	  b->load = fill_buffer(b->seq,b->capacidade);//Enche o buffer e guarda a quantidade de sequências carregadas.			
-  }
-	  
-  
+	  nc_bytes_read += fill_buffer(b->seq,b->capacidade,&b->load);//Enche o buffer e guarda a quantidade de sequências carregadas.			
+  } 
   return;
 }
 
@@ -161,18 +160,19 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
       //Copia sequências senso e antisenso encontradas
 	      switch(resultados[i]){
 		      case SENSO:
-			      central = (char*)malloc((seqSize_an+1)*sizeof(char));
 			      if(central_cut){
+				      central = (char*)malloc((blocoV+1)*sizeof(char));	
 				      gap = search_gaps[i];
 				      strncpy(central,buffer->seq[i]+gap,blocoV);
 				      central[blocoV] = '\0';
-			      }else{									
+			      }else{				
+				      central = (char*)malloc((seqSize_an+1)*sizeof(char));					
 				      strncpy(central,buffer->seq[i],seqSize_an+1);
 			      }
 
 
 			      if(regiao_5l){
-				      cincol = (char*)malloc((blocos+1)*sizeof(char));
+				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 
 				      gap = search_gaps[i] - dist_regiao_5l;
 				      strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
@@ -183,29 +183,30 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			      
 		      fsensos++;
 		      wave_size++;
-		      hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
-		      enfileirar(toStore,hold_event);
-		      /*adicionar_ht(central,cincol,SENSO);
+		      //hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+		      //enfileirar(toStore,hold_event);
+		      adicionar_ht(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
 		      if(cincol)
-			free(cincol);*/
+			free(cincol);
 		      buffer->load--;
 		      break;
 		      case ANTISENSO:
-			      central = (char*)malloc((seqSize_an+1)*sizeof(char));
 			      if(central_cut){
+				      central = (char*)malloc((blocoV+1)*sizeof(char));
 				      gap = search_gaps[i];
 				      strncpy(central,buffer->seq[i]+gap,blocoV);
 				      central[blocoV] = '\0';
-			      }else{									
+			      }else{						
+				      central = (char*)malloc((seqSize_an+1)*sizeof(char));			
 				      strncpy(central,buffer->seq[i],seqSize_an+1);
 			      }
 
 			      
 			      if(regiao_5l){
-				      cincol = (char*)malloc((blocos+1)*sizeof(char));
+				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 				      
 				      gap = search_gaps[i] + dist_regiao_5l-1;
 				      strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
@@ -216,14 +217,14 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
 			      fasensos++;
 		      wave_size++;
-		      hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-		      enfileirar(toStore,hold_event);
-		      /*adicionar_ht(central,cincol,SENSO);
+		      //hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+		     // enfileirar(toStore,hold_event);
+		      adicionar_ht(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
 		      if(cincol)
-			free(cincol);*/
+			free(cincol);
 			      buffer->load--;
 		      break;
 		      default:
@@ -256,6 +257,8 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
 void nc_queue_manager(Fila *toStore){
  Event *hold;
+ char *central;
+ char *cincoL;
   float tempo;
   
   sent_to_db =0;
@@ -263,18 +266,21 @@ void nc_queue_manager(Fila *toStore){
   while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
       hold = (Event*)desenfileirar(toStore);
+      central = hold->seq_central;
+      cincoL = hold->seq_cincoL;
+      
       sent_to_db++;
       if(hold == NULL){
 	printf("Erro alocando memoria - Queue.\n");
 	exit(1);
       }
       
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+      adicionar_ht(central,cincoL,hold->tipo);
 	
-      if(hold->seq_central != NULL)
-		free(hold->seq_central);
-      if(hold->seq_cincoL != NULL)
-		free(hold->seq_cincoL);
+      if(central != NULL)
+	free(central);
+      if(cincoL != NULL)
+	free(cincoL);
       free(hold);
     }	
   }
@@ -332,7 +338,7 @@ void nc_report_manager(Fila* toStore){
     diff = pos_sent_to_db - pre_sent_to_db;
     
     if(gui_run){
-      sprintf(msg,"T%dS%dAS%dSPS%d",p,fsensos,fasensos,diff);
+      sprintf(msg,"T%dS%dAS%dSPS%dBR%d",p,fsensos,fasensos,diff,0);
       send_msg_to_socket(gui_socket,msg);
       get_msg_to_socket(gui_socket);
     }
@@ -383,7 +389,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	      }
 	      #pragma omp section
 	      {
-		      nc_queue_manager(toStore);
+		      //nc_queue_manager(toStore);
 	      }
 	      #pragma omp section
 	      {
@@ -457,6 +463,8 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
+	
+	destroy_ghash_table();
 	if(gui_run)
 		destroy_socket(gui_socket);
 	

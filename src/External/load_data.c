@@ -147,20 +147,26 @@ void prepare_buffer(Buffer *b,int c){
 	return;
 }
 
-int fill_buffer(char **seqs,int MAX_TO_LOAD){
+int fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
 	int i = 0;
 	int j = 0;
+	int bytes_read = 0;
 	
 	//Enche buffer
 	for(j=0;j < files && i < MAX_TO_LOAD;j++){		
 		while(i < MAX_TO_LOAD && !feof(f[j])){
 			// Le sequencia, verifica se eh valida e incrementa a contagem
-			fscanf(f[j],"%*s");
-			fscanf(f[j],"%*s");
 			fscanf(f[j],"%s",hold);
-			fscanf(f[j],"%*s");
-			fscanf(f[j],"%*s");
+			bytes_read += strlen(hold)*sizeof(char);
+			fscanf(f[j],"%s",hold);
+			bytes_read += strlen(hold)*sizeof(char);
+			fscanf(f[j],"%s",hold);
+			bytes_read += strlen(hold)*sizeof(char);
 			strcpy(seqs[i],hold);
+			fscanf(f[j],"%s",hold);
+			bytes_read += strlen(hold)*sizeof(char);
+			fscanf(f[j],"%s",hold);
+			bytes_read += strlen(hold)*sizeof(char);
 			i++;
 		}
 		// Corrige contagem errada
@@ -170,7 +176,9 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD){
 			i = -1;// Nao ha mais arquivos
 	}
 	
-	return i;
+	*SEQS_LOADED = i;
+	
+	return bytes_read;
 }
 
 void despejar_seq(char *seq,FILE *f){

@@ -70,7 +70,7 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}	
-	sqlite3_exec(db,"PRAGMA cache_size = 2000000000",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA cache_size = 200000",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);

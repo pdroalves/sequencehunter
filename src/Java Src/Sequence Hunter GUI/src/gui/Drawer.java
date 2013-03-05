@@ -43,7 +43,8 @@ public class Drawer implements ActionListener {
 	private static JTextArea statusLog;
 	private static JButton startButton;
 	private static JButton abortButton;
-	private JProgressBar jprog;
+	private static JProgressBar jprog;
+	private static Container jcprogress;
 	private JPanel jpTableList;
 	private JList<String> jl ;
 	private DefaultListModel<String> listModel;
@@ -60,8 +61,6 @@ public class Drawer implements ActionListener {
 	private static JLabel sensosFounded;
 	private static JLabel antisensosFounded;
 	private static JLabel calcSPS;
-	private static long startSPS = -1;
-	private static long diffSPS;
 	
 	public Drawer(){
 		seqOriginal = new JBaseTextField(25);
@@ -80,6 +79,9 @@ public class Drawer implements ActionListener {
 		antisensosFounded = new JLabel("");
 		calcSPS = new JLabel("");
 		jpTableList = new JPanel();
+		
+		jprog = new JProgressBar();
+		jcprogress = drawProgressBarContainer(jprog);
 		drawEmptyLibsContainer();
 		
 		// Start cancel buttons
@@ -395,7 +397,7 @@ public class Drawer implements ActionListener {
 		// Adiciona tudo na Panel
 		statusPanel.add(statusLabel,BorderLayout.NORTH);
 		statusPanel.add(jscrlp,BorderLayout.CENTER);
-		statusPanel.add(drawProgressBarContainer(jprog),BorderLayout.SOUTH);
+		statusPanel.add(jcprogress,BorderLayout.SOUTH);
 		return statusPanel;
 	}
 	
@@ -474,11 +476,8 @@ public class Drawer implements ActionListener {
 	private Container drawProgressBarContainer(JProgressBar jprog){
 		Box vbox = Box.createVerticalBox();
 		
-		jprog = new JProgressBar();
-		jprog.setMaximum(4);
-		jprog.setValue(1); // Apenas para testar
 		jprog.setMinimumSize(new Dimension(ySize,xSize));
-		//jprog.setVisible(false);
+		jprog.setVisible(false);
 		
 		Box hbox = Box.createHorizontalBox();
 		hbox.add(processedSeqs);
@@ -493,6 +492,12 @@ public class Drawer implements ActionListener {
 		return vbox;
 	}
 	
+	private void initProgressBar(int max){
+		jprog.setMaximum(max);
+		jprog.setValue(0);
+		jprog.setVisible(true);
+	}
+	
 	public static void setProcessedSeqs(int n){
 		processedSeqs.setText("Total: "+Integer.toString(n)+" ");
 	}
@@ -504,6 +509,14 @@ public class Drawer implements ActionListener {
 	}
 	public static void setSPS(int n){
 		calcSPS.setText(" - "+Integer.toString(n) +" Events/s");
+	}
+	
+	public static void enableStatusJLabels(boolean b){
+		processedSeqs.setVisible(b);
+		sensosFounded.setVisible(b);
+		antisensosFounded.setVisible(b);
+		calcSPS.setVisible(b);
+		jprog.setVisible(b);
 	}
 
 	public static int getProcessedSeqs(){
@@ -518,6 +531,10 @@ public class Drawer implements ActionListener {
 	
 	public static String getTargetSeq(){
 		return seqBusca.getText();
+	}
+	
+	public static void updateProgressBar(int br){
+		jprog.setValue(br);
 	}
 
 	@Override
@@ -570,14 +587,26 @@ public class Drawer implements ActionListener {
 			writeToLog("Starting the hunt...");
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
+			initProgressBar(getTotalLibSize(libs));
 			h = new Hunter(searchSeq,libs);
-			//h.start();				
-			addReport("/home/pedro/Projetos/LNBIO/SH/Out/eGilboa/FriMar10210002013.sqlite",null);
+			h.start();				
+			//addReport("/home/pedro/Projetos/LNBIO/SH/Out/eGilboa/FriMar10210002013.sqlite",null);
 			break;
 		case "Abort":
 			huntAbort();
 			break;
 		}
+	}
+	
+	private int getTotalLibSize(ArrayList<String> libs){
+		int count = 0;
+		Iterator<String> iterator = libs.iterator();
+		while(iterator.hasNext()){
+			File f = new File(iterator.next());
+			count += f.length();
+		}
+		System.out.println("Lib size: "+count);
+		return count;
 	}
 	
 	static public void writeToLog(String txt){
@@ -588,6 +617,13 @@ public class Drawer implements ActionListener {
 	
 	static public void huntDone(String libDatabse,File logFile){
 		if(libDatabse != null){
+			jprog.setValue(jprog.getMaximum());
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			addReport(libDatabse,logFile);
 			jtp.setSelectedIndex(2);
 			Drawer.writeToLog("Hunt done.");
@@ -595,8 +631,7 @@ public class Drawer implements ActionListener {
 		}
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
-		startSPS = -1;
-		diffSPS = 0;
+		enableStatusJLabels(false);
 	}
 	
 	static public void huntAbort(){
@@ -604,8 +639,7 @@ public class Drawer implements ActionListener {
 		writeToLog("Hunt aborted");
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
-		startSPS = -1;
-		diffSPS = 0;
+		enableStatusJLabels(false);
 	}
 
 }
