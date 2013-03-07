@@ -68,7 +68,6 @@ static GOptionEntry entries[] =
 		{ "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
 		{ "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Impede o processamento atraves da arquitetura CUDA.", NULL },
 		{ "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Carrega a configuracao de busca de um arquivo de texto.", NULL },
-		{ "check", 'c', 0, G_OPTION_ARG_NONE, &check_seqs, "Verifica a biblioteca antes de executar a busca.", NULL },
 		{ "events", 'e', 0, G_OPTION_ARG_INT, &max_events, "Quantidade maxima de eventos a serem exportados. Padrao: 20.", NULL},
 		{ "cutseqs", 't', 0, G_OPTION_ARG_NONE, &cutmode, "Guarda apenas o bloco variavel central de cada sequencia apos a filtragem.", NULL },
 		{ "keep", 'k', 0, G_OPTION_ARG_NONE, &keep, "Gera binario com os dados brutos apos filtragem.", NULL },

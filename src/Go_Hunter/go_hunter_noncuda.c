@@ -220,6 +220,10 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		      wave_size++;
 		      hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 		      enfileirar(toStore,hold_event);
+		      if(central != NULL)
+			free(central);
+		      if(cincol != NULL)
+			free(cincol);
 		      /*adicionar_ht(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
@@ -247,7 +251,9 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 
   if(!silent)
       printf("Busca realizada em %.2f ms.\n",iteration_time);
-
+  
+  free(resultados);
+  free(search_gaps);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
   return;
   //////////////////////////////////////////
@@ -267,26 +273,52 @@ void nc_queue_manager(Fila *toStore){
   while(!THREAD_DONE[THREAD_SEARCH]){
     while(tamanho_da_fila(toStore)> 0){
       hold = (Event*)desenfileirar(toStore);
-      central = hold->seq_central;
-      cincoL = hold->seq_cincoL;
-      
-      sent_to_db++;
-      if(hold == NULL){
-	printf("Erro alocando memoria - Queue.\n");
-	exit(1);
-      }
-      
-      adicionar_ht(central,cincoL,hold->tipo);
+      if(hold != NULL){
+	central = hold->seq_central;
+	cincoL = hold->seq_cincoL;
 	
-      if(central != NULL)
-	free(central);
-      if(cincoL != NULL)
-	free(cincoL);
-      free(hold);
+	if(hold == NULL){
+	  printf("Erro alocando memoria - Queue.\n");
+	  exit(1);
+	}
+	
+	adicionar_ht(central,cincoL,hold->tipo);
+	  
+	sent_to_db++;
+	if(central != NULL)
+	  free(central);
+	if(cincoL != NULL)
+	  free(cincoL);
+	free(hold);
+      }
     }	
   }
   
   THREAD_DONE[THREAD_QUEUE] = TRUE;
+  return;
+}
+
+void nc_send_setup_to_gui(){
+  char *msg;
+  
+  if(gui_socket == NULL){
+	  printf("Socket não configurado. Encerrando...\n");
+	  exit(1);
+  }
+  
+  msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  
+  sprintf(msg,"DB %s",get_database_filename());
+  
+  send_msg_to_socket(gui_socket,msg);
+  get_msg_to_socket(gui_socket);
+  
+  sprintf(msg,"Log %s",get_log_filename());
+  
+  send_msg_to_socket(gui_socket,msg);
+  get_msg_to_socket(gui_socket);
+  
+  free(msg);
   return;
 }
 
@@ -329,11 +361,13 @@ void nc_report_manager(Fila* toStore){
   }
   
   while(!THREAD_DONE[THREAD_SEARCH]){
+    
     queue_size = tamanho_da_fila(toStore);
     pre_sent_to_db = sent_to_db;
     SLEEP(1);
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = sent_to_db;
+    
     count++;
     
     diff = pos_sent_to_db - pre_sent_to_db;
@@ -399,31 +433,8 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	      }
 	  }
 	}
-	
+	close_buffer(&buffer);
 	return;
-}
-void nc_send_setup_to_gui(){
-  char *msg;
-  
-  if(gui_socket == NULL){
-	  printf("Socket não configurado. Encerrando...\n");
-	  exit(1);
-  }
-  
-  msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-  
-  sprintf(msg,"DB %s",get_database_filename());
-  
-  send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
-  
-  sprintf(msg,"Log %s",get_log_filename());
-  
-  send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
-  
-  free(msg);
-  return;
 }
 
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){

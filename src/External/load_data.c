@@ -181,13 +181,6 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
 	return bytes_read;
 }
 
-void despejar_seq(char *seq,FILE *f){
-	if(seq != NULL){
-			fputs(seq,f);
-			free(seq);
-		}
-	return;
-}
 
 char* carrega_do_arquivo(int n,FILE *filename){
 	char *seq;
@@ -204,3 +197,12 @@ char* carrega_do_arquivo(int n,FILE *filename){
 	return seq;
 }
 
+void close_buffer(Buffer *b){
+	int i;
+	for(i=0;i<b->capacidade;i++){
+		if(b->seq[i] != NULL)
+			free(b->seq[i]);
+	}
+	if(hold != NULL)
+		free(hold);
+}

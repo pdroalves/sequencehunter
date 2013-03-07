@@ -63,42 +63,50 @@ void enfileirar(Fila *f,void *data){
 		//printf("Enfileirando: %s\n",seq);
 		
 		novo = (FilaItem*)malloc(sizeof(FilaItem));
-		novo->data = data;
+		if(novo != NULL){
+			novo->data = data;
 
-         omp_set_lock(&f->fila_lock);
-		switch(f->size){
-			case 0:
-				f->first = novo;
-			break;
-			case 1:
-				f->end = novo;
-				f->first->prox = f->end;
-			break;
-			default:
-				f->end->prox = novo;
-				f->end = f->end->prox;
-			break;
+			 omp_set_lock(&f->fila_lock);
+			switch(tamanho_da_fila(f)){
+				case 0:
+					f->first = novo;
+				break;
+				case 1:
+					f->end = novo;
+					f->first->prox = f->end;
+				break;
+				default:
+					f->end->prox = novo;
+					f->end = f->end->prox;
+				break;
+			}
+			f->size = f->size + 1;
+			omp_unset_lock(&f->fila_lock);
+			
 		}
-		
-		f->size = f->size + 1;
-         omp_unset_lock(&f->fila_lock);
 	return;
 }
 
 void* desenfileirar(Fila *f){
-		void *to_return;
-		//printf("Desenfileirando\n");
-         omp_set_lock(&f->fila_lock);
-         
-		if(f->size > 0){
-			to_return = f->first->data;
-			f->first = f->first->prox;
-			f->size--;
-		}else{
-			to_return = NULL;
-		}
+	void *to_return;
+	FilaItem *hold;
+	
+	//printf("Desenfileirando\n");
+	 
+	if(tamanho_da_fila(f) > 0){
+		omp_set_lock(&f->fila_lock);
+		hold = f->first;		
+		f->first = f->first->prox;
+		to_return = hold->data;	
+		if(hold != NULL)
+			free(hold);
 		
-         omp_unset_lock(&f->fila_lock);
+		f->size--;
+		omp_unset_lock(&f->fila_lock);
+	}else{
+		to_return = NULL;
+	}
+	
 	return to_return;
 }
 
