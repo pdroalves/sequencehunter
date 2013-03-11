@@ -24,6 +24,7 @@
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
+#define GIGA 1073741824 
 
 omp_lock_t buffer_lock;
 gboolean verbose;
@@ -481,6 +482,7 @@ void report_manager(Fila *toStore){
     }
     
     if(verbose && !silent){
+		printf("DB memory used: %.2f GB\n",sqlite3_memory_used()/(float)GIGA);
 		printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
 		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
 		printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);

@@ -477,7 +477,6 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
 	
-	destroy_ghash_table();
 	if(gui_run)
 		destroy_socket(gui_socket);
 	
