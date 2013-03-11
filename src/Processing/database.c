@@ -2,7 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <omp.h>
-#include <sqlite3.h>
+#ifdef _WIN32
+#include "C:\SQLite3\sqlite-source\sqlite3.h"
+#endif
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
 
@@ -44,7 +46,6 @@ void db_create(char *filename){
 	int ret;
     char * sErrMsg;
 	char *query;
-    sqlite3_stmt *stmt;
 	
 	ret = sqlite3_open(filename,&db);
 	
@@ -91,7 +92,7 @@ void db_create(char *filename){
 	query = (char*)malloc(500*sizeof(char));
 	
 	// Create the SQL query for creating a table
-	strcpy(query,"CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,qnt_rel REAL DEFAULT 0.00,pares INTEGER DEFAULT 0)");
+	strcpy(query,"CREATE TABLE events (main_seq TEXT NOT NULL PRIMARY KEY UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,pares INTEGER DEFAULT 0)");
 
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
@@ -130,8 +131,6 @@ void db_create(char *filename){
 
 void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	int ret=0;
-	int cols;
-    char * sErrMsg;
     
 	sqlite3_bind_text(stmt_insert,1,seq_central,-1,SQLITE_STATIC);
 	ret = sqlite3_step(stmt_insert);	
@@ -167,7 +166,13 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 }
 
 void db_destroy(){
+    char * sErrMsg;
+	int ret;
+	char query[] = "UPDATE events SET pares = min(qnt_sensos,qnt_antisensos)";
+
 	printf("Limpando\n");
+	
+	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	sqlite3_finalize(stmt_update_senso);
 	sqlite3_finalize(stmt_update_antisenso);
 	sqlite3_finalize(stmt_insert);

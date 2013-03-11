@@ -130,7 +130,7 @@ void prepare_buffer(Buffer *b,int c){
 	int n;
 	char* tamanho_do_buffer;
 	
-	get_setup(&n);
+	n = get_setup();
 	
 	b->capacidade = c;
 	b->seq = (char**)malloc(c*sizeof(char*));
@@ -162,6 +162,8 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
 			bytes_read += strlen(hold)*sizeof(char);
 			fscanf(f[j],"%s",hold);
 			bytes_read += strlen(hold)*sizeof(char);
+			if(seqs[i] == NULL)
+				seqs[i] = (char*)malloc((strlen(hold)+1)*sizeof(char));
 			strcpy(seqs[i],hold);
 			fscanf(f[j],"%s",hold);
 			bytes_read += strlen(hold)*sizeof(char);
@@ -199,10 +201,10 @@ char* carrega_do_arquivo(int n,FILE *filename){
 
 void close_buffer(Buffer *b){
 	int i;
-	for(i=0;i<b->capacidade;i++){
+	/*for(i=0;i<b->capacidade;i++){
 		if(b->seq[i] != NULL)
 			free(b->seq[i]);
-	}
+	}*/
 	if(hold != NULL)
 		free(hold);
 }

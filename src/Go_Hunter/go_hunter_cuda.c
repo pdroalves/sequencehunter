@@ -20,6 +20,7 @@
 #include "../Headers/busca.h"
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
+#include "../Headers/socket.h"
 
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
@@ -417,6 +418,21 @@ void queue_manager(Fila *toStore)
   return;
 }
 
+void send_setup_to_gui(){
+  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+  char *msg_returned;
+  
+  sprintf(msg,"DB %s",get_database_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+
+  sprintf(msg,"Log %s",get_log_filename());
+  send_msg_to_socket(gui_socket,msg);
+  msg_returned = get_msg_to_socket(gui_socket);
+  
+  return;
+}
+
 void report_manager(Fila *toStore){
   /*
   while(!THREAD_DONE[THREAD_QUEUE]){
@@ -563,21 +579,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
     cudaFreeHost(h_data);
     cudaFreeHost(d_data);*/
   cudaFree(data);
-  return;
-}
-
-void send_setup_to_gui(){
-  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-  char *msg_returned;
-  
-  sprintf(msg,"DB %s",get_database_filename());
-  send_msg_to_socket(gui_socket,msg);
-  msg_returned = get_msg_to_socket(gui_socket);
-
-  sprintf(msg,"Log %s",get_log_filename());
-  send_msg_to_socket(gui_socket,msg);
-  msg_returned = get_msg_to_socket(gui_socket);
-  
   return;
 }
 

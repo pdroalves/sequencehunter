@@ -61,6 +61,7 @@ public class Drawer implements ActionListener {
 	private static JLabel sensosFounded;
 	private static JLabel antisensosFounded;
 	private static JLabel calcSPS;
+	private static JTextField outputfolderTF;
 	
 	public Drawer(){
 		seqOriginal = new JBaseTextField(25);
@@ -79,6 +80,7 @@ public class Drawer implements ActionListener {
 		antisensosFounded = new JLabel("");
 		calcSPS = new JLabel("");
 		jpTableList = new JPanel();
+		h = new Hunter();
 		
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
@@ -115,6 +117,7 @@ public class Drawer implements ActionListener {
 		jtp.addTab("Setup",null,drawSearchContainer(),"Set what you want to search");
 		
 		// Monta summaryContainer
+		outputfolderTF = new JTextField(50);
 		jtp.addTab("Summary",null,drawSummaryContainer(),"Confirm the configuration and start the hunt");
 		
 		// Monta reportContainer
@@ -225,6 +228,7 @@ public class Drawer implements ActionListener {
 		jp.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		
+		// Line - Target Sequence
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.15;
 	    c.weightx = 0.3;
@@ -232,19 +236,22 @@ public class Drawer implements ActionListener {
 	    c.gridy = 0;
 		jp.add(new JLabel("Target sequence: "),c);
 
+		// Line - Target Sequence
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.1;
 	    c.weightx = 0.3;
 	    c.gridx = 1;
 	    c.gridy = 0;
 		jp.add(new JLabel(searchSeq),c);
-		
+
+		// Line - Loaded libraries
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weightx = 0.3;
 	    c.gridx = 0;
 	    c.gridy = 1;
-		jp.add(new JLabel("Loaded librarys: "),c);
-		
+		jp.add(new JLabel("Loaded libraries: "),c);
+
+		// Line - Loaded libraries
 		Box vbox = Box.createVerticalBox();
 		for(String s : libs){
 			JLabel lib = new JLabel(s);
@@ -252,19 +259,44 @@ public class Drawer implements ActionListener {
 			vbox.add(lib);
 		}
 	    c.fill = GridBagConstraints.BOTH;
-	    c.weighty = 0.75;
+	    c.weighty = 0.65;
 	    c.weightx = 0.7;
 	    c.gridx = 1;
 	    c.gridy = 1;
 		JScrollPane jscrp = new JScrollPane(vbox);
 		jp.add(jscrp,c);
 		
+		// Line - Output Folder
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.3;
+	    c.gridx = 0;
+	    c.gridy = 2;
+		jp.add(new JLabel("Output folder: "),c);
+
+		// Line - Output Folder
 		Box hbox = Box.createHorizontalBox();
+		JButton browseOutput = new JButton("Browse");
+		browseOutput.addActionListener(this);
+		outputfolderTF.setEditable(false);
+		String outputFolder = h.getOutput();
+		outputfolderTF.setText(outputFolder);
+		hbox.add(outputfolderTF);
+		hbox.add(browseOutput);
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.4;
+	    c.gridx = 1;
+	    c.gridy = 2;
+		jp.add(hbox,c);
+
+		// Line - Start/Abort buttons
+		hbox = Box.createHorizontalBox();
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.1;
 	    c.weightx = 0.3;
 	    c.gridx = 1;
-	    c.gridy = 2;		
+	    c.gridy = 3;		
 	    hbox.add(startButton);
 	    hbox.add(abortButton);
 		jp.add(hbox,c);
@@ -553,6 +585,7 @@ public class Drawer implements ActionListener {
 			break;
 		case "Load":
 			JFileChooser jfc = new JFileChooser();
+			jfc.setCurrentDirectory(new File(h.getOutput()));
 			jfc.setFileFilter(new JTxtFileFilter());
 			jfc.setMultiSelectionEnabled(true);
 			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
@@ -588,12 +621,24 @@ public class Drawer implements ActionListener {
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
 			initProgressBar(getTotalLibSize(libs));
-			h = new Hunter(searchSeq,libs);
+			h.Set(searchSeq,libs);
 			h.start();				
 			//addReport("/home/pedro/Projetos/LNBIO/SH/Out/eGilboa/FriMar10210002013.sqlite",null);
 			break;
 		case "Abort":
 			huntAbort();
+			break;
+		case "Browse":
+			JFileChooser jfcBrowse = new JFileChooser();
+			jfcBrowse.setCurrentDirectory(new File(h.getOutput()));
+			jfcBrowse.setDialogTitle("Select output folder");
+			jfcBrowse.setMultiSelectionEnabled(false);
+			jfcBrowse.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			jfcBrowse.setAcceptAllFileFilterUsed(false);
+			if(jfcBrowse.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+				h.setOutput(jfcBrowse.getSelectedFile().getAbsolutePath());
+				outputfolderTF.setText(h.getOutput());
+			}
 			break;
 		}
 	}
