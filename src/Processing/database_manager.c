@@ -1,9 +1,9 @@
-//      ghashtable.c
+//      database_manager.c
 //      
 //      Copyright 2012 Pedro Alves <pdroalves@gmail.com>
 //      
-//		Implementação de GHashTable para armazenar e contar repetições
-//		de sequências. Cria nova GHashtable, adiciona elemento, 
+//		Implementação de banco de dados SQLite3 para armazenar e contar repetições
+//		de sequências. 
 //
 //		21/08/2012
 
@@ -23,7 +23,7 @@
 int data_added;
 char *db_filename;
 
-void criar_ghash_table(char* output_dir,char *tempo,const int key_max_size){
+void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
    int i;
    int j;
    
@@ -55,7 +55,7 @@ void criar_ghash_table(char* output_dir,char *tempo,const int key_max_size){
 	return;
 }
 
-void destroy_ghash_table(){
+void destroy_db_manager(){
 	// Envia msg para fechar
 	if(data_added > 0)
 		db_commit_transaction();
@@ -64,7 +64,7 @@ void destroy_ghash_table(){
 	return;
 }
 
-void adicionar_ht(char *central,char *cincol,int tipo){
+void adicionar_db(char *central,char *cincol,int tipo){
 	
 	if(data_added > MAX_PER_TMP_FILE){
 		db_commit_transaction();
@@ -77,7 +77,7 @@ void adicionar_ht(char *central,char *cincol,int tipo){
 	return;
 }
 
-int tamanho_ht(){
+int tamanho_db(){
 	// To-do
 	return 0;		
 }

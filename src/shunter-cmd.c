@@ -23,7 +23,7 @@
 #include "Headers/processing_data.h"
 #include "Headers/linkedlist.h"
 #include "Headers/version.h"
-#include "Headers/hashtable.h"
+#include "Headers/database_manager.h"
 #include "Headers/database.h"
 #ifdef _WIN32
 char* DEFAULT_OUTPUT_DIR = "%HOMEPATH%";
@@ -233,9 +233,9 @@ int main (int argc,char *argv[]) {
 
 		// Seta database
 		if(cutmode)  
-			criar_ghash_table(output_dir,tempo,bv_size);
+			criar_db_manager(output_dir,tempo,bv_size);
 		else
-			criar_ghash_table(output_dir,tempo,get_setup());
+			criar_db_manager(output_dir,tempo,get_setup());
 
 		//Guarda parametros
 		set.verbose = verbose;
@@ -267,6 +267,6 @@ int main (int argc,char *argv[]) {
 	if(!silent)
 		printf("Algoritmo concluído.\n");
 	close_file();
-	destroy_ghash_table();
+	destroy_db_manager();
 	return 0;
 }

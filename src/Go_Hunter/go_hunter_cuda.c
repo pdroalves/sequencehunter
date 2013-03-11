@@ -12,7 +12,7 @@
 #else
 #define SLEEP(a) sleep(a)
 #endif
-#include "../Headers/hashtable.h"
+#include "../Headers/database_manager.h"
 #include "../Headers/database.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
@@ -401,7 +401,7 @@ void queue_manager(Fila *toStore)
 	exit(1);
       }
       
-      adicionar_ht(hold->seq_central,hold->seq_cincoL,hold->tipo);
+      adicionar_db(hold->seq_central,hold->seq_cincoL,hold->tipo);
 	
       if(hold->seq_central != NULL)
 	free(hold->seq_central);
@@ -546,7 +546,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	    }
 	  }
   }
-  destroy_ghash_table();
+  destroy_db_manager();
   if(gui_run)
 	  destroy_socket(gui_socket);
 	

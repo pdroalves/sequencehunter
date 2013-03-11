@@ -10,7 +10,7 @@
 #else
 #define SLEEP(a) sleep(a)
 #endif
-#include "../Headers/hashtable.h"
+#include "../Headers/database_manager.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/go_hunter_noncuda.h"
 #include "../Headers/load_data.h"
@@ -186,7 +186,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 		      wave_size++;
 		      hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
 		      enfileirar(toStore,hold_event);
-		     /* adicionar_ht(central,cincol,SENSO);
+		     /* adicionar_db(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
@@ -224,7 +224,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			free(central);
 		      if(cincol != NULL)
 			free(cincol);
-		      /*adicionar_ht(central,cincol,SENSO);
+		      /*adicionar_db(central,cincol,SENSO);
 			sent_to_db++;
 		      if(central)
 			free(central);
@@ -282,7 +282,7 @@ void nc_queue_manager(Fila *toStore){
 	  exit(1);
 	}
 	
-	adicionar_ht(central,cincoL,hold->tipo);
+	adicionar_db(central,cincoL,hold->tipo);
 	  
 	sent_to_db++;
 	if(central != NULL)
