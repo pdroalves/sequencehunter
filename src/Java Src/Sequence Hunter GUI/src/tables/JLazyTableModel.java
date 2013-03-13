@@ -1,6 +1,7 @@
 package tables;
 
 import gui.Drawer;
+import gui.SearchDrawer;
 import hunt.Library;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class JLazyTableModel extends AbstractTableModel{
 	
 	private String getTargetPattern(){
 		String pattern = new String("");
-		String originalSeq = Drawer.getTargetSeq();
+		String originalSeq = SearchDrawer.getTargetSeq();
 		
 		for(int i = 0;i < originalSeq.length();i++){
 			switch(originalSeq.charAt(i)){
