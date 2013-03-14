@@ -88,8 +88,13 @@ public class SummaryDrawer implements ActionListener{
 	
 	public static void removeLoadedLib(String libpath){
 		// Remove lib
-
-		// To-do
+		for(int i=0;i < libSummaryVBox.getComponentCount();i++){
+			JLabel lib =(JLabel)libSummaryVBox.getComponent(i);
+			if(lib.getText().equals(libpath)){
+				libSummaryVBox.remove(i);
+			}
+		}
+		libs.remove(libpath);
 	}
 	
 	private void drawSummaryContainer(){
@@ -171,7 +176,10 @@ public class SummaryDrawer implements ActionListener{
 			drawer.moveToReportTab();
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");
+		}else{
+			Drawer.writeToLog("Error on processing.");
 		}
+		
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
 		Drawer.enableStatusJLabels(false);

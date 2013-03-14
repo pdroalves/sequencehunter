@@ -4,6 +4,8 @@
 #include <omp.h>
 #ifdef _WIN32
 #include "C:\SQLite3\sqlite-source\sqlite3.h"
+#else
+#include <sqlite3.h>
 #endif
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"

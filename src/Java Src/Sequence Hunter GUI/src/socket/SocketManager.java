@@ -8,6 +8,9 @@
 
 package socket;
 
+import gui.Drawer;
+import gui.SummaryDrawer;
+
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.SocketException;
@@ -43,6 +46,8 @@ public class SocketManager {
 		}
 		catch (IOException e){
 			e.printStackTrace(System.err);
+			Drawer.writeToLog("Error on connection to CLI.");
+			//SummaryDrawer.huntAbort();
 		}
 		return sock;
 	}
@@ -150,6 +155,10 @@ public class SocketManager {
 				System.err.println("Exception:");
 				e.printStackTrace(System.err);
 			}
+		catch (NullPointerException e){
+			System.err.println("Exception:");
+			
+		}
 
 			System.err.println("Finished with socket.");	
 	}

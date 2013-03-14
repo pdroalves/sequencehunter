@@ -50,7 +50,6 @@ public class SearchDrawer implements ActionListener{
 	private JList<String> jl ;
 	private DefaultListModel<String> listModel;
 	private JTabbedPane libContainer;
-	private JPanel jpTableList;
 	private boolean emptyLibPreview;
 	private int xSize = 700;
 	private int ySize = 1000;
@@ -69,8 +68,7 @@ public class SearchDrawer implements ActionListener{
 		seqBusca = new JLabel();
 		jl = new JList<String>();
 		listModel = new DefaultListModel<String>();  
-		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		jpTableList = new JPanel();
+		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 		seqBuscaPanel = new JPanel();
 		seqBuscaRightPanel = new JPanel(new BorderLayout());
 		seqBuscaLeftPanel = new JPanel(new BorderLayout());
@@ -185,14 +183,14 @@ public class SearchDrawer implements ActionListener{
 				throw new FileNotFoundException();
 			}
 			
-			// Inicializa container que irá guardar os dados
+			// Inicializa container que irah guardar os dados
 			JPanel jp = new JPanel(new BorderLayout());
 			final JLibPreviewTableModel jltm = new JLibPreviewTableModel(lib);
 			
-			// Inicializa tabela que irá mostrar as sequências
+			// Inicializa tabela que irah mostrar as sequencias
 			JTable jtabPreviewLibs = new JTable(jltm);
 			
-			// Seta configurações de render para a tabela
+			// Seta configuracoes de render para a tabela
 			DefaultTableCellRenderer indexRenderer = new DefaultTableCellRenderer();
 			indexRenderer.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
 			jtabPreviewLibs.getColumnModel().getColumn(0).setCellRenderer(new JTableRenderer(indexRenderer));
@@ -264,19 +262,20 @@ public class SearchDrawer implements ActionListener{
 	public void actionPerformed(ActionEvent ae) {
 		switch(ae.getActionCommand()){
 		case "Set":
-			if(seqOriginal.getSelectedText() != null)
-				searchSeq = seqOriginal.getSelectedText();
-			else	
-				searchSeq = seqOriginal.getText();
-			seqBusca.setText(searchSeq);
-			Drawer.writeToLog("Target sequence: " + searchSeq);
-			// To-do: Atualizar highlights nas tabelas lib preview
-			SummaryDrawer.setTargetSeq(searchSeq);
-			libContainer.repaint();
+			if(seqOriginal.getText().length() > 0){
+				if(seqOriginal.getSelectedText() != null)
+					searchSeq = seqOriginal.getSelectedText();
+				else	
+					searchSeq = seqOriginal.getText();
+				seqBusca.setText(searchSeq);
+				Drawer.writeToLog("Target sequence: " + searchSeq);
+				SummaryDrawer.setTargetSeq(searchSeq);
+				libContainer.repaint();
+			}
 			break;
 		case "Load":
 			JFileChooser jfc = new JFileChooser();
-			jfc.setCurrentDirectory(new File(h.getOutput()));
+			//jfc.setCurrentDirectory(new File(h.getOutput()));
 			jfc.setFileFilter(new JTxtFileFilter());
 			jfc.setMultiSelectionEnabled(true);
 			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
@@ -293,7 +292,6 @@ public class SearchDrawer implements ActionListener{
 					}
 				}
 			}
-			// To-do: Atualizar highlights nas tabelas lib preview
 			break;
 		case "Unload":
 			List<String> elements =jl.getSelectedValuesList();
@@ -305,7 +303,6 @@ public class SearchDrawer implements ActionListener{
 				listModel.removeElement(ele);
 				Drawer.writeToLog("File "+ele+" unloaded.");
 			}
-			// To-do: Atualizar highlights nas tabelas lib preview
 			break;
 		}
 	}

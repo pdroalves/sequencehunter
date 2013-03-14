@@ -29,7 +29,7 @@ public class Hunter{
 		}else if(getOS().contains("MAC")){
 			
 		}else if(getOS().contains("NUX")){
-			default_output_folder = System.getenv("~/");
+			default_output_folder = System.getenv("HOME");
 		}
 	}
 	

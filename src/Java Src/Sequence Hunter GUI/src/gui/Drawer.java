@@ -39,7 +39,7 @@ public class Drawer {
 	private static JTextArea statusLog;
 	private static Container jcprogress;
 	private int xSize = 700;
-	private int ySize = 1000;
+	private int ySize = 900;
 	private SearchDrawer searchDrawer;
 	private SummaryDrawer summaryDrawer;
 	private ReportDrawer reportDrawer; 
