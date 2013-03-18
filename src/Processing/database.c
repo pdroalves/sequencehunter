@@ -2,7 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <omp.h>
+#ifdef _WIN32
+#include "C:\SQLite3\sqlite-source\sqlite3.h"
+#else
 #include <sqlite3.h>
+#endif
 #include "../Headers/operacoes.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
@@ -108,16 +112,15 @@ void db_create(char *filename){
 	
 	// Create the SQL query for creating a table
 	strcpy(query,"CREATE TABLE events (id INTEGER NOT NULL,main_seq TEXT NOT NULL UNIQUE,qnt_sensos INTEGER DEFAULT 0,qnt_antisensos INTEGER DEFAULT 0,pares INTEGER DEFAULT 0,PRIMARY KEY(id))");
+	// Execute the query for creating the table
+	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Erro ao criar tabela: %s\n",sErrMsg);
 		exit(1);
 	}
-	// Execute the query for creating the table
-	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 
 	// Create the SQL query for creating a table
 	strcpy(query,"CREATE TABLE events_cincol (id INTEGER NOT NULL,cincol_seq TEXT NOT NULL UNIQUE,PRIMARY KEY(id))");
-
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
@@ -306,7 +309,13 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 }
 
 void db_destroy(){
+    char * sErrMsg;
+	int ret;
+	char query[] = "UPDATE events SET pares = min(qnt_sensos,qnt_antisensos)";
+
 	printf("Limpando\n");
+	
+	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	sqlite3_finalize(stmt_update_senso);
 	sqlite3_finalize(stmt_update_antisenso);
 	sqlite3_finalize(stmt_insert);

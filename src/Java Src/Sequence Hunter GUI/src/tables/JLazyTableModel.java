@@ -11,18 +11,16 @@ import java.util.regex.Pattern;
 import javax.swing.table.AbstractTableModel;
 
 
-public class JLibPreviewTableModel extends AbstractTableModel{
+public class JLazyTableModel extends AbstractTableModel{
 	
 	private Library data;
 	private ArrayList<String> seqs;
 	private int defaultLoad = 100;
-	private JLibPreviewLoadMore loader;
 	
-	public JLibPreviewTableModel(Library lib){
+	public JLazyTableModel(Library lib){
 		super();
 		data = lib;
 		seqs = new ArrayList<String>();
-		loader = new JLibPreviewLoadMore(data,defaultLoad,seqs);
 		loadMore();
 	}
 
@@ -143,7 +141,7 @@ public class JLibPreviewTableModel extends AbstractTableModel{
 	}
 	
 	public void loadMore(){
-		loader.run();
+		(new JLazyLoadMore(data,defaultLoad,seqs)).start();
 		return;
 	}
 

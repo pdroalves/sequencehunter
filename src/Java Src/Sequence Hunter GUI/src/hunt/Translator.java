@@ -1,6 +1,7 @@
 package hunt;
 
 import gui.Drawer;
+import gui.SummaryDrawer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,9 +45,9 @@ public class Translator extends Thread implements ISocketUser{
 			
 			if(!stop){
 				if(outputDatabase != null)
-					Drawer.huntDone(outputDatabase,new File(logFile));
+					SummaryDrawer.huntDone(outputDatabase,new File(logFile));
 				else
-					Drawer.huntDone(null,null);
+					SummaryDrawer.huntDone(null,null);
 			}else{
 				killProcess(process);
 				stop = false;
@@ -54,11 +55,11 @@ public class Translator extends Thread implements ISocketUser{
 		}catch(IllegalArgumentException e){
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
-			Drawer.huntAbort();
+			SummaryDrawer.huntAbort();
 		}catch (IOException e) {
 			e.printStackTrace();
 			Drawer.writeToLog("Hunt fail.");
-			Drawer.huntAbort();
+			SummaryDrawer.huntAbort();
 		}
 		return;
 	}

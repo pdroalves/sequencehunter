@@ -49,7 +49,7 @@ void criar_socket(Socket *sock,int port){
     sock->ostream = g_io_stream_get_output_stream (G_IO_STREAM (sock->connection));  
     
     send_msg_to_socket(sock,SKT_MSG_HELLO);  
-   // get_msg_to_socket(sock);   
+    get_msg_to_socket(sock);   
     return;
 }
 

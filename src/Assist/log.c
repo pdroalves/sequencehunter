@@ -20,6 +20,19 @@ char* get_log_filename(){
 	return logfile_name;
 }
 
+void print_time(){
+ 
+ time_t t;
+ char *tempo;
+
+ time(&t);
+ tempo = ctime(&t);
+ 
+ fprintf(logfile,"%s\n",tempo);
+
+  return;
+}
+
 void prepareLog(char* output_dir,char *tempo,gboolean gui){
   //Abre e prepara arquivo log.dat para receber mensagens de log
 	char tmp[500];	
@@ -31,7 +44,7 @@ void prepareLog(char* output_dir,char *tempo,gboolean gui){
 	else
 		sprintf(tmp,"SHunter Log - %s.txt",tempo);
 	for(i=0;i <= strlen(tmp); i++){
-		if(tmp[i] == ':')
+		if(tmp[i] == ':' && i > 1)
 			logfile_name[i] = ' ';
 		else
 			logfile_name[i] = tmp[i];
@@ -50,19 +63,6 @@ void prepareLog(char* output_dir,char *tempo,gboolean gui){
 
 	  if(gui)
 		printf("Log %s\n",logfile_name);
-
-  return;
-}
-
-void print_time(){
- 
- time_t t;
- char *tempo;
-
- time(&t);
- tempo = ctime(&t);
- 
- fprintf(logfile,"%s\n",tempo);
 
   return;
 }

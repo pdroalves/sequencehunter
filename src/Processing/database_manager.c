@@ -39,7 +39,8 @@ void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
 	while(i<=strlen(db_filename)){
 		if(		db_filename[i] != ' ' && 
 				db_filename[i] != ':' && 
-				db_filename[i] != '\n'){
+				db_filename[i] != '\n' ||
+				i <= 1){
 			db_filename[j] = db_filename[i];
 			j++;
 		}

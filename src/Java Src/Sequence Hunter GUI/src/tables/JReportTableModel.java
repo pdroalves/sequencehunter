@@ -18,6 +18,7 @@ public class JReportTableModel extends AbstractTableModel{
 		database = db;
 		seqs = new ArrayList<Evento>();
 		jrld = new JReportLoadData(database,defaultLoad,seqs);
+		startLoad();
 	}
 
 	@Override
@@ -71,5 +72,10 @@ public class JReportTableModel extends AbstractTableModel{
 	
 	public void loadData(){
 		jrld.load();
+	}
+	
+	private void startLoad(){
+		for(int i = 0; i < defaultLoad;i++)
+			loadData();
 	}
 }

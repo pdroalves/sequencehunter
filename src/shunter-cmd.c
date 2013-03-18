@@ -26,7 +26,17 @@
 #include "Headers/database_manager.h"
 #include "Headers/database.h"
 #ifdef _WIN32
-char* DEFAULT_OUTPUT_DIR = "%HOMEPATH%";
+#include <Windows.h>
+const char* get_windows_homefolder(){
+	const char *homedrive = getenv("HOMEDRIVE");
+	const char *homepath = getenv("HOMEPATH");
+	char* fullpath;
+	fullpath = (char*)malloc((strlen(homedrive)+strlen(homepath)+1)*sizeof(char));
+	strcpy(fullpath,homedrive);
+	strcat(fullpath,homepath);
+	return fullpath;
+};
+#define DEFAULT_OUTPUT_DIR get_windows_homefolder()
 #else
 #include <wordexp.h>
 const char* expand_tilde(){
@@ -85,6 +95,19 @@ int get_build(){
 	return build;
 }
 
+char* trocar_barra(char *s){
+	const int len = strlen(s);
+	char *n_s = (char*)malloc((len+1)*sizeof(char));
+	int i;
+	for(i=0;i<=len;i++){
+		if(s[i] == '\\'){
+			n_s[i] = '/';
+		}else{
+			n_s[i] = s[i];
+		}
+	}
+	return n_s;
+}
 
 //####################
 int main (int argc,char *argv[]) {
@@ -105,9 +128,6 @@ int main (int argc,char *argv[]) {
 	Params set;
 	time_t t;
 	char *tempo;
-
-	// Necessario para Glib 2.28
-	g_type_init();
 
 	//##########################
 	//Carrega parametros de entrada
@@ -140,7 +160,9 @@ int main (int argc,char *argv[]) {
 			output_dir[strlen(output_dir)-1] = '\0';
 	}else{
 		output_dir = (char*)malloc(100*sizeof(char));
+		printf("Output: %s\n",DEFAULT_OUTPUT_DIR);
 		strcpy(output_dir,DEFAULT_OUTPUT_DIR);
+		output_dir = trocar_barra(output_dir);
 	}
 	// Seta log
 	prepareLog(output_dir,tempo,gui_run);

@@ -7,4 +7,5 @@ int fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED);
 int get_setup();
 int check_seq(char *seq,int *bloco1,int *bloco2,int *blocoV);
 void close_buffer(Buffer *b);
+int check_sequencias_validas(int silent);
 #endif

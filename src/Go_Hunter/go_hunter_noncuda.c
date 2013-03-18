@@ -18,6 +18,7 @@
 #include "../Headers/busca.h"
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
+#include "../Headers/socket.h"
 
 // Lista de threads a serem criados
 enum threads { 
@@ -359,7 +360,7 @@ void nc_report_manager(Fila* toStore){
 	  nc_send_setup_to_gui();
   }
   
-  while(!THREAD_DONE[THREAD_SEARCH]){
+  while(!THREAD_DONE[THREAD_QUEUE]){
     
     queue_size = tamanho_da_fila(toStore);
     pre_sent_to_db = sent_to_db;

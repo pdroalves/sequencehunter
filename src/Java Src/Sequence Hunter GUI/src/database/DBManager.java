@@ -21,7 +21,7 @@ public class DBManager extends Thread{
 	}
 
 	public void loadSorted(){
-		dbst.start();
+		dbst.go();
 	}
 
 	public Evento getEvento(){

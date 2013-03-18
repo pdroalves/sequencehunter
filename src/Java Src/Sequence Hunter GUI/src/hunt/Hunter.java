@@ -12,24 +12,51 @@ import java.util.Map;
 public class Hunter{
 
 	private ProcessBuilder pb;
-	private static String appName_win = "SHunter64.exe";
+	private static String appName_win = "%SHUNTER%";
 	private static String appName_mac = "";
 	private static String appName_nix = "shunter-cli";
+	private static String default_output_folder;
+	private static String output_folder;
 	String command = "";
 	private Translator t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	private static String OS;
+	
+	public Hunter(){
+		setOS(System.getProperty("os.name").toUpperCase());
+		if(getOS().contains("WIN")){
+			default_output_folder = new String(System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH"));
+		}else if(getOS().contains("MAC")){
+			
+		}else if(getOS().contains("NUX")){
+			default_output_folder = System.getenv("HOME");
+		}
+	}
+	
+	public void setOutput(String output){
+		output_folder = output;
+	}
+	
+	public String getOutput(){
+		if(output_folder != null){
+			return output_folder;
+		}else{
+			return default_output_folder;
+		}
+	}
 
-	public Hunter(String target,ArrayList<String> libs){	
+	public void Set(String target,ArrayList<String> libs){	
 
 		// Gera linha de parametros
-		String parameters = new String("--target "+ target+ " -dt --gui -o /home/pedro");
+		String parameters = new String("--target "+ target+ " -dt --gui");
+		if(output_folder != null){
+			parameters.concat(" -o "+output_folder);
+		}
 		String libsPath = " ";
 		if(!libs.isEmpty()){
 			for(int i=0;i<libs.size();i++)
 				libsPath = libsPath.concat("\""+libs.get(i))+"\" ";
 		}
-		setOS(System.getProperty("os.name").toUpperCase());
 
 		if (getOS().contains("WIN")){
 			//Windows
