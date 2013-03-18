@@ -71,7 +71,7 @@ void adicionar_db(char *central,char *cincol,int tipo){
 		db_start_transaction();
 		data_added = 0;
 	}
-	db_add(central,NULL,tipo);
+	db_add(central,cincol,tipo);
 	data_added++;
 	
 	return;
