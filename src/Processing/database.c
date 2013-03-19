@@ -21,6 +21,7 @@ double MAX_DB_MEM_USE;
 sqlite3 *db;
 // The number of query to be dbd,size of each query and pointer
 int count;
+int destroyed;
 sqlite3_stmt *stmt_insert;
 sqlite3_stmt *stmt_update_senso;
 sqlite3_stmt *stmt_update_antisenso;
@@ -56,6 +57,7 @@ void db_create(char *filename){
     char * sErrMsg;
 	char *query;
     sqlite3_stmt *stmt;
+    destroyed = 0;
     
     MAX_DB_MEM_USE = (double)getTotalSystemMemory()*DB_FREE_MEMORY_FACTOR*1024;
 	
@@ -312,15 +314,19 @@ void db_destroy(){
     char * sErrMsg;
 	int ret;
 	char query[] = "UPDATE events SET pares = min(qnt_sensos,qnt_antisensos)";
-
-	printf("Limpando\n");
 	
-	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
-	sqlite3_finalize(stmt_update_senso);
-	sqlite3_finalize(stmt_update_antisenso);
-	sqlite3_finalize(stmt_insert);
-	sqlite3_finalize(stmt_update_senso_cincol);
-	sqlite3_finalize(stmt_update_antisenso_cincol);
-	sqlite3_finalize(stmt_insert_cincol);
-	sqlite3_close(db);
+	if(!destroyed){
+		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
+		
+		sqlite3_finalize(stmt_insert);
+		sqlite3_finalize(stmt_insert_cincol);
+		sqlite3_finalize(stmt_insert_link);
+		sqlite3_finalize(stmt_select_cincol);
+		sqlite3_finalize(stmt_update_antisenso);
+		sqlite3_finalize(stmt_update_antisenso_cincol);
+		sqlite3_finalize(stmt_update_senso);
+		sqlite3_finalize(stmt_update_senso_cincol);
+		sqlite3_close(db);
+		destroyed = 1;
+	}
 }

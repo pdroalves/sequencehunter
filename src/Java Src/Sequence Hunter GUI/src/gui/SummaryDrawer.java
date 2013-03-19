@@ -166,6 +166,7 @@ public class SummaryDrawer implements ActionListener{
 	
 	static public void huntDone(String libDatabse,File logFile){
 		if(libDatabse != null){
+			abortButton.setEnabled(false);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {

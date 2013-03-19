@@ -66,6 +66,18 @@ public class Drawer {
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
 		jfrm.setResizable(true);
+		
+		// Set look and feel
+        try {
+        	if(Hunter.getOS().equals("WIN"))
+    			UIManager.setLookAndFeel("javax.swing.plaf.windows.WindowsLookAndFeel");
+        	else
+        		UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+		} catch (ClassNotFoundException | InstantiationException
+				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// Seta FlowLayout para o content pane
 		jfrm.getContentPane().setLayout(new BorderLayout());

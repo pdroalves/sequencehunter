@@ -9,11 +9,9 @@
 package socket;
 
 import gui.Drawer;
-import gui.SummaryDrawer;
 
 import java.net.Socket;
 import java.net.ServerSocket;
-import java.net.SocketException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.InputStream;

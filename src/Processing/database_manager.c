@@ -22,11 +22,12 @@
 
 int data_added;
 char *db_filename;
+int destroyed;
 
 void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
    int i;
    int j;
-   
+   destroyed = 0;
    db_filename = (char*)malloc(500*sizeof(char));
    if(output_dir != NULL)
 	sprintf(db_filename,"%s/SH_%s.db",output_dir,tempo);
@@ -58,10 +59,13 @@ void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
 
 void destroy_db_manager(){
 	// Envia msg para fechar
-	if(data_added > 0)
-		db_commit_transaction();
-    db_destroy();
-	printf("Seqs sent: %d\n",data_added);
+	if(!destroyed){
+		if(data_added > 0)
+			db_commit_transaction();
+		db_destroy();
+		printf("Seqs sent: %d\n",data_added);
+		destroyed = 1;
+	}
 	return;
 }
 
