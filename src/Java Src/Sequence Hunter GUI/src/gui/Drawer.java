@@ -1,35 +1,16 @@
 package gui;
 import hunt.Hunter;
-import hunt.Library;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
-
-import tables.JLibPreviewTableModel;
-import tables.JReportTableModel;
-import tables.JTableRenderer;
-import tables.SelectionListener;
 
 import dialogs.AboutDialog;
-
-import auxiliares.ButtonTabComponent;
-import auxiliares.JBaseTextField;
-import auxiliares.JTxtFileFilter;
 
 
 public class Drawer {
@@ -38,8 +19,8 @@ public class Drawer {
 	private static JTabbedPane jtp;
 	private static JTextArea statusLog;
 	private static Container jcprogress;
-	private int xSize = 700;
-	private int ySize = 900;
+	private int xSize = 600;
+	private int ySize = 800;
 	private SearchDrawer searchDrawer;
 	private SummaryDrawer summaryDrawer;
 	private ReportDrawer reportDrawer; 
