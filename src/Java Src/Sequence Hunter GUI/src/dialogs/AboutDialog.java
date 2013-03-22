@@ -11,7 +11,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 public class AboutDialog extends JDialog {
-	  public AboutDialog(JFrame parent) {
+	  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public AboutDialog(JFrame parent) {
 		    super(parent, "About", true);
 		    
 		    Box b = Box.createVerticalBox();

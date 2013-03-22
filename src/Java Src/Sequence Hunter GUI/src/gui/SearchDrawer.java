@@ -4,8 +4,6 @@ import hunt.Hunter;
 import hunt.Library;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
@@ -16,7 +14,6 @@ import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.Box;
@@ -26,7 +23,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -38,7 +34,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import tables.JLibPreviewTableModel;
 import tables.JTableRenderer;
 
-import auxiliares.ButtonTabComponent;
 import auxiliares.JBaseTextField;
 import auxiliares.JTxtFileFilter;
 
@@ -57,7 +52,6 @@ public class SearchDrawer implements ActionListener{
 	private JPanel seqBuscaPanel;
 	private JPanel seqBuscaRightPanel;
 	private JPanel seqBuscaLeftPanel;
-	private Hunter h;
 	private JSplitPane jsp;
 
 	public SearchDrawer(int xSize,int ySize,Hunter hunterInstance){
@@ -73,7 +67,6 @@ public class SearchDrawer implements ActionListener{
 		seqBuscaRightPanel = new JPanel(new BorderLayout());
 		seqBuscaLeftPanel = new JPanel(new BorderLayout());
 		drawSearchContainer();
-		h = hunterInstance;
 	}
 
 	public JPanel getContainer(){
@@ -239,19 +232,18 @@ public class SearchDrawer implements ActionListener{
 	}
 	
 	private void unloadLibPreview(int index){
-		libContainer.remove(index);
-		if(libContainer.getTabCount() == 0){
-			drawEmptyLibsContainer();
+		if(index < libContainer.getTabCount()){
+			libContainer.remove(index);
+			if(libContainer.getTabCount() == 0){
+				drawEmptyLibsContainer();
+			}
 		}
 		return;
 	}
-
-	private static void initTabsComponents(JTabbedPane pane){
-		if(pane != null){
-			for(int i=0;i < pane.getTabCount();i++){
-				pane.setTabComponentAt(i, new ButtonTabComponent(pane));
-			}
-		}
+	
+	private void unloadAllLibPreviews(){
+		libContainer.removeAll();
+		drawEmptyLibsContainer();
 	}
 
 	public static String getTargetSeq(){
@@ -267,8 +259,8 @@ public class SearchDrawer implements ActionListener{
 					searchSeq = seqOriginal.getSelectedText();
 				else	
 					searchSeq = seqOriginal.getText();
-				seqBusca.setText(searchSeq);
 				Drawer.writeToLog("Target sequence: " + searchSeq);
+				seqBusca.setText(searchSeq);
 				SummaryDrawer.setTargetSeq(searchSeq);
 				libContainer.repaint();
 			}
@@ -286,7 +278,6 @@ public class SearchDrawer implements ActionListener{
 						loadLibPreview(txt);
 						SummaryDrawer.addLoadedLib(txt);
 						listModel.addElement(txt);
-						Drawer.writeToLog("File "+txt+" is being loaded.");
 					}else{
 						Drawer.writeToLog("File "+txt+" can not be read.");
 					}
@@ -304,7 +295,36 @@ public class SearchDrawer implements ActionListener{
 				Drawer.writeToLog("File "+ele+" unloaded.");
 			}
 			break;
+		case "Clean":
+			cleanHunt();
+			break;
 		}
+	}
+	
+	private void unloadAllLibs(){
+		for(int i = 0;i < libs.size();i++){
+			try{
+				SummaryDrawer.removeLoadedLib(libs.get(i));
+			}catch(IndexOutOfBoundsException e){
+				System.out.println(e.getMessage());
+			}
+		}
+		libs.clear();
+		listModel.removeAllElements();
+	}
+	
+	private void unsetTarget(){
+		searchSeq = "";
+		seqOriginal.setText("");
+		seqBusca.setText("");
+		SummaryDrawer.setTargetSeq("");
+	}
+	protected void cleanHunt(){
+		// Unload em todas as libs abertas e grava null em searchSeq	
+		unloadAllLibs();
+		unloadAllLibPreviews();
+		unsetTarget();
+		Drawer.writeToLog("Hunt sets were cleared.");
 	}
 
 }

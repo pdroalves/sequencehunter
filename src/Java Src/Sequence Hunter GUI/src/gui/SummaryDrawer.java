@@ -4,7 +4,6 @@ import hunt.Hunter;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -173,8 +172,8 @@ public class SummaryDrawer implements ActionListener{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			ReportDrawer.addReport(libDatabse,logFile);
-			drawer.moveToReportTab();
+			ReportDrawer.addReport(new File(libDatabse).getAbsolutePath(),logFile);
+			Drawer.moveToReportTab();
 			Drawer.writeToLog("Hunt done.");
 			Drawer.writeToLog("Check Report tab for results...");
 		}else{

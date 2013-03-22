@@ -1,7 +1,8 @@
 package gui;
 
+import gui.toolbar.OpenReportFileFilter;
+
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -9,8 +10,11 @@ import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.Box;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -48,7 +52,7 @@ public class ReportDrawer implements ActionListener{
 	// Central Cut
 	final JReportTableModel jrtm = new JReportTableModel(libDatabase);
 	final JTable jte = new JTable(jrtm); 
-	jte.setAutoCreateRowSorter(true);
+	jte.setAutoCreateRowSorter(false);
 	ListSelectionModel cellSelectionModel = jte.getSelectionModel();
 	final JLabel seqJLabel = new JLabel("");
 	final JLabel seqFreqJLabel = new JLabel("");
@@ -67,7 +71,6 @@ public class ReportDrawer implements ActionListener{
 			seqJLabel.setText(sequence);
 			seqFreqJLabel.setText(Integer.toString(sequenceFreq));
 		}
-
 	    });
 	JScrollPane jscp = new JScrollPane(jte);
 	JScrollBar jsb = jscp.getVerticalScrollBar();
@@ -103,8 +106,9 @@ public class ReportDrawer implements ActionListener{
 				String linha = scLog.nextLine();
 				logJTA.append(linha+"\n");
 			}
+			scLog.close();
 			JScrollPane jscrlp = new JScrollPane(logJTA);
-			jtp.addTab("Hunt log", logJTA);
+			jtp.addTab("Hunt log", jscrlp);
 		} catch (FileNotFoundException e1) {
 			Drawer.writeToLog("File "+log.getAbsolutePath()+" could not be read.");
 		}
@@ -128,9 +132,7 @@ public class ReportDrawer implements ActionListener{
 		noReports = false;
 	}
 	reportTab.addTab(libDatabase,jp);
-	reportTab.setSelectedIndex(reportTab.getTabCount()-1);
-
-	
+	reportTab.setSelectedIndex(reportTab.getTabCount()-1);	
 	return;
 }
 	private JPanel drawEmptyReportContainer(){
@@ -149,8 +151,23 @@ public class ReportDrawer implements ActionListener{
 		}
 	}
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+	public void actionPerformed(ActionEvent ae) {
+		switch(ae.getActionCommand()){
+		case "Open":
+			// Abre arquivo
+			JFileChooser jfc = new JFileChooser();
+			jfc.setFileFilter(new OpenReportFileFilter());
+			jfc.setMultiSelectionEnabled(false);
+			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+				// O arquivo selecionado pode ser do tipo .db
+				Pattern databasePattern = Pattern.compile(".db");
+				Matcher databaseMatcher = databasePattern.matcher(jfc.getSelectedFile().getName());
+				if(databaseMatcher.find())
+					addReport(jfc.getSelectedFile().getAbsolutePath(),null);
+				Drawer.moveToReportTab();
+			}
+			break;
+		}
 		
 	}
 

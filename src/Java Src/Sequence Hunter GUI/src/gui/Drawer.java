@@ -1,4 +1,8 @@
 package gui;
+import gui.toolbar.NewJButton;
+import gui.toolbar.OpenJButton;
+import gui.toolbar.SaveAllJButton;
+import gui.toolbar.SaveJButton;
 import hunt.Hunter;
 
 import java.awt.*;
@@ -40,7 +44,6 @@ public class Drawer {
 		antisensosFounded = new JLabel("");
 		calcSPS = new JLabel("");
 		h = new Hunter();
-
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
 
@@ -103,8 +106,8 @@ public class Drawer {
 		//jsp.setDividerSize(10);
 		jsp.setOneTouchExpandable(true);
 
+		jfrm.add(drawToolbar(),BorderLayout.NORTH);
 		jfrm.add(jsp,BorderLayout.CENTER);
-
 		jfrm.setVisible(true);
 
 		jsp.setDividerLocation(0.70);
@@ -112,6 +115,26 @@ public class Drawer {
 		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
 	}
 
+	private JToolBar drawToolbar(){
+		JToolBar jtb = new JToolBar();
+		// Botoes
+		NewJButton newhunt = new NewJButton();
+		OpenJButton open = new OpenJButton();
+		JButton save = new SaveJButton();
+		JButton saveall = new SaveAllJButton();
+		
+		// Actions
+		newhunt.addActionListener(searchDrawer);
+		open.addActionListener(reportDrawer);
+		
+		jtb.add(newhunt);
+		jtb.add(open);
+		jtb.add(save);
+		jtb.add(saveall);
+		jtb.setFloatable(false);
+		return jtb;
+	}
+	
 	private JMenuBar drawMenuBar(){
 		// Barra do menu
 		JMenuBar menuBar = new JMenuBar();
@@ -242,7 +265,7 @@ public class Drawer {
 		return Integer.parseInt(antisensosFounded.getText());
 	}
 	
-	protected void moveToReportTab(){
+	protected static void moveToReportTab(){
 		jtp.setSelectedIndex(2);		
 	}
 

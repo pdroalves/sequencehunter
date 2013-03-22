@@ -16,7 +16,7 @@ public class JLibPreviewLoadMore{
 		seqs = db;
 	}
 	
-	public void run(){
+	public void load(){
 		for(int i = 0; i < defaultLoad;i++){
 			String seq = data.getSeq();
 			if(seq != null) 

@@ -1,6 +1,5 @@
 package tables;
 
-import gui.Drawer;
 import gui.SearchDrawer;
 import hunt.Library;
 
@@ -13,6 +12,10 @@ import javax.swing.table.AbstractTableModel;
 
 public class JLibPreviewTableModel extends AbstractTableModel{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Library data;
 	private ArrayList<String> seqs;
 	private int defaultLoad = 100;
@@ -143,7 +146,7 @@ public class JLibPreviewTableModel extends AbstractTableModel{
 	}
 	
 	public void loadMore(){
-		loader.run();
+		loader.load();
 		return;
 	}
 
