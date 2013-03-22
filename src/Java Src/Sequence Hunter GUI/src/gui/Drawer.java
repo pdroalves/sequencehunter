@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 
 import dialogs.AboutDialog;
 
@@ -34,6 +36,8 @@ public class Drawer {
 	private static JLabel calcSPS;
 	private static JProgressBar jprog;
 	private static Hunter h;
+	private static JToolBar toolbar;
+	private static JMenuBar menubar;
 
 	public Drawer(){
 		statusLog = new JTextArea();
@@ -50,7 +54,7 @@ public class Drawer {
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
 		jfrm.setResizable(true);
-		
+	
 		// Set look and feel
         try {
         	if(Hunter.getOS().equals("WIN"))
@@ -72,7 +76,8 @@ public class Drawer {
 		jfrm.setLocationRelativeTo(null);
 
 		//Gera menu
-		jfrm.setJMenuBar(drawMenuBar());
+		menubar = drawMenuBar();
+		jfrm.setJMenuBar(menubar);
 
 		//Seta posicao inicial para centro da tela
 		//jfrm.setLocationRelativeTo(null);	
@@ -105,14 +110,18 @@ public class Drawer {
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,top,bottom);
 		//jsp.setDividerSize(10);
 		jsp.setOneTouchExpandable(true);
-
-		jfrm.add(drawToolbar(),BorderLayout.NORTH);
-		jfrm.add(jsp,BorderLayout.CENTER);
-		jfrm.setVisible(true);
-
+		
 		jsp.setDividerLocation(0.70);
 		jsp.setResizeWeight(0.5);
 		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
+		jsp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+		
+		toolbar = drawToolbar();
+		toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+		jfrm.add(toolbar,BorderLayout.NORTH);
+		jfrm.add(jsp,BorderLayout.CENTER);
+		jfrm.setVisible(true);
+
 	}
 
 	private JToolBar drawToolbar(){
@@ -144,9 +153,24 @@ public class Drawer {
 		JMenu menuHelp = new JMenu("Help");   
 
 		// Item do menu  
-		JMenuItem menuItemExit = new JMenuItem("Exit");  		
-		JMenuItem menuItemAbout = new JMenuItem("About");		
+		final JMenuItem menuItemExit = new JMenuItem("Exit");  		
+		JMenuItem menuItemAbout = new JMenuItem("About");
 
+		menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		menuItemExit.setBorderPainted(true);
+		menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		menuItemAbout.setBorderPainted(true);
+
+		menuItemExit.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				jfrm.dispose();
+			}
+			
+			
+		});
+		
 		menuItemAbout.addActionListener(new ActionListener() {
 
 			@Override
@@ -160,6 +184,11 @@ public class Drawer {
 		menuHelp.add(menuItemAbout);
 		menuBar.add(menuFile); 
 		menuBar.add(menuHelp);
+		
+		menuFile.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuHelp.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuBar.setBorderPainted(true);
 
 		return menuBar;
 	}
