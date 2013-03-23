@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AllTextResource>
+	<TextResource tag="targetSequenceSetLabel" text="Sequence: "></TextResource>
+	<TextResource tag="targetSequenceLabel" text="Target Sequence: "></TextResource>
+	<TextResource tag="targetSequenceSetButton" text="Set"></TextResource>
+	<TextResource tag="loadButton" text="Load"></TextResource>
+	<TextResource tag="unloadButton" text="Unload"></TextResource>
+	<TextResource tag="librariesLoadedLabel" text="Libraries Loaded: "></TextResource>
+	<TextResource tag="libFileLoad" text=" has loaded"></TextResource>
+	<TextResource tag="libFileDoNotLoad" text=" could not be loaded"></TextResource>
+	<TextResource tag="libFileUnload" text=" unloaded"></TextResource>
+	<TextResource tag="libPreviewEmptyMsg" text="Add a library to start..."></TextResource>
+	<TextResource tag="cleanHuntMsg" text="Hunt settings were cleaned"></TextResource>
+</AllTextResource>
+	

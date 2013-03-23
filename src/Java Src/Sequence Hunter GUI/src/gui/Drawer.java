@@ -16,6 +16,8 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 
+import xml.TranslationsManager;
+
 import dialogs.AboutDialog;
 
 
@@ -38,6 +40,7 @@ public class Drawer {
 	private static Hunter h;
 	private static JToolBar toolbar;
 	private static JMenuBar menubar;
+	private static TranslationsManager tm;
 
 	public Drawer(){
 		statusLog = new JTextArea();
@@ -50,6 +53,7 @@ public class Drawer {
 		h = new Hunter();
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
+		tm = new TranslationsManager();
 
 		// Cria JFrame container
 		jfrm = new JFrame("Sequence Hunter");
@@ -84,7 +88,7 @@ public class Drawer {
 		
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		searchDrawer = new SearchDrawer(xSize, ySize, h);
+		searchDrawer = new SearchDrawer(xSize, ySize, tm);
 		summaryDrawer = new SummaryDrawer(this, h);
 		reportDrawer = new ReportDrawer();
 
