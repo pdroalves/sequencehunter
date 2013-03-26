@@ -3,19 +3,31 @@ package xml;
 import java.util.HashMap;
 
 public class TranslationsManager {
-	private final String defaultLanguageFile = "src/resources/translations/EnUS.xml";
-	private final String tagName = "TextResource";
-	private XMLReader xmlReader;
-	private HashMap<String, String> textHM;
+	// Padrão singleton
+	private final static String defaultLanguageFile = "resources/translations/EnUS.xml";
+	private final static String tagName = "TextResource";
+	private static XMLReader xmlReader;
+	private static HashMap<String, String> textHM;
+	private static TranslationsManager instance = new TranslationsManager();
 	
-	public TranslationsManager(){
-		xmlReader = new XMLReader(defaultLanguageFile,tagName);
+	private TranslationsManager(){
+		
+	}
+	
+	private TranslationsManager(String language){
+		// Define a linguagem a ser carregada
+
+		xmlReader = new XMLReader(language,tagName);
 		textHM = xmlReader.getSet();
 	}
 	
-	public TranslationsManager(String language){
-		// Define a linguagem a ser carregada
-		
+	public static TranslationsManager getInstance(){
+		return instance;
+	}
+	
+	public void setDefaultLanguage(){
+		xmlReader = new XMLReader(defaultLanguageFile,tagName);
+		textHM = xmlReader.getSet();
 	}
 	
 	public String getText(String tag){

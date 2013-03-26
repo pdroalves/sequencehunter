@@ -1,6 +1,5 @@
 package gui;
 
-import hunt.Hunter;
 import hunt.Library;
 
 import java.awt.BorderLayout;
@@ -56,10 +55,10 @@ public class SearchDrawer implements ActionListener{
 	private JSplitPane jsp;
 	private TranslationsManager tm;
 
-	public SearchDrawer(int xSize,int ySize,TranslationsManager tm){
+	public SearchDrawer(int xSize,int ySize){
 		this.xSize = xSize;
 		this.ySize = ySize;
-		this.tm = tm;
+		this.tm = TranslationsManager.getInstance();
 		seqOriginal = new JBaseTextField(25);
 		seqOriginal.setMaximumSize(new Dimension(xSize*2, 30));
 		seqBusca = new JLabel();

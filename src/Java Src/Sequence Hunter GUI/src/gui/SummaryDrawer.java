@@ -19,6 +19,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import xml.TranslationsManager;
+
 public class SummaryDrawer implements ActionListener{
 	private static String searchSeq;
 	private static JLabel searchSeqJLabel;
@@ -32,16 +34,18 @@ public class SummaryDrawer implements ActionListener{
 	private JButton browseOutputButton;
 	private static Drawer drawer;
 	private static ArrayList<String> libs;
+	private static TranslationsManager tm;
 	
 	public SummaryDrawer(Drawer d,Hunter hunterInstance){
 		drawer = d;
 		h = hunterInstance;
+		SummaryDrawer.tm = TranslationsManager.getInstance();
 		libs = new ArrayList<String>();
 		
 		// Start cancel buttons
-		startButton = new JButton("Start");
+		startButton = new JButton(tm.getText("summaryStartButton"));
 		startButton.addActionListener(this);
-		abortButton = new JButton("Abort");
+		abortButton = new JButton(tm.getText("summaryAbortButton"));
 		abortButton.setEnabled(false);
 		abortButton.addActionListener(this);
 		
@@ -52,7 +56,7 @@ public class SummaryDrawer implements ActionListener{
 		// Instancia output options
 		outputFolderSummaryVBox = Box.createHorizontalBox();
 		
-		browseOutputButton = new JButton("Browse");
+		browseOutputButton = new JButton(tm.getText("summaryBrowseButton"));
 		browseOutputButton.addActionListener(this);
 		browseOutputButton.setEnabled(false);
 		
@@ -107,7 +111,7 @@ public class SummaryDrawer implements ActionListener{
 	    c.weightx = 0.3;
 	    c.gridx = 0;
 	    c.gridy = 0;
-		jp.add(new JLabel("Target sequence: "),c);
+		jp.add(new JLabel(tm.getText("targetSequenceLabel")),c);
 
 		// Line - Target Sequence
 	    c.fill = GridBagConstraints.HORIZONTAL;
@@ -122,7 +126,7 @@ public class SummaryDrawer implements ActionListener{
 	    c.weightx = 0.3;
 	    c.gridx = 0;
 	    c.gridy = 1;
-		jp.add(new JLabel("Loaded libraries: "),c);
+		jp.add(new JLabel(tm.getText("librariesLoadedLabel")),c);
 
 		// Line - Loaded libraries
 	    c.fill = GridBagConstraints.BOTH;
@@ -139,7 +143,7 @@ public class SummaryDrawer implements ActionListener{
 	    c.weightx = 0.3;
 	    c.gridx = 0;
 	    c.gridy = 2;
-		jp.add(new JLabel("Output folder: "),c);
+		jp.add(new JLabel(tm.getText("summaryOutputFolder")),c);
 
 		// Line - Output Folder
 	    c.fill = GridBagConstraints.HORIZONTAL;
@@ -174,10 +178,10 @@ public class SummaryDrawer implements ActionListener{
 			}
 			ReportDrawer.addReport(new File(libDatabse).getAbsolutePath(),logFile);
 			Drawer.moveToReportTab();
-			Drawer.writeToLog("Hunt done.");
-			Drawer.writeToLog("Check Report tab for results...");
+			Drawer.writeToLog(tm.getText("statusHuntDoneMsg"));
+			Drawer.writeToLog(tm.getText("statusCheckReportTabMsg"));
 		}else{
-			Drawer.writeToLog("Error on processing.");
+			Drawer.writeToLog(tm.getText("statusErrorProcessingMsg"));
 		}
 		
 		startButton.setEnabled(true);
@@ -187,7 +191,7 @@ public class SummaryDrawer implements ActionListener{
 
 	static public void huntAbort(){
 		h.stop();
-		Drawer.writeToLog("Hunt aborted");
+		Drawer.writeToLog(tm.getText("statusHuntAbortMsg"));
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
 		Drawer.enableStatusJLabels(false);
@@ -198,13 +202,12 @@ public class SummaryDrawer implements ActionListener{
 		switch(ae.getActionCommand()){
 		case "Start":
 			// Monta reportContainer
-			Drawer.writeToLog("Starting the hunt...");
+			Drawer.writeToLog(tm.getText("statusStartHuntMsg"));
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
 			drawer.initProgressBar(drawer.getTotalLibSize(libs));
 			h.Set(searchSeq,libs);
 			h.start();				
-			//addReport("/home/pedro/Projetos/LNBIO/SH/Out/eGilboa/FriMar10210002013.sqlite",null);
 			break;
 		case "Abort":
 			huntAbort();

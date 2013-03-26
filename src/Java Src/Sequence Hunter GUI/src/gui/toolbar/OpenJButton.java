@@ -5,6 +5,8 @@ import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
+import xml.TranslationsManager;
+
 public class OpenJButton extends JButton{
 	/**
 	 * 
@@ -17,7 +19,7 @@ public class OpenJButton extends JButton{
 		String iconFilepath = new String("/toolbarButtonGraphics/general/Open24.gif");
 		icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource(iconFilepath)));
 		super.setIcon(icon);
-		hint = "Open an report";
+		hint = TranslationsManager.getInstance().getText("toolbarOpenHint");
 		super.setToolTipText(hint);
 		super.setActionCommand("Open");
 	}

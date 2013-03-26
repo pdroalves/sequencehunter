@@ -53,10 +53,11 @@ public class Drawer {
 		h = new Hunter();
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
-		tm = new TranslationsManager();
+		tm = TranslationsManager.getInstance();
+		tm.setDefaultLanguage();
 
 		// Cria JFrame container
-		jfrm = new JFrame("Sequence Hunter");
+		jfrm = new JFrame(tm.getText("appName"));
 		jfrm.setResizable(true);
 	
 		// Set look and feel
@@ -88,18 +89,18 @@ public class Drawer {
 		
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		searchDrawer = new SearchDrawer(xSize, ySize, tm);
+		searchDrawer = new SearchDrawer(xSize, ySize);
 		summaryDrawer = new SummaryDrawer(this, h);
 		reportDrawer = new ReportDrawer();
 
 		// Monta searchContainer		
-		jtp.addTab("Setup",null,searchDrawer.getContainer(),"Set what you want to search");
+		jtp.addTab(tm.getText("setupTabName"),null,searchDrawer.getContainer(),tm.getText("setupTabHint"));
 
 		// Monta summaryContainer
-		jtp.addTab("Summary",null,summaryDrawer.getContainer(),"Confirm the configuration and start the hunt");
+		jtp.addTab(tm.getText("summaryTabName"),null,summaryDrawer.getContainer(),tm.getText("summaryTabHint"));
 
 		// Monta reportContainer
-		jtp.addTab("Report",null,reportDrawer.getContainer(),"Check the results after a hunt");
+		jtp.addTab(tm.getText("reportTabName"),null,reportDrawer.getContainer(),tm.getText("reportTabHint"));
 
 		JPanel top = new JPanel(new BorderLayout());
 		top.add(jtp,BorderLayout.CENTER);
@@ -153,12 +154,12 @@ public class Drawer {
 		JMenuBar menuBar = new JMenuBar();
 
 		// Novo Menu  
-		JMenu menuFile = new JMenu("File"); 
-		JMenu menuHelp = new JMenu("Help");   
+		JMenu menuFile = new JMenu(tm.getText("menuFileLabel")); 
+		JMenu menuHelp = new JMenu(tm.getText("menuHelpLabel"));   
 
 		// Item do menu  
-		final JMenuItem menuItemExit = new JMenuItem("Exit");  		
-		JMenuItem menuItemAbout = new JMenuItem("About");
+		final JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
+		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
 
 		menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		menuItemExit.setBorderPainted(true);
@@ -196,21 +197,16 @@ public class Drawer {
 
 		return menuBar;
 	}
-
-
-
-
-
-
+	
 	private JPanel drawStatusContainer(){
 		JPanel statusPanel = new JPanel(new BorderLayout());
 
 		// Cria scroll pane e adiciona statusLog dentro
 		statusLog.setEditable(false);
-		statusLog.append("Sequence Hunter started...");
+		statusLog.append(tm.getText("statusStartMsg"));
 		JScrollPane jscrlp = new JScrollPane(statusLog);	
 		//jscrlp.setPreferredSize(new Dimension(250,200));
-		JLabel statusLabel = new JLabel("Status: ");
+		JLabel statusLabel = new JLabel(tm.getText("statusLabel"));
 
 		// Adiciona tudo na Panel
 		statusPanel.add(statusLabel,BorderLayout.NORTH);
@@ -232,7 +228,7 @@ public class Drawer {
 			File f = new File(iterator.next());
 			count += f.length();
 		}
-		System.out.println("Lib size: "+count);
+		//System.out.println("Lib size: "+count);
 		return count;
 	}
 
@@ -268,16 +264,16 @@ public class Drawer {
 	}
 	
 	public static void setProcessedSeqs(int n){
-		processedSeqs.setText("Total: "+Integer.toString(n)+" ");
+		processedSeqs.setText(tm.getText("statusProgressTotal")+Integer.toString(n)+" ");
 	}
 	public static void setSensosFounded(int n){
-		sensosFounded.setText("S: "+Integer.toString(n)+" ");
+		sensosFounded.setText(tm.getText("statusProgressSensos")+Integer.toString(n)+" ");
 	}
 	public static void setAntisensosFounded(int n){
-		antisensosFounded.setText("AS: "+Integer.toString(n)+" ");
+		antisensosFounded.setText(tm.getText("statusProgressAntisensos")+Integer.toString(n)+" ");
 	}
 	public static void setSPS(int n){
-		calcSPS.setText(" - "+Integer.toString(n) +" Events/s");
+		calcSPS.setText(" - "+Integer.toString(n) +tm.getText("statusProgressEventsPerSecond"));
 	}
 	
 	public static void enableStatusJLabels(boolean b){

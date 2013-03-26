@@ -30,14 +30,17 @@ import javax.swing.event.ListSelectionListener;
 import auxiliares.RemovableTabComponent;
 
 import tables.JReportTableModel;
+import xml.TranslationsManager;
 
 public class ReportDrawer implements ActionListener{
 	private static JPanel reportContainer;
 	private static JTabbedPane reportTab;
 	private static Boolean noReports = true;
+	private static TranslationsManager tm;
 
 	public ReportDrawer(){
 		reportContainer = new JPanel();
+		ReportDrawer.tm = TranslationsManager.getInstance();
 		drawEmptyReportContainer();
 	}
 
@@ -92,9 +95,9 @@ public class ReportDrawer implements ActionListener{
 		jte.setAutoscrolls(true);
 
 		Box seqInfo = Box.createVerticalBox();
-		seqInfo.add(new JLabel("Sequence: "));
+		seqInfo.add(new JLabel(tm.getText("reportSequenceInfoLabel")));
 		seqInfo.add(seqJLabel);
-		seqInfo.add(new JLabel("Sequence frequency: "));
+		seqInfo.add(new JLabel(tm.getText("reportSequenceFrequencyInfoLabel")));
 		seqInfo.add(seqFreqJLabel);
 
 		// Log Report
@@ -110,9 +113,9 @@ public class ReportDrawer implements ActionListener{
 				}
 				scLog.close();
 				JScrollPane jscrlp = new JScrollPane(logJTA);
-				jtp.addTab("Hunt log", jscrlp);
+				jtp.addTab(tm.getText("reportHuntLogDefaultName"), jscrlp);
 			} catch (FileNotFoundException e1) {
-				Drawer.writeToLog("File "+log.getAbsolutePath()+" could not be read.");
+				Drawer.writeToLog(log.getAbsolutePath()+tm.getText("fileNotFound"));
 			}
 		}
 
@@ -150,7 +153,7 @@ public class ReportDrawer implements ActionListener{
 	private static void drawEmptyReportContainer(){
 		reportContainer.removeAll();
 		reportContainer.setLayout(new FlowLayout());
-		JLabel emptyLabel = new JLabel("No report to show");
+		JLabel emptyLabel = new JLabel(tm.getText("reportNothingToShow"));
 		reportContainer.add(emptyLabel);
 		reportContainer.repaint();
 		return;

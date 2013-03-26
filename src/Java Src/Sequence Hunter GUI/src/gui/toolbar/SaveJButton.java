@@ -5,6 +5,8 @@ import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
+import xml.TranslationsManager;
+
 public class SaveJButton extends JButton{
 	/**
 	 * 
@@ -17,7 +19,7 @@ public class SaveJButton extends JButton{
 		String iconFilepath = new String("/toolbarButtonGraphics/general/Save24.gif");
 		icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource(iconFilepath)));
 		super.setIcon(icon);
-		hint = "Save a report";
+		hint = TranslationsManager.getInstance().getText("toolbarSaveHint");
 		super.setToolTipText(hint);
 	}
 }

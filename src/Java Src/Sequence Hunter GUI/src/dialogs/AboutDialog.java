@@ -10,21 +10,24 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import xml.TranslationsManager;
+
 public class AboutDialog extends JDialog {
 	  /**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
+	
 	public AboutDialog(JFrame parent) {
+		
 		    super(parent, "About", true);
-		    
+		    TranslationsManager tm = TranslationsManager.getInstance();
 		    Box b = Box.createVerticalBox();
 		    b.add(Box.createGlue());
-		    b.add(new JLabel("Sequence Hunter - "));
-		    b.add(new JLabel("Developers:"));
-		    b.add(new JLabel("Pedro Alves e Marcio Chain Bjalman"));
-		    b.add(new JLabel("Laboratório Nacional de Biociências, Campinas - SP, Brazil"));
+		    b.add(new JLabel(tm.getText("appName")+" - "));
+		    b.add(new JLabel(tm.getText("aboutDevLabel")));
+		    b.add(new JLabel(tm.getText("aboutDevs")));
+		    b.add(new JLabel(tm.getText("aboutCompanyLabel")));
 		    b.add(Box.createGlue());
 		    getContentPane().add(b, "Center");
 

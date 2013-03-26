@@ -4,6 +4,7 @@ import gui.Drawer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -25,13 +26,17 @@ public class XMLReader {
 		DocumentBuilder dBuilder;
 		try {
 			dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(new File(filePath));
+			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+			if(is == null)
+				throw new IOException("InputStream null");
+			Document doc = dBuilder.parse(is);
 			doc.normalize();
 			
 			nList = doc.getElementsByTagName(tag);		
 		} catch (ParserConfigurationException | SAXException | IOException e) {
-			System.out.println("Impossível carregar arquivo de linguagens.");
+			System.out.println("Impossível carregar arquivo de linguagens. "+e.getMessage());
 			Drawer.writeToLog("Error on load of language file");
+			System.exit(1);
 		}
 	}
 
