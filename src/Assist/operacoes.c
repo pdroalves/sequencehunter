@@ -10,7 +10,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <omp.h>
-#include <sys/sysinfo.h>
 #include "../Headers/processing_data.h"
 #define TAM_MAX 10000
 

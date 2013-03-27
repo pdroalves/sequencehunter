@@ -2,11 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <omp.h>
-#ifdef _WIN32
-#include "C:\SQLite3\sqlite-source\sqlite3.h"
-#else
-#include <sqlite3.h>
-#endif
+#include "sqlite3.h"
 #include "../Headers/operacoes.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
@@ -83,12 +79,12 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA journal_mode = OFF",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}	
-	sqlite3_exec(db,"PRAGMA page_size = 4096",NULL,NULL,&sErrMsg);
+	//sqlite3_exec(db,"PRAGMA page_size = 2048",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);

@@ -62,8 +62,8 @@ public class Drawer {
 	
 		// Set look and feel
         try {
-        	if(Hunter.getOS().equals("WIN"))
-    			UIManager.setLookAndFeel("javax.swing.plaf.windows.WindowsLookAndFeel");
+        	if(Hunter.getOS().contains("WIN"))
+    			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         	else
         		UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
 		} catch (ClassNotFoundException | InstantiationException

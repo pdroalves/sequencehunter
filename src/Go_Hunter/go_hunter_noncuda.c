@@ -15,10 +15,11 @@
 #include "../Headers/go_hunter_noncuda.h"
 #include "../Headers/load_data.h"
 #include "../Headers/operacoes.h"
-#include "../Headers/busca.h"
+#include "../Headers/nc_busca.h"
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 #include "../Headers/socket.h"
+#include "sqlite3.h"
 
 // Lista de threads a serem criados
 enum threads { 
@@ -33,7 +34,7 @@ enum threads {
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
 
-gboolean THREAD_DONE[3];
+gboolean THREAD_DONE[OMP_NTHREADS];
 omp_lock_t buffer_lock;
 gboolean verbose;
 gboolean silent;
@@ -45,6 +46,7 @@ int dist_regiao_5l;
 int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
 int sent_to_db;
+Buffer buf;
 int p;
 int fsensos,fasensos;
 Socket *gui_socket;
@@ -52,31 +54,30 @@ unsigned long nc_bytes_read=0;
 
 const int buffer_size_NC = buffer_size;
 
-void load_buffer_NONCuda(Buffer *b,int n){
-  if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-	  nc_bytes_read += fill_buffer(b->seq,b->capacidade,&b->load);//Enche o buffer e guarda a quantidade de sequências carregadas.			
+void load_buffer_NONCuda(int n){
+  if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
+	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.			
   } 
   return;
 }
 
-void nc_buffer_manager(Buffer *b,int n){
+void nc_buffer_manager(int n){
   //////////////////////////////////////////
   // Carrega o buffer //////////////////////
   //////////////////////////////////////////
-  THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
-  while(b->load != -1){//Looping até o final do buffer
-	  //printf("%d.\n",buffer.load);
-	  if(b->load == 0)
-		  load_buffer_NONCuda(b,n);
+  while(buf.load != -1){//Looping até o final do buf
+	  //printf("%d.\n",buf.load);
+	  if(buf.load == 0){
+		  load_buffer_NONCuda(n);
+	  }
   }
-  
   THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
   //////////////////////////////////////////
   //////////////////////////////////////////
   //////////////////////////////////////////	
 }
 
-void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int seqSize_an,Fila *toStore){
+void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fila *toStore){
     //////////////////////////////////////////
   // Realiza as iteracoes///////////////////
   //////////////////////////////////////////
@@ -116,11 +117,11 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
   wave_size = 0;
   wave_processed_diff = 0;
   
-  while( buffer->load == 0){
+  while( buf.load == 0){
   }//Aguarda para que o buffer seja enchido pela primeira vez
   
   cudaEventRecord(start,0);
-  while(buffer->load != GATHERING_DONE || 
+  while(buf.load != GATHERING_DONE || 
 		  THREAD_DONE[THREAD_BUFFER_LOADER] == FALSE){
     //Realiza loop enquanto existirem sequências para encher o buffer
     cudaEventRecord(stop,0);
@@ -138,7 +139,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
     cudaEventRecord(start,0);
 
     cudaEventRecord(startK,0);
-	    busca(bloco1,bloco2,blocos,buffer,resultados,search_gaps);//Kernel de busca					
+	    busca(bloco1,bloco2,blocos,&buf,resultados,search_gaps);//Kernel de busca					
     cudaEventRecord(stopK,0);
     cudaEventSynchronize(stopK);
 
@@ -153,7 +154,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
     cudaEventRecord(start,0);
 		    
 	    
-    tam = buffer->load;
+    tam = buf.load;
     p += tam;
 	    
     for(i = 0; i < tam;i++){
@@ -163,11 +164,11 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			      if(central_cut){
 				      central = (char*)malloc((blocoV+1)*sizeof(char));	
 				      gap = search_gaps[i];
-				      strncpy(central,buffer->seq[i]+gap,blocoV);
+				      strncpy(central,buf.seq[i]+gap,blocoV);
 				      central[blocoV] = '\0';
 			      }else{				
 				      central = (char*)malloc((seqSize_an+1)*sizeof(char));					
-				      strncpy(central,buffer->seq[i],seqSize_an+1);
+				      strncpy(central,buf.seq[i],seqSize_an+1);
 			      }
 
 
@@ -175,7 +176,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 
 				      gap = search_gaps[i] - dist_regiao_5l;
-				      strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
+				      strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
 				      cincol[tam_regiao_5l] = '\0';
 			      }else{
 				      cincol = NULL;
@@ -183,7 +184,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			      
 		      fsensos++;
 		      wave_size++;
-		      hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+		      hold_event = criar_elemento_fila_event(central,cincol,SENSO);
 		      enfileirar(toStore,hold_event);
 		     /* adicionar_db(central,cincol,SENSO);
 			sent_to_db++;
@@ -191,17 +192,16 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			free(central);
 		      if(cincol)
 			free(cincol);*/
-		      buffer->load--;
 		      break;
 		      case ANTISENSO:
 			      if(central_cut){
 				      central = (char*)malloc((blocoV+1)*sizeof(char));
 				      gap = search_gaps[i];
-				      strncpy(central,buffer->seq[i]+gap,blocoV);
+				      strncpy(central,buf.seq[i]+gap,blocoV);
 				      central[blocoV] = '\0';
 			      }else{						
 				      central = (char*)malloc((seqSize_an+1)*sizeof(char));			
-				      strncpy(central,buffer->seq[i],seqSize_an+1);
+				      strncpy(central,buf.seq[i],seqSize_an+1);
 			      }
 
 			      
@@ -209,7 +209,7 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 				      
 				      gap = search_gaps[i] + dist_regiao_5l-1;
-				      strncpy(cincol,buffer->seq[i] + gap,tam_regiao_5l);
+				      strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
 				      cincol[tam_regiao_5l] = '\0';
 			      }else{
 				      cincol = NULL;
@@ -229,17 +229,20 @@ void nc_search_manager(Buffer *buffer,int bloco1,int bloco2,int blocos,const int
 			free(central);
 		      if(cincol)
 			free(cincol);*/
-			      buffer->load--;
 		      break;
 		      default:
-			      buffer->load--;
 		      break;
 	      }
     }
 	    
 	    // Aguarda o buffer estar cheio novamente
     cudaEventRecord(startV,0);
-    while(buffer->load==0 && !THREAD_DONE[THREAD_BUFFER_LOADER]|| tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
+	if(buf.load > 0)
+		buf.load = 0;
+    while(	buf.load==0 && 
+			!THREAD_DONE[THREAD_BUFFER_LOADER]
+			|| 
+			tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
     cudaEventRecord(stopV,0);						
     cudaEventSynchronize(stopV);
     cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
@@ -269,8 +272,7 @@ void nc_queue_manager(Fila *toStore){
   
   sent_to_db =0;
 		
-  while(!THREAD_DONE[THREAD_SEARCH]){
-    while(tamanho_da_fila(toStore)> 0){
+    while(tamanho_da_fila(toStore)> 0 || !THREAD_DONE[THREAD_SEARCH]){
       hold = (Event*)desenfileirar(toStore);
       if(hold != NULL){
 	central = hold->seq_central;
@@ -291,7 +293,6 @@ void nc_queue_manager(Fila *toStore){
 	free(hold);
       }
     }	
-  }
   
   THREAD_DONE[THREAD_QUEUE] = TRUE;
   return;
@@ -399,30 +400,29 @@ void nc_report_manager(Fila* toStore){
 
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	
-	Buffer buffer;
 	Fila *toStore;
 	int blocoV;
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
-	prepare_buffer(&buffer,buffer_size_NC);	
+	prepare_buffer(&buf,buffer_size_NC);	
 	toStore = criar_fila("toStore");
 			      
 	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
 	THREAD_DONE[THREAD_QUEUE] = FALSE;
 	THREAD_DONE[THREAD_DATABASE] = FALSE;
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(toStore)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(toStore) shared(seqSize_an) shared(buf)
 	{	
 		
 	  #pragma omp sections
 	  {
 	      #pragma omp section
 	      {
-		      nc_buffer_manager(&buffer,seqSize_an);
+		      nc_buffer_manager(seqSize_an);
 	      }
 	      #pragma omp section
 	      {
-		      nc_search_manager(&buffer,bloco1,bloco2,blocos,seqSize_an,toStore);
+		      nc_search_manager(bloco1,bloco2,blocos,seqSize_an,toStore);
 	      }
 	      #pragma omp section
 	      {
@@ -434,7 +434,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	      }
 	  }
 	}
-	close_buffer(&buffer);
+	close_buffer(&buf);
 	return;
 }
 

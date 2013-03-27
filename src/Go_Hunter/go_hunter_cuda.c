@@ -21,6 +21,7 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 #include "../Headers/socket.h"
+#include "sqlite3.h"
 
 #define buffer_size 4096 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
@@ -62,7 +63,7 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
 {
   //Enche o buffer e guarda a quantidade de sequencias carregadas.
   int load;
-  bytes_read += fill_buffer(h_seqs,buffer_size,&load);	
+  fill_buffer(h_seqs,buffer_size,&load);	
   return load;
 }
 
