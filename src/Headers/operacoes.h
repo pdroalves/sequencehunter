@@ -3,4 +3,5 @@
 char *get_antisenso(char *s);
 int check_base_valida(char c);
 int get_sequencias_validas(FILE**,int);
+size_t getTotalSystemMemory();
 #endif

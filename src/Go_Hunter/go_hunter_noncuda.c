@@ -51,8 +51,6 @@ Socket *gui_socket;
 unsigned long nc_bytes_read=0;
 
 const int buffer_size_NC = buffer_size;
-const char tmp_ncuda_s_name[11] = "tmp_sensos";
-const char tmp_ncuda_as_name[15] = "tmp_antisensos";
 
 void load_buffer_NONCuda(Buffer *b,int n){
   if(b->load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
@@ -334,6 +332,7 @@ void nc_report_manager(Fila* toStore){
   FILE* fp_enchimento;
   FILE* fp_esvaziamento;
   char *msg;
+  float sqlite3_mem_used;
   int port = GUI_SOCKET_PORT;
   
     if(verbose && !silent){
@@ -380,7 +379,8 @@ void nc_report_manager(Fila* toStore){
     }
     
     if(verbose && !silent){
-      printf("DB memory used: %.2f GB\n",sqlite3_memory_used()/(float)GIGA);
+	  sqlite3_mem_used = sqlite3_memory_used();
+      printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
       printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
       printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
       printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
@@ -451,7 +451,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	gui_run = set.gui_run;
 	dist_regiao_5l = set.dist_regiao_5l;
 	tam_regiao_5l = set.tam_regiao_5l;
-	if(dist_regiao_5l && tam_regiao_5l)
+	if(dist_regiao_5l || tam_regiao_5l)
 		regiao_5l = TRUE;
 	else
 		regiao_5l = FALSE;

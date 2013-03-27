@@ -2,11 +2,9 @@ package hunt;
 
 import gui.Drawer;
 
-import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Map;
 
 
 public class Hunter{
@@ -20,10 +18,8 @@ public class Hunter{
 	String command = "";
 	private Translator t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
-	private static String OS;
 	
 	public Hunter(){
-		setOS(System.getProperty("os.name").toUpperCase());
 		if(getOS().contains("WIN")){
 			default_output_folder = new String(System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH"));
 		}else if(getOS().contains("MAC")){
@@ -105,11 +101,6 @@ public class Hunter{
 	}
 
 	public static String getOS() {
-		return OS;
+		return System.getProperty("os.name").toUpperCase();
 	}
-
-	public void setOS(String oS) {
-		OS = oS;
-	}
-
 }

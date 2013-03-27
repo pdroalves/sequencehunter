@@ -5,12 +5,48 @@
 //		Contem funções e métodos comuns ao projeto Sequence Hunter
 //
 //		27/03/2012
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <omp.h>
+#include <sys/sysinfo.h>
 #include "../Headers/processing_data.h"
 #define TAM_MAX 10000
+
+
+#ifdef _WIN32
+#include <windows.h>
+size_t getTotalSystemMemory()
+{
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+}
+#else
+#include <unistd.h>
+size_t getTotalSystemMemory()
+{
+	FILE *meminfo = fopen("/proc/meminfo", "r");
+
+    char line[256];
+    while(fgets(line, sizeof(line), meminfo))
+    {
+        int ram;
+        if(sscanf(line, "MemTotal: %d kB", &ram) == 1)
+        {
+            fclose(meminfo);
+            return ram;
+        }
+    }
+
+    // If we got here, then we couldn't find the proper line in the meminfo file:
+    // do something appropriate like return an error code, throw an exception, etc.
+    fclose(meminfo);
+    return -1;
+}
+#endif
 
 char* get_antisenso(char *s){
 	int i;

@@ -1,35 +1,24 @@
 package gui;
+import gui.toolbar.NewJButton;
+import gui.toolbar.OpenJButton;
+import gui.toolbar.SaveAllJButton;
+import gui.toolbar.SaveJButton;
 import hunt.Hunter;
-import hunt.Library;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 
-import tables.JLibPreviewTableModel;
-import tables.JReportTableModel;
-import tables.JTableRenderer;
-import tables.SelectionListener;
+import xml.TranslationsManager;
 
 import dialogs.AboutDialog;
-
-import auxiliares.ButtonTabComponent;
-import auxiliares.JBaseTextField;
-import auxiliares.JTxtFileFilter;
 
 
 public class Drawer {
@@ -38,8 +27,8 @@ public class Drawer {
 	private static JTabbedPane jtp;
 	private static JTextArea statusLog;
 	private static Container jcprogress;
-	private int xSize = 700;
-	private int ySize = 900;
+	private int xSize = 600;
+	private int ySize = 800;
 	private SearchDrawer searchDrawer;
 	private SummaryDrawer summaryDrawer;
 	private ReportDrawer reportDrawer; 
@@ -49,6 +38,9 @@ public class Drawer {
 	private static JLabel calcSPS;
 	private static JProgressBar jprog;
 	private static Hunter h;
+	private static JToolBar toolbar;
+	private static JMenuBar menubar;
+	private static TranslationsManager tm;
 
 	public Drawer(){
 		statusLog = new JTextArea();
@@ -59,13 +51,26 @@ public class Drawer {
 		antisensosFounded = new JLabel("");
 		calcSPS = new JLabel("");
 		h = new Hunter();
-
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
+		tm = TranslationsManager.getInstance();
+		tm.setDefaultLanguage();
 
 		// Cria JFrame container
-		jfrm = new JFrame("Sequence Hunter");
+		jfrm = new JFrame(tm.getText("appName"));
 		jfrm.setResizable(true);
+	
+		// Set look and feel
+        try {
+        	if(Hunter.getOS().equals("WIN"))
+    			UIManager.setLookAndFeel("javax.swing.plaf.windows.WindowsLookAndFeel");
+        	else
+        		UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+		} catch (ClassNotFoundException | InstantiationException
+				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// Seta FlowLayout para o content pane
 		jfrm.getContentPane().setLayout(new BorderLayout());
@@ -76,25 +81,26 @@ public class Drawer {
 		jfrm.setLocationRelativeTo(null);
 
 		//Gera menu
-		jfrm.setJMenuBar(drawMenuBar());
+		menubar = drawMenuBar();
+		jfrm.setJMenuBar(menubar);
 
 		//Seta posicao inicial para centro da tela
 		//jfrm.setLocationRelativeTo(null);	
 		
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		searchDrawer = new SearchDrawer(xSize, ySize, h);
+		searchDrawer = new SearchDrawer(xSize, ySize);
 		summaryDrawer = new SummaryDrawer(this, h);
 		reportDrawer = new ReportDrawer();
 
 		// Monta searchContainer		
-		jtp.addTab("Setup",null,searchDrawer.getContainer(),"Set what you want to search");
+		jtp.addTab(tm.getText("setupTabName"),null,searchDrawer.getContainer(),tm.getText("setupTabHint"));
 
 		// Monta summaryContainer
-		jtp.addTab("Summary",null,summaryDrawer.getContainer(),"Confirm the configuration and start the hunt");
+		jtp.addTab(tm.getText("summaryTabName"),null,summaryDrawer.getContainer(),tm.getText("summaryTabHint"));
 
 		// Monta reportContainer
-		jtp.addTab("Report",null,reportDrawer.getContainer(),"Check the results after a hunt");
+		jtp.addTab(tm.getText("reportTabName"),null,reportDrawer.getContainer(),tm.getText("reportTabHint"));
 
 		JPanel top = new JPanel(new BorderLayout());
 		top.add(jtp,BorderLayout.CENTER);
@@ -109,28 +115,67 @@ public class Drawer {
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,top,bottom);
 		//jsp.setDividerSize(10);
 		jsp.setOneTouchExpandable(true);
-
-		jfrm.add(jsp,BorderLayout.CENTER);
-
-		jfrm.setVisible(true);
-
+		
 		jsp.setDividerLocation(0.70);
 		jsp.setResizeWeight(0.5);
 		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
+		jsp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+		
+		toolbar = drawToolbar();
+		toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+		jfrm.add(toolbar,BorderLayout.NORTH);
+		jfrm.add(jsp,BorderLayout.CENTER);
+		jfrm.setVisible(true);
+
 	}
 
+	private JToolBar drawToolbar(){
+		JToolBar jtb = new JToolBar();
+		// Botoes
+		NewJButton newhunt = new NewJButton();
+		OpenJButton open = new OpenJButton();
+		JButton save = new SaveJButton();
+		JButton saveall = new SaveAllJButton();
+		
+		// Actions
+		newhunt.addActionListener(searchDrawer);
+		open.addActionListener(reportDrawer);
+		
+		jtb.add(newhunt);
+		jtb.add(open);
+		jtb.add(save);
+		jtb.add(saveall);
+		jtb.setFloatable(false);
+		return jtb;
+	}
+	
 	private JMenuBar drawMenuBar(){
 		// Barra do menu
 		JMenuBar menuBar = new JMenuBar();
 
 		// Novo Menu  
-		JMenu menuFile = new JMenu("File"); 
-		JMenu menuHelp = new JMenu("Help");   
+		JMenu menuFile = new JMenu(tm.getText("menuFileLabel")); 
+		JMenu menuHelp = new JMenu(tm.getText("menuHelpLabel"));   
 
 		// Item do menu  
-		JMenuItem menuItemExit = new JMenuItem("Exit");  		
-		JMenuItem menuItemAbout = new JMenuItem("About");		
+		final JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
+		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
 
+		menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		menuItemExit.setBorderPainted(true);
+		menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		menuItemAbout.setBorderPainted(true);
+
+		menuItemExit.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				jfrm.dispose();
+			}
+			
+			
+		});
+		
 		menuItemAbout.addActionListener(new ActionListener() {
 
 			@Override
@@ -144,24 +189,24 @@ public class Drawer {
 		menuHelp.add(menuItemAbout);
 		menuBar.add(menuFile); 
 		menuBar.add(menuHelp);
+		
+		menuFile.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuHelp.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuBar.setBorderPainted(true);
 
 		return menuBar;
 	}
-
-
-
-
-
-
+	
 	private JPanel drawStatusContainer(){
 		JPanel statusPanel = new JPanel(new BorderLayout());
 
 		// Cria scroll pane e adiciona statusLog dentro
 		statusLog.setEditable(false);
-		statusLog.append("Sequence Hunter started...");
+		statusLog.append(tm.getText("statusStartMsg"));
 		JScrollPane jscrlp = new JScrollPane(statusLog);	
 		//jscrlp.setPreferredSize(new Dimension(250,200));
-		JLabel statusLabel = new JLabel("Status: ");
+		JLabel statusLabel = new JLabel(tm.getText("statusLabel"));
 
 		// Adiciona tudo na Panel
 		statusPanel.add(statusLabel,BorderLayout.NORTH);
@@ -183,7 +228,7 @@ public class Drawer {
 			File f = new File(iterator.next());
 			count += f.length();
 		}
-		System.out.println("Lib size: "+count);
+		//System.out.println("Lib size: "+count);
 		return count;
 	}
 
@@ -219,16 +264,16 @@ public class Drawer {
 	}
 	
 	public static void setProcessedSeqs(int n){
-		processedSeqs.setText("Total: "+Integer.toString(n)+" ");
+		processedSeqs.setText(tm.getText("statusProgressTotal")+Integer.toString(n)+" ");
 	}
 	public static void setSensosFounded(int n){
-		sensosFounded.setText("S: "+Integer.toString(n)+" ");
+		sensosFounded.setText(tm.getText("statusProgressSensos")+Integer.toString(n)+" ");
 	}
 	public static void setAntisensosFounded(int n){
-		antisensosFounded.setText("AS: "+Integer.toString(n)+" ");
+		antisensosFounded.setText(tm.getText("statusProgressAntisensos")+Integer.toString(n)+" ");
 	}
 	public static void setSPS(int n){
-		calcSPS.setText(" - "+Integer.toString(n) +" Events/s");
+		calcSPS.setText(" - "+Integer.toString(n) +tm.getText("statusProgressEventsPerSecond"));
 	}
 	
 	public static void enableStatusJLabels(boolean b){
@@ -249,7 +294,7 @@ public class Drawer {
 		return Integer.parseInt(antisensosFounded.getText());
 	}
 	
-	protected void moveToReportTab(){
+	protected static void moveToReportTab(){
 		jtp.setSelectedIndex(2);		
 	}
 

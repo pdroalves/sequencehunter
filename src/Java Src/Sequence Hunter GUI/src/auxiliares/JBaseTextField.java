@@ -7,6 +7,11 @@ import javax.swing.text.PlainDocument;
 
 
 public class JBaseTextField extends JTextField {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public JBaseTextField(int cols) {
 		super(cols);
 	}
@@ -16,6 +21,11 @@ public class JBaseTextField extends JTextField {
 	}
 
 	static class BaseDocument extends PlainDocument {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		public void insertString(int offs, String txt, AttributeSet a) throws BadLocationException {
 			// Aceita apenas as bases ACGTN e converte sempre para a forma maiuscula

@@ -1,4 +1,4 @@
-package auxiliares;
+package tables;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -343,7 +343,11 @@ public class TableColumnAdjuster implements PropertyChangeListener, TableModelLi
 	 */
 	class ColumnAction extends AbstractAction
 	{
-    	private boolean isSelectedColumn;
+    	/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		private boolean isSelectedColumn;
     	private boolean isAdjust;
 
 		public ColumnAction(boolean isSelectedColumn, boolean isAdjust)
@@ -385,6 +389,10 @@ public class TableColumnAdjuster implements PropertyChangeListener, TableModelLi
 	 */
 	class ToggleAction extends AbstractAction
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private boolean isToggleDynamic;
 		private boolean isToggleLarger;
 
