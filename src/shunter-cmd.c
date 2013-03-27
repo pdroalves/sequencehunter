@@ -286,9 +286,11 @@ int main (int argc,char *argv[]) {
 	//if(!gui_run)
 	//	imprimir(resultados,tempo,max_events,silent,gui_run);
 
-	if(!silent)
-		printf("Algoritmo concluído.\n");
 	close_file();
 	destroy_db_manager();
+
+	if(!silent)
+		printf("Algoritmo concluído.\n");
+
 	return 0;
 }

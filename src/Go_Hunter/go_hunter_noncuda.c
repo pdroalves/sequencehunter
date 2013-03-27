@@ -478,9 +478,11 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
 	
-	if(gui_run)
+	if(gui_run){
+		// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
+		destroy_db_manager();
 		destroy_socket(gui_socket);
-	
+	}
 	return;	
 }
 

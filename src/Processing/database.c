@@ -23,6 +23,7 @@ int count;
 sqlite3_stmt *stmt_insert;
 sqlite3_stmt *stmt_update_senso;
 sqlite3_stmt *stmt_update_antisenso;
+int destroyed;
 
 void db_start_transaction(){
     char * sErrMsg;
@@ -127,6 +128,8 @@ void db_create(char *filename){
 	
 	sqlite3_soft_heap_limit64(MAX_DB_MEM_USE_GB*GIGA);
 	
+	destroyed = 0;
+
 	free(query);
 	return;
 }
@@ -171,12 +174,14 @@ void db_destroy(){
     char * sErrMsg;
 	int ret;
 	char query[] = "UPDATE events SET pares = min(qnt_sensos,qnt_antisensos)";
-
-	printf("Limpando\n");
+	if(!destroyed){
+		printf("Limpando\n");
 	
-	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
-	sqlite3_finalize(stmt_update_senso);
-	sqlite3_finalize(stmt_update_antisenso);
-	sqlite3_finalize(stmt_insert);
-	sqlite3_close(db);
+		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
+		sqlite3_finalize(stmt_update_senso);
+		sqlite3_finalize(stmt_update_antisenso);
+		sqlite3_finalize(stmt_insert);
+		sqlite3_close(db);
+		destroyed = 1;
+	}
 }
