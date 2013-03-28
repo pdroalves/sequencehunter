@@ -85,6 +85,7 @@ public class SearchDrawer implements ActionListener{
 		hbox.add(seqOriginal);
 		setSeqButton = new JButton(tm.getText("targetSequenceSetButton"));
 		setSeqButton.addActionListener(this);
+		setSeqButton.setActionCommand("Set");
 		hbox.add(setSeqButton);
 		// Configura linha
 	    c.fill = GridBagConstraints.HORIZONTAL;
@@ -125,9 +126,11 @@ public class SearchDrawer implements ActionListener{
 		// Adiciona nova linha hbox
 		hbox = Box.createHorizontalBox();
 		JButton loadLib = new JButton(tm.getText("loadButton"));
+		loadLib.setActionCommand("Load");
 		loadLib.addActionListener(this);
 		hbox.add(loadLib);
 		JButton unloadLib = new JButton(tm.getText("unloadButton"));
+		unloadLib.setActionCommand("Unload");
 		unloadLib.addActionListener(this);
 		hbox.add(unloadLib);
 		// Configura linha

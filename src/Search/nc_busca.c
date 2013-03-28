@@ -5,6 +5,17 @@
 short int matrix_senso[MAX_SEQ_SIZE];
 short int matrix_antisenso[MAX_SEQ_SIZE];
 
+unsigned long get_hash(char* original,int start_offset,int end_offset){
+	char *c;
+	unsigned long hash = 5381;
+	int i;
+
+	for(i=start_offset;i < end_offset;i++)
+		hash = ((hash << 5)+hash)+original[i];
+	return hash;
+}
+
+
 
 void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buf,int *resultados,int *search_gaps,const int seqId){
   int baseId;// id da base analisada
@@ -17,7 +28,8 @@ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buf
   int fase;
   const int seqSize_an = strlen(buf->seq[seqId]);
   //int tabela[MAX_SEQ_SIZE];
-  char *seq;  
+  char *seq;
+  unsigned long seq_original_hash = get_hash(buf->seq[seqId]);
   
 	  tipo = 0;
 	  fase = 0;
@@ -36,8 +48,7 @@ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buf
 											
 					linha = seq[baseId];	
 					alarmS += (linha-lsenso)*(lsenso-'N');		
-					alarmAS += (linha-lantisenso)*(lantisenso-'N');	
-					
+					alarmAS += (linha-lantisenso)*(lantisenso-'N');						
 				}
 			if(!alarmS)
 				tipo = SENSO;
@@ -45,9 +56,9 @@ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buf
 				if(!alarmAS) 
 					tipo = ANTISENSO;
 			
-			fase++;   
-									
-		
+			fase++;  									
+		}
+
 		resultados[seqId] = tipo;	
 		if(tipo == SENSO){
 			//printf("%s -> s_match= %d e as_match=%d\n",seq,s_match,as_match);
@@ -57,7 +68,7 @@ void buscador(const int bloco1,const int bloco2,const int seqSize_bu,Buffer *buf
 			search_gaps[seqId] = fase + bloco2 -1;
 		}
 	
-	}
+	
 	return;
 }
 

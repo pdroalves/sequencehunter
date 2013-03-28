@@ -176,7 +176,7 @@ public class SummaryDrawer implements ActionListener{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			ReportDrawer.addReport(new File(libDatabse).getAbsolutePath(),logFile);
+			Drawer.getReportDrawer().addMainReport(new File(libDatabse).getAbsolutePath(),logFile);
 			Drawer.moveToReportTab();
 			Drawer.writeToLog(tm.getText("statusHuntDoneMsg"));
 			Drawer.writeToLog(tm.getText("statusCheckReportTabMsg"));
@@ -205,7 +205,7 @@ public class SummaryDrawer implements ActionListener{
 			Drawer.writeToLog(tm.getText("statusStartHuntMsg"));
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
-			drawer.initProgressBar(drawer.getTotalLibSize(libs));
+			drawer.setProgressBar(drawer.getTotalLibSize(libs));
 			h.Set(searchSeq,libs);
 			h.start();				
 			break;

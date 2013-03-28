@@ -1,5 +1,6 @@
 package database;
 
+import gui.Drawer;
 import hunt.Evento;
 
 import java.sql.Connection;
@@ -9,8 +10,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DB {
-	Connection databaseConn;
-	ResultSet rows;
+	private Connection databaseConn;
+	private ResultSet rows;
 	
 	public DB(String databaseFilename){	
 	      try {
@@ -18,11 +19,9 @@ public class DB {
 	    	  Class.forName("org.sqlite.JDBC");
 		      databaseConn = DriverManager.getConnection("jdbc:sqlite:"+databaseFilename);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Drawer.writeToLog("Database ERROR: "+e.getMessage());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Drawer.writeToLog("Database ERROR: "+e.getMessage());
 			}
 	}
 	
@@ -34,8 +33,7 @@ public class DB {
 			if(rows != null) 
 				return true;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
 		}
 		return false;
 	}
@@ -52,8 +50,7 @@ public class DB {
 				}
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
 		}
 		return null;
 	}

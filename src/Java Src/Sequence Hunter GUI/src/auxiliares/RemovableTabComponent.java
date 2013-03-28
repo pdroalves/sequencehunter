@@ -28,6 +28,7 @@ public class RemovableTabComponent extends JPanel implements ActionListener{
     	// Cria close button
     	closeButton = new JButton();
     	closeButton.setToolTipText("Close");
+    	closeButton.setActionCommand("Close Tab");
     	closeButton.addActionListener(this);
     	
     	// Adiciona imagem no botao
@@ -47,7 +48,7 @@ public class RemovableTabComponent extends JPanel implements ActionListener{
     @Override
 	public void actionPerformed(ActionEvent e) {
 		    pane.removeTabAt(tabIndex);
-		    ReportDrawer.updateReportTabs();
+		    ReportDrawer.updateReportsView();
 	}
     
  }

@@ -1,5 +1,6 @@
 package gui;
 
+import auxiliares.WaitLayerUI;
 import gui.toolbar.OpenReportFileFilter;
 
 import java.awt.BorderLayout;
@@ -10,13 +11,18 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.Box;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -27,136 +33,116 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import database.DBManager;
+
 import auxiliares.RemovableTabComponent;
 
-import tables.JReportTableModel;
+import tables.JNewReportTableModel;
 import xml.TranslationsManager;
 
-public class ReportDrawer implements ActionListener{
+import gui.report.*;
+
+public class ReportDrawer implements ActionListener, Observer{
 	private static JPanel reportContainer;
 	private static JTabbedPane reportTab;
-	private static Boolean noReports = true;
+	private static JPanel emptyReportTab;
 	private static TranslationsManager tm;
+	private TabledReport tabledreport;
 
 	public ReportDrawer(){
-		reportContainer = new JPanel();
+		reportContainer = new JPanel(new BorderLayout());
 		ReportDrawer.tm = TranslationsManager.getInstance();
-		drawEmptyReportContainer();
+		reportTab = new JTabbedPane(JTabbedPane.NORTH,JTabbedPane.SCROLL_TAB_LAYOUT);
+		emptyReportTab = getEmptyJPanel();
+		reportContainer.add(reportTab,BorderLayout.CENTER);
+		reportContainer.add(emptyReportTab,BorderLayout.NORTH);
+		updateReportsView();
 	}
 
 	public JPanel getContainer(){
 		return reportContainer;
 	}
 
-	protected static void addReport(String libDatabase,File log){
+	protected void addMainReport(String libDatabase,File log){
+		// Inicia wait dialog
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
-
-		// Report		
+		
+		// Report	
+		JComponent jc;
 		// Central Cut
-		final JReportTableModel jrtm = new JReportTableModel(libDatabase);
-		final JTable jte = new JTable(jrtm); 
-		jte.setAutoCreateRowSorter(false);
-		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
-		final JLabel seqJLabel = new JLabel("");
-		final JLabel seqFreqJLabel = new JLabel("");
-		cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) { 
-				String sequence=null;
-				int sequenceFreq=0;
-
-				int[] selectedRow = jte.getSelectedRows();
-
-				for (int i = 0; i < selectedRow.length; i++) {
-					sequence = (String) jte.getValueAt(selectedRow[i], 1);
-					sequenceFreq = (int) jte.getValueAt(selectedRow[i], 2);		          
-				}
-				seqJLabel.setText(sequence);
-				seqFreqJLabel.setText(Integer.toString(sequenceFreq));
-			}
-		});
-		JScrollPane jscp = new JScrollPane(jte);
-		JScrollBar jsb = jscp.getVerticalScrollBar();
-		jsb.addAdjustmentListener(new AdjustmentListener(){
-			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e) {
-				JScrollBar jsb = (JScrollBar) e.getSource();
-				int jsbMax = jsb.getMaximum();
-				int jsbPos = jsb.getValue();
-				System.out.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
-				if(jsbMax*0.6 <= jsbPos){
-					System.out.println("Loading...");
-					jrtm.loadData();
-				}
-			}					
-		});
-		jte.setAutoscrolls(true);
-
-		Box seqInfo = Box.createVerticalBox();
-		seqInfo.add(new JLabel(tm.getText("reportSequenceInfoLabel")));
-		seqInfo.add(seqJLabel);
-		seqInfo.add(new JLabel(tm.getText("reportSequenceFrequencyInfoLabel")));
-		seqInfo.add(seqFreqJLabel);
-
+		if(libDatabase != null){
+			DBManager dbm = new DBManager(libDatabase);
+			JNewReportTableModel jrtm = new JNewReportTableModel(dbm);
+			dbm.addObserver(jrtm);
+			tabledreport = new TabledReport(dbm,jrtm);
+			dbm.addObserver(tabledreport);
+			dbm.addObserver(this);
+			jc = tabledreport.createTabledReport();
+			jtp.addTab("Central Cut",jc);
+		}
+		
 		// Log Report
 		if(log != null){
-			final JTextArea logJTA = new JTextArea();
-			logJTA.setLineWrap(true);
-			logJTA.setWrapStyleWord(true);
-			try {
-				Scanner scLog = new Scanner(log);
-				while(scLog.hasNextLine()){
-					String linha = scLog.nextLine();
-					logJTA.append(linha+"\n");
-				}
-				scLog.close();
-				JScrollPane jscrlp = new JScrollPane(logJTA);
-				jtp.addTab(tm.getText("reportHuntLogDefaultName"), jscrlp);
-			} catch (FileNotFoundException e1) {
-				Drawer.writeToLog(log.getAbsolutePath()+tm.getText("fileNotFound"));
-			}
+			jc = createTextReport(log);
+			jtp.addTab(tm.getText("reportHuntLogDefaultName"), jc);
 		}
 
-		jtp.addTab("Central Cut",jscp);
-
-		JPanel insideJp = new JPanel();
+		/*JPanel insideJp = new JPanel();
 		insideJp.setLayout(new BorderLayout());
 		insideJp.add(seqInfo,BorderLayout.EAST);
-		insideJp.add(jtp,BorderLayout.CENTER);
+		insideJp.add(jtp,BorderLayout.CENTER);*/
 
-		jp.add(insideJp,BorderLayout.CENTER);
+		jp.add(jtp,BorderLayout.CENTER);
 
-		if(noReports){
-			reportContainer.removeAll();
-			reportContainer.setLayout(new BorderLayout());
-			reportTab = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
-			reportContainer.add(reportTab);
-			noReports = false;
-		}
 		reportTab.addTab(libDatabase,jp);
 		reportTab.setSelectedIndex(reportTab.getTabCount()-1);	
-		initTabsComponents(reportTab);
 		return;
-	}
-
-	public static void updateReportTabs(){
-		reportContainer.repaint();
-		initTabsComponents(reportTab);
-		if(reportTab.getTabCount() == 0){
-			drawEmptyReportContainer();
-			noReports = true;
-		}
 	}
 	
-	private static void drawEmptyReportContainer(){
-		reportContainer.removeAll();
-		reportContainer.setLayout(new FlowLayout());
-		JLabel emptyLabel = new JLabel(tm.getText("reportNothingToShow"));
-		reportContainer.add(emptyLabel);
+	protected static void addSubReport(String query,String mainLibDatabase){
+		// Cria tabledReport com dados relativos a uma query em cima de determinada db
+		// To-do
+	}
+	
+	
+	private static JComponent createTextReport(File txtFile){
+		final JTextArea logJTA = new JTextArea();
+		logJTA.setLineWrap(true);
+		logJTA.setWrapStyleWord(true);
+		try {
+			Scanner scLog = new Scanner(txtFile);
+			while(scLog.hasNextLine()){
+				String linha = scLog.nextLine();
+				logJTA.append(linha+"\n");
+			}
+			scLog.close();
+			JScrollPane jscrlp = new JScrollPane(logJTA);
+			return jscrlp;
+		} catch (FileNotFoundException e1) {
+			Drawer.writeToLog(txtFile.getAbsolutePath()+tm.getText("fileNotFound"));
+			return null;
+		}
+	}
+
+	public static void updateReportsView(){
+		if(reportTab.getTabCount() == 0){
+			reportTab.setVisible(false);
+			emptyReportTab.setVisible(true);
+		}else{
+			initTabsComponents(reportTab);
+			reportTab.setVisible(true);
+			emptyReportTab.setVisible(false);
+		}
 		reportContainer.repaint();
-		return;
+	}
+	
+	private static JPanel getEmptyJPanel(){
+		JPanel panel = new JPanel(new FlowLayout());
+		JLabel emptyLabel = new JLabel(tm.getText("reportNothingToShow"));
+		panel.add(emptyLabel);
+		return panel;
 	}
 
 	private static void initTabsComponents(JTabbedPane pane){
@@ -178,13 +164,25 @@ public class ReportDrawer implements ActionListener{
 				// O arquivo selecionado pode ser do tipo .db
 				Pattern databasePattern = Pattern.compile(".db");
 				Matcher databaseMatcher = databasePattern.matcher(jfc.getSelectedFile().getName());
-				if(databaseMatcher.find())
-					addReport(jfc.getSelectedFile().getAbsolutePath(),null);
-				Drawer.moveToReportTab();
+				if(databaseMatcher.find()){
+					Drawer.setProgressBar(5);
+					Drawer.enableProgressBar(true);
+					Drawer.updateProgressBar(1);
+					addMainReport(jfc.getSelectedFile().getAbsolutePath(),null);
+					updateReportsView();
+					Drawer.updateProgressBar(5);
+					Drawer.moveToReportTab();
+					Drawer.enableProgressBar(false);
+				}
 			}
 			break;
 		}
 
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		updateReportsView();
 	}
 
 }

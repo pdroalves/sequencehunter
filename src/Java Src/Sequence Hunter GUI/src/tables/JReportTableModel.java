@@ -2,31 +2,35 @@ package tables;
 
 import hunt.Evento;
 
-import java.io.File;
 import java.util.ArrayList;
+
 import javax.swing.table.AbstractTableModel;
 
+import database.DBManager;
 
-public class JReportTableModel extends AbstractTableModel{
+
+public abstract class JReportTableModel extends AbstractTableModel{
 	
-	private String database;
-	private ArrayList<Evento> seqs;
-	private JReportLoadData jrld;
-	private int defaultLoad = 100;
-	public JReportTableModel(String db){
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	protected ArrayList<Evento> seqs;
+	protected int defaultLoad = 100;
+	
+	public JReportTableModel(DBManager dbm){
 		super();
-		database = db;
 		seqs = new ArrayList<Evento>();
-		jrld = new JReportLoadData(database,defaultLoad,seqs);
-		startLoad();
+		if(dbm.isReady()){
+			startLoad();
+			super.fireTableDataChanged();
+		}
 	}
 
-	@Override
 	public int getRowCount() {
 		return seqs.size();
 	}
 
-	@Override
 	public int getColumnCount() {
 		return 3;
 	}
@@ -34,26 +38,10 @@ public class JReportTableModel extends AbstractTableModel{
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Object obj = null;
-		
-		while(seqs.size() < rowIndex){
-			jrld.load();		
-		}
-		
-		switch(columnIndex){
-			case 0:
-				obj = rowIndex+1;
-			break;
-			case 1:
-				obj = seqs.get(rowIndex).getSeq();
-			break;
-			case 2:
-				obj = seqs.get(rowIndex).getPares();
-			break;
-		}
+	
 		return obj;
 	}
 	
-	@Override
 	public String getColumnName(int column) {
 		String name = null;
 		switch(column){
@@ -70,11 +58,9 @@ public class JReportTableModel extends AbstractTableModel{
 		return name;
 	}
 	
-	public void loadData(){
-		jrld.load();
-	}
+	public abstract void loadData();
 	
-	private void startLoad(){
+	protected void startLoad(){
 		for(int i = 0; i < defaultLoad;i++)
 			loadData();
 	}

@@ -29,9 +29,9 @@ public class Drawer {
 	private static Container jcprogress;
 	private int xSize = 600;
 	private int ySize = 800;
-	private SearchDrawer searchDrawer;
-	private SummaryDrawer summaryDrawer;
-	private ReportDrawer reportDrawer; 
+	private static SearchDrawer searchDrawer;
+	private static SummaryDrawer summaryDrawer;
+	private static ReportDrawer reportDrawer; 
 	private static JLabel processedSeqs;
 	private static JLabel sensosFounded;
 	private static JLabel antisensosFounded;
@@ -88,19 +88,19 @@ public class Drawer {
 		//jfrm.setLocationRelativeTo(null);	
 		
 		// Cria tabbed pane
-		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);	
+		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 		searchDrawer = new SearchDrawer(xSize, ySize);
 		summaryDrawer = new SummaryDrawer(this, h);
 		reportDrawer = new ReportDrawer();
 
 		// Monta searchContainer		
-		jtp.addTab(tm.getText("setupTabName"),null,searchDrawer.getContainer(),tm.getText("setupTabHint"));
+		jtp.addTab(tm.getText("setupTabName"),null,getSearchDrawer().getContainer(),tm.getText("setupTabHint"));
 
 		// Monta summaryContainer
-		jtp.addTab(tm.getText("summaryTabName"),null,summaryDrawer.getContainer(),tm.getText("summaryTabHint"));
+		jtp.addTab(tm.getText("summaryTabName"),null,getSummaryDrawer().getContainer(),tm.getText("summaryTabHint"));
 
 		// Monta reportContainer
-		jtp.addTab(tm.getText("reportTabName"),null,reportDrawer.getContainer(),tm.getText("reportTabHint"));
+		jtp.addTab(tm.getText("reportTabName"),null,getReportDrawer().getContainer(),tm.getText("reportTabHint"));
 
 		JPanel top = new JPanel(new BorderLayout());
 		top.add(jtp,BorderLayout.CENTER);
@@ -114,17 +114,20 @@ public class Drawer {
 		bottom.setMinimumSize(new Dimension(0,0));
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,top,bottom);
 		//jsp.setDividerSize(10);
-		jsp.setOneTouchExpandable(true);
-		
-		jsp.setDividerLocation(0.70);
+		jsp.setOneTouchExpandable(true);		
+		jsp.setDividerLocation(0.30);
 		jsp.setResizeWeight(0.5);
 		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
 		jsp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		
+		JPanel outsideJPanel = new JPanel(new BorderLayout());
+		outsideJPanel.add(jsp,BorderLayout.CENTER);
+		
 		toolbar = drawToolbar();
 		toolbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-		jfrm.add(toolbar,BorderLayout.NORTH);
-		jfrm.add(jsp,BorderLayout.CENTER);
+		jfrm.add(toolbar,BorderLayout.NORTH);		
+		jfrm.add(outsideJPanel,BorderLayout.CENTER);
+		//jfrm.add(outsideJPanel,BorderLayout.CENTER);
 		jfrm.setVisible(true);
 
 	}
@@ -138,9 +141,8 @@ public class Drawer {
 		JButton saveall = new SaveAllJButton();
 		
 		// Actions
-		newhunt.addActionListener(searchDrawer);
-		open.addActionListener(reportDrawer);
-		
+		newhunt.addActionListener(getSearchDrawer());
+		open.addActionListener(getReportDrawer());
 		jtb.add(newhunt);
 		jtb.add(open);
 		jtb.add(save);
@@ -215,10 +217,18 @@ public class Drawer {
 		return statusPanel;
 	}
 
-	protected void initProgressBar(int max){
+	protected static void setProgressBar(int max){
 		jprog.setMaximum(max);
-		jprog.setValue(0);
-		jprog.setVisible(true);
+		updateProgressBar(0);
+		enableProgressBar(false);
+	}
+	
+	public static void updateProgressBar(int br){
+		jprog.setValue(br);
+	}
+	
+	public static void enableProgressBar(boolean b){
+		jprog.setVisible(b);
 	}
 	
 	protected int getTotalLibSize(ArrayList<String> libs){
@@ -242,7 +252,7 @@ public class Drawer {
 		Box vbox = Box.createVerticalBox();
 		
 		jprog.setMinimumSize(new Dimension(ySize,xSize));
-		jprog.setVisible(false);
+		enableProgressBar(false);
 		
 		Box hbox = Box.createHorizontalBox();
 		hbox.add(processedSeqs);
@@ -255,12 +265,6 @@ public class Drawer {
 		vbox.add(jprog);
 		
 		return vbox;
-	}
-	
-	
-	
-	public static void updateProgressBar(int br){
-		jprog.setValue(br);
 	}
 	
 	public static void setProcessedSeqs(int n){
@@ -281,7 +285,7 @@ public class Drawer {
 		sensosFounded.setVisible(b);
 		antisensosFounded.setVisible(b);
 		calcSPS.setVisible(b);
-		jprog.setVisible(b);
+		enableProgressBar(b);
 	}
 
 	public static int getProcessedSeqs(){
@@ -296,6 +300,18 @@ public class Drawer {
 	
 	protected static void moveToReportTab(){
 		jtp.setSelectedIndex(2);		
+	}
+
+	protected static SearchDrawer getSearchDrawer() {
+		return searchDrawer;
+	}
+
+	protected static SummaryDrawer getSummaryDrawer() {
+		return summaryDrawer;
+	}
+
+	protected static ReportDrawer getReportDrawer() {
+		return reportDrawer;
 	}
 
 }
