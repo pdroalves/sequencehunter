@@ -35,6 +35,7 @@ public class DBManager extends Observable{
 		// Avisa os observadores da mudanca
 		super.setChanged();
 		super.notifyObservers();
+		System.out.println("Update!");
 	}
 
 	public ArrayList<Evento> getEvents() {
@@ -67,5 +68,4 @@ public class DBManager extends Observable{
 		else 
 			return;
 	}
-
 }

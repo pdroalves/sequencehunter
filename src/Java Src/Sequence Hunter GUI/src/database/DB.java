@@ -29,7 +29,6 @@ public class DB {
 		try {
 			Statement stat = databaseConn.createStatement();
 			rows = stat.executeQuery(query);
-			stat.close();
 			if(rows != null) 
 				return true;
 		} catch (SQLException e) {
@@ -64,5 +63,15 @@ public class DB {
 			Drawer.writeToLog("Database ERROR: "+e.getMessage());
 		}
 		return null;
+	}
+	
+	public void close(){
+		try {
+			if(!rows.isClosed()){
+				rows.close();
+			}
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		}
 	}
 }
