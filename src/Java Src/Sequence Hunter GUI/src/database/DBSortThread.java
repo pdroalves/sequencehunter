@@ -18,7 +18,7 @@ public class DBSortThread extends Thread{
 		if(!sortStatus){
 			Drawer.writeToLog("Database ERROR!");
 		}else{
-			caller.setLoadSorted();
+			caller.setDatabaseReady();
 		}
 	}
 }

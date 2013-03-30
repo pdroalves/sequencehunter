@@ -37,7 +37,8 @@ import database.DBManager;
 
 import auxiliares.RemovableTabComponent;
 
-import tables.JNewReportTableModel;
+import tables.report.JPartialReportTableModel;
+import tables.report.JTotalReportTableModel;
 import xml.TranslationsManager;
 
 import gui.report.*;
@@ -71,16 +72,25 @@ public class ReportDrawer implements ActionListener, Observer{
 		
 		// Report	
 		JComponent jc;
-		// Central Cut
 		if(libDatabase != null){
 			DBManager dbm = new DBManager(libDatabase);
-			JNewReportTableModel jrtm = new JNewReportTableModel(dbm);
-			dbm.addObserver(jrtm);
-			tabledreport = new TabledReport(dbm,jrtm);
-			dbm.addObserver(tabledreport);
 			dbm.addObserver(this);
+
+			// Central Cut paired
+			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
+			dbm.addObserver(jprtm);
+			tabledreport = new TabledReport(dbm,jprtm);
+			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
-			jtp.addTab("Central Cut",jc);
+			jtp.addTab(tm.getText("reportCentralCutPairedDefaultName"),jc);
+
+			// Central Cut unpaired
+			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
+			dbm.addObserver(jtrtm);
+			tabledreport = new TabledReport(dbm,jtrtm);
+			dbm.addObserver(tabledreport);
+			jc = tabledreport.createTabledReport();
+			jtp.addTab(tm.getText("reportCentralCutUnpairedDefaultName"),jc);
 		}
 		
 		// Log Report

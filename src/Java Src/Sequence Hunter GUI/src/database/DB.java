@@ -26,10 +26,10 @@ public class DB {
 	}
 	
 	public boolean loadQuery(String query){
-		Statement stat;
 		try {
-			stat = databaseConn.createStatement();
+			Statement stat = databaseConn.createStatement();
 			rows = stat.executeQuery(query);
+			stat.close();
 			if(rows != null) 
 				return true;
 		} catch (SQLException e) {
@@ -45,10 +45,21 @@ public class DB {
 				if(rows.next()){
 					return new Evento(	rows.getString("main_seq"),
 										rows.getInt("qnt_sensos"),
-										rows.getInt("qnt_antisensos"),
-										false);
+										rows.getInt("qnt_antisensos"));
 				}
 			}
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		}
+		return null;
+	}
+	
+	public ResultSet executeQuery(String query){
+		try {
+			Statement stat = databaseConn.createStatement();
+			ResultSet set = stat.executeQuery(query);
+			stat.close();
+			return set;
 		} catch (SQLException e) {
 			Drawer.writeToLog("Database ERROR: "+e.getMessage());
 		}

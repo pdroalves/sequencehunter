@@ -1,5 +1,6 @@
 package database;
 
+import java.util.ArrayList;
 import java.util.Observable;
 
 import hunt.Evento;
@@ -8,32 +9,24 @@ public class DBManager extends Observable{
 	private DB database;
 	private DBSortThread dbst;
 	private boolean ready;
+	private ArrayList<Evento> seqs;
+	protected int defaultLoad = 100;
 	
 	public DBManager(String databaseFilename){
 		setReady(false);
 		database = new DB(databaseFilename);
+		seqs = new ArrayList<Evento>() ;
 		if(database != null){
 			dbst = new DBSortThread(this,database);
 		}
-	}
-
-	public void loadSort(){
 		dbst.start();
 	}
 	
-	public void setLoadSorted(){
+	public void setDatabaseReady(){
 		setReady(true);
 	}
 
-	public Evento getEvento(){
-		return database.getEvento();
-	}
-
 	public boolean isReady() {
-		return getReady() == true;
-	}
-
-	private boolean getReady(){
 		return ready;
 	}
 	
@@ -43,4 +36,36 @@ public class DBManager extends Observable{
 		super.setChanged();
 		super.notifyObservers();
 	}
+
+	public ArrayList<Evento> getEvents() {
+		return seqs;
+	}
+	
+	public DB getDB(){
+		return database;
+	}
+
+	public Evento getEvento(){
+		return database.getEvento();
+	}
+	
+	public void startLoad(){
+		for(int i = 0; i < defaultLoad;i++){
+			Evento e = this.getEvento();
+			if(e != null){
+				seqs.add(e);
+			}else{
+				return;
+			}
+		}
+	}
+	
+	public void load(){
+		Evento e = this.getEvento();
+		if(e != null) 
+			seqs.add(e);
+		else 
+			return;
+	}
+
 }

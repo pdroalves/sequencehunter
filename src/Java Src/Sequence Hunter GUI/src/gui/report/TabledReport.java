@@ -17,7 +17,7 @@ import database.DBManager;
 
 import auxiliares.WaitLayerUI;
 
-import tables.JReportTableModel;
+import tables.report.JReportTableModel;
 
 public class TabledReport implements Observer{
 	private WaitLayerUI layerUI;
@@ -70,7 +70,7 @@ public class TabledReport implements Observer{
 				System.out.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
 				if(jsbMax*0.6 <= jsbPos){
 					System.out.println("Loading...");
-					jrtm.loadData();
+					jrtm.load();
 				}
 			}					
 		});
