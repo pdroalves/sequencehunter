@@ -205,7 +205,7 @@ public class SummaryDrawer implements ActionListener{
 			Drawer.writeToLog(tm.getText("statusStartHuntMsg"));
 			startButton.setEnabled(false);
 			abortButton.setEnabled(true);
-			drawer.setProgressBar(drawer.getTotalLibSize(libs));
+			Drawer.setProgressBar(drawer.getTotalLibSize(libs));
 			h.Set(searchSeq,libs);
 			h.start();				
 			break;

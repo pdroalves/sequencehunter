@@ -1,17 +1,16 @@
 package hunt;
 
-public class Evento {
+import myTypeData.GenType;
+
+public class Evento extends GenType{
 	private String seq;
 	private int qsensos;
 	private int qantisensos;
 	private double qnt_relativa;
 	private int pares;
-	
-	public Evento(){
 		
-	}
-	
 	public Evento(String s,int qs,int qas){
+		super(s,Math.min(qs, qas));
 		seq = s;
 		qsensos = qs;
 		qantisensos = qas;

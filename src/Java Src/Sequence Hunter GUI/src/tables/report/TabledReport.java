@@ -1,6 +1,10 @@
-package gui.report;
+package tables.report;
+
+import histogram.EventHistogram;
+import histogram.SimpleHistogramPanel;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.util.Observable;
@@ -11,13 +15,14 @@ import javax.swing.JLayer;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 
 import database.DBManager;
 
+import myTypeData.GenType;
 import auxiliares.WaitLayerUI;
 
-import tables.report.JReportTableModel;
 
 public class TabledReport implements Observer{
 	private WaitLayerUI layerUI;
@@ -25,12 +30,14 @@ public class TabledReport implements Observer{
 	private JPanel panel;
 	private JTable jte;
 	private JReportTableModel jrtm;
+	private EventHistogram eh;
 	
 	public TabledReport(DBManager dbm,JReportTableModel jrtm){
 		panel = new JPanel(new BorderLayout());
 		layerUI = new WaitLayerUI();
 		this.dbm = dbm;
 		this.jrtm = jrtm;
+		eh = new EventHistogram();
 	}
 	
 	public JComponent createTabledReport(){
@@ -81,10 +88,20 @@ public class TabledReport implements Observer{
 		seqInfo.add(seqJLabel);
 		seqInfo.add(new JLabel(tm.getText("reportSequenceFrequencyInfoLabel")));
 		seqInfo.add(seqFreqJLabel);*/
-		panel.add(jscp,BorderLayout.CENTER);
+		
+		// Cria histograma
+		eh.enableLinearize(true);
+		SimpleHistogramPanel shp = eh.getPanel();
+		
+		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,shp,jscp);
+		
+		panel.add(jsp,BorderLayout.CENTER);
 		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
 		if(!dbm.isReady()){
 			layerUI.start();
+		}else{
+			eh.addTypeSet(dbm.getEvents());
+			eh.commit();
 		}
 		return jlayer;
 	}
@@ -92,6 +109,8 @@ public class TabledReport implements Observer{
 	@Override
 	public void update(Observable o, Object arg) {
 		if(dbm.isReady()){
+			eh.addTypeSet(dbm.getEvents());
+			eh.commit();
 			jte.repaint();
 			panel.repaint();
 			jrtm.fireTableDataChanged();

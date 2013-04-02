@@ -115,8 +115,8 @@ public class Drawer {
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,top,bottom);
 		//jsp.setDividerSize(10);
 		jsp.setOneTouchExpandable(true);		
-		jsp.setDividerLocation(0.30);
-		jsp.setResizeWeight(0.5);
+		jsp.setDividerLocation(0.75);
+		jsp.setResizeWeight(0.7);
 		jsp.setMaximumSize(new Dimension(xSize/3,ySize));
 		jsp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		
