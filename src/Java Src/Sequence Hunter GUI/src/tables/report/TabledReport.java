@@ -1,10 +1,10 @@
 package tables.report;
 
 import histogram.EventHistogram;
+import histogram.ReportHistogramPanel;
 import histogram.SimpleHistogramPanel;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.util.Observable;
@@ -17,10 +17,13 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import database.DBManager;
 
-import myTypeData.GenType;
 import auxiliares.WaitLayerUI;
 
 
@@ -45,27 +48,22 @@ public class TabledReport implements Observer{
 		jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(false);
 		
-		/*
+		// Table selection listener
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
-		final JLabel seqJLabel = new JLabel("");
-		final JLabel seqFreqJLabel = new JLabel("");
 		cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) { 
+				// Ativa highlight de barra e linha
 				String sequence=null;
-				int sequenceFreq=0;
 
 				int[] selectedRow = jte.getSelectedRows();
 
 				for (int i = 0; i < selectedRow.length; i++) {
-					sequence = (String) jte.getValueAt(selectedRow[i], 1);
-					sequenceFreq = (int) jte.getValueAt(selectedRow[i], 2);		          
+					sequence = (String) jte.getValueAt(selectedRow[i], 1);	        
+					eh.enableBarHighlight(sequence, true);
 				}
-				seqJLabel.setText(sequence);
-				seqFreqJLabel.setText(Integer.toString(sequenceFreq));
 			}
-		});*/
-		
+		});
 		JScrollPane jscp = new JScrollPane(jte);
 		JScrollBar jsb = jscp.getVerticalScrollBar();
 		jsb.addAdjustmentListener(new AdjustmentListener(){
@@ -91,9 +89,11 @@ public class TabledReport implements Observer{
 		
 		// Cria histograma
 		eh.enableLinearize(true);
-		SimpleHistogramPanel shp = eh.getPanel();
-		
-		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,shp,jscp);
+		ReportHistogramPanel rhp = eh.getPanel();
+		rhp.setBorder(new EmptyBorder(25,15,45,10));
+		// Table selection
+		rhp.setJTableToListen(jte);
+		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
 		
 		panel.add(jsp,BorderLayout.CENTER);
 		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
@@ -116,6 +116,5 @@ public class TabledReport implements Observer{
 			jrtm.fireTableDataChanged();
 			layerUI.stop();
 		}
-	}
-	
+	}	
 }
