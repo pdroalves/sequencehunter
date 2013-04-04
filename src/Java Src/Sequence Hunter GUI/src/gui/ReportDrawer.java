@@ -1,46 +1,35 @@
 package gui;
 
-import auxiliares.WaitLayerUI;
 import gui.toolbar.OpenReportFileFilter;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JLayer;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import database.DBManager;
 
 import auxiliares.RemovableTabComponent;
 
-import tables.JNewReportTableModel;
+import tables.report.JPartialReportTableModel;
+import tables.report.JTotalReportTableModel;
+import tables.report.TabledReport;
 import xml.TranslationsManager;
-
-import gui.report.*;
 
 public class ReportDrawer implements ActionListener, Observer{
 	private static JPanel reportContainer;
@@ -71,16 +60,25 @@ public class ReportDrawer implements ActionListener, Observer{
 		
 		// Report	
 		JComponent jc;
-		// Central Cut
 		if(libDatabase != null){
 			DBManager dbm = new DBManager(libDatabase);
-			JNewReportTableModel jrtm = new JNewReportTableModel(dbm);
-			dbm.addObserver(jrtm);
-			tabledreport = new TabledReport(dbm,jrtm);
-			dbm.addObserver(tabledreport);
 			dbm.addObserver(this);
+
+			// Central Cut paired
+			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
+			dbm.addObserver(jprtm);
+			tabledreport = new TabledReport(dbm,jprtm);
+			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
-			jtp.addTab("Central Cut",jc);
+			jtp.addTab(tm.getText("reportCentralCutPairedDefaultName"),jc);
+
+			// Central Cut unpaired
+			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
+			dbm.addObserver(jtrtm);
+			tabledreport = new TabledReport(dbm,jtrtm);
+			dbm.addObserver(tabledreport);
+			jc = tabledreport.createTabledReport();
+			jtp.addTab(tm.getText("reportCentralCutUnpairedDefaultName"),jc);
 		}
 		
 		// Log Report

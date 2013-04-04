@@ -39,9 +39,13 @@
 	<TextResource tag="reportNumberColumnLabel" text="#"></TextResource>	
 	<TextResource tag="reportSequencesColumnLabel" text="Sequences"></TextResource>	
 	<TextResource tag="reportPairedColumnLabel" text="# Paired"></TextResource>
+	<TextResource tag="reportSensosColumnLabel" text="# Sensos"></TextResource>
+	<TextResource tag="reportAntisensosColumnLabel" text="# Antisensos"></TextResource>
 	<TextResource tag="reportSequenceInfoLabel" text="Sequence: "></TextResource>
 	<TextResource tag="reportSequenceFrequencyInfoLabel" text="Sequence frequency: "></TextResource>
 	<TextResource tag="reportHuntLogDefaultName" text="Hunt log"></TextResource>
+	<TextResource tag="reportCentralCutPairedDefaultName" text="Central cut paired"></TextResource>
+	<TextResource tag="reportCentralCutUnpairedDefaultName" text="Central cut unpaired"></TextResource>
 	<TextResource tag="statusStartMsg" text="Sequence Hunter started..."></TextResource>
 	<TextResource tag="statusLabel" text="Status:"></TextResource>
 	<TextResource tag="statusProgressTotal" text="Total:"></TextResource>

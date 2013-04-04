@@ -1,22 +1,25 @@
-package tables;
+package tables.report;
 
 import java.util.Observable;
 import java.util.Observer;
 
+import xml.TranslationsManager;
+
 import database.DBManager;
 
-public class JNewReportTableModel extends JReportTableModel implements Observer{
+public class JPartialReportTableModel extends JReportTableModel implements Observer{
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
-	private JReportLoadData jrld;
 	
-	public JNewReportTableModel(DBManager dbm){
+	public JPartialReportTableModel(DBManager dbm){
 		super(dbm);
-		jrld = new JReportLoadData(defaultLoad,seqs,dbm);
+	}
+	
+	public int getColumnCount() {
+		return 3;
 	}
 	
 	@Override
@@ -24,7 +27,7 @@ public class JNewReportTableModel extends JReportTableModel implements Observer{
 		Object obj = null;
 		
 		while(seqs.size() < rowIndex){
-			jrld.load();		
+			load();		
 		}
 		
 		switch(columnIndex){
@@ -39,11 +42,6 @@ public class JNewReportTableModel extends JReportTableModel implements Observer{
 			break;
 		}
 		return obj;
-	}
-	
-	@Override
-	public void loadData(){
-		jrld.load();
 	}
 	
 	@Override

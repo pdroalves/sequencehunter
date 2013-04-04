@@ -1,27 +1,20 @@
 package hunt;
 
-import java.util.ArrayList;
+import myTypeData.GenType;
 
-public class Evento {
+public class Evento extends GenType{
 	private String seq;
 	private int qsensos;
 	private int qantisensos;
 	private double qnt_relativa;
 	private int pares;
-	private ArrayList<Evento> regiao5l;
-	
-	public Evento(){
 		
-	}
-	
-	public Evento(String s,int qs,int qas,boolean r5l){
+	public Evento(String s,int qs,int qas){
+		super(s,Math.min(qs, qas));
 		seq = s;
 		qsensos = qs;
 		qantisensos = qas;
 		pares = Math.min(qs, qas);
-		if(r5l){
-			regiao5l = new ArrayList<Evento>();
-		}
 	}
 	
 	public void setSeq(String s){
@@ -63,18 +56,4 @@ public class Evento {
 	public double getQntRelativa(){
 		return qnt_relativa;
 	}
-	
-	public void have5l(boolean b){
-		if(b){
-			if(regiao5l == null){
-				regiao5l = new ArrayList<Evento>();				
-			}
-		}
-	}
-	
-	public void addTo5l(Evento e){
-		regiao5l.add(e);
-		return;
-	}
-
 }
