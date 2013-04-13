@@ -2,6 +2,7 @@ package hunt;
 
 import gui.Drawer;
 import gui.SummaryDrawer;
+import gui.statuslog.SLStreamWriter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,7 +16,7 @@ import socket.ISocketUser;
 import socket.SocketManager;
 
 
-public class Translator extends Thread implements ISocketUser{
+public class KernelDealer extends Thread implements ISocketUser{
 
 	private ProcessBuilder pb;
 	private Process process;
@@ -27,7 +28,7 @@ public class Translator extends Thread implements ISocketUser{
 	private String logFile;
 	private SocketManager sm;
 
-	public Translator(ProcessBuilder p){
+	public KernelDealer(ProcessBuilder p){
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)BR(\\d+)");
@@ -40,7 +41,11 @@ public class Translator extends Thread implements ISocketUser{
 		try {
 			process = pb.start();
 			Drawer.enableStatusJLabels(true);
+			InputStream is = process.getInputStream();
+			SLStreamWriter statusLogWriter = new SLStreamWriter(is);
 			sm = new SocketManager(this);
+			
+			statusLogWriter.start();
 			sm.waitForConnections();
 			
 			if(!stop){

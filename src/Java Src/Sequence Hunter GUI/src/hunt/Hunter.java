@@ -16,7 +16,7 @@ public class Hunter{
 	private static String default_output_folder;
 	private static String output_folder;
 	String command = "";
-	private Translator t;
+	private KernelDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	
 	public Hunter(){
@@ -76,7 +76,7 @@ public class Hunter{
 		pb.redirectErrorStream(true);	
 
 		// Instancia interpretador
-		t = new Translator(pb);
+		t = new KernelDealer(pb);
 
 	}
 
