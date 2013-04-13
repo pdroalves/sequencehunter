@@ -134,6 +134,7 @@ public class ReportDrawer implements ActionListener, Observer{
 			emptyReportTab.setVisible(false);
 		}
 		reportContainer.repaint();
+		Drawer.repaint();
 	}
 	
 	private static JPanel getEmptyJPanel(){
@@ -182,5 +183,18 @@ public class ReportDrawer implements ActionListener, Observer{
 	public void update(Observable arg0, Object arg1) {
 		updateReportsView();
 	}
-
+	
+	public static int getReportsLoaded(){
+		return reportTab.getTabCount();
+	}
+	
+	public static int getSelectedReportTabIndex(){
+		return reportTab.getSelectedIndex();
+	}
+	
+	public static int getSelectedSubReportTabIndex(){		
+		JPanel jp = (JPanel) reportTab.getComponentAt(getSelectedReportTabIndex());
+		JTabbedPane jtp = (JTabbedPane) jp.getComponent(0);
+		return jtp.getSelectedIndex();
+	}
 }

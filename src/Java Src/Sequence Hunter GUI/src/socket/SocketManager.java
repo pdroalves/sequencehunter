@@ -80,6 +80,7 @@ public class SocketManager {
 					return;
 				}
 				data = new String(buf, 0, bytes_read);
+				System.err.println("Socket said: "+data);
 				
 				Matcher helloMatcher = helloPattern.matcher(data);
 				Matcher closeMatcher = closePattern.matcher(data);
@@ -100,9 +101,7 @@ public class SocketManager {
 				sockOutput.flush();
 			}
 			catch (IOException e){
-				System.err.println("Exception reading from/writing to socket, e="+e);
-				e.printStackTrace(System.err);
-				return;
+				Drawer.writeToLog(e.getMessage());
 			}
 		}
 	}

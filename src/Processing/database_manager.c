@@ -30,7 +30,7 @@ void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
    destroyed = 0;
    db_filename = (char*)malloc(500*sizeof(char));
    if(output_dir != NULL)
-	sprintf(db_filename,"%s/SH_%s.db",output_dir,tempo);
+	sprintf(db_filename,"%sSH_%s.db",output_dir,tempo);
    else
 	sprintf(db_filename,"SH_%s.db",tempo);
 	

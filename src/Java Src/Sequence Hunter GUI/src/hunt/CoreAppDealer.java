@@ -16,7 +16,7 @@ import socket.ISocketUser;
 import socket.SocketManager;
 
 
-public class KernelDealer extends Thread implements ISocketUser{
+public class CoreAppDealer extends Thread implements ISocketUser{
 
 	private ProcessBuilder pb;
 	private Process process;
@@ -28,7 +28,7 @@ public class KernelDealer extends Thread implements ISocketUser{
 	private String logFile;
 	private SocketManager sm;
 
-	public KernelDealer(ProcessBuilder p){
+	public CoreAppDealer(ProcessBuilder p){
 		pb = p;
 		stop = false;
 		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)BR(\\d+)");
@@ -77,17 +77,20 @@ public class KernelDealer extends Thread implements ISocketUser{
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
 			Drawer.setSPS(Integer.parseInt(matcher.group(4)));
 			Drawer.updateProgressBar(Integer.parseInt(matcher.group(5)));
-			System.out.println(s);
+			System.err.println("Processing info.");
 		}else{
 			matcher = outputPattern.matcher(s);
 			if(matcher.matches()){
 				outputDatabase = matcher.group(1);
+				System.err.println("Output file info.");
 			}else{
 				matcher =logPattern.matcher(s);
 				if(matcher.matches()){
 					logFile = matcher.group(1);
+					System.err.println("Output log file info.");
 				}else{
 					Drawer.writeToLog(s);	
+					System.err.println("Dunno.");
 				}
 			}
 		}
@@ -138,7 +141,7 @@ public class KernelDealer extends Thread implements ISocketUser{
 		}else if (OS.contains("NUX")){
 			// Linux
 			String tkProcess = "killall "+Hunter.getAppName();
-			System.out.println(tkProcess);
+			System.err.println(tkProcess);
 			try {
 				Runtime.getRuntime().exec(tkProcess);
 			} catch (IOException e) {

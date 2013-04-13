@@ -1,4 +1,5 @@
 package gui;
+import gui.menubar.SHMenuBar;
 import gui.toolbar.NewJButton;
 import gui.toolbar.OpenJButton;
 import gui.toolbar.SaveAllJButton;
@@ -6,8 +7,6 @@ import gui.toolbar.SaveJButton;
 import hunt.Hunter;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,12 +17,9 @@ import javax.swing.border.EtchedBorder;
 
 import xml.TranslationsManager;
 
-import dialogs.AboutDialog;
-
-
 public class Drawer {
 
-	private JFrame jfrm;
+	private static JFrame jfrm;
 	private static JTabbedPane jtp;
 	private static JTextArea statusLog;
 	private static Container jcprogress;
@@ -41,6 +37,10 @@ public class Drawer {
 	private static JToolBar toolbar;
 	private static JMenuBar menubar;
 	private static TranslationsManager tm;
+	private SHMenuBar shmb;
+	public final static int SETUP_TAB = 0;
+	public final static int SUMMARY_TAB = 1;
+	public final static int REPORT_TAB = 2;
 
 	public Drawer(){
 		statusLog = new JTextArea();
@@ -55,6 +55,7 @@ public class Drawer {
 		jcprogress = drawProgressBarContainer(jprog);
 		tm = TranslationsManager.getInstance();
 		tm.setDefaultLanguage();
+		shmb = new SHMenuBar();
 
 		// Cria JFrame container
 		jfrm = new JFrame(tm.getText("appName"));
@@ -101,6 +102,8 @@ public class Drawer {
 
 		// Monta reportContainer
 		jtp.addTab(tm.getText("reportTabName"),null,getReportDrawer().getContainer(),tm.getText("reportTabHint"));
+		
+		jtp.addChangeListener(shmb);
 
 		JPanel top = new JPanel(new BorderLayout());
 		top.add(jtp,BorderLayout.CENTER);
@@ -152,52 +155,7 @@ public class Drawer {
 	}
 	
 	private JMenuBar drawMenuBar(){
-		// Barra do menu
-		JMenuBar menuBar = new JMenuBar();
-
-		// Novo Menu  
-		JMenu menuFile = new JMenu(tm.getText("menuFileLabel")); 
-		JMenu menuHelp = new JMenu(tm.getText("menuHelpLabel"));   
-
-		// Item do menu  
-		final JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
-		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
-
-		menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuItemExit.setBorderPainted(true);
-		menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuItemAbout.setBorderPainted(true);
-
-		menuItemExit.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				jfrm.dispose();
-			}
-			
-			
-		});
-		
-		menuItemAbout.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				JDialog about = new AboutDialog(jfrm);
-				about.setVisible(true);
-			}
-		});
-
-		menuFile.add(menuItemExit);
-		menuHelp.add(menuItemAbout);
-		menuBar.add(menuFile); 
-		menuBar.add(menuHelp);
-		
-		menuFile.setBorder(BorderFactory.createLoweredBevelBorder());
-		menuHelp.setBorder(BorderFactory.createLoweredBevelBorder());
-		menuBar.setBorder(BorderFactory.createLoweredBevelBorder());
-		menuBar.setBorderPainted(true);
-
-		return menuBar;
+		return shmb.getJMenuBar();
 	}
 	
 	private JPanel drawStatusContainer(){
@@ -299,7 +257,7 @@ public class Drawer {
 	}
 	
 	protected static void moveToReportTab(){
-		jtp.setSelectedIndex(2);		
+		jtp.setSelectedIndex(REPORT_TAB);		
 	}
 
 	protected static SearchDrawer getSearchDrawer() {
@@ -313,5 +271,16 @@ public class Drawer {
 	protected static ReportDrawer getReportDrawer() {
 		return reportDrawer;
 	}
+	
+	public static void repaint(){
+		jfrm.repaint();
+	}
+	
+	public static void dispose(){
+		jfrm.dispose();
+	}
 
+	public static JFrame getJFrame(){
+		return jfrm;
+	}
 }
