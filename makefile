@@ -37,12 +37,12 @@ java:build_gui
 #########################################
 #########################################
 
-compile:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o build_control	
+compile:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o $(OBJ)nc_busca.o build_control	
 	echo "CLI Compiled."
 	
-build:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o build_control	
+build:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o $(OBJ)nc_busca.o build_control	
 	$(BIN)build_control $(SOURCE)Headers/version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
+	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)nc_busca.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
 	echo "CLI built"	
 	
 build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -92,7 +92,10 @@ $(OBJ)fila.o:$(SOURCE)Processing/fila.c
 	
 $(OBJ)database.o:$(SOURCE)Processing/database.c
 	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
-	
+
+$(OBJ)nc_busca.o:$(SOURCE)Search/nc_busca.c
+	$(CC) -g -c $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
+
 #########################################
 ############ NVCC LINUX##################
 #########################################

@@ -19,6 +19,7 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 #include "../Headers/socket.h"
+#include "../Headers/nc_busca.h"
 #include "sqlite3.h"
 
 // Lista de threads a serem criados
@@ -411,7 +412,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
 	THREAD_DONE[THREAD_QUEUE] = FALSE;
 	THREAD_DONE[THREAD_DATABASE] = FALSE;
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(toStore) shared(seqSize_an) shared(buf)
+	#pragma omp parallel num_threads(OMP_NTHREADS) shared(toStore) shared(buf)
 	{	
 		
 	  #pragma omp sections
