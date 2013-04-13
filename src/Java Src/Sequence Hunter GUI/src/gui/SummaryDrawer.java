@@ -167,16 +167,16 @@ public class SummaryDrawer implements ActionListener{
 		return;
 	}
 	
-	static public void huntDone(String libDatabse,File logFile){
-		if(libDatabse != null){
+	static public void huntDone(String libDatabase,File logFile){
+		if(libDatabase != null){
 			abortButton.setEnabled(false);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Drawer.writeToLog(e.getMessage());
 			}
-			Drawer.getReportDrawer().addMainReport(new File(libDatabse).getAbsolutePath(),logFile);
+			Drawer.getReportDrawer().addMainReport(libDatabase,logFile);
+			ReportDrawer.updateReportsView();
 			Drawer.moveToReportTab();
 			Drawer.writeToLog(tm.getText("statusHuntDoneMsg"));
 			Drawer.writeToLog(tm.getText("statusCheckReportTabMsg"));
@@ -225,6 +225,5 @@ public class SummaryDrawer implements ActionListener{
 			}
 			break;
 		}
-		
 	}
 }

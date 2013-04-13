@@ -331,16 +331,16 @@ void nc_report_manager(Fila* toStore){
   int pos_sent_to_db;
   int count;
   int diff;
-  FILE* fp_enchimento;
-  FILE* fp_esvaziamento;
+  // FILE* fp_enchimento;
+  // FILE* fp_esvaziamento;
   char *msg;
   float sqlite3_mem_used;
   int port = GUI_SOCKET_PORT;
   
-    if(verbose && !silent){
-      fp_enchimento = fopen("enchimento.dat","w");
-      fp_esvaziamento = fopen("esvaziamento.dat","w");
-    }
+    // if(verbose && !silent){
+      // fp_enchimento = fopen("enchimento.dat","w");
+      // fp_esvaziamento = fopen("esvaziamento.dat","w");
+    // }
   count = 0;
   
   
@@ -386,14 +386,14 @@ void nc_report_manager(Fila* toStore){
       printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
       printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
       printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
-      fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
-      fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
+      //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
+     //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	
   }
-    if(verbose && !silent){
-	  fclose(fp_enchimento);
-	  fclose(fp_esvaziamento);
-	}
+    //if(verbose && !silent){
+	  //fclose(fp_enchimento);
+	  //fclose(fp_esvaziamento);
+	//}
   THREAD_DONE[THREAD_DATABASE] = TRUE;
   return;
 }
@@ -419,18 +419,22 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	  {
 	      #pragma omp section
 	      {
+	      	// Carrega sequencias
 		      nc_buffer_manager(seqSize_an);
 	      }
 	      #pragma omp section
 	      {
+	      	// Faz o processamento e adiciona resultado na queue
 		      nc_search_manager(bloco1,bloco2,blocos,seqSize_an,toStore);
 	      }
 	      #pragma omp section
 	      {
+	      	// Carrega resultados da queue e salva no db
 		      nc_queue_manager(toStore);
 	      }
 	      #pragma omp section
 	      {
+	      	// Escrita de informacoes relevantes na stdout
 		      nc_report_manager(toStore);
 	      }
 	  }

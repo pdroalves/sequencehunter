@@ -40,7 +40,7 @@ void prepareLog(char* output_dir,char *tempo,gboolean gui){
 	
 	logfile_name = (char*)malloc(500*sizeof(char));
 	if(output_dir != NULL)
-		sprintf(tmp,"%s/SHunter Log - %s.txt",output_dir,tempo);
+		sprintf(tmp,"%sSHunter Log - %s.txt",output_dir,tempo);
 	else
 		sprintf(tmp,"SHunter Log - %s.txt",tempo);
 	for(i=0;i <= strlen(tmp); i++){

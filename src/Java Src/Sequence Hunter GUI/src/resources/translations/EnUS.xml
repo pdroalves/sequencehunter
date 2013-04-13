@@ -58,5 +58,8 @@
 	<TextResource tag="statusCheckReportTabMsg" text="Check Report tab for results..."></TextResource>
 	<TextResource tag="statusErrorProcessingMsg" text="Error on processing."></TextResource>
 	<TextResource tag="pleaseWaitDialogLabel" text="Please wait..."></TextResource>
+	<TextResource tag="menuFileItemExportGeneric" text="Export"></TextResource>
+	<TextResource tag="menuFileItemExportGenericSingleReport" text="Export only this report"></TextResource>
+	<TextResource tag="menuFileItemExportGenericEntireReport" text="Export the entire report"></TextResource>
 </AllTextResource>
 	
