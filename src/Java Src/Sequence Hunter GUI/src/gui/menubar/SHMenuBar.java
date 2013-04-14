@@ -2,10 +2,13 @@ package gui.menubar;
 
 import gui.Drawer;
 import gui.ReportDrawer;
+import hunt.Evento;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -19,6 +22,7 @@ import javax.swing.event.ChangeListener;
 import xml.TranslationsManager;
 
 import dialogs.AboutDialog;
+import dialogs.ExportDialog;
 
 public class SHMenuBar implements ChangeListener, ActionListener{
 
@@ -28,28 +32,18 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 	//private int currentMode;
 	private JMenu menuFile;
 	private JMenu menuHelp;
-	private JMenu menuItemExport;
-	private JMenuItem menuItemExportSingleReport;
-	private JMenuItem menuItemExportEntireReport;
+	private JMenuItem menuItemExport;
 
 	public SHMenuBar(){
 		this.tm = TranslationsManager.getInstance();
 
 		// Export set
-		menuItemExport = new JMenu(tm.getText("menuFileItemExportGeneric"));
-		menuItemExportSingleReport = new JMenuItem(tm.getText("menuFileItemExportGenericSingleReport"));
-		menuItemExportSingleReport.setActionCommand("ExportSingle");
-		menuItemExportEntireReport = new JMenuItem(tm.getText("menuFileItemExportGenericEntireReport"));
-		menuItemExportEntireReport.setActionCommand("ExportAll");
+		menuItemExport = new JMenuItem(tm.getText("menuFileItemExportGeneric"));
 		
 		menuItemExport.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		menuItemExport.setBorderPainted(true);
 
-		menuItemExportSingleReport.addActionListener(this);
-		menuItemExportEntireReport.addActionListener(this);
-		
-		menuItemExport.add(menuItemExportSingleReport);
-		menuItemExport.add(menuItemExportEntireReport);
+		menuItemExport.addActionListener(this);
 	}
 
 	@Override
@@ -133,10 +127,22 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand().equals("ExportSingle")){
-			System.err.println("Aba selecionada: "+ReportDrawer.getSelectedReportTabIndex()+"->"+ReportDrawer.getSelectedSubReportTabIndex());
-		}else if(e.getActionCommand().equals("ExportAll")){			
-			System.err.println("Aba selecionada: "+ReportDrawer.getSelectedReportTabIndex());
-		}		
+		if(e.getActionCommand().equals("Export")){
+			// Exporta uma aba especifica do relatorio aberto
+			System.err.println("Aba selecionada: "+ReportDrawer.getSelectedReportTabIndex()+
+					"->"+ReportDrawer.getSelectedSubReportTabIndex());
+			int reportGroupIndex = ReportDrawer.getSelectedReportTabIndex();
+			int reportIndex = ReportDrawer.getSelectedSubReportTabIndex();
+		
+			ArrayList<Evento> data = ReportDrawer.getData(reportGroupIndex, reportIndex);
+			if(data != null){
+				System.out.println("Carreguei "+data.size()+" seqs.");
+			}else{
+				File log = ReportDrawer.getLog(reportGroupIndex, reportIndex);
+				System.out.println("Carreguei o arquivo "+log.getAbsolutePath());
+			}
+			ExportDialog ed = new ExportDialog(Drawer.getJFrame());
+			ed.setVisible(true);
+		}	
 	}
 }
