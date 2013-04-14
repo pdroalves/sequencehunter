@@ -1,6 +1,7 @@
 package gui;
 
 import gui.toolbar.OpenReportFileFilter;
+import hunt.Evento;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -8,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
@@ -37,7 +40,11 @@ public class ReportDrawer implements ActionListener, Observer{
 	private static JPanel emptyReportTab;
 	private static TranslationsManager tm;
 	private TabledReport tabledreport;
+	@SuppressWarnings("rawtypes")
+	private static List<List> data;
+	private static List<List<String>> tabNames;
 
+	@SuppressWarnings("rawtypes")
 	public ReportDrawer(){
 		reportContainer = new JPanel(new BorderLayout());
 		ReportDrawer.tm = TranslationsManager.getInstance();
@@ -46,22 +53,30 @@ public class ReportDrawer implements ActionListener, Observer{
 		reportContainer.add(reportTab,BorderLayout.CENTER);
 		reportContainer.add(emptyReportTab,BorderLayout.NORTH);
 		updateReportsView();
+		data = new ArrayList<List>();
+		tabNames = new ArrayList<List<String>>();
 	}
 
 	public JPanel getContainer(){
 		return reportContainer;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		
+		data.add(new ArrayList<DBManager>());
+		tabNames.add(new ArrayList<String>());
+
 		// Report	
 		JComponent jc;
+		String tabName;
 		if(libDatabase != null){
 			DBManager dbm = new DBManager(libDatabase);
+
+			data.get(data.size()-1).add(dbm);
 			dbm.addObserver(this);
 
 			// Central Cut paired
@@ -70,21 +85,29 @@ public class ReportDrawer implements ActionListener, Observer{
 			tabledreport = new TabledReport(dbm,jprtm);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
-			jtp.addTab(tm.getText("reportCentralCutPairedDefaultName"),jc);
+			tabName = tm.getText("reportCentralCutPairedDefaultName");
+			tabNames.get(tabNames.size()-1).add(tabName);
+			jtp.addTab(tabName,jc);
 
 			// Central Cut unpaired
+			data.get(data.size()-1).add(dbm);
 			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
 			dbm.addObserver(jtrtm);
 			tabledreport = new TabledReport(dbm,jtrtm);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
-			jtp.addTab(tm.getText("reportCentralCutUnpairedDefaultName"),jc);
+			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
+			tabNames.get(tabNames.size()-1).add(tabName);
+			jtp.addTab(tabName,jc);
 		}
-		
+
 		// Log Report
 		if(log != null){
 			jc = createTextReport(log);
-			jtp.addTab(tm.getText("reportHuntLogDefaultName"), jc);
+			data.get(data.size()-1).add(log);
+			tabName = tm.getText("reportHuntLogDefaultName");
+			tabNames.get(tabNames.size()-1).add(tabName);
+			jtp.addTab(tabName, jc);
 		}
 
 		/*JPanel insideJp = new JPanel();
@@ -98,13 +121,13 @@ public class ReportDrawer implements ActionListener, Observer{
 		reportTab.setSelectedIndex(reportTab.getTabCount()-1);	
 		return;
 	}
-	
+
 	protected static void addSubReport(String query,String mainLibDatabase){
 		// Cria tabledReport com dados relativos a uma query em cima de determinada db
 		// To-do
 	}
-	
-	
+
+
 	private static JComponent createTextReport(File txtFile){
 		final JTextArea logJTA = new JTextArea();
 		logJTA.setLineWrap(true);
@@ -136,7 +159,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		reportContainer.repaint();
 		Drawer.repaint();
 	}
-	
+
 	private static JPanel getEmptyJPanel(){
 		JPanel panel = new JPanel(new FlowLayout());
 		JLabel emptyLabel = new JLabel(tm.getText("reportNothingToShow"));
@@ -183,18 +206,41 @@ public class ReportDrawer implements ActionListener, Observer{
 	public void update(Observable arg0, Object arg1) {
 		updateReportsView();
 	}
-	
+
 	public static int getReportsLoaded(){
 		return reportTab.getTabCount();
 	}
-	
+
 	public static int getSelectedReportTabIndex(){
 		return reportTab.getSelectedIndex();
 	}
-	
+
 	public static int getSelectedSubReportTabIndex(){		
 		JPanel jp = (JPanel) reportTab.getComponentAt(getSelectedReportTabIndex());
 		JTabbedPane jtp = (JTabbedPane) jp.getComponent(0);
 		return jtp.getSelectedIndex();
+	}
+
+	public static ArrayList<Evento> getData(int mainIndex,int subIndex){
+		Object obj = data.get(mainIndex).get(subIndex);
+		if(obj instanceof DBManager){
+			DBManager dbm = (DBManager) obj;
+			return dbm.getEvents();
+		}else{
+			return null;
+		}
+	}
+	
+	public static File getLog(int mainIndex,int subIndex){
+		Object obj = data.get(mainIndex).get(subIndex);
+		if(obj instanceof File){
+			return (File)obj;
+		}else{
+			return null;
+		}
+	}
+	
+	public static String getTabName(int mainIndex,int subIndex){
+		return tabNames.get(mainIndex).get(subIndex);
 	}
 }
