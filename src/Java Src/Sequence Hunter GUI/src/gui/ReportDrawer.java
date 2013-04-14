@@ -43,6 +43,7 @@ public class ReportDrawer implements ActionListener, Observer{
 	@SuppressWarnings("rawtypes")
 	private static List<List> data;
 	private static List<List<String>> tabNames;
+	private static List<String> reportName;
 
 	@SuppressWarnings("rawtypes")
 	public ReportDrawer(){
@@ -55,6 +56,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		updateReportsView();
 		data = new ArrayList<List>();
 		tabNames = new ArrayList<List<String>>();
+		reportName = new ArrayList<String>();
 	}
 
 	public JPanel getContainer(){
@@ -116,8 +118,10 @@ public class ReportDrawer implements ActionListener, Observer{
 		insideJp.add(jtp,BorderLayout.CENTER);*/
 
 		jp.add(jtp,BorderLayout.CENTER);
-
-		reportTab.addTab(libDatabase,jp);
+		
+		String reportTitle = libDatabase;
+		reportName.add(reportTitle);
+		reportTab.addTab(reportTitle,jp);
 		reportTab.setSelectedIndex(reportTab.getTabCount()-1);	
 		return;
 	}
@@ -241,6 +245,20 @@ public class ReportDrawer implements ActionListener, Observer{
 	}
 	
 	public static String getTabName(int mainIndex,int subIndex){
+		// Retorna o nome de uma subtab
 		return tabNames.get(mainIndex).get(subIndex);
+	}
+	
+	public static List<List<String>> getAllTabNames(){
+		// Retorna o nome de subtabs
+		return tabNames;
+	}
+	
+	public static String getReportTitle(int mainIndex){
+		return reportName.get(mainIndex);
+	}
+	
+	public static List<String> getAllReportTitles(){
+		return reportName;
 	}
 }
