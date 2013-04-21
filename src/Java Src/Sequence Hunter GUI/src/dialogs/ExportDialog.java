@@ -3,9 +3,12 @@ package dialogs;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -20,7 +23,7 @@ import xml.TranslationsManager;
 
 import gui.ReportDrawer;
 
-public class ExportDialog extends JDialog{
+public class ExportDialog extends JDialog implements ActionListener{
 
 	/**
 	 * 
@@ -36,13 +39,13 @@ public class ExportDialog extends JDialog{
 	    TranslationsManager tm = TranslationsManager.getInstance();
 
 	    ///////////////////
-	    ///////////////////
 		// Line - Export type
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.10;
 	    c.weightx = 0.5;
 	    c.gridy = 0;
-	    
+
+	    ///////////////////
 	    // Export single
 	    c.gridx = 0;
 	    JRadioButton selectExportTypeSingle = new JRadioButton();
@@ -51,7 +54,8 @@ public class ExportDialog extends JDialog{
 	    item.add(selectExportTypeSingle);
 	    item.add(singleExportJLabel);
 		jp.add(item,c);
-		
+
+	    ///////////////////
 		// Export all
 		c.gridx = 1;
 		item = new JPanel(new FlowLayout());
@@ -67,12 +71,12 @@ public class ExportDialog extends JDialog{
 	    bgroup.add(selectExportTypeSingle);
 	    bgroup.add(selectExportTypeAll);
 	    ///////////////////
+
 	    ///////////////////
-	    ///////////////////
-	    
 	    // Arvore de reports
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("The Java Series");
+        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Reports");
         createNodes(top);
+        
 	    JTree tree = new JTree(top);
 	    JScrollPane jscp = new JScrollPane(tree);
 	    c.fill = GridBagConstraints.BOTH;
@@ -82,6 +86,24 @@ public class ExportDialog extends JDialog{
 		c.gridx = 0;
 		c.gridwidth = 2;
 	    jp.add(jscp,c);
+
+	    ///////////////////
+	    // Botoes
+	    JButton exportButton = new JButton(tm.getText("ExportDialogExportButton"));
+	    exportButton.setActionCommand("Export");
+	    exportButton.addActionListener(this);
+	    JButton cancelButton = new JButton(tm.getText("ExportDialogCancelButton"));
+	    cancelButton.setActionCommand("Cancel");
+	    cancelButton.addActionListener(this);
+	    c.fill = GridBagConstraints.NONE;
+	    c.weighty = 0.05;
+	    c.weightx = 1;
+	    c.gridy = 2;
+		c.gridx = 0;
+		c.gridwidth = 1;
+		jp.add(exportButton,c);
+		c.gridx=1;
+		jp.add(cancelButton,c);
 	    
 	    getContentPane().add(jp);
 	    
@@ -102,5 +124,14 @@ public class ExportDialog extends JDialog{
 	    	}
 	    	top.add(mainReport);
 	    }
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+		if(ae.getActionCommand().equals("Export")){
+			
+		}else if(ae.getActionCommand().equals("Cancel")){
+			super.dispose();
+		}
 	}
 }

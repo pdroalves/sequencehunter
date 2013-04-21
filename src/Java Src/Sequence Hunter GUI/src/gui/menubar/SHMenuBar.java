@@ -39,7 +39,7 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 
 		// Export set
 		menuItemExport = new JMenuItem(tm.getText("menuFileItemExportGeneric"));
-		
+
 		menuItemExport.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		menuItemExport.setBorderPainted(true);
 
@@ -51,7 +51,7 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 		if(e.getSource() instanceof JTabbedPane){
 			JTabbedPane jtp = (JTabbedPane) e.getSource();
 			int mode;
-			
+
 			if(jtp.getSelectedIndex() == Drawer.REPORT_TAB &&
 					ReportDrawer.getReportsLoaded() > 0){
 				mode = MENUBAR_REPORT_MODE;
@@ -133,7 +133,7 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 					"->"+ReportDrawer.getSelectedSubReportTabIndex());
 			int reportGroupIndex = ReportDrawer.getSelectedReportTabIndex();
 			int reportIndex = ReportDrawer.getSelectedSubReportTabIndex();
-		
+
 			ArrayList<Evento> data = ReportDrawer.getData(reportGroupIndex, reportIndex);
 			if(data != null){
 				System.out.println("Carreguei "+data.size()+" seqs.");
