@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -14,10 +15,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import dialogs.checkbox.CheckBoxNode;
+import dialogs.checkbox.CheckBoxNodeEditor;
+import dialogs.checkbox.CheckBoxNodeRenderer;
+import dialogs.checkbox.NamedVector;
 
 import xml.TranslationsManager;
 
@@ -29,7 +34,8 @@ public class ExportDialog extends JDialog implements ActionListener{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
+	private JTree tree;
+	
 	public ExportDialog(JFrame parent){
 	    super(parent, "Export", true);
 	
@@ -38,6 +44,11 @@ public class ExportDialog extends JDialog implements ActionListener{
 	    GridBagConstraints c = new GridBagConstraints();
 	    TranslationsManager tm = TranslationsManager.getInstance();
 
+	    ///////////////////
+	    // Cria arvore de reports
+        tree = createTree();
+	    JScrollPane jscp = new JScrollPane(tree);
+	    
 	    ///////////////////
 		// Line - Export type
 	    c.fill = GridBagConstraints.HORIZONTAL;
@@ -49,6 +60,7 @@ public class ExportDialog extends JDialog implements ActionListener{
 	    // Export single
 	    c.gridx = 0;
 	    JRadioButton selectExportTypeSingle = new JRadioButton();
+	    selectExportTypeSingle.setActionCommand("SingleExport");
 	    selectExportTypeSingle.setSelected(true);
 	    JLabel singleExportJLabel = new JLabel(tm.getText("menuFileItemExportGenericSingleReport"));
 	    item.add(selectExportTypeSingle);
@@ -60,25 +72,23 @@ public class ExportDialog extends JDialog implements ActionListener{
 		c.gridx = 1;
 		item = new JPanel(new FlowLayout());
 		JRadioButton selectExportTypeAll = new JRadioButton();
+		selectExportTypeAll.setActionCommand("FullExport");
 	    selectExportTypeAll.setSelected(false);
 	    JLabel fullExportJLabel = new JLabel(tm.getText("menuFileItemExportGenericAllReports"));
 	    item.add(selectExportTypeAll);
 	    item.add(fullExportJLabel);
 	    jp.add(item);
 	    
-
 	    ButtonGroup bgroup = new ButtonGroup();
 	    bgroup.add(selectExportTypeSingle);
 	    bgroup.add(selectExportTypeAll);
+	    
+	    selectExportTypeSingle.addActionListener(this);
+	    selectExportTypeAll.addActionListener(this);
 	    ///////////////////
 
 	    ///////////////////
-	    // Arvore de reports
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Reports");
-        createNodes(top);
-        
-	    JTree tree = new JTree(top);
-	    JScrollPane jscp = new JScrollPane(tree);
+	    // Adiciona arvore
 	    c.fill = GridBagConstraints.BOTH;
 	    c.weighty = 0.30;
 	    c.weightx = 1;
@@ -112,23 +122,42 @@ public class ExportDialog extends JDialog implements ActionListener{
 		setLocationRelativeTo(parent);
 	}
 	
-	private void createNodes(DefaultMutableTreeNode top) {	    
+	@SuppressWarnings("rawtypes")
+	private JTree createTree() {	    
 	    List<String> reportNames = ReportDrawer.getAllReportTitles();
 	    List<List<String>> tabNames = ReportDrawer.getAllTabNames();
 	    
+	    Object rootNodes[] = new Object[reportNames.size()];
+	    
 	    for(int i=0; i < reportNames.size();i++){
-	    	DefaultMutableTreeNode mainReport = new DefaultMutableTreeNode(reportNames.get(i));
+	    	CheckBoxNode mainReport[] = new CheckBoxNode[tabNames.get(i).size()];
 	    	for(int j=0;j < tabNames.get(i).size();j++){
-	    		DefaultMutableTreeNode subReport = new DefaultMutableTreeNode(tabNames.get(i).get(j));
-	    		mainReport.add(subReport);
+	    		CheckBoxNode subReport = new CheckBoxNode(tabNames.get(i).get(j),false);
+	    		mainReport[j] = subReport;
 	    	}
-	    	top.add(mainReport);
+	    	Vector mainReportVector = new NamedVector(reportNames.get(i),mainReport);
+	    	rootNodes[i] = mainReportVector;
 	    }
+	    Vector rootVector = new NamedVector("Root", rootNodes);
+
+	    JTree tree = new JTree(rootVector);
+	    
+	    CheckBoxNodeRenderer renderer = new CheckBoxNodeRenderer();
+	    tree.setCellRenderer(renderer);
+
+	    tree.setCellEditor(new CheckBoxNodeEditor(tree));
+	    tree.setEditable(true);
+	    
+	    return tree;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent ae) {
-		if(ae.getActionCommand().equals("Export")){
+		if(ae.getActionCommand().equals("SingleExport")){
+			tree.setEnabled(true);
+		}else if(ae.getActionCommand().equals("FullExport")){
+			tree.setEnabled(false);			
+		}else if(ae.getActionCommand().equals("Export")){
 			
 		}else if(ae.getActionCommand().equals("Cancel")){
 			super.dispose();
