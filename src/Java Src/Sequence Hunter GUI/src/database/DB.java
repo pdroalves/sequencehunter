@@ -65,6 +65,19 @@ public class DB {
 		return null;
 	}
 	
+	public int getSize(){
+		Statement stat;
+		try {
+			stat = databaseConn.createStatement();
+			ResultSet rs = stat.executeQuery("SELECT COUNT(*) FROM events");
+			return rs.getInt(1);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	
 	public void close(){
 		try {
 			if(!rows.isClosed()){

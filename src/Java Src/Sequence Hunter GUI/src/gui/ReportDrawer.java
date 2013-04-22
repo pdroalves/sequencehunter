@@ -31,7 +31,9 @@ import auxiliares.RemovableTabComponent;
 
 import tables.report.JPartialReportTableModel;
 import tables.report.JTotalReportTableModel;
+import tables.report.ReportFactory;
 import tables.report.TabledReport;
+import tables.report.TextReport;
 import xml.TranslationsManager;
 
 public class ReportDrawer implements ActionListener, Observer{
@@ -71,6 +73,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
 		data.add(new ArrayList<DBManager>());
 		tabNames.add(new ArrayList<String>());
+		ReportFactory rf = new ReportFactory();
 
 		// Report	
 		JComponent jc;
@@ -84,7 +87,7 @@ public class ReportDrawer implements ActionListener, Observer{
 			// Central Cut paired
 			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
 			dbm.addObserver(jprtm);
-			tabledreport = new TabledReport(dbm,jprtm);
+			tabledreport = rf.createTabledReport(dbm,jprtm);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
 			tabName = tm.getText("reportCentralCutPairedDefaultName");
@@ -95,7 +98,7 @@ public class ReportDrawer implements ActionListener, Observer{
 			data.get(data.size()-1).add(dbm);
 			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
 			dbm.addObserver(jtrtm);
-			tabledreport = new TabledReport(dbm,jtrtm);
+			tabledreport = rf.createTabledReport(dbm,jtrtm);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
 			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
@@ -105,7 +108,8 @@ public class ReportDrawer implements ActionListener, Observer{
 
 		// Log Report
 		if(log != null){
-			jc = createTextReport(log);
+			TextReport tr = rf.createTextReport(log);
+			jc = tr.getReport();
 			data.get(data.size()-1).add(log);
 			tabName = tm.getText("reportHuntLogDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
@@ -129,26 +133,6 @@ public class ReportDrawer implements ActionListener, Observer{
 	protected static void addSubReport(String query,String mainLibDatabase){
 		// Cria tabledReport com dados relativos a uma query em cima de determinada db
 		// To-do
-	}
-
-
-	private static JComponent createTextReport(File txtFile){
-		final JTextArea logJTA = new JTextArea();
-		logJTA.setLineWrap(true);
-		logJTA.setWrapStyleWord(true);
-		try {
-			Scanner scLog = new Scanner(txtFile);
-			while(scLog.hasNextLine()){
-				String linha = scLog.nextLine();
-				logJTA.append(linha+"\n");
-			}
-			scLog.close();
-			JScrollPane jscrlp = new JScrollPane(logJTA);
-			return jscrlp;
-		} catch (FileNotFoundException e1) {
-			Drawer.writeToLog(txtFile.getAbsolutePath()+tm.getText("fileNotFound"));
-			return null;
-		}
 	}
 
 	public static void updateReportsView(){
@@ -260,5 +244,9 @@ public class ReportDrawer implements ActionListener, Observer{
 	
 	public static List<String> getAllReportTitles(){
 		return reportName;
+	}
+	
+	public static DBManager getReport(int mainReport,int subReport){
+		return (DBManager) data.get(mainReport).get(subReport);
 	}
 }

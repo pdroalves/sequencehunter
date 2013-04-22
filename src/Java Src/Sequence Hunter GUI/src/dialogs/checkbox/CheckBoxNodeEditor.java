@@ -4,7 +4,9 @@ import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.Iterator;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JCheckBox;
@@ -26,15 +28,25 @@ public class CheckBoxNodeEditor extends AbstractCellEditor implements TreeCellEd
 	ChangeEvent changeEvent = null;
 
 	JTree tree;
+	ArrayList<CheckBoxNode> cbn;
 
-	public CheckBoxNodeEditor(JTree tree) {
+	public CheckBoxNodeEditor(JTree tree,ArrayList<CheckBoxNode> cbn) {
 		this.tree = tree;
+		this.cbn = cbn;
 	}
 
 	public Object getCellEditorValue() {
 		JCheckBox checkbox = renderer.getLeafRenderer();
-		CheckBoxNode checkBoxNode = new CheckBoxNode(checkbox.getText(),
+		CheckBoxNode checkBoxNode = new CheckBoxNode(checkbox.getText(),null,
 				checkbox.isSelected());
+		Iterator<CheckBoxNode> iterator = cbn.iterator();
+		while(iterator.hasNext()){
+			CheckBoxNode node = iterator.next();
+			if(node.getText().equals(checkbox.getText())){
+				node.setSelected(checkbox.isSelected());
+				return node;
+			}
+		}
 		return checkBoxNode;
 	}
 

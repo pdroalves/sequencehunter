@@ -15,7 +15,8 @@ public class DBManager extends Observable{
 	public DBManager(String databaseFilename){
 		setReady(false);
 		database = new DB(databaseFilename);
-		seqs = new ArrayList<Evento>() ;
+		int size = database.getSize();
+		seqs = new ArrayList<Evento>(size) ;
 		if(database != null){
 			dbst = new DBSortThread(this,database);
 		}

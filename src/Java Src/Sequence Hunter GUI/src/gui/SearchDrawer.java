@@ -271,7 +271,7 @@ public class SearchDrawer implements ActionListener{
 			}
 			break;
 		case "Load":
-			JFileChooser jfc = new JFileChooser();
+			JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
 			//jfc.setCurrentDirectory(new File(h.getOutput()));
 			jfc.setFileFilter(new JTxtFileFilter());
 			jfc.setMultiSelectionEnabled(true);
