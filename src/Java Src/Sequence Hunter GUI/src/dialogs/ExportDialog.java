@@ -5,10 +5,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.*;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -141,8 +145,10 @@ public class ExportDialog extends JDialog implements ActionListener{
 		for(int i=0; i < reportNames.size();i++){
 			CheckBoxNode mainReport[] = new CheckBoxNode[tabNames.get(i).size()];
 			for(int j=0;j < tabNames.get(i).size();j++){
-				DBManager dbm = ReportDrawer.getReport(i, j);
-				CheckBoxNode subReport = new CheckBoxNode(tabNames.get(i).get(j),dbm,false);
+				Object obj = ReportDrawer.getReport(i, j);
+				String name = ReportDrawer.getReportTitle(i);
+				name = name.substring(0, name.length()-3);
+				CheckBoxNode subReport = new CheckBoxNode(name+" - "+tabNames.get(i).get(j),obj,false);
 				cbnList.add(subReport);
 				mainReport[j] = subReport;
 			}
@@ -169,46 +175,66 @@ public class ExportDialog extends JDialog implements ActionListener{
 		}else if(ae.getActionCommand().equals("FullExport")){
 			tree.setEnabled(false);			
 		}else if(ae.getActionCommand().equals("Export")){
-
 			// Escolhe o local para salvar o arquivo
 			JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
+			jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			if(jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION){
 				Iterator<CheckBoxNode> iterator = cbnList.iterator();
+				try {
+					Calendar calendar = Calendar.getInstance();
+					ZipOutputStream out = new ZipOutputStream(new FileOutputStream(new File(jfc.getSelectedFile()+"/"+"Export-"+calendar.getTime()+".zip")));
+					while(iterator.hasNext()){
+						CheckBoxNode cbn = iterator.next();
+						if(cbn.isSelected() || !tree.isEnabled()){
+							Object attribute = cbn.getAttribute();
 
-				while(iterator.hasNext()){
-					CheckBoxNode cbn = iterator.next();
-					if(cbn.isSelected()){
-						DBManager dbm = cbn.getDBManager();
-						List<Evento> eventos = dbm.getEvents();
+							if(attribute instanceof DBManager){
+								DBManager dbm = (DBManager) attribute;
+								List<Evento> eventos = dbm.getEvents();
 
-						System.out.println("Vou salvar : "+eventos.size()+" em "+jfc.getSelectedFile());
-						ZipOutputStream out;
-						try {
-							out = new ZipOutputStream(new FileOutputStream(jfc.getSelectedFile()));
+								System.out.println("Vou salvar : "+eventos.size()+" em "+jfc.getSelectedFile());
 
-							// name the file inside the zip  file 
-							out.putNextEntry(new ZipEntry(cbn.getText()+".txt")); 
-
-							Iterator<Evento> eventoIterator = eventos.iterator();
-							while(eventoIterator.hasNext()){
-								Evento e = eventoIterator.next();
-								String str;
-								if(cbn.getText().contains("unpaired")){
-									str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"\n"; 
-								}else{
-									str = e.getSeq()+"-"+e.getPares()+"\n"; 
+								// name the file inside the zip  file 
+								out.putNextEntry(new ZipEntry(cbn.getText()+".txt")); 
+								Iterator<Evento> eventoIterator = eventos.iterator();
+								while(eventoIterator.hasNext()){
+									Evento e = eventoIterator.next();
+									String str;
+									if(cbn.getText().contains("unpaired")){
+										str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"\n"; 
+									}else{
+										str = e.getSeq()+"-"+e.getPares()+"\n"; 
+									}
+									out.write(str.getBytes("UTF-8"), 0, str.length());
 								}
-								out.write(str.getBytes("UTF-8"), 0, str.length());
+
+							}else if(attribute instanceof File){
+								File f = (File) attribute;
+								FileInputStream in = new FileInputStream(f);
+								// out put file 
+
+								out.putNextEntry(new ZipEntry(f.getName())); 
+
+								byte[] b = new byte[1024];
+
+								int count;
+
+								while ((count = in.read(b)) > 0) {
+									System.out.println();
+
+									out.write(b, 0, count);
+								}
+								in.close();
 							}
-							out.close();
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
 						}
 					}
+					out.close();
+				}catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
-				super.dispose();
 			}
+			super.dispose();
 		}else if(ae.getActionCommand().equals("Cancel")){
 			super.dispose();
 		}

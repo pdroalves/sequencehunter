@@ -1,34 +1,31 @@
 package dialogs.checkbox;
 
-import database.DBManager;
-
-
 public class CheckBoxNode {
 
 	private String text;
 	private boolean selected;
-	private DBManager dbm;
+	private Object attribute;
 	private int maxSeqsToPrint = 1000;
 
 	public CheckBoxNode(String text, boolean selected) {
 		this.text = text;
 		this.selected = selected;
-		this.dbm = null;
+		this.attribute = null;
 	}
-	public CheckBoxNode(String text, DBManager dbm,boolean selected) {
+	public CheckBoxNode(String text, Object attribute,boolean selected) {
 		this.text = text;
 		this.selected = selected;
-		this.dbm = dbm;
+		this.attribute = attribute;
 	}
 	public CheckBoxNode(String text, int maxSeqsToPrint,boolean selected) {
 		this.text = text;
 		this.selected = selected;
 		this.maxSeqsToPrint = maxSeqsToPrint;
 	}
-	public CheckBoxNode(String text, DBManager dbm,int maxSeqsToPrint,boolean selected) {
+	public CheckBoxNode(String text, Object attribute,int maxSeqsToPrint,boolean selected) {
 		this.text = text;
 		this.selected = selected;
-		this.dbm = dbm;
+		this.attribute = attribute;
 		this.maxSeqsToPrint = maxSeqsToPrint;
 	}
 
@@ -48,8 +45,8 @@ public class CheckBoxNode {
 		text = newValue;
 	}
 
-	public DBManager getDBManager(){
-		return dbm;
+	public Object getAttribute(){
+		return attribute;
 	}
 
 	public String toString() {
