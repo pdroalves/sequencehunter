@@ -9,10 +9,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.*;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -147,7 +148,12 @@ public class ExportDialog extends JDialog implements ActionListener{
 			for(int j=0;j < tabNames.get(i).size();j++){
 				Object obj = ReportDrawer.getReport(i, j);
 				String name = ReportDrawer.getReportTitle(i);
-				name = name.substring(0, name.length()-3);
+
+				Pattern pattern = Pattern.compile("^.*(SH_.*).db$");
+				Matcher matcher = pattern.matcher(name);
+				if(matcher.find()){
+					name = matcher.group(1);
+				}
 				CheckBoxNode subReport = new CheckBoxNode(name+" - "+tabNames.get(i).get(j),obj,false);
 				cbnList.add(subReport);
 				mainReport[j] = subReport;
@@ -182,7 +188,9 @@ public class ExportDialog extends JDialog implements ActionListener{
 				Iterator<CheckBoxNode> iterator = cbnList.iterator();
 				try {
 					Calendar calendar = Calendar.getInstance();
-					ZipOutputStream out = new ZipOutputStream(new FileOutputStream(new File(jfc.getSelectedFile()+"/"+"Export-"+calendar.getTime()+".zip")));
+					File zipfile = new File(jfc.getSelectedFile()+"/"+"Export-"+calendar.getTime()+".zip");
+					zipfile.createNewFile();
+					ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipfile));
 					while(iterator.hasNext()){
 						CheckBoxNode cbn = iterator.next();
 						if(cbn.isSelected() || !tree.isEnabled()){
@@ -194,7 +202,7 @@ public class ExportDialog extends JDialog implements ActionListener{
 
 								System.out.println("Vou salvar : "+eventos.size()+" em "+jfc.getSelectedFile());
 
-								// name the file inside the zip  file 
+								// name the file inside the zip  file
 								out.putNextEntry(new ZipEntry(cbn.getText()+".txt")); 
 								Iterator<Evento> eventoIterator = eventos.iterator();
 								while(eventoIterator.hasNext()){

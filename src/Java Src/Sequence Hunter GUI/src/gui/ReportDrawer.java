@@ -1,4 +1,4 @@
-package gui;
+ package gui;
 
 import gui.toolbar.OpenReportFileFilter;
 import hunt.Evento;
