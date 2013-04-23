@@ -2,7 +2,6 @@ package tables.report;
 
 import histogram.EventHistogram;
 import histogram.ReportHistogramPanel;
-import histogram.SimpleHistogramPanel;
 
 import java.awt.BorderLayout;
 import java.awt.event.AdjustmentEvent;
@@ -27,7 +26,7 @@ import database.DBManager;
 import auxiliares.WaitLayerUI;
 
 
-public class TabledReport implements Observer{
+public class TabledReport extends Report implements Observer{
 	private WaitLayerUI layerUI;
 	private DBManager dbm;
 	private JPanel panel;
@@ -106,6 +105,10 @@ public class TabledReport implements Observer{
 		return jlayer;
 	}
 
+	public DBManager getDBM(){
+		return dbm;
+	}
+	
 	@Override
 	public void update(Observable o, Object arg) {
 		if(dbm.isReady()){

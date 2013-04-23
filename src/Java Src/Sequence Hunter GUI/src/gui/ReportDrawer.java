@@ -8,12 +8,10 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,9 +19,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 
 import database.DBManager;
 
@@ -31,6 +27,7 @@ import auxiliares.RemovableTabComponent;
 
 import tables.report.JPartialReportTableModel;
 import tables.report.JTotalReportTableModel;
+import tables.report.Report;
 import tables.report.ReportFactory;
 import tables.report.TabledReport;
 import tables.report.TextReport;
@@ -42,8 +39,7 @@ public class ReportDrawer implements ActionListener, Observer{
 	private static JPanel emptyReportTab;
 	private static TranslationsManager tm;
 	private TabledReport tabledreport;
-	@SuppressWarnings("rawtypes")
-	private static List<List> data;
+	private static List<List<Report>> data;
 	private static List<List<String>> tabNames;
 	private static List<String> reportName;
 
@@ -56,7 +52,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		reportContainer.add(reportTab,BorderLayout.CENTER);
 		reportContainer.add(emptyReportTab,BorderLayout.NORTH);
 		updateReportsView();
-		data = new ArrayList<List>();
+		data = new ArrayList<List<Report>>();
 		tabNames = new ArrayList<List<String>>();
 		reportName = new ArrayList<String>();
 	}
@@ -71,7 +67,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		JPanel jp = new JPanel();
 		jp.setLayout(new BorderLayout());
 		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		data.add(new ArrayList<DBManager>());
+		data.add(new ArrayList<Report>());
 		tabNames.add(new ArrayList<String>());
 		ReportFactory rf = new ReportFactory();
 
@@ -80,14 +76,14 @@ public class ReportDrawer implements ActionListener, Observer{
 		String tabName;
 		if(libDatabase != null){
 			DBManager dbm = new DBManager(libDatabase);
-
-			data.get(data.size()-1).add(dbm);
 			dbm.addObserver(this);
 
 			// Central Cut paired
 			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
 			dbm.addObserver(jprtm);
 			tabledreport = rf.createTabledReport(dbm,jprtm);
+			
+			data.get(data.size()-1).add(tabledreport);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
 			tabName = tm.getText("reportCentralCutPairedDefaultName");
@@ -95,10 +91,10 @@ public class ReportDrawer implements ActionListener, Observer{
 			jtp.addTab(tabName,jc);
 
 			// Central Cut unpaired
-			data.get(data.size()-1).add(dbm);
 			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
 			dbm.addObserver(jtrtm);
 			tabledreport = rf.createTabledReport(dbm,jtrtm);
+			data.get(data.size()-1).add(tabledreport);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
 			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
@@ -110,7 +106,7 @@ public class ReportDrawer implements ActionListener, Observer{
 		if(log != null){
 			TextReport tr = rf.createTextReport(log);
 			jc = tr.getReport();
-			data.get(data.size()-1).add(log);
+			data.get(data.size()-1).add(tr);
 			tabName = tm.getText("reportHuntLogDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
 			jtp.addTab(tabName, jc);
@@ -246,7 +242,12 @@ public class ReportDrawer implements ActionListener, Observer{
 		return reportName;
 	}
 	
-	public static DBManager getReport(int mainReport,int subReport){
-		return (DBManager) data.get(mainReport).get(subReport);
+	public static Object getReport(int mainReport,int subReport){
+		Object obj = data.get(mainReport).get(subReport);
+		if(obj instanceof TabledReport){
+			return ((TabledReport) obj).getDBM();
+		}else{
+			return ((TextReport) obj).getFile();
+		}
 	}
 }

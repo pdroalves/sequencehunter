@@ -129,18 +129,6 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand().equals("Export")){
 			// Exporta uma aba especifica do relatorio aberto
-			System.err.println("Aba selecionada: "+ReportDrawer.getSelectedReportTabIndex()+
-					"->"+ReportDrawer.getSelectedSubReportTabIndex());
-			int reportGroupIndex = ReportDrawer.getSelectedReportTabIndex();
-			int reportIndex = ReportDrawer.getSelectedSubReportTabIndex();
-
-			ArrayList<Evento> data = ReportDrawer.getData(reportGroupIndex, reportIndex);
-			if(data != null){
-				System.out.println("Carreguei "+data.size()+" seqs.");
-			}else{
-				File log = ReportDrawer.getLog(reportGroupIndex, reportIndex);
-				System.out.println("Carreguei o arquivo "+log.getAbsolutePath());
-			}
 			ExportDialog ed = new ExportDialog(Drawer.getJFrame());
 			ed.setVisible(true);
 		}	
