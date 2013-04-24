@@ -152,7 +152,7 @@ void buffer_manager(	int *buffer_load,
 	  
       *buffer_load = load_buffer_CUDA(h_data,seq_size);
       for(i=0;i < *buffer_load;i++)
-	cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
+      	cudaMemcpyAsync(data[i],h_data[i],(seq_size+1)*sizeof(char),cudaMemcpyHostToDevice,stream);
     }
   }
 		
@@ -528,6 +528,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   Fila *toStore;
   cudaStream_t stream;
 	
+  prepare_buffer_cuda();
   //Inicializa buffer
   cudaStreamCreate(&stream);
 
@@ -547,19 +548,19 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	  {
 	  #pragma omp section
 	    {
-		buffer_manager(&buffer_load,seqSize_an,stream);
+		    buffer_manager(&buffer_load,seqSize_an,stream);
 	    }
 	  #pragma omp section
 	    {
-		search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
+		    search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
 	    }
 	  #pragma omp section
 	    {
-		queue_manager(toStore);
+		    queue_manager(toStore);
 	    }
 	  #pragma omp section
 	    {
-		report_manager(toStore);
+		    report_manager(toStore);
 	    }
 	  }
   }

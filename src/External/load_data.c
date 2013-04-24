@@ -147,6 +147,10 @@ void prepare_buffer(Buffer *b,int c){
 	return;
 }
 
+void prepare_buffer_cuda(){
+	hold = (char*)malloc(MAX_SEQ_SIZE*sizeof(char));
+}
+
 void fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
 	int i = 0;
 	int j = 0;
