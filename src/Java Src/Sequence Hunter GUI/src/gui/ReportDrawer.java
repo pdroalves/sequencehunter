@@ -33,7 +33,7 @@ import tables.report.TabledReport;
 import tables.report.TextReport;
 import xml.TranslationsManager;
 
-public class ReportDrawer implements ActionListener, Observer{
+public class ReportDrawer extends Observable implements ActionListener, Observer{
 	private static JPanel reportContainer;
 	private static JTabbedPane reportTab;
 	private static JPanel emptyReportTab;
@@ -43,8 +43,8 @@ public class ReportDrawer implements ActionListener, Observer{
 	private static List<List<String>> tabNames;
 	private static List<String> reportName;
 
-	@SuppressWarnings("rawtypes")
 	public ReportDrawer(){
+		super();
 		reportContainer = new JPanel(new BorderLayout());
 		ReportDrawer.tm = TranslationsManager.getInstance();
 		reportTab = new JTabbedPane(JTabbedPane.NORTH,JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -61,7 +61,6 @@ public class ReportDrawer implements ActionListener, Observer{
 		return reportContainer;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
 		JPanel jp = new JPanel();
@@ -122,7 +121,10 @@ public class ReportDrawer implements ActionListener, Observer{
 		String reportTitle = libDatabase;
 		reportName.add(reportTitle);
 		reportTab.addTab(reportTitle,jp);
-		reportTab.setSelectedIndex(reportTab.getTabCount()-1);	
+		reportTab.setSelectedIndex(reportTab.getTabCount()-1);
+		
+		super.setChanged();
+		super.notifyObservers();
 		return;
 	}
 
@@ -140,6 +142,7 @@ public class ReportDrawer implements ActionListener, Observer{
 			reportTab.setVisible(true);
 			emptyReportTab.setVisible(false);
 		}
+		
 		reportContainer.repaint();
 		Drawer.repaint();
 	}
@@ -174,8 +177,10 @@ public class ReportDrawer implements ActionListener, Observer{
 					Drawer.setProgressBar(5);
 					Drawer.enableProgressBar(true);
 					Drawer.updateProgressBar(1);
-					addMainReport(jfc.getSelectedFile().getAbsolutePath(),null);
+					String filepath = jfc.getSelectedFile().getAbsolutePath();
+					addMainReport(filepath,null);
 					updateReportsView();
+					Drawer.writeToLog(tm.getText("reportLoadedFromFile")+" "+filepath);
 					Drawer.updateProgressBar(5);
 					Drawer.moveToReportTab();
 					Drawer.enableProgressBar(false);

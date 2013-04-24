@@ -8,7 +8,11 @@ import hunt.Hunter;
 
 import java.awt.*;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.*;
@@ -103,7 +107,7 @@ public class Drawer {
 		// Monta reportContainer
 		jtp.addTab(tm.getText("reportTabName"),null,getReportDrawer().getContainer(),tm.getText("reportTabHint"));
 		
-		jtp.addChangeListener(shmb);
+		reportDrawer.addObserver(shmb);
 
 		JPanel top = new JPanel(new BorderLayout());
 		top.add(jtp,BorderLayout.CENTER);
@@ -163,7 +167,11 @@ public class Drawer {
 
 		// Cria scroll pane e adiciona statusLog dentro
 		statusLog.setEditable(false);
-		statusLog.append(tm.getText("statusStartMsg"));
+		Calendar calendar = Calendar.getInstance();
+		Date instante = calendar.getTime();
+		DateFormat dateformat = new SimpleDateFormat();
+		String str = dateformat.format(instante)+": "+tm.getText("statusStartMsg");
+		statusLog.append(str);
 		JScrollPane jscrlp = new JScrollPane(statusLog);	
 		//jscrlp.setPreferredSize(new Dimension(250,200));
 		JLabel statusLabel = new JLabel(tm.getText("statusLabel"));
@@ -199,9 +207,13 @@ public class Drawer {
 		//System.out.println("Lib size: "+count);
 		return count;
 	}
-
+	
 	static public void writeToLog(String txt){
-		statusLog.append("\n"+txt);
+		Calendar calendar = Calendar.getInstance();
+		Date instante = calendar.getTime();
+		DateFormat dateformat = new SimpleDateFormat();
+		String str = "\n"+dateformat.format(instante)+": "+txt;
+		statusLog.append(str);
 		statusLog.setCaretPosition(statusLog.getDocument().getLength());
 		return;
 	}

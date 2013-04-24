@@ -2,13 +2,11 @@ package gui.menubar;
 
 import gui.Drawer;
 import gui.ReportDrawer;
-import hunt.Evento;
-
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
@@ -24,7 +22,7 @@ import xml.TranslationsManager;
 import dialogs.AboutDialog;
 import dialogs.ExportDialog;
 
-public class SHMenuBar implements ChangeListener, ActionListener{
+public class SHMenuBar implements Observer, ActionListener{
 
 	private TranslationsManager tm;
 	public final int MENUBAR_NO_REPORT_MODE = 0;
@@ -36,43 +34,7 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 
 	public SHMenuBar(){
 		this.tm = TranslationsManager.getInstance();
-
-		// Export set
 		menuItemExport = new JMenuItem(tm.getText("menuFileItemExportGeneric"));
-
-		menuItemExport.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuItemExport.setBorderPainted(true);
-
-		menuItemExport.addActionListener(this);
-	}
-
-	@Override
-	public void stateChanged(ChangeEvent e) {
-		if(e.getSource() instanceof JTabbedPane){
-			JTabbedPane jtp = (JTabbedPane) e.getSource();
-			int mode;
-
-			if(jtp.getSelectedIndex() == Drawer.REPORT_TAB &&
-					ReportDrawer.getReportsLoaded() > 0){
-				mode = MENUBAR_REPORT_MODE;
-			}else{
-				mode = MENUBAR_NO_REPORT_MODE;				
-			}
-
-			if(	menuFile != null && 
-					menuHelp != null){
-
-				if(mode == MENUBAR_NO_REPORT_MODE){
-					menuFile.remove(menuItemExport);
-				}else if(mode == MENUBAR_REPORT_MODE){
-					menuFile.add(menuItemExport,0);
-				}else{
-					return;
-				}
-
-				//currentMode = mode;
-			}
-		}
 	}
 
 	public JMenuBar getJMenuBar(){
@@ -81,45 +43,38 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 
 		// Novo Menu  
 		menuFile = new JMenu(tm.getText("menuFileLabel")); 
-		menuHelp = new JMenu(tm.getText("menuHelpLabel"));   
-
+		menuHelp = new JMenu(tm.getText("menuHelpLabel"));   		
+		
 		// Item do menu  
-		final JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
+		JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
 		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
+		menuItemExport.setEnabled(false);
+		
+		menuItemExit.setActionCommand("Exit");
+		menuItemAbout.setActionCommand("About");
+		menuItemExport.setActionCommand("Export");
 
-		menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuItemExit.setBorderPainted(true);
-		menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuItemAbout.setBorderPainted(true);
+		//menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		//menuItemExit.setBorderPainted(true);
+		//menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		//menuItemAbout.setBorderPainted(true);
+		//menuItemExport.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		//menuItemExport.setBorderPainted(true);
 
-		menuItemExit.addActionListener(new ActionListener(){
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Drawer.dispose();
-			}
-
-
-		});
-
-		menuItemAbout.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				JDialog about = new AboutDialog(Drawer.getJFrame());
-				about.setVisible(true);
-			}
-		});
-
+		menuItemExport.addActionListener(this);
+		menuItemExit.addActionListener(this);
+		menuItemAbout.addActionListener(this);
+		
+		menuFile.add(menuItemExport);
 		menuFile.addSeparator();
 		menuFile.add(menuItemExit);
+		
 		menuHelp.add(menuItemAbout);
+		
 		menuBar.add(menuFile); 
 		menuBar.add(menuHelp);
 
-		menuFile.setBorder(BorderFactory.createLoweredBevelBorder());
-		menuHelp.setBorder(BorderFactory.createLoweredBevelBorder());
-		menuBar.setBorder(BorderFactory.createLoweredBevelBorder());
+		menuBar.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		menuBar.setBorderPainted(true);
 
 		return menuBar;
@@ -131,6 +86,40 @@ public class SHMenuBar implements ChangeListener, ActionListener{
 			// Exporta uma aba especifica do relatorio aberto
 			ExportDialog ed = new ExportDialog(Drawer.getJFrame());
 			ed.setVisible(true);
-		}	
+		}else if(e.getActionCommand().equals("Exit")){
+			Drawer.dispose();
+		}else if(e.getActionCommand().equals("About")){
+			JDialog about = new AboutDialog(Drawer.getJFrame());
+			about.setVisible(true);
+		}
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		//if(arg instanceof ReportDrawer){
+			int reportsCount = ReportDrawer.getReportsLoaded();
+			int mode;
+
+			if(reportsCount > 0){
+				mode = MENUBAR_REPORT_MODE;
+			}else{
+				mode = MENUBAR_NO_REPORT_MODE;				
+			}
+
+			if(	menuFile != null && 
+					menuHelp != null){
+
+				if(mode == MENUBAR_NO_REPORT_MODE){
+					menuItemExport.setEnabled(false);
+				}else if(mode == MENUBAR_REPORT_MODE){
+					menuItemExport.setEnabled(true);
+				}else{
+					return;
+				}
+
+				//currentMode = mode;
+			}
+		//}
+
 	}
 }

@@ -63,5 +63,6 @@
 	<TextResource tag="menuFileItemExportGenericAllReports" text="Export all reports"></TextResource>
 	<TextResource tag="ExportDialogExportButton" text="Export"></TextResource>
 	<TextResource tag="ExportDialogCancelButton" text="Cancel"></TextResource>
+	<TextResource tag="reportLoadedFromFile" text="File loaded:"></TextResource>
 </AllTextResource>
 	
