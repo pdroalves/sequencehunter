@@ -60,14 +60,16 @@ void enfileirar(Fila *f,void *data){
 	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
 	// com free(), vai dar problema.
 		FilaItem* novo;
+		int size;
 		//printf("Enfileirando: %s\n",seq);
 		
 		novo = (FilaItem*)malloc(sizeof(FilaItem));
 		if(novo != NULL){
 			novo->data = data;
 
+			size = tamanho_da_fila(f);
 			 omp_set_lock(&f->fila_lock);
-			switch(tamanho_da_fila(f)){
+			switch(size){
 				case 0:
 					f->first = novo;
 				break;
@@ -87,8 +89,8 @@ void enfileirar(Fila *f,void *data){
 	return;
 }
 
-void* desenfileirar(Fila *f){
-	void *to_return;
+Fila* desenfileirar(Fila *f){
+	Fila *to_return;
 	FilaItem *hold;
 	
 	//printf("Desenfileirando\n");
@@ -117,9 +119,9 @@ gboolean fila_vazia(Fila *f){
 
 int tamanho_da_fila(Fila *f){
 	int size;
-    //omp_set_lock(&f->fila_lock);
+   omp_set_lock(&f->fila_lock);
     size = f->size;
-    //omp_unset_lock(&f->fila_lock);
+   omp_unset_lock(&f->fila_lock);
 	return size;
 }
 

@@ -18,8 +18,8 @@
 #include "../Headers/nc_busca.h"
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
-#include "../Headers/socket.h"
 #include "../Headers/nc_busca.h"
+#include "../Headers/go_hunter.h"
 #include "sqlite3.h"
 
 // Lista de threads a serem criados
@@ -50,7 +50,6 @@ int sent_to_db;
 Buffer buf;
 int p;
 int fsensos,fasensos;
-Socket *gui_socket;
 unsigned long nc_bytes_read=0;
 
 const int buffer_size_NC = buffer_size;
@@ -140,7 +139,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     cudaEventRecord(start,0);
 
     cudaEventRecord(startK,0);
-	    busca(bloco1,bloco2,blocos,&buf,resultados,search_gaps);//Kernel de busca					
+    busca(bloco1,bloco2,blocos,&buf,resultados,search_gaps);//Kernel de busca					
     cudaEventRecord(stopK,0);
     cudaEventSynchronize(stopK);
 
@@ -241,8 +240,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	if(buf.load > 0)
 		buf.load = 0;
     while(	buf.load==0 && 
-			!THREAD_DONE[THREAD_BUFFER_LOADER]
-			|| 
+			!THREAD_DONE[THREAD_BUFFER_LOADER]|| 
 			tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
     cudaEventRecord(stopV,0);						
     cudaEventSynchronize(stopV);
@@ -265,141 +263,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 		
 }
 
-void nc_queue_manager(Fila *toStore){
- Event *hold;
- char *central;
- char *cincoL;
-  float tempo;
-  
-  sent_to_db =0;
-		
-    while(tamanho_da_fila(toStore)> 0 || !THREAD_DONE[THREAD_SEARCH]){
-      hold = (Event*)desenfileirar(toStore);
-      if(hold != NULL){
-	central = hold->seq_central;
-	cincoL = hold->seq_cincoL;
-	
-	if(hold == NULL){
-	  printf("Erro alocando memoria - Queue.\n");
-	  exit(1);
-	}
-	
-	adicionar_db(central,cincoL,hold->tipo);
-	  
-	sent_to_db++;
-	if(central != NULL)
-	  free(central);
-	if(cincoL != NULL)
-	  free(cincoL);
-	free(hold);
-      }
-    }	
-  
-  THREAD_DONE[THREAD_QUEUE] = TRUE;
-  return;
-}
-
-void nc_send_setup_to_gui(){
-  char *msg;
-  
-  if(gui_socket == NULL){
-	  printf("Socket não configurado. Encerrando...\n");
-	  exit(1);
-  }
-  
-  msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-  
-  sprintf(msg,"DB %s",get_database_filename());
-  
-  send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
-  
-  sprintf(msg,"Log %s",get_log_filename());
-  
-  send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
-  
-  free(msg);
-  return;
-}
-
-void nc_report_manager(Fila* toStore){
-  clock_t cStartClock;
-  int queue_size;
-  int pos_queue_size;
-  int pre_sent_to_db;
-  int pos_sent_to_db;
-  int count;
-  int diff;
-  // FILE* fp_enchimento;
-  // FILE* fp_esvaziamento;
-  char *msg;
-  float sqlite3_mem_used;
-  int port = GUI_SOCKET_PORT;
-  
-    // if(verbose && !silent){
-      // fp_enchimento = fopen("enchimento.dat","w");
-      // fp_esvaziamento = fopen("esvaziamento.dat","w");
-    // }
-  count = 0;
-  
-  
-  if(gui_run){
-	  msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-	  
-	  gui_socket = (Socket*)malloc(sizeof(Socket));
-	  
-	  criar_socket(gui_socket,port);
-	  if(gui_socket == NULL){
-	      SLEEP(5);
-	      criar_socket(gui_socket,port);
-	      if(gui_socket == NULL){
-		      printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
-		      printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
-		      exit(1);
-	      }
-	  }
-	  nc_send_setup_to_gui();
-  }
-  
-  while(!THREAD_DONE[THREAD_QUEUE]){
-    
-    queue_size = tamanho_da_fila(toStore);
-    pre_sent_to_db = sent_to_db;
-    SLEEP(1);
-    pos_queue_size = tamanho_da_fila(toStore);
-    pos_sent_to_db = sent_to_db;
-    
-    count++;
-    
-    diff = pos_sent_to_db - pre_sent_to_db;
-    
-    if(gui_run){
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%d",p,fsensos,fasensos,diff,0);
-      send_msg_to_socket(gui_socket,msg);
-      get_msg_to_socket(gui_socket);
-    }
-    
-    if(verbose && !silent){
-	  sqlite3_mem_used = sqlite3_memory_used();
-      printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
-      printf("Sequencias processadas: %d - S: %d, AS: %d\n",p,fsensos,fasensos);
-      printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
-      printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
-      //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
-     //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
-    }	
-  }
-    //if(verbose && !silent){
-	  //fclose(fp_enchimento);
-	  //fclose(fp_esvaziamento);
-	//}
-  THREAD_DONE[THREAD_DATABASE] = TRUE;
-  return;
-}
-
-
-void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
+void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Socket *gui_socket){
 	
 	Fila *toStore;
 	int blocoV;
@@ -430,12 +294,15 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an){
 	      #pragma omp section
 	      {
 	      	// Carrega resultados da queue e salva no db
-		      nc_queue_manager(toStore);
+		      //nc_queue_manager(toStore);
+			  queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+			  THREAD_DONE[THREAD_QUEUE] = TRUE;
 	      }
 	      #pragma omp section
 	      {
 	      	// Escrita de informacoes relevantes na stdout
-		      nc_report_manager(toStore);
+		      report_manager(gui_socket,toStore,&p,&sent_to_db,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
+  				THREAD_DONE[THREAD_DATABASE] = TRUE;
 	      }
 	  }
 	}
@@ -447,7 +314,9 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	
 	int seqSize_an;//Elementos por sequência
 	float tempo;
+	Socket *gui_socket;
 
+	// Inicializa variaveis
 	tempo = 0;
 	verbose = set.verbose;
 	silent = set.silent;
@@ -462,6 +331,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 		regiao_5l = FALSE;
 
 	  if(!silent)
+	gui_socket = (Socket*)malloc(sizeof(Socket));
 	printf("OpenMP Mode.\n");
 	printString("OpenMP Mode.\n",NULL);
 	printf("Buffer size: %d\n",buffer_size);
@@ -474,11 +344,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	printSet(seqSize_an);
 	printString("Iniciando iterações:\n",NULL);
 	
-	//cudaEventRecord(start,0);
-	NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an);
-	//cudaEventRecord(stop,0);
-	//cudaEventSynchronize(stop);
-	//cudaEventElapsedTime(&tempo,start,stop);
+	NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an,gui_socket);
     
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);

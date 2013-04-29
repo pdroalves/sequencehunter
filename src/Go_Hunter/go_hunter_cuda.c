@@ -19,6 +19,7 @@
 #include "../Headers/operacoes.h"
 #include "../Headers/busca.h"
 #include "../Headers/log.h"
+#include "../Headers/go_hunter.h"
 #include "../Headers/fila.h"
 #include "../Headers/socket.h"
 #include "sqlite3.h"
@@ -387,137 +388,8 @@ void search_manager(int *buffer_load,
   return;
 }
 
-void queue_manager(Fila *toStore)
-{
-  Event *hold;
-  float tempo;
-  
-  sent_to_db =0;
-		
-  while(!THREAD_DONE[THREAD_SEARCH]){
-    while(tamanho_da_fila(toStore)> 0){
-      hold = (Event*)desenfileirar(toStore);
-      sent_to_db++;
-      if(hold == NULL){
-	printf("Erro alocando memoria - Queue.\n");
-	exit(1);
-      }
-      
-      adicionar_db(hold->seq_central,hold->seq_cincoL,hold->tipo);
-	
-      if(hold->seq_central != NULL)
-	free(hold->seq_central);
-      if(hold->seq_cincoL != NULL)
-	free(hold->seq_cincoL);
-      free(hold);
-    }	
-  }
-  
-  
-  
-  THREAD_DONE[THREAD_QUEUE] = TRUE;
-  return;
-}
 
-void send_setup_to_gui(){
-  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-  char *msg_returned;
-  
-  sprintf(msg,"DB %s",get_database_filename());
-  send_msg_to_socket(gui_socket,msg);
-  msg_returned = get_msg_to_socket(gui_socket);
-
-  sprintf(msg,"Log %s",get_log_filename());
-  send_msg_to_socket(gui_socket,msg);
-  msg_returned = get_msg_to_socket(gui_socket);
-  
-  return;
-}
-
-void report_manager(Fila *toStore){
-  /*
-  while(!THREAD_DONE[THREAD_QUEUE]){
-    while(tmp_queue_size() > 0){
-      load_from_tmp_file();
-    }
-  }*/
-  
-  clock_t cStartClock;
-  int queue_size;
-  int pos_queue_size;
-  int pre_sent_to_db;
-  int pos_sent_to_db;
-  int count;
-  FILE* fp_enchimento;
-  FILE* fp_esvaziamento;
-  char *msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-  char *msg_returned;
-  int port = GUI_SOCKET_PORT;
-  int diff;
-  
-    if(verbose && !silent){
-	  fp_enchimento = fopen("enchimento.dat","w");
-	  fp_esvaziamento = fopen("esvaziamento.dat","w");
-	}
-  count = 0;
-  
-    if(gui_run){
-    gui_socket = (Socket*)malloc(sizeof(Socket));
-    criar_socket(gui_socket,port);
-    /*while(gui_socket == NULL || port > GUI_SOCKET_PORT + 200){
-	    port++;
-	    gui_socket = criar_socket(port);	
-    }*/
-    
-    if(gui_socket == NULL){
-      SLEEP(2);
-      criar_socket(gui_socket,port);
-      if(gui_socket = NULL){
-	printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
-	printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
-	exit(1);
-      }
-    }
-    
-    send_setup_to_gui();
-  }
-  
-  while(!THREAD_DONE[THREAD_SEARCH]){
-    queue_size = tamanho_da_fila(toStore);
-    pre_sent_to_db = sent_to_db;
-    SLEEP(1);
-    pos_queue_size = tamanho_da_fila(toStore);
-    pos_sent_to_db = sent_to_db;
-    count++;
-    
-    diff = pos_sent_to_db - pre_sent_to_db;
-	
-    if(gui_run){
-      sprintf(msg,"T%dS%dAS%dSPS%d",processadas,fsenso,fasenso,diff);
-      send_msg_to_socket(gui_socket,msg);
-      msg_returned = get_msg_to_socket(gui_socket);
-    }
-    
-    if(verbose && !silent){
-		printf("DB memory used: %.2f GB\n",sqlite3_memory_used()/(float)GIGA);
-		printf("Sequencias analisadas: %d - S: %d, AS: %d\n",processadas,fsenso,fasenso);
-		printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
-		printf("Esvaziamento: %d seq/s\n",pos_sent_to_db - pre_sent_to_db);
-		fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
-		fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
-	}
-  }
-    if(verbose && !silent){
-	  fclose(fp_enchimento);
-	  fclose(fp_esvaziamento);
-	}
-  
-  THREAD_DONE[THREAD_DATABASE] = TRUE;
-  return;
-}
-
-
-void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu)
+void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu,Socket *gui_socket)
 {
 	
 	
@@ -556,11 +428,13 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	    }
 	  #pragma omp section
 	    {
-		    queue_manager(toStore);
+		    queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+        THREAD_DONE[THREAD_QUEUE] = TRUE;
 	    }
 	  #pragma omp section
 	    {
-		    report_manager(toStore);
+          report_manager(gui_socket,toStore,&processadas,&sent_to_db,gui_run,verbose,silent,&fsenso,&fasenso,&THREAD_DONE[THREAD_QUEUE]);
+          THREAD_DONE[THREAD_DATABASE] = TRUE;
 	    }
 	  }
   }
@@ -587,7 +461,8 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
-  
+  Socket *gui_socket;
+
   verbose = set.verbose;
   silent = set.silent;
   debug = set.debug;
@@ -600,7 +475,7 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
     regiao_5l = TRUE;
   else
     regiao_5l = FALSE;
-	
+	gui_socket = (Socket*)malloc(sizeof(Socket));
   if(!silent || gui_run)
     printf("CUDA Mode.\n");
   printString("CUDA Mode.\n",NULL);
@@ -617,7 +492,7 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   printSet(seqSize_an);
   printString("Iniciando iterações:\n",NULL);
 	
-  cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu);
+  cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu,gui_socket);
   
   cudaThreadExit();
   
