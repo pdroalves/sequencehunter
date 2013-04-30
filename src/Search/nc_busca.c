@@ -71,6 +71,7 @@ void buscador(  const int bloco1,
   num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
 
   resultados[seqId] = 0;
+  tipo = 0;
   for(i=0;i<num_sensos_candidates && !tipo;i++){
     candidate_pos_sensos = candidates[i];
     candidate_pos_antisensos = candidates[i];
