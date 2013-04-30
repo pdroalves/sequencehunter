@@ -64,7 +64,7 @@ $(OBJ)go_hunter_cuda.o:$(SOURCE)Go_Hunter/go_hunter_cuda.c
 	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
-	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -g -c -Wall $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 $(OBJ)load_data.o:$(SOURCE)External/load_data.c
 	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
@@ -94,7 +94,7 @@ $(OBJ)database.o:$(SOURCE)Processing/database.c
 	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
 
 $(OBJ)nc_busca.o:$(SOURCE)Search/nc_busca.c
-	$(CC) -g -c $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
+	$(CC) -g -c -Wall $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
 
 #########################################
 ############ NVCC LINUX##################

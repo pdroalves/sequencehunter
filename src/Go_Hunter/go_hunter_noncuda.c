@@ -98,11 +98,15 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   const int blocoV = blocos-bloco1-bloco2;
   int wave_size;
   int wave_processed_diff;
+  int *candidates;
+  int *vertexes;
   Event *hold_event;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   p = 0;
   fsensos=fasensos=0;
   
+  vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
+  candidates = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
   resultados = (int*)malloc(buffer_size_NC*sizeof(int));
   search_gaps = (int*)malloc(buffer_size_NC*sizeof(int));
 		  
@@ -139,7 +143,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     cudaEventRecord(start,0);
 
     cudaEventRecord(startK,0);
-    busca(bloco1,bloco2,blocos,&buf,resultados,search_gaps);//Kernel de busca					
+    busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca					
     cudaEventRecord(stopK,0);
     cudaEventSynchronize(stopK);
 
@@ -186,12 +190,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 		      wave_size++;
 		      hold_event = criar_elemento_fila_event(central,cincol,SENSO);
 		      enfileirar(toStore,hold_event);
-		     /* adicionar_db(central,cincol,SENSO);
-			sent_to_db++;
-		      if(central)
-			free(central);
-		      if(cincol)
-			free(cincol);*/
+		      //printf("Guardei %s como senso\n",central);
 		      break;
 		      case ANTISENSO:
 			      if(central_cut){
@@ -219,16 +218,11 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 		      wave_size++;
 		      hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 		      enfileirar(toStore,hold_event);
+		      //printf("Guardei %s como antisenso\n",central);
 		      if(central != NULL)
 			free(central);
 		      if(cincol != NULL)
 			free(cincol);
-		      /*adicionar_db(central,cincol,SENSO);
-			sent_to_db++;
-		      if(central)
-			free(central);
-		      if(cincol)
-			free(cincol);*/
 		      break;
 		      default:
 		      break;
@@ -283,6 +277,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
 	  {
 	      #pragma omp section
 	      {
+	      	printf("%d threads criados\n",omp_get_num_threads());
 	      	// Carrega sequencias
 		      nc_buffer_manager(seqSize_an);
 	      }
@@ -349,9 +344,10 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	printString("Iterações terminadas. Tempo: ",NULL);
 	print_tempo(tempo);
 	
+
+	// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
+	destroy_db_manager();
 	if(gui_run){
-		// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
-		destroy_db_manager();
 		destroy_socket(gui_socket);
 	}
 	return;	

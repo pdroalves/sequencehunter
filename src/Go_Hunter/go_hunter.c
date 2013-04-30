@@ -141,7 +141,7 @@ void queue_manager(Fila *toStore,int *sent_to_db,int *THREAD_SEARCH_DONE){
   
 	*sent_to_db =0;
 		
-	while(!(*THREAD_SEARCH_DONE)){
+	while(!(*THREAD_SEARCH_DONE) || tamanho_da_fila(toStore) > 0){
 	  if(tamanho_da_fila(toStore) > 0){
 	 	 hold = desenfileirar(toStore);
 		  if(hold != NULL){
