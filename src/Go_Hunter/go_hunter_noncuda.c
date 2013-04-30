@@ -10,6 +10,7 @@
 #else
 #define SLEEP(a) sleep(a)
 #endif
+#include "../Headers/database.h"
 #include "../Headers/database_manager.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/go_hunter_noncuda.h"
@@ -20,6 +21,7 @@
 #include "../Headers/fila.h"
 #include "../Headers/nc_busca.h"
 #include "../Headers/go_hunter.h"
+#include "../Headers/socket.h"
 #include "sqlite3.h"
 
 // Lista de threads a serem criados
@@ -48,27 +50,34 @@ int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
 int sent_to_db;
 Buffer buf;
+int *vertexes;
 int p;
 int fsensos,fasensos;
 unsigned long nc_bytes_read=0;
 
 const int buffer_size_NC = buffer_size;
 
-void load_buffer_NONCuda(int n){
+void load_buffer_NONCuda(){
+  int i;
+  int n;
   if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.			
+	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.
+	  n = strlen(buf.seq[0]);
+	  for(i=0;i<buf.load;i++){
+	  	convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
+	  }
   } 
   return;
 }
 
-void nc_buffer_manager(int n){
+void nc_buffer_manager(){
   //////////////////////////////////////////
   // Carrega o buffer //////////////////////
   //////////////////////////////////////////
   while(buf.load != -1){//Looping até o final do buf
 	  //printf("%d.\n",buf.load);
 	  if(buf.load == 0){
-		  load_buffer_NONCuda(n);
+		  load_buffer_NONCuda();
 	  }
   }
   THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
@@ -99,13 +108,11 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   int wave_size;
   int wave_processed_diff;
   int *candidates;
-  int *vertexes;
   Event *hold_event;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   p = 0;
   fsensos=fasensos=0;
   
-  vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
   candidates = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
   resultados = (int*)malloc(buffer_size_NC*sizeof(int));
   search_gaps = (int*)malloc(buffer_size_NC*sizeof(int));
@@ -233,8 +240,8 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     cudaEventRecord(startV,0);
 	if(buf.load > 0)
 		buf.load = 0;
-    while(	buf.load==0 && 
-			!THREAD_DONE[THREAD_BUFFER_LOADER]|| 
+    while(	(buf.load==0 && 
+			!THREAD_DONE[THREAD_BUFFER_LOADER]) || 
 			tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
     cudaEventRecord(stopV,0);						
     cudaEventSynchronize(stopV);
@@ -264,13 +271,14 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
 	//Inicializa
 	blocoV = blocos - bloco1 - bloco2+1;
 	prepare_buffer(&buf,buffer_size_NC);	
+    vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
 	toStore = criar_fila("toStore");
 			      
 	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
 	THREAD_DONE[THREAD_QUEUE] = FALSE;
 	THREAD_DONE[THREAD_DATABASE] = FALSE;
-	#pragma omp parallel num_threads(OMP_NTHREADS) shared(toStore) shared(buf)
+	#pragma omp parallel num_threads(OMP_NTHREADS)
 	{	
 		
 	  #pragma omp sections
@@ -346,6 +354,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	
 
 	// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
+	db_select("SELECT * FROM events");
 	destroy_db_manager();
 	if(gui_run){
 		destroy_socket(gui_socket);

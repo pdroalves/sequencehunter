@@ -66,26 +66,27 @@ void buscador(  const int bloco1,
   int candidate_pos_antisensos;
   int tipo;
 
-  convert_to_graph(seq,seqSize_an,this_vertexes);
   num_sensos_candidates = get_candidate_table(matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-  num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-
   resultados[seqId] = 0;
   tipo = 0;
   for(i=0;i<num_sensos_candidates && !tipo;i++){
-    candidate_pos_sensos = candidates[i];
-    candidate_pos_antisensos = candidates[i];
+    candidate_pos_sensos = this_candidates[i];
     if(match_check(matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
       search_gaps[seqId] = i + bloco1;
-      resultados[seqId] = SENSO;  
-    }else{
+      tipo = SENSO;  
+    }
+  }
+  if(!tipo){
+    num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+    for(i=0;i<num_antisensos_candidates && !tipo;i++){
+      candidate_pos_antisensos = this_candidates[i];
       if(match_check(matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
         search_gaps[seqId] = i + bloco2;
-        resultados[seqId] = ANTISENSO;  
+        tipo = ANTISENSO;  
       }
     }
   }
-               
+  resultados[seqId] = tipo;               
   return;
 }
 

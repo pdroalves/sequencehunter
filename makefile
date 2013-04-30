@@ -25,7 +25,7 @@ SOURCE = src/
 JAVA_SOURCE = $(SOURCE)Java\ Src/
 
 OPT = -Wall
-OPT_CUDA = -Xcompiler
+OPT_CUDA = -Xcompiler -Wall
 
 all:build
 
@@ -37,12 +37,12 @@ java:build_gui
 #########################################
 #########################################
 
-compile:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o $(OBJ)nc_busca.o build_control	
+compile:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
 	echo "CLI Compiled."
 	
-build:$(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)socket.o $(OBJ)database.o $(OBJ)nc_busca.o build_control	
+build:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
 	$(BIN)build_control $(SOURCE)Headers/version
-	$(CUDA_CC) -G -g -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)nc_busca.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
+	$(CUDA_CC) -G -g $(OPT_CUDA) -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)nc_busca.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
 	echo "CLI built"	
 	
 build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -54,55 +54,55 @@ build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
 ############ GCC ######## ###############
 #########################################
 	
-$(OBJ)shunter-cmd.o:$(SOURCE)shunter-cmd.c
-	$(CC) -g -c $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
+shunter-cmd.o:$(SOURCE)shunter-cmd.c
+	$(CC) -g -c -Wall $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
 	
-$(OBJ)go_hunter.o:$(SOURCE)Go_Hunter/go_hunter.c
+go_hunter.o:$(SOURCE)Go_Hunter/go_hunter.c
 	$(CC) -Wall -g -c $(SOURCE)Go_Hunter/go_hunter.c -o $(OBJ)go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
-$(OBJ)go_hunter_cuda.o:$(SOURCE)Go_Hunter/go_hunter_cuda.c
+go_hunter_cuda.o:$(SOURCE)Go_Hunter/go_hunter_cuda.c
 	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
-$(OBJ)go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
+go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
 	$(CC) -g -c -Wall $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
-$(OBJ)load_data.o:$(SOURCE)External/load_data.c
+load_data.o:$(SOURCE)External/load_data.c
 	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
-$(OBJ)database_manager.o:$(SOURCE)Processing/database_manager.c
+database_manager.o:$(SOURCE)Processing/database_manager.c
 	$(CC) -g -c $(SOURCE)Processing/database_manager.c -o $(OBJ)database_manager.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
-$(OBJ)socket.o:$(SOURCE)External/socket.c
+socket.o:$(SOURCE)External/socket.c
 	$(CC) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
-$(OBJ)operacoes.o:$(SOURCE)Assist/operacoes.c
+operacoes.o:$(SOURCE)Assist/operacoes.c
 	$(CC) -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
 	
-$(OBJ)log.o:$(SOURCE)Assist/log.c
+log.o:$(SOURCE)Assist/log.c
 	$(CC) -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
 	
-$(OBJ)linkedlist.o:$(SOURCE)Processing/linkedlist.c
+linkedlist.o:$(SOURCE)Processing/linkedlist.c
 	$(CC) -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
 	
-$(OBJ)processing_data.o:$(SOURCE)Processing/processing_data.c
+processing_data.o:$(SOURCE)Processing/processing_data.c
 	$(CC) -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
 	
-$(OBJ)fila.o:$(SOURCE)Processing/fila.c
+fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
-$(OBJ)database.o:$(SOURCE)Processing/database.c
+database.o:$(SOURCE)Processing/database.c
 	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
 
-$(OBJ)nc_busca.o:$(SOURCE)Search/nc_busca.c
+nc_busca.o:$(SOURCE)Search/nc_busca.c
 	$(CC) -g -c -Wall $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
 
 #########################################
 ############ NVCC LINUX##################
 #########################################
-$(OBJ)busca.o:$(SOURCE)Search/busca.cu
+busca.o:$(SOURCE)Search/busca.cu
 	$(CUDA_CC) -Xptxas -v $(CUDA_ARCH) -G -g -c $(SOURCE)Search/busca.cu -o $(OBJ)busca.o
 	
-$(OBJ)cuda_functions.o:$(SOURCE)Assist/cuda_functions.cu
+cuda_functions.o:$(SOURCE)Assist/cuda_functions.cu
 	$(CUDA_CC) $(CUDA_ARCH) -G -g -c $(SOURCE)Assist/cuda_functions.cu -o $(OBJ)cuda_functions.o $(GLIB_CFLAGS)
 
 build_control:$(SOURCE)Assist/build_control.c

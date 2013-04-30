@@ -328,3 +328,26 @@ void db_destroy(){
 		destroyed = 1;
 	}
 }
+
+int callback(void *NotUsed,int argc,char **argv,char **azColName){
+	int i;
+  /*for(i=0;i<argc;i++){
+  	printf("%s ",azColName[i]);
+  }
+  printf("\n");
+*/
+  for(i=0; i<argc; i++){
+    if( argv[i] )
+        printf("%s ",argv[i]);
+    else
+        printf("NULL ");
+  }
+  printf("\n");
+  return 0;
+
+}
+
+void db_select(char *query){
+	char *db_err;
+	sqlite3_exec(db,query,callback,0,&db_err);
+}
