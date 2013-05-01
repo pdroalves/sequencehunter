@@ -39,7 +39,7 @@ int get_candidate_table(int start_vertex,int *vertexes,int v_size,int *table){
 int match_check(int *target,int target_size,int *analyse){
   int i;
   for(i=0;i<target_size;i++){
-    if(target[i] > 0)
+    if(target[i] >= 0)
       if(target[i] != analyse[i])
         return 0;
   }
@@ -50,7 +50,7 @@ void buscador(  const int bloco1,
                 const int bloco2,
                 const int seqSize_bu,
                 const int seqSize_an,
-                Buffer *buf,
+                const Buffer *buf,
                 const int *vertexes,
                 int *candidates,
                 int *resultados,
@@ -68,8 +68,12 @@ void buscador(  const int bloco1,
   int tipo;
   int tmp;
 
+  /*if( seq[0]*(2+seq[1]) != this_vertexes[0]){
+    printf("Erro na %d - %d == %d em %d => %s\n",seqId,this_vertexes[0],vertexes[seqId*seqSize_an],seqId*seqSize_an,seq);
+    exit(1);
+  }
   convert_to_graph(seq,seqSize_an,this_vertexes);
-
+*/
   num_sensos_candidates = get_candidate_table(matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
   tipo = 0;
   for(i=0;i<num_sensos_candidates && !tipo;i++){
@@ -78,13 +82,7 @@ void buscador(  const int bloco1,
     if(tmp){
       search_gaps[seqId] = i + bloco1;
       tipo = SENSO;  
-      /*printf("Encontrei um senso %d =>%s - Vertice:%d ,Vertice alvo: %d, Pos: %d\n",seqId,seq,this_vertexes[candidate_pos_sensos],matrix_senso[0],candidate_pos_sensos);
-        printf("%s - ",seq);
-    for(i=0;i<seqSize_an;i++){
-      printf("%d ",this_vertexes[i]);
     }
-    printf("\n");
-    */}
   }
   if(!tipo){
     num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
@@ -97,7 +95,7 @@ void buscador(  const int bloco1,
       }
     }
   }
- /* if(tipo == 0){
+ /* if(strcmp("AGCTGAAAACT",seq) == 0){
       printf("Candidado falhou %d =>%s\n",seqId,seq);
     for(i=0;i<seqSize_an;i++){
       printf("%d ",this_vertexes[i]);
@@ -121,7 +119,16 @@ void busca( const int bloco1,
 	int seqSize_an = strlen(buffer->seq[0]);
 
 	for(i=0; i < buffer->load; i++)
-		buscador(bloco1,bloco2,seqSize_bu,seqSize_an,buffer,vertexes,candidates,resultados,search_gaps,i);//Metodo de busca
+		buscador( bloco1,
+              bloco2,
+              seqSize_bu,
+              seqSize_an,
+              buffer,
+              vertexes,
+              candidates,
+              resultados,
+              search_gaps,
+              i);//Metodo de busca
 	
 	return;
 }

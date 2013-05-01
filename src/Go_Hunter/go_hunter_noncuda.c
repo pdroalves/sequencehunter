@@ -60,16 +60,18 @@ const int buffer_size_NC = buffer_size;
 void load_buffer_NONCuda(){
   int i,j;
   int n;
+  int loaded;
   if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.
+	  fill_buffer(buf.seq,buf.capacidade,&loaded);//Enche o buffer e guarda a quantidade de sequências carregadas.
 	  n = strlen(buf.seq[0]);
-	  for(i=0;i<buf.load;i++){
-	  	//printf("\n%s => ",buf.seq[i]);
+	  for(i=0;i<loaded;i++){	  
 	  	convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
-	  	/*for(j=0;j<n-1;j++){
-	  		printf("%d ",vertexes[i*n + j]);
-	  	}*/
+	  	if( buf.seq[i][0]*(2+buf.seq[i][1]) != vertexes[i*n]){
+		    printf("Erro na %d - %d %s\n",loaded,vertexes[i*n],buf.seq[i]);
+		    exit(1);
+		  }
 	  }
+	  buf.load = loaded;
   } 
   return;
 }
@@ -242,8 +244,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	    
 	    // Aguarda o buffer estar cheio novamente
     cudaEventRecord(startV,0);
-	if(buf.load > 0)
-		buf.load = 0;
+	buf.load = 0;
     while(	(buf.load==0 && 
 			!THREAD_DONE[THREAD_BUFFER_LOADER]) || 
 			tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
