@@ -21,6 +21,7 @@ void convert_target_to_graph(char *s,int s_len,int *vector){
       vector[i] = -1*s[i]*(2+s[i+1]);
     else
       vector[i] = s[i]*(2+s[i+1]);
+  vector[s_len-1] = 0;
   return;
 }
 
@@ -39,7 +40,7 @@ int get_candidate_table(int start_vertex,int *vertexes,int v_size,int *table){
 int match_check(int *target,int target_size,int *analyse){
   int i;
   for(i=0;i<target_size;i++){
-    if(target[i] >= 0)
+    if(target[i] > 0)
       if(target[i] != analyse[i])
         return 0;
   }
@@ -66,20 +67,13 @@ void buscador(  const int bloco1,
   int candidate_pos_sensos;
   int candidate_pos_antisensos;
   int tipo;
-  int tmp;
 
-  /*if( seq[0]*(2+seq[1]) != this_vertexes[0]){
-    printf("Erro na %d - %d == %d em %d => %s\n",seqId,this_vertexes[0],vertexes[seqId*seqSize_an],seqId*seqSize_an,seq);
-    exit(1);
-  }
-  convert_to_graph(seq,seqSize_an,this_vertexes);
-*/
+  
   num_sensos_candidates = get_candidate_table(matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
   tipo = 0;
   for(i=0;i<num_sensos_candidates && !tipo;i++){
     candidate_pos_sensos = this_candidates[i];
-    tmp = match_check(matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos]);
-    if(tmp){
+    if(match_check(matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
       search_gaps[seqId] = i + bloco1;
       tipo = SENSO;  
     }

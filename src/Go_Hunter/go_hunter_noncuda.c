@@ -359,11 +359,12 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	
 
 	// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
-	db_select("SELECT * FROM events");
-	destroy_db_manager();
 	if(gui_run){
 		destroy_socket(gui_socket);
+	}else{
+		db_select("SELECT * FROM events");
 	}
+	destroy_db_manager();
 	return;	
 }
 

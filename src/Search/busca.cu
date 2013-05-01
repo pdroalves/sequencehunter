@@ -18,6 +18,45 @@
 __constant__ short int d_matrix_senso[MAX_SEQ_SIZE];
 __constant__ short int d_matrix_antisenso[MAX_SEQ_SIZE];
 
+extern "C" void cuda_convert_to_graph(char *s,short int s_len,short int *vector){
+  int i;
+  for(i=0;i<s_len-1;i++)
+    vector[i] = s[i]*(2+s[i+1]);
+  return;
+}
+
+void convert_target_to_graph(char *s,int s_len,short int *vector){
+  int i;
+  for(i=0;i<s_len-1;i++)
+    if(s[i] == 'N' || s[i+1] == 'N')
+      vector[i] = -1*s[i]*(2+s[i+1]);
+    else
+      vector[i] = s[i]*(2+s[i+1]);
+  vector[s_len-1] = 0;
+  return;
+}
+
+__device__ int get_candidate_table(short int start_vertex,short int *vertexes,short int v_size,short int *table){
+  int i;
+  int j = 0;
+  for(i=0;i<v_size;i++){
+    if(vertexes[i] == start_vertex){
+      table[j] = i;
+      j++;
+    }
+  }
+  return j;
+}
+
+__device__ int match_check(short int *target,short int target_size,short int *analyse){
+  int i;
+  for(i=0;i<target_size;i++){
+    if(target[i] > 0)
+      if(target[i] != analyse[i])
+        return 0;
+  }
+  return 1;
+}
 
 extern "C" void checkCudaError();
 
@@ -32,7 +71,8 @@ extern "C" void checkCudaError();
 
 __global__ void k_buscador(int totalseqs,
 										int seqSize_an,
-										char **data,
+										short int *vertexes,
+										short int *candidates,
 										short int *resultados,
 										short int *search_gaps,
 										int bloco1,
@@ -45,73 +85,48 @@ __global__ void k_buscador(int totalseqs,
   ////////
   ////////		seqSize_an: o tamanho da sequencia analisada
   ////////		seqSize_busca: o tamanho da sequencia alvo
-  ////////		data: o endereco com todo o buffer carregado
   ////////
   ////////
   ////////
   
-  unsigned int seqId;// id da sequencia analisada
-  int baseId;// id da base analisada
-  short int tipo;// Variavel temporaria para salvar o resultado de uma analise
-  short int linha;// Cada thread cuida de uma linha
-  short int lsenso;// Guarda o valor da matriz senso para ser comparado com a sequencia alvo
-  short int lantisenso;// Guarda o valor da matriz antisenso para ser comparado com a sequencia alvo
-  short int alarmS;// Caso a comparacao do valor da matriz senso falhe, essa variavel encerra o loop
-  short int alarmAS;// Caso a comparacao do valor da matriz antisenso falhe, essa variavel encerra o loop
-  short int fase;// Guarda a posicao analisada
-  short int seqSize_bu;// Tamanho da sequencia alvo
-  char *seq;// Sequencia sob analise
-  seqId = threadIdx.x + blockIdx.x*blockDim.x;
-  seqSize_bu = bloco1+bloco2+blocoV;
+	unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
+	short int seqSize_bu = bloco1+bloco2+blocoV;;// Tamanho da sequencia alvo
+	short tipo;
+	short int *this_candidates = &candidates[seqId*seqSize_an];
+	short int *this_vertexes = &vertexes[seqId*seqSize_an];
+	short int num_sensos_candidates;
+	short int num_antisensos_candidates;
+	short int candidate_pos_sensos;
+	short int candidate_pos_antisensos;
+	short int i;
 
 	if(seqId < totalseqs){
-	  tipo = 0;
-	  fase = 0;
-	  while(fase + seqSize_bu <= seqSize_an && !tipo){
-			   seq = data[seqId]+fase;	
-			   alarmS = 0;
-			   alarmAS = 0;
-			   // Quando esse loop for encerrado eu jah saberei se a sequencia eh senso, antisenso ou nada
-			   for(baseId=0; 
-						(baseId < seqSize_bu) && (!alarmS || !alarmAS); 
-										baseId++){	
-					linha = 0;
-					// Carrega a linha analisada	
-					lsenso = d_matrix_senso[baseId];
-					lantisenso = d_matrix_antisenso[baseId];	
-										
-					linha = seq[baseId];
-					
-					// Verifica se algum alarme deve ser ativado			
-					alarmS += (linha-lsenso)*(lsenso-'N');		
-					alarmAS += (linha-lantisenso)*(lantisenso-'N');
-				}
-				
-			// Guarda resultados
-			if(!alarmS)
-				tipo = SENSO;
-			else 
-				if(!alarmAS) 
-					tipo = ANTISENSO;
-			
-			// Caso nao tenha encontrado nada, tenta pular para a base seguinte
-			fase++;   
-		}			
-		
-	   
-		if(tipo == SENSO){
-				search_gaps[seqId] = fase + bloco1 -1;
-		}else  
-			if(tipo == ANTISENSO){
-				search_gaps[seqId] = fase + bloco2 -1;
+		num_sensos_candidates = get_candidate_table(d_matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+		tipo = 0;
+	  	for(i=0;i<num_sensos_candidates && !tipo;i++){
+			candidate_pos_sensos = this_candidates[i];
+			if(match_check(d_matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
+			  search_gaps[seqId] = i + bloco1;
+			  tipo = SENSO;  
 			}
+		}
+		if(!tipo){		
+			num_antisensos_candidates = get_candidate_table(d_matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+			for(i=0;i<num_antisensos_candidates && !tipo;i++){
+			 candidate_pos_antisensos = this_candidates[i];
+			  if(match_check(d_matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
+			    search_gaps[seqId] = i + bloco2;
+			    tipo = ANTISENSO;
+			  }
+			}
+		}		
 								 
 		resultados[seqId] = tipo;	 
 	}
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,char **data,short int *resultados,short int *search_gaps,char **founded,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,short int *vertexes,short int *candidates,short int *resultados,short int *search_gaps,char **founded,cudaStream_t stream){
 	int num_threads;
 	int num_blocks;
 	
@@ -126,44 +141,11 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,data,resultados,search_gaps,bloco1,bloco2,blocoV);
+	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////////
-///////////////				Metodo de busca sem CUDA				////////////////////
-////////////////////////////////////////////////////////////////////////////////////////
-
-/*void failure_function(char *s,short int *table){
-	short int pos = 2;
-	short int cnd = 0;
-	short int seq_size = strlen(s);
-	
-	table[0] = -1;
-	table[1] = 0;
-	
-	while(pos < seq_size){
-		if(s[pos-1] == s[cnd]){
-			cnd++;
-			table[pos] = cnd;
-			pos++;
-		}else if(cnd > 0){
-			cnd = table[cnd];
-		}else{
-			table[pos] = 0;
-			pos++;
-		}
-	} 
-	
-}*/
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////   	Auxiliar     ///////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -198,8 +180,8 @@ void getMatrix(short int *matrix,char *str){
  void set_grafo(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
   // As matrizes já devem vir alocadas
   
-  getMatrix(matrix_senso,senso);
-  getMatrix(matrix_antisenso,antisenso);
+  convert_target_to_graph(senso,strlen(senso),matrix_senso);
+  convert_target_to_graph(antisenso,strlen(antisenso),matrix_antisenso);
   
   return;
 }
@@ -254,12 +236,12 @@ extern "C" void setup_for_cuda(char *seq){
 	// Copia dados
 	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
-	cudaMalloc((void**)&d_senso,(size+1)*sizeof(char));
+	/*cudaMalloc((void**)&d_senso,(size+1)*sizeof(char));
 	cudaMalloc((void**)&d_antisenso,(size+1)*sizeof(char));
 	
 	cudaMemcpy(d_senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
 	cudaMemcpy(d_antisenso,get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
-	
+	*/
 	//printf("Verificando matrizes:...\n");
 	//check_matrix<<<1,size,0>>>(d_senso,d_antisenso);
 	
