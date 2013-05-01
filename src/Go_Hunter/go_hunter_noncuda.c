@@ -64,11 +64,11 @@ void load_buffer_NONCuda(){
 	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.
 	  n = strlen(buf.seq[0]);
 	  for(i=0;i<buf.load;i++){
-	  	printf("\n%s => ",buf.seq[i]);
+	  	//printf("\n%s => ",buf.seq[i]);
 	  	convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
-	  	for(j=0;j<n-1;j++){
+	  	/*for(j=0;j<n-1;j++){
 	  		printf("%d ",vertexes[i*n + j]);
-	  	}
+	  	}*/
 	  }
   } 
   return;
