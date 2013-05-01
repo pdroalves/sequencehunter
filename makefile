@@ -1,5 +1,5 @@
 CUDA_CC = nvcc
-CC = gcc -march=x86-64
+CC = gcc
 CPP = g++
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`
@@ -55,46 +55,46 @@ build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
 #########################################
 	
 shunter-cmd.o:$(SOURCE)shunter-cmd.c
-	$(CC) -g -c -Wall $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
+	$(CC) -Wall  -g -c  $(SOURCE)shunter-cmd.c -o $(OBJ)shunter-cmd.o $(GLIB_CFLAGS) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lcuda -lcudart
 	
 go_hunter.o:$(SOURCE)Go_Hunter/go_hunter.c
-	$(CC) -Wall -g -c $(SOURCE)Go_Hunter/go_hunter.c -o $(OBJ)go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -Wall   -g -c $(SOURCE)Go_Hunter/go_hunter.c -o $(OBJ)go_hunter.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 go_hunter_cuda.o:$(SOURCE)Go_Hunter/go_hunter_cuda.c
-	$(CC) -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -Wall   -g -c $(SOURCE)Go_Hunter/go_hunter_cuda.c -o $(OBJ)go_hunter_cuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 go_hunter_noncuda.o:$(SOURCE)Go_Hunter/go_hunter_noncuda.c
-	$(CC) -g -c -Wall $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
+	$(CC) -Wall  -g -c  $(SOURCE)Go_Hunter/go_hunter_noncuda.c -o $(OBJ)go_hunter_noncuda.o $(GLIB_CFLAGS) $(OPENMP) -L/usr/local/cuda/lib64 -I/usr/local/cuda/include
 	
 load_data.o:$(SOURCE)External/load_data.c
-	$(CC) -g -c $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
+	$(CC) -Wall  -g -c  $(SOURCE)External/load_data.c -o $(OBJ)load_data.o $(GLIB_CFLAGS)  -L/usr/local/cuda/lib64 -I/usr/local/cuda/include -lstdc++
 	
 database_manager.o:$(SOURCE)Processing/database_manager.c
-	$(CC) -g -c $(SOURCE)Processing/database_manager.c -o $(OBJ)database_manager.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+	$(CC) -Wall  -g -c $(SOURCE)Processing/database_manager.c -o $(OBJ)database_manager.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
 socket.o:$(SOURCE)External/socket.c
-	$(CC) -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
+	$(CC) -Wall  -g -c $(SOURCE)External/socket.c -o $(OBJ)socket.o $(GLIB_CFLAGS) $(GIO_CFLAGS)
 	
 operacoes.o:$(SOURCE)Assist/operacoes.c
-	$(CC) -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
+	$(CC) -Wall  -g -c $(SOURCE)Assist/operacoes.c -o $(OBJ)operacoes.o $(GLIB_CFLAGS) $(OPENMP) 
 	
 log.o:$(SOURCE)Assist/log.c
-	$(CC) -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
+	$(CC) -Wall  -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
 	
 linkedlist.o:$(SOURCE)Processing/linkedlist.c
-	$(CC) -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
+	$(CC) -Wall  -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
 	
 processing_data.o:$(SOURCE)Processing/processing_data.c
-	$(CC) -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
+	$(CC) -Wall  -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
 	
 fila.o:$(SOURCE)Processing/fila.c
-	$(CC) -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
+	$(CC) -Wall  -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)
 	
 database.o:$(SOURCE)Processing/database.c
-	$(CC) -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
+	$(CC) -Wall  -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
 
 nc_busca.o:$(SOURCE)Search/nc_busca.c
-	$(CC) -g -c -Wall $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
+	$(CC) -Wall  -g -c  $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
 
 #########################################
 ############ NVCC LINUX##################

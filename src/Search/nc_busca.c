@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/operacoes.h"
@@ -50,13 +51,13 @@ void buscador(  const int bloco1,
                 const int seqSize_bu,
                 const int seqSize_an,
                 Buffer *buf,
-                int *vertexes,
+                const int *vertexes,
                 int *candidates,
                 int *resultados,
                 int *search_gaps,
                 const int seqId){  
   
-  char *seq = buf->seq[seqId];
+  const char *seq = buf->seq[seqId];
   int *this_candidates = &candidates[seqId*seqSize_an];
   int *this_vertexes = &vertexes[seqId*seqSize_an];
   int num_sensos_candidates;
@@ -65,27 +66,30 @@ void buscador(  const int bloco1,
   int candidate_pos_sensos;
   int candidate_pos_antisensos;
   int tipo;
+  int tmp;
 
   num_sensos_candidates = get_candidate_table(matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-  resultados[seqId] = 0;
   tipo = 0;
   for(i=0;i<num_sensos_candidates && !tipo;i++){
     candidate_pos_sensos = this_candidates[i];
-    if(match_check(matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
+    tmp = match_check(matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos]);
+    if(tmp){
       search_gaps[seqId] = i + bloco1;
       tipo = SENSO;  
+      printf("Encontrei um senso %s - %d == %d\n",seq,this_vertexes[candidate_pos_sensos],matrix_senso[0]);
     }
   }
-  if(!tipo){
-    num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-    for(i=0;i<num_antisensos_candidates && !tipo;i++){
-      candidate_pos_antisensos = this_candidates[i];
-      if(match_check(matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
-        search_gaps[seqId] = i + bloco2;
-        tipo = ANTISENSO;  
-      }
-    }
-  }
+  // if(!tipo){
+  //   num_antisensos_candidates = get_candidate_table(matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+  //   for(i=0;i<num_antisensos_candidates && !tipo;i++){
+  //     candidate_pos_antisensos = this_candidates[i];
+  //     if(match_check(matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
+  //       search_gaps[seqId] = i + bloco2;
+  //       tipo = ANTISENSO;  
+  //       printf("Encontrei um antisenso %s\n",seq);
+  //     }
+  //   }
+  // }
   resultados[seqId] = tipo;               
   return;
 }
@@ -120,9 +124,7 @@ void set_grafo(char *senso,char *antisenso,int *matrix_senso,int *matrix_antisen
 }
 
 void setup_without_cuda(char *seq){
-// Recebe um vetor de caracteres com o padrão a ser procurado
-	int size = strlen(seq);
-
+  // Recebe um vetor de caracteres com o padrão a ser procurado
 	set_grafo(seq,get_antisenso(seq),matrix_senso,matrix_antisenso);	
 
 	return;

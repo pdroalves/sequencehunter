@@ -58,13 +58,17 @@ unsigned long nc_bytes_read=0;
 const int buffer_size_NC = buffer_size;
 
 void load_buffer_NONCuda(){
-  int i;
+  int i,j;
   int n;
   if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
 	  fill_buffer(buf.seq,buf.capacidade,&buf.load);//Enche o buffer e guarda a quantidade de sequências carregadas.
 	  n = strlen(buf.seq[0]);
 	  for(i=0;i<buf.load;i++){
+	  	printf("\n%s => ",buf.seq[i]);
 	  	convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
+	  	for(j=0;j<n-1;j++){
+	  		printf("%d ",vertexes[i*n + j]);
+	  	}
 	  }
   } 
   return;
@@ -251,8 +255,8 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	    printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);						
   }     
 
-  if(!silent)
-      printf("Busca realizada em %.2f ms.\n",iteration_time);
+  // if(!silent)
+  //     printf("Busca realizada em %.2f ms.\n",iteration_time);
   
   free(resultados);
   free(search_gaps);
