@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AllTextResource>
+	<TextResource tag="appName" text="Sequence Hunter"></TextResource>
+	<TextResource tag="aboutDevLabel" text="Developers"></TextResource>
+	<TextResource tag="aboutDevs" text="Pedro Alves and Marcio Chaim Bajgelman"></TextResource>
+	<TextResource tag="aboutCompanyLabel" text="Laboratório Nacional de Biociências"></TextResource>
+	<TextResource tag="setupTabName" text="Setup"></TextResource>
+	<TextResource tag="setupTabHint" text="Set what you want to search"></TextResource>
+	<TextResource tag="summaryTabName" text="Summary"></TextResource>
+	<TextResource tag="summaryTabHint" text="Confirm the configuration and start the hunt"></TextResource>
+	<TextResource tag="reportTabName" text="Report"></TextResource>
+	<TextResource tag="reportTabHint" text="Check the results after a hunt"></TextResource>
+	<TextResource tag="toolbarClearHint" text="Clear all hunt settings"></TextResource>
+	<TextResource tag="toolbarOpenHint" text="Open an report"></TextResource>
+	<TextResource tag="toolbarSaveHint" text="Save a report"></TextResource>
+	<TextResource tag="toolbarSaveAllHint" text="Save all reports"></TextResource>
+	<TextResource tag="menuFileLabel" text="File"></TextResource>
+	<TextResource tag="menuHelpLabel" text="Help"></TextResource>
+	<TextResource tag="menuFileItemExitLabel" text="Exit"></TextResource>
+	<TextResource tag="menuHelpItemAboutLabel" text="About"></TextResource>
+	<TextResource tag="targetSequenceSetLabel" text="Sequence: "></TextResource>
+	<TextResource tag="targetSequenceLabel" text="Target Sequence: "></TextResource>
+	<TextResource tag="targetSequenceSetButton" text="Set"></TextResource>
+	<TextResource tag="loadButton" text="Load"></TextResource>
+	<TextResource tag="unloadButton" text="Unload"></TextResource>
+	<TextResource tag="librariesLoadedLabel" text="Libraries Loaded: "></TextResource>
+	<TextResource tag="libFileLoad" text=" has loaded"></TextResource>
+	<TextResource tag="libFileDoNotLoad" text=" could not be loaded"></TextResource>
+	<TextResource tag="fileNotFound" text=" were not found"></TextResource>
+	<TextResource tag="libFileUnload" text=" unloaded"></TextResource>
+	<TextResource tag="libPreviewEmptyMsg" text="Add a library to start..."></TextResource>
+	<TextResource tag="cleanHuntMsg" text="Hunt settings were cleaned"></TextResource>
+	<TextResource tag="summaryLoadedLibraries" text="Loaded Libraries"></TextResource>
+	<TextResource tag="summaryOutputFolder" text="Output Folder"></TextResource>
+	<TextResource tag="summaryStartButton" text="Start"></TextResource>	
+	<TextResource tag="summaryAbortButton" text="Abort"></TextResource>	
+	<TextResource tag="summaryBrowseButton" text="Browse"></TextResource>	
+	<TextResource tag="reportNothingToShow" text="No report to show"></TextResource>	
+	<TextResource tag="reportNumberColumnLabel" text="#"></TextResource>	
+	<TextResource tag="reportSequencesColumnLabel" text="Sequences"></TextResource>	
+	<TextResource tag="reportPairedColumnLabel" text="# Paired"></TextResource>
+	<TextResource tag="reportSensosColumnLabel" text="# Sensos"></TextResource>
+	<TextResource tag="reportAntisensosColumnLabel" text="# Antisensos"></TextResource>
+	<TextResource tag="reportSequenceInfoLabel" text="Sequence: "></TextResource>
+	<TextResource tag="reportSequenceFrequencyInfoLabel" text="Sequence frequency: "></TextResource>
+	<TextResource tag="reportHuntLogDefaultName" text="Hunt log"></TextResource>
+	<TextResource tag="reportCentralCutPairedDefaultName" text="Central cut paired"></TextResource>
+	<TextResource tag="reportCentralCutUnpairedDefaultName" text="Central cut unpaired"></TextResource>
+	<TextResource tag="statusStartMsg" text="Sequence Hunter started..."></TextResource>
+	<TextResource tag="statusLabel" text="Status:"></TextResource>
+	<TextResource tag="statusProgressTotal" text="Total:"></TextResource>
+	<TextResource tag="statusProgressSensos" text="S:"></TextResource>
+	<TextResource tag="statusProgressAntisensos" text="AS:"></TextResource>
+	<TextResource tag="statusProgressEventsPerSecond" text=" Events/s"></TextResource>
+	<TextResource tag="statusStartHuntMsg" text="Starting the hunt..."></TextResource>
+	<TextResource tag="statusHuntDoneMsg" text="Hunt done."></TextResource>
+	<TextResource tag="statusHuntAbortMsg" text="Hunt aborted."></TextResource>
+	<TextResource tag="statusCheckReportTabMsg" text="Check Report tab for results..."></TextResource>
+	<TextResource tag="statusErrorProcessingMsg" text="Error on processing."></TextResource>
+	<TextResource tag="pleaseWaitDialogLabel" text="Please wait..."></TextResource>
+	<TextResource tag="menuFileItemExportGeneric" text="Export"></TextResource>
+	<TextResource tag="menuFileItemExportGenericSingleReport" text="Export a single report"></TextResource>
+	<TextResource tag="menuFileItemExportGenericAllReports" text="Export all reports"></TextResource>
+	<TextResource tag="ExportDialogExportButton" text="Export"></TextResource>
+	<TextResource tag="ExportDialogCancelButton" text="Cancel"></TextResource>
+	<TextResource tag="reportLoadedFromFile" text="File loaded:"></TextResource>
+</AllTextResource>
+	
