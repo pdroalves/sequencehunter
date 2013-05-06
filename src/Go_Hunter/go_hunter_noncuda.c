@@ -362,7 +362,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 	if(gui_run){
 		destroy_socket(gui_socket);
 	}else{
-		db_select("SELECT * FROM events");
+		//db_select("SELECT * FROM events");
 	}
 	destroy_db_manager();
 	return;	

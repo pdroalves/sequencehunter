@@ -1,5 +1,5 @@
 CUDA_CC = nvcc
-CC = gcc
+CC = colorgcc
 CPP = g++
 GLIB_CFLAGS = `pkg-config --cflags glib-2.0`
 GLIB_LIBS = `pkg-config --libs glib-2.0`

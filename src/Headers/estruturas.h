@@ -24,32 +24,6 @@
 #define SKT_MSG_GETSIZE "size"
 #define SKT_MSG_PROCESS "processDB"
 
-// int AA = 'A'*(2+'A');
-// int AC = 'A'*(2+'C');
-// int AG = 'A'*(2+'G');
-// int AT = 'A'*(2+'T');
-// int AN = -1*'A'*(2+'N');
-// int CA = 'C'*(2+'A');
-// int CC = 'C'*(2+'C');
-// int CT = 'C'*(2+'T');
-// int CG = 'C'*(2+'G');
-// int CN = -1*'C'*(2+'N');
-// int GA = 'G'*(2+'A');
-// int GC = 'G'*(2+'C');
-// int GT = 'G'*(2+'T');
-// int GG = 'G'*(2+'G');
-// int GN = -1*'G'*(2+'N');
-// int TA = 'T'*(2+'A');
-// int TC = 'T'*(2+'C');
-// int TG = 'T'*(2+'G');
-// int TT = 'T'*(2+'T');
-// int TN = -1*'T'*(2+'N');
-// int NA = -1*'N'*(2+'A');
-// int NC = -1*'N'*(2+'C');
-// int NG = -1*'N'*(2+'G');
-// int NT = -1*'N'*(2+'T');
-// int NN = -1*'N'*(2+'N');
-
 struct event{
 	char *seq_central;
 	char *seq_cincoL;

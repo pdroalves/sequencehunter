@@ -24,7 +24,7 @@
 #include "../Headers/socket.h"
 #include "sqlite3.h"
 
-#define buffer_size 4096 // Capacidade máxima do buffer
+#define buffer_size 1024 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
@@ -143,8 +143,6 @@ void buffer_manager(	int *buffer_load,
     data[i] = (char*)malloc((seq_size+1)*sizeof(char));
   h_vertexes = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
   h_candidates = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
-  cudaMalloc((void**)&d_vertexes,buffer_size*seq_size*sizeof(short int));
-  cudaMalloc((void**)&d_candidates,buffer_size*seq_size*sizeof(short int));
     
   //////////////////////////////////////////
   // Carrega o buffer //////////////////////
@@ -156,7 +154,6 @@ void buffer_manager(	int *buffer_load,
       *buffer_load = loaded;
     }
   }
-		
   THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
   //////////////////////////////////////////
   //////////////////////////////////////////
@@ -399,6 +396,8 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   int buffer_load;
   Fila *toStore;
   cudaStream_t stream;
+  cudaMalloc((void**)&d_vertexes,buffer_size*seqSize_an*sizeof(short int));
+  cudaMalloc((void**)&d_candidates,buffer_size*seqSize_an*sizeof(short int));
 	
   prepare_buffer_cuda();
   //Inicializa buffer
@@ -443,6 +442,8 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   //printf("Iterações executadas: %d.\n",iter);
   //free(tmp);
   cudaDeviceReset();
+  cudaFree(d_vertexes);
+  cudaFree(d_candidates);
   //cudaStreamDestroy(stream1);
   //cudaStreamDestroy(stream2);
   /*for(i=0;i<buffer_size;i++){
@@ -496,7 +497,7 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   if(gui_run){
     destroy_socket(gui_socket);
   }else{
-    db_select("SELECT * FROM events");
+    //db_select("SELECT * FROM events");
   }
   destroy_db_manager();
   
