@@ -396,7 +396,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   int buffer_load;
   Fila *toStore;
   cudaStream_t stream;
-  cudaMalloc((void**)&d_vertexes,buffer_size*seqSize_an*sizeof(short int));
+  cudaHostAlloc((void**)&d_vertexes,buffer_size*seqSize_an*sizeof(short int),cudaHostAllocWriteCombined);
   cudaMalloc((void**)&d_candidates,buffer_size*seqSize_an*sizeof(short int));
 	
   prepare_buffer_cuda();
