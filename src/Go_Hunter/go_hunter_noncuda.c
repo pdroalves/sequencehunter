@@ -32,7 +32,7 @@ enum threads {
   THREAD_DATABASE,
   OMP_NTHREADS
 };
-#define buffer_size 4096 // Capacidade máxima do buffer
+#define buffer_size 512 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
@@ -137,23 +137,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   while( buf.load == 0){
   }//Aguarda para que o buffer seja enchido pela primeira vez
   
-  cudaEventRecord(start,0);
   while(buf.load != GATHERING_DONE || 
 		  THREAD_DONE[THREAD_BUFFER_LOADER] == FALSE){
     //Realiza loop enquanto existirem sequências para encher o buffer
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsedTime,start,stop);
-    iteration_time += elapsedTime;
-    //if(verbose == TRUE && silent != TRUE)	
-    //	printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-    if(debug){
-	    if(!silent)
-	    printf("Tempo até retornar para busca em %f ms\n",elapsedTime);
-	    printString("Retorno da busca:\n",NULL);
-	    //print_tempo_optional(elapsedTime);
-    }
-    cudaEventRecord(start,0);
 
     cudaEventRecord(startK,0);
     busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca					

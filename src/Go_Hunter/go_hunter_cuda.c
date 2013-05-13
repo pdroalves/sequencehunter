@@ -24,7 +24,7 @@
 #include "../Headers/socket.h"
 #include "sqlite3.h"
 
-#define buffer_size 1024 // Capacidade máxima do buffer
+#define buffer_size 512 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
@@ -100,31 +100,31 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   
   data = (char**)malloc(buffer_size*sizeof(char*));
   for(i=0;i<buffer_size;i++)
-  data[i] = (char*)malloc((seq_size+1)*sizeof(char));
+	data[i] = (char*)malloc((seq_size+1)*sizeof(char));
 	
   //////////////////////////////////////////
   // Loop que mantem fila cheia
   //////////////////////////////////////////
   while(loaded != GATHERING_DONE){
-  if(tamanho_da_fila(loaded_data_queue) < 0.5*LOADER_QUEUE_MAX_SIZE){
-  while(tamanho_da_fila(loaded_data_queue) < LOADER_QUEUE_MAX_SIZE)
-  {
-  loaded = load_buffer_CUDA(data, seq_size);
+	  if(tamanho_da_fila(loaded_data_queue) < 0.5*LOADER_QUEUE_MAX_SIZE){
+		  while(tamanho_da_fila(loaded_data_queue) < LOADER_QUEUE_MAX_SIZE)
+		  {
+		  loaded = load_buffer_CUDA(data, seq_size);
 
-  // Enfileira tudo
-  for(i=0; i < loaded; i++)
-  enfileirar(loaded_data_queue,data[i],NULL,NULL);
+		  // Enfileira tudo
+		  for(i=0; i < loaded; i++)
+			enfileirar(loaded_data_queue,data[i],NULL,NULL);
 
-  // Precisa garantir que nada seja sobrescrito
-  for(i=0;i<buffer_size;i++)
-  data[i] = (char*)malloc((seq_size+1)*sizeof(char));
-  }
-  }
-  } 	
-  
-  free(data);
-  THREAD_DONE[THREAD_LOADER] = TRUE;
-  return;
+		  // Precisa garantir que nada seja sobrescrito
+		  for(i=0;i<buffer_size;i++)
+			data[i] = (char*)malloc((seq_size+1)*sizeof(char));
+		  }
+	  }
+	  } 	
+	  
+	  free(data);
+	  THREAD_DONE[THREAD_LOADER] = TRUE;
+	  return;
   }*/
 
 
@@ -142,7 +142,11 @@ void buffer_manager(	int *buffer_load,
   for(i=0;i<buffer_size;i++)
     data[i] = (char*)malloc((seq_size+1)*sizeof(char));
   h_vertexes = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
+  //cudaHostAlloc((void**)&h_vertexes,buffer_size*seq_size*sizeof(short int),cudaHostAllocWriteCombined);
   h_candidates = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
+  //d_vertexes = (short int*)malloc(seq_size*sizeof(short int));
+  cudaMalloc((void**)&d_vertexes,buffer_size*seq_size*sizeof(short int));
+  cudaMalloc((void**)&d_candidates,buffer_size*seq_size*sizeof(short int));
     
   //////////////////////////////////////////
   // Carrega o buffer //////////////////////
@@ -150,7 +154,8 @@ void buffer_manager(	int *buffer_load,
   while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
     if(*buffer_load == 0){      
       loaded = load_buffer_CUDA(data,seq_size);
-      cudaMemcpy(d_vertexes,h_vertexes,loaded*seq_size*sizeof(short int),cudaMemcpyHostToDevice);
+//      cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+      cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seq_size*sizeof(short int),cudaMemcpyHostToDevice,stream);
       *buffer_load = loaded;
     }
   }
@@ -239,17 +244,9 @@ void search_manager(int *buffer_load,
   while( *buffer_load == 0){
   }//Aguarda para que o buffer seja enchido pela primeira vez
 
-  cudaEventRecord(start,0);
   while( *buffer_load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequencias para encher o buffer
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-	
-    cudaEventElapsedTime(&elapsedTime,start,stop);
-    if(debug&&!silent)
-      printf("Tempo até retornar busca em %.2f ms\n",elapsedTime);
-    iteration_time += elapsedTime;
-	
+    
     loaded = *buffer_load;
     // Execuca iteracao
     cudaEventRecord(startK,0);
@@ -396,8 +393,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   int buffer_load;
   Fila *toStore;
   cudaStream_t stream;
-  cudaMalloc((void**)&d_vertexes,buffer_size*seqSize_an*sizeof(short int));
-  cudaMalloc((void**)&d_candidates,buffer_size*seqSize_an*sizeof(short int));
 	
   prepare_buffer_cuda();
   //Inicializa buffer
