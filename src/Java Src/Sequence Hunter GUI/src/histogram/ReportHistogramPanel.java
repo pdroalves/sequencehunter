@@ -18,7 +18,6 @@ public class ReportHistogramPanel extends SimpleHistogramPanel {
 
 	@Override
 	public void barClicked(HistogramBar b) {
-		System.out.println("Teste: "+b.getName());
 		if(jte != null){
 			for(int i = 0;i < jte.getRowCount();i++){
 				String seq = (String)jte.getValueAt(i, 1);

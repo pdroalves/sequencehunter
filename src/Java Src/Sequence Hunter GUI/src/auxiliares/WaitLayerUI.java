@@ -52,7 +52,7 @@ public class WaitLayerUI extends LayerUI<JPanel> implements ActionListener {
 
 		Graphics2D g2 = (Graphics2D)g.create();
 
-		float fade = (float)mFadeCount / (float)mFadeLimit;
+		float fade = mFadeCount / (float)mFadeLimit;
 		
 		// Gray it out.
 		Composite urComposite = g2.getComposite();
@@ -92,14 +92,26 @@ public class WaitLayerUI extends LayerUI<JPanel> implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
+		/////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
+		/////////////// Preciso estudar essa classe /////////////////////
+		////////////// Ela precisa ser capaz de ativar e desativar //////
+		/////////// a animacao varias vezes. Ainda nao sei pq ///////////
+		/////////// nao funciona/////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////
 		if (mIsRunning) {
+			if(mFadeCount < 0){
+				System.exit(1);
+			}
 			firePropertyChange("tick", 0, 1);
 			mAngle += 3;
 			if (mAngle >= 360) {
 				mAngle = 0;
 			}
 			if (mIsFadingOut) {
-				if (--mFadeCount == 0) {
+				if (--mFadeCount <= 0) {
 					mIsRunning = false;
 					mTimer.stop();
 				}
@@ -114,7 +126,6 @@ public class WaitLayerUI extends LayerUI<JPanel> implements ActionListener {
 		if (mIsRunning) {
 			return;
 		}
-
 		// Run a thread for animation.
 		mIsRunning = true;
 		mIsFadingOut = false;

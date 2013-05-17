@@ -80,8 +80,7 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 			// Central Cut paired
 			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
 			dbm.addObserver(jprtm);
-			tabledreport = rf.createTabledReport(dbm,jprtm);
-			
+			tabledreport = rf.createTabledReport(dbm,jprtm);			
 			data.get(data.size()-1).add(tabledreport);
 			dbm.addObserver(tabledreport);
 			jc = tabledreport.createTabledReport();
