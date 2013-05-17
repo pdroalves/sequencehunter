@@ -52,8 +52,8 @@ Socket *gui_socket;
 
 
 // Lista de threads a serem criados
+//
 enum threads { 
-  THREAD_BUFFER_LOADER,
   THREAD_SEARCH,
   THREAD_QUEUE,
   THREAD_DATABASE,
@@ -128,7 +128,7 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   }*/
 
 
-void buffer_manager(	int *buffer_load,
+/*void buffer_manager(	int *buffer_load,
 			int seq_size,
 			cudaStream_t stream )
 {
@@ -163,7 +163,7 @@ void buffer_manager(	int *buffer_load,
   //////////////////////////////////////////
   //////////////////////////////////////////
   //////////////////////////////////////////	
-}
+}*/
 
 void search_manager(int *buffer_load,
 		    Fila *toStore,
@@ -171,45 +171,40 @@ void search_manager(int *buffer_load,
 		    const int seqSize_bu,
 		    int bloco1,
 		    int bloco2,
-		    int blocoV,
-		    cudaStream_t stream1,
-		    cudaStream_t stream2)
+		    int blocoV)
 {	
   int i;
   short int *h_resultados;
   short int *d_resultados;
   short int *h_search_gaps;
   short int *d_search_gaps;
-  char **h_founded;
-  char **d_founded;
-  char **d_tmp_founded;
-  char *hold_seq;
   char *central;
   char *cincol;
   int loaded;
   int hold;
   int p;
   int last_p;
-  float iteration_time;
   int gap;
-  int wave_size;
-  int wave_processed_diff;
-  cudaEvent_t startK,stopK;
-  cudaEvent_t start,stop;
-  cudaEvent_t startV,stopV;
   char **local_data;
-  float elapsedTimeK,elapsedTime,elapsedTimeV;
   Event *hold_event;
   gboolean retorno;
+  cudaStream_t stream;
 
   fsenso=fasenso=0;
-
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  cudaEventCreate(&startK);
-  cudaEventCreate(&stopK);
-  cudaEventCreate(&startV);
-  cudaEventCreate(&stopV);
+  
+  //////////////////////////////////////////
+  // Inicializa
+  //////////////////////////////////////////
+  cudaStreamCreate(&stream);
+  data = (char**)malloc(buffer_size*sizeof(char*));
+  for(i=0;i<buffer_size;i++)
+    data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
+  h_vertexes = (short int*)malloc(buffer_size*seqSize_an*sizeof(short int));
+  //cudaHostAlloc((void**)&h_vertexes,buffer_size*seqSize_an*sizeof(short int),cudaHostAllocWriteCombined);
+  h_candidates = (short int*)malloc(buffer_size*seqSize_an*sizeof(short int));
+  //d_vertexes = (short int*)malloc(seqSize_an*sizeof(short int));
+  cudaMalloc((void**)&d_vertexes,buffer_size*seqSize_an*sizeof(short int));
+  cudaMalloc((void**)&d_candidates,buffer_size*seqSize_an*sizeof(short int));
 
   // Alloc: resultados de cada iteracao
   h_resultados = (short int*)malloc(buffer_size*sizeof(short int));
@@ -217,27 +212,6 @@ void search_manager(int *buffer_load,
   cudaMalloc((void**)&d_resultados,buffer_size*sizeof(short int));
   cudaMalloc((void**)&d_search_gaps,buffer_size*sizeof(short int));
 
-  // Alloc: Seqs encontradas
-  //CPU
-  cudaHostAlloc((void**)&h_founded,buffer_size*sizeof(char*),cudaHostAllocDefault);
-  for(i=0;i<buffer_size;i++)
-    cudaHostAlloc((void**)&h_founded[i],(seqSize_an+1)*sizeof(char),cudaHostAllocDefault);
-
-  //GPU	
-  d_tmp_founded = (char**)malloc(buffer_size*sizeof(char*));
-  for(i=0;i<buffer_size;i++)
-    cudaHostAlloc((void**)&d_tmp_founded[i],(seqSize_an+1)*sizeof(char),cudaHostAllocDefault);
-
-  cudaMalloc((void**)&d_founded,buffer_size*sizeof(char**));
-  cudaMemcpy(d_founded,d_tmp_founded,buffer_size*sizeof(char*),cudaMemcpyHostToDevice);
-
-  // Alloc: Vetor temporario
-  local_data = (char**)malloc(buffer_size*sizeof(char*));
-  for(i=0;i<buffer_size;i++)
-    local_data[i] = (char*)malloc((seqSize_an+1)*sizeof(char));
-  hold_seq = (char*)malloc(seqSize_an*sizeof(char));
-
-  iteration_time = 0;
 
   processadas = 0;
 
@@ -249,33 +223,16 @@ void search_manager(int *buffer_load,
     
     loaded = *buffer_load;
     // Execuca iteracao
-    cudaEventRecord(startK,0);
-    k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,d_founded,stream2);//Kernel de busca
-    cudaEventRecord(stopK,0);	
-    cudaEventSynchronize(stopK);
-    cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-    if(debug&&!silent)
-      printf("Execucao da busca em %.2f ms\n",elapsedTimeK);
-	
-    // Guarda tempo gasto na iteracao
-    iteration_time += elapsedTimeK;
-	
-	
-    cudaEventRecord(start,0);
-	
+   k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,stream);//Kernel de busca
+		
     // Inicia processamento dos resultados
     processadas += loaded;
-    cudaStreamSynchronize(stream2);
+    cudaStreamSynchronize(stream);
 	
     // Em casos reais, cada iteracao possuirah poucos eventos. Portanto, a copia de dados para 
     // o host serah bastante casual e esse trecho nao deve implicar em perda de desempenho.	
     cudaMemcpy(h_resultados,d_resultados,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
     cudaMemcpy(h_search_gaps,d_search_gaps,buffer_size*sizeof(short int),cudaMemcpyDeviceToHost);
-    //for(i=0;i<buffer_size;i++)
-    //	if(h_resultados[i] != 0)
-    //		cudaMemcpyAsync(h_founded[i],data[i],seqSize_an*sizeof(char),cudaMemcpyDeviceToHost,stream2);
-	
-    //cudaStreamSynchronize(stream2);
 	
 	
     // Guarda o que foi encontrado
@@ -303,7 +260,6 @@ void search_manager(int *buffer_load,
       	  }
       			
       	  fsenso++;
-      	  wave_size++;
       	  hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
       	  enfileirar(toStore,hold_event);
       	  break;
@@ -328,56 +284,26 @@ void search_manager(int *buffer_load,
       	  }
 
       	  fasenso++;
-      	  wave_size++;
       	  hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
       	  enfileirar(toStore,hold_event);
       			
       	  break;
       	}
       }
-		
-    // Libera para o thread buffer_manager carregar mais sequencias
-    *buffer_load = 0;		
 	
     checkCudaError();
 	
-	
-    // Aguarda o buffer estar cheio novamente
-    cudaEventRecord(startV,0);
-    while(*buffer_load == 0 && !THREAD_DONE[THREAD_BUFFER_LOADER] || tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
-    cudaEventRecord(stopV,0);	
-    cudaEventSynchronize(stopV);
-    cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
-	
-    // Evita desincronização
-    if(	*buffer_load == 0 && 
-	THREAD_DONE[THREAD_BUFFER_LOADER])
-      {
-	*buffer_load = GATHERING_DONE;
-      }
-    
-    if(debug && !silent)
-      printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);
+	//////////////////////////////////////////
+	// Carrega o buffer //////////////////////
+	//////////////////////////////////////////
+	*buffer_load = load_buffer_CUDA(data,seqSize_an);
+	//cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+	cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
 	
   }
-  if(!silent)
-    if(iteration_time > 10000)
-      printf("Busca realizada em %.2f min.\n",iteration_time/(float)60000);
-    else 
-      printf("Busca realizada em %.2f ms.\n",iteration_time);
 			
-  for(i=0;i<buffer_size;i++)
-    free(local_data[i]);
-  free(local_data);
   cudaFree(d_resultados);
-  for(i=0;i<buffer_size;i++)
-    cudaFreeHost(h_founded[i]);
-  cudaFreeHost(h_founded);
   free(h_resultados);
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
-  cudaEventDestroy(startK);
-  cudaEventDestroy(stopK);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
   return;
 }
@@ -392,33 +318,31 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   int i;
   int buffer_load;
   Fila *toStore;
-  cudaStream_t stream;
 	
   prepare_buffer_cuda();
   //Inicializa buffer
-  cudaStreamCreate(&stream);
 
   buffer_load = 0;
   toStore = criar_fila("toStore");
   cudaMalloc((void**)&data,buffer_size*sizeof(char*));	
 	
-  THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
+  //THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   THREAD_DONE[THREAD_QUEUE] = FALSE;
   THREAD_DONE[THREAD_DATABASE] = FALSE;
   
 		
-#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(stream) shared(toStore)
+#pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(toStore)
   {		
 #pragma omp sections
     {
+//#pragma omp section
+//      {
+//	 buffer_manager(&buffer_load,seqSize_an,stream);
+//      }
 #pragma omp section
       {
-	 buffer_manager(&buffer_load,seqSize_an,stream);
-      }
-#pragma omp section
-      {
-  	search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,stream,stream);
+  	search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV);
       }
 #pragma omp section
       {

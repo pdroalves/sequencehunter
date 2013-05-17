@@ -126,7 +126,7 @@ __global__ void k_buscador(int totalseqs,
 	return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,short int *vertexes,short int *candidates,short int *resultados,short int *search_gaps,char **founded,cudaStream_t stream){
+extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,short int *vertexes,short int *candidates,short int *resultados,short int *search_gaps,cudaStream_t stream){
 	int num_threads;
 	int num_blocks;
 	
@@ -141,7 +141,7 @@ extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_
 	dim3 dimBlock(num_threads);
 	dim3 dimGrid(num_blocks);
 	
-	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
+	k_buscador<<<dimGrid,dimBlock,0,stream>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
 	
 	checkCudaError();
 	return;
