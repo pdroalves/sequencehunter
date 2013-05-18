@@ -67,7 +67,7 @@ void db_create(char *filename){
 	// If connection failed, db returns NULL
 	if(ret)
 	{
-		printf("Database connection failed\n");
+		printf("Database connection failed - %s\n",filename);
 		exit(1);
 	}
 	
