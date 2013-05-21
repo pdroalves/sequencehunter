@@ -25,6 +25,9 @@
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
 
+int tmp = 0;
+int sent_to_db = 0;
+
 void send_setup_to_gui(Socket *gui_socket){
   char *msg;
   
@@ -52,7 +55,6 @@ void send_setup_to_gui(Socket *gui_socket){
 void report_manager(	Socket *gui_socket,
 						Fila* toStore,
 						int *p,
-						int *sent_to_db,
 						gboolean gui_run,
 						gboolean verbose,
 						gboolean silent,
@@ -74,7 +76,8 @@ void report_manager(	Socket *gui_socket,
   int port = GUI_SOCKET_PORT;
   int new_p;
   int old_p;
-  float rate;
+  float rate_processing;
+  float rate_enqueue;
   int sleep_time = 3;
   
     // if(verbose && !silent){
@@ -104,30 +107,32 @@ void report_manager(	Socket *gui_socket,
   while(!(*THREAD_DONE_QUEUE)){
     
     queue_size = tamanho_da_fila(toStore);
-    pre_sent_to_db = *sent_to_db;
+    pre_sent_to_db = sent_to_db;
     old_p = *p;
     SLEEP(sleep_time);
     pos_queue_size = tamanho_da_fila(toStore);
-    pos_sent_to_db = *sent_to_db;
+    pos_sent_to_db = sent_to_db;
     new_p = *p;
     
     count++;
     
     diff = pos_sent_to_db - pre_sent_to_db;
+    rate_processing = (new_p-old_p)/((float)(sleep_time));
+    rate_enqueue = (pos_sent_to_db - pre_sent_to_db)/((float)(sleep_time));
     
     if(gui_run){
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%d",*p,*fsensos,*fasensos,diff,0);
+      sprintf(msg,"T%dS%dAS%dSPS%dBR%d",*p,*fsensos,*fasensos,rate_processing,0);
       send_msg_to_socket(gui_socket,msg);
       get_msg_to_socket(gui_socket);
     }
-    
+    printf("%d\n",pos_sent_to_db);
     if(verbose && !silent){
 	  sqlite3_mem_used = sqlite3_memory_used();
       printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
       printf("Processed sequences: %d - S: %d, AS: %d\n",*p,*fsensos,*fasensos);
       printf("DB queue: %d\n",pos_queue_size);
-      rate = (new_p-old_p)/((float)(sleep_time));
-      printf("Processing rate: %.1f seq/s\n\n",rate);
+      printf("Processing rate: %.1f seq/s\n",rate_processing);
+      printf("Enqueue rate: %.1f seqs/s\n\n",rate_enqueue);
       //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
      //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	
@@ -140,13 +145,12 @@ void report_manager(	Socket *gui_socket,
 }
 
 
-void queue_manager(Fila *toStore,int *sent_to_db,int *THREAD_SEARCH_DONE){
+void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 	Event *hold;
 	char *central;
 	char *cincoL;
 	float tempo;
   
-	*sent_to_db =0;
 		
 	while(!(*THREAD_SEARCH_DONE) || tamanho_da_fila(toStore) > 0){
 	  if(tamanho_da_fila(toStore) > 0){
@@ -161,8 +165,7 @@ void queue_manager(Fila *toStore,int *sent_to_db,int *THREAD_SEARCH_DONE){
 			}
 
 			adicionar_db(central,cincoL,hold->tipo);
-			  
-			*sent_to_db++;
+			sent_to_db++;
 			if(central != NULL)
 			  free(central);
 			if(cincoL != NULL)

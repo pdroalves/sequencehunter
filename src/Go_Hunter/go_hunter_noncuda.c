@@ -48,7 +48,6 @@ gboolean gui_run;
 int dist_regiao_5l;
 int tam_regiao_5l;
 omp_lock_t MC_copy_lock;
-int sent_to_db;
 Buffer buf;
 int *vertexes;
 int processadas;
@@ -229,13 +228,13 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
       {
 	// Carrega resultados da queue e salva no db
 	//nc_queue_manager(toStore);
-	queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+	queue_manager(toStore,&THREAD_DONE[THREAD_SEARCH]);
 	THREAD_DONE[THREAD_QUEUE] = TRUE;
       }
 #pragma omp section
       {
 	// Escrita de informacoes relevantes na stdout
-	report_manager(gui_socket,toStore,&processadas,&sent_to_db,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
+	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
 	THREAD_DONE[THREAD_DATABASE] = TRUE;
       }
     }

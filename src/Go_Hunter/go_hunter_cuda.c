@@ -38,7 +38,6 @@ gboolean regiao_5l;
 gboolean gui_run;
 int dist_regiao_5l;
 int tam_regiao_5l;
-int sent_to_db;
 int fsenso;
 int fasenso;	
 char **data;
@@ -268,12 +267,12 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
       }
 #pragma omp section
       {
-	queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+	queue_manager(toStore,&THREAD_DONE[THREAD_SEARCH]);
         THREAD_DONE[THREAD_QUEUE] = TRUE;
       }
 #pragma omp section
       {
-  	report_manager(gui_socket,toStore,&processadas,&sent_to_db,gui_run,verbose,silent,&fsenso,&fasenso,&THREAD_DONE[THREAD_QUEUE]);
+  	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsenso,&fasenso,&THREAD_DONE[THREAD_QUEUE]);
   	THREAD_DONE[THREAD_DATABASE] = TRUE;
       }
     }
