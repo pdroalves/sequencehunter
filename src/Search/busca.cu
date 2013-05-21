@@ -150,7 +150,7 @@ extern "C" void k_busca(const int loaded,
   dim3 dimBlock(num_threads);
   dim3 dimGrid(num_blocks);
 
-  k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
+  k_buscador<<<dimGrid,dimBlock,0,*stream>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
 	
   checkCudaError();
   return;
