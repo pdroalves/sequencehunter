@@ -240,9 +240,9 @@ int main (int argc,char *argv[]) {
 
     // Seta database
     if(cutmode)  
-      criar_db_manager(output_dir,tempo,bv_size);
+      criar_db_manager(output_dir,tempo,bv_size,silent);
     else
-      criar_db_manager(output_dir,tempo,get_setup());
+      criar_db_manager(output_dir,tempo,get_setup(),silent);
 
     //Guarda parametros
     set.verbose = verbose;

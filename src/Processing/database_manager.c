@@ -24,7 +24,7 @@ int data_added;
 char *db_filename;
 int destroyed;
 
-void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
+void criar_db_manager(char* output_dir,char *tempo,const int key_max_size,gboolean silent){
    int i;
    int j;
    destroyed = 0;
@@ -54,6 +54,9 @@ void criar_db_manager(char* output_dir,char *tempo,const int key_max_size){
 	 
 	 // Inicializa db, cria fila para tmp_file e inicia primeiro arquivo temporario
 	 db_create(db_filename);
+	 if(!silent)
+		printf("Database stored on %s\n",db_filename);
+	printString("Database stored on ",db_filename);
 	db_start_transaction();
 	data_added = 0;
 	 //tmp_file_fila = criar_fila("Temp Files");
