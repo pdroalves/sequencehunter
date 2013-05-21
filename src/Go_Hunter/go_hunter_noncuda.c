@@ -26,7 +26,6 @@
 
 // Lista de threads a serem criados
 enum threads { 
-  THREAD_BUFFER_LOADER,
   THREAD_SEARCH,
   THREAD_QUEUE,
   THREAD_DATABASE,
@@ -76,22 +75,6 @@ void load_buffer_NONCuda(){
   return;
 }
 
-void nc_buffer_manager(){
-  //////////////////////////////////////////
-  // Carrega o buffer //////////////////////
-  //////////////////////////////////////////
-  while(buf.load != -1){//Looping até o final do buf
-	  //printf("%d.\n",buf.load);
-	  if(buf.load == 0){
-		  load_buffer_NONCuda();
-	  }
-  }
-  THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
-  //////////////////////////////////////////
-  //////////////////////////////////////////
-  //////////////////////////////////////////	
-}
-
 void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fila *toStore){
     //////////////////////////////////////////
   // Realiza as iteracoes///////////////////
@@ -134,11 +117,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   wave_size = 0;
   wave_processed_diff = 0;
   
-  while( buf.load == 0){
-  }//Aguarda para que o buffer seja enchido pela primeira vez
+  load_buffer_NONCuda();
   
-  while(buf.load != GATHERING_DONE || 
-		  THREAD_DONE[THREAD_BUFFER_LOADER] == FALSE){
+  while(buf.load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequências para encher o buffer
 
     cudaEventRecord(startK,0);
@@ -229,14 +210,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     }
 	    
 	    // Aguarda o buffer estar cheio novamente
-    cudaEventRecord(startV,0);
-	buf.load = 0;
-    while(	(buf.load==0 && 
-			!THREAD_DONE[THREAD_BUFFER_LOADER]) || 
-			tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE ){}
-    cudaEventRecord(stopV,0);						
-    cudaEventSynchronize(stopV);
-    cudaEventElapsedTime(&elapsedTimeV,startV,stopV);
+   		  load_buffer_NONCuda();
 
     if(debug && !silent)
 	    printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);						
@@ -265,7 +239,6 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
     vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
 	toStore = criar_fila("toStore");
 			      
-	THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
 	THREAD_DONE[THREAD_SEARCH] = FALSE;
 	THREAD_DONE[THREAD_QUEUE] = FALSE;
 	THREAD_DONE[THREAD_DATABASE] = FALSE;
@@ -274,12 +247,6 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
 		
 	  #pragma omp sections
 	  {
-	      #pragma omp section
-	      {
-	      	printf("%d threads criados\n",omp_get_num_threads());
-	      	// Carrega sequencias
-		      nc_buffer_manager(seqSize_an);
-	      }
 	      #pragma omp section
 	      {
 	      	// Faz o processamento e adiciona resultado na queue
