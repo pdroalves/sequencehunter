@@ -24,7 +24,7 @@
 #include "../Headers/socket.h"
 #include "sqlite3.h"
 
-#define buffer_size 512 // Capacidade máxima do buffer
+#define buffer_size 1024 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
@@ -100,38 +100,38 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   
   data = (char**)malloc(buffer_size*sizeof(char*));
   for(i=0;i<buffer_size;i++)
-	data[i] = (char*)malloc((seq_size+1)*sizeof(char));
+  data[i] = (char*)malloc((seq_size+1)*sizeof(char));
 	
   //////////////////////////////////////////
   // Loop que mantem fila cheia
   //////////////////////////////////////////
   while(loaded != GATHERING_DONE){
-	  if(tamanho_da_fila(loaded_data_queue) < 0.5*LOADER_QUEUE_MAX_SIZE){
-		  while(tamanho_da_fila(loaded_data_queue) < LOADER_QUEUE_MAX_SIZE)
-		  {
-		  loaded = load_buffer_CUDA(data, seq_size);
+  if(tamanho_da_fila(loaded_data_queue) < 0.5*LOADER_QUEUE_MAX_SIZE){
+  while(tamanho_da_fila(loaded_data_queue) < LOADER_QUEUE_MAX_SIZE)
+  {
+  loaded = load_buffer_CUDA(data, seq_size);
 
-		  // Enfileira tudo
-		  for(i=0; i < loaded; i++)
-			enfileirar(loaded_data_queue,data[i],NULL,NULL);
+  // Enfileira tudo
+  for(i=0; i < loaded; i++)
+  enfileirar(loaded_data_queue,data[i],NULL,NULL);
 
-		  // Precisa garantir que nada seja sobrescrito
-		  for(i=0;i<buffer_size;i++)
-			data[i] = (char*)malloc((seq_size+1)*sizeof(char));
-		  }
-	  }
-	  } 	
+  // Precisa garantir que nada seja sobrescrito
+  for(i=0;i<buffer_size;i++)
+  data[i] = (char*)malloc((seq_size+1)*sizeof(char));
+  }
+  }
+  } 	
 	  
-	  free(data);
-	  THREAD_DONE[THREAD_LOADER] = TRUE;
-	  return;
+  free(data);
+  THREAD_DONE[THREAD_LOADER] = TRUE;
+  return;
   }*/
 
 
 /*void buffer_manager(	int *buffer_load,
-			int seq_size,
-			cudaStream_t stream )
-{
+  int seq_size,
+  cudaStream_t stream )
+  {
 		
   int i;
   int loaded;
@@ -140,7 +140,7 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   //////////////////////////////////////////
   data = (char**)malloc(buffer_size*sizeof(char*));
   for(i=0;i<buffer_size;i++)
-    data[i] = (char*)malloc((seq_size+1)*sizeof(char));
+  data[i] = (char*)malloc((seq_size+1)*sizeof(char));
   h_vertexes = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
   //cudaHostAlloc((void**)&h_vertexes,buffer_size*seq_size*sizeof(short int),cudaHostAllocWriteCombined);
   h_candidates = (short int*)malloc(buffer_size*seq_size*sizeof(short int));
@@ -152,18 +152,18 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   // Carrega o buffer //////////////////////
   //////////////////////////////////////////
   while(*buffer_load != GATHERING_DONE){//Looping até o final do buffer
-    if(*buffer_load == 0){      
-      loaded = load_buffer_CUDA(data,seq_size);
-//      cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
-      cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seq_size*sizeof(short int),cudaMemcpyHostToDevice,stream);
-      *buffer_load = loaded;
-    }
+  if(*buffer_load == 0){      
+  loaded = load_buffer_CUDA(data,seq_size);
+  //      cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+  cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seq_size*sizeof(short int),cudaMemcpyHostToDevice,stream);
+  *buffer_load = loaded;
+  }
   }
   THREAD_DONE[THREAD_BUFFER_LOADER] = TRUE;
   //////////////////////////////////////////
   //////////////////////////////////////////
   //////////////////////////////////////////	
-}*/
+  }*/
 
 void search_manager(int *buffer_load,
 		    Fila *toStore,
@@ -189,7 +189,8 @@ void search_manager(int *buffer_load,
   Event *hold_event;
   gboolean retorno;
   cudaStream_t stream;
-
+  double sec;
+  struct timeval start_time, end_time;
   fsenso=fasenso=0;
   
   //////////////////////////////////////////
@@ -215,15 +216,17 @@ void search_manager(int *buffer_load,
 
   processadas = 0;
 
-  while( *buffer_load == 0){
-  }//Aguarda para que o buffer seja enchido pela primeira vez
-
+  *buffer_load = load_buffer_CUDA(data,seqSize_an);
+  //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+  cudaMemcpyAsync(d_vertexes,h_vertexes,*buffer_load*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
+ checkCudaError();
+  gettimeofday(&start_time, NULL);
   while( *buffer_load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequencias para encher o buffer
     
     loaded = *buffer_load;
     // Execuca iteracao
-   k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,stream);//Kernel de busca
+    k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,&stream);//Kernel de busca
 		
     // Inicia processamento dos resultados
     processadas += loaded;
@@ -293,15 +296,20 @@ void search_manager(int *buffer_load,
 	
     checkCudaError();
 	
-	//////////////////////////////////////////
-	// Carrega o buffer //////////////////////
-	//////////////////////////////////////////
-	*buffer_load = load_buffer_CUDA(data,seqSize_an);
-	//cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
-	cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
-	
+    //////////////////////////////////////////
+    // Carrega o buffer //////////////////////
+    //////////////////////////////////////////
+    *buffer_load = load_buffer_CUDA(data,seqSize_an);
+    //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+    cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
+	 checkCudaError();
   }
-			
+  gettimeofday(&end_time, NULL);
+	
+  sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
+  if(!silent)
+    printf("Kernel de busca executado em %.2f s\n",sec);
+  
   cudaFree(d_resultados);
   free(h_resultados);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
@@ -318,6 +326,8 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   int i;
   int buffer_load;
   Fila *toStore;
+  double sec;
+  struct timeval start_time, end_time;
 	
   prepare_buffer_cuda();
   //Inicializa buffer
@@ -331,6 +341,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   THREAD_DONE[THREAD_DATABASE] = FALSE;
   
 		
+  gettimeofday(&start_time, NULL);
 #pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(toStore)
   {		
 #pragma omp sections
@@ -341,7 +352,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
       }
 #pragma omp section
       {
-	   queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+	queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
         THREAD_DONE[THREAD_QUEUE] = TRUE;
       }
 #pragma omp section
@@ -351,7 +362,12 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
       }
     }
   }
-  
+  gettimeofday(&end_time, NULL);
+  if(!silent){
+    sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
+    printf("Busca executada em %.2f s\n",sec);
+  }
+	
 	
   //printf("Iterações executadas: %d.\n",iter);
   //free(tmp);

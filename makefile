@@ -11,7 +11,7 @@ OPENMP = -fopenmp
 OPENMP_CUDA = -Xcompiler $(OPENMP)
 
 CUDA = -L/usr/local/cuda/lib64 -lcudart 
-CUDA_ARCH = -arch=sm_21
+CUDA_ARCH = 
 
 CLI_NAME = shunter-cli
 GUI_NAME = shunter-gui.jar

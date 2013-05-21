@@ -23,6 +23,7 @@
 #include "../Headers/go_hunter.h"
 #include "../Headers/socket.h"
 #include "sqlite3.h"
+#include <time.h>
 
 // Lista de threads a serem criados
 enum threads { 
@@ -50,7 +51,7 @@ omp_lock_t MC_copy_lock;
 int sent_to_db;
 Buffer buf;
 int *vertexes;
-int p;
+int processadas;
 int fsensos,fasensos;
 unsigned long nc_bytes_read=0;
 
@@ -61,22 +62,22 @@ void load_buffer_NONCuda(){
   int n;
   int loaded;
   if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-	  fill_buffer(buf.seq,buf.capacidade,&loaded);//Enche o buffer e guarda a quantidade de sequências carregadas.
-	  n = strlen(buf.seq[0]);
-	  for(i=0;i<loaded;i++){	  
-	  	convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
-	  	if( buf.seq[i][0]*(2+buf.seq[i][1]) != vertexes[i*n]){
-		    printf("Erro na %d - %d %s\n",loaded,vertexes[i*n],buf.seq[i]);
-		    exit(1);
-		  }
-	  }
-	  buf.load = loaded;
+    fill_buffer(buf.seq,buf.capacidade,&loaded);//Enche o buffer e guarda a quantidade de sequências carregadas.
+    n = strlen(buf.seq[0]);
+    for(i=0;i<loaded;i++){	  
+      convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
+      if( buf.seq[i][0]*(2+buf.seq[i][1]) != vertexes[i*n]){
+	printf("Erro na %d - %d %s\n",loaded,vertexes[i*n],buf.seq[i]);
+	exit(1);
+      }
+    }
+    buf.load = loaded;
   } 
   return;
 }
 
 void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fila *toStore){
-    //////////////////////////////////////////
+  //////////////////////////////////////////
   // Realiza as iteracoes///////////////////
   //////////////////////////////////////////
   
@@ -89,136 +90,105 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   char *central;
   char *cincol;
   char *seqToSave;
-  cudaEvent_t startK,stopK,start,stop;
-		  cudaEvent_t startV,stopV;
-  float elapsedTimeK,elapsedTime,elapsedTimeV;
   float iteration_time;
   const int blocoV = blocos-bloco1-bloco2;
-  int wave_size;
-  int wave_processed_diff;
   int *candidates;
   Event *hold_event;
-  THREAD_DONE[THREAD_SEARCH] = FALSE;
-  p = 0;
+  double sec;
+  struct timeval start_time, end_time;
+  processadas = 0;
   fsensos=fasensos=0;
   
   candidates = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
   resultados = (int*)malloc(buffer_size_NC*sizeof(int));
   search_gaps = (int*)malloc(buffer_size_NC*sizeof(int));
-		  
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  cudaEventCreate(&startK);
-  cudaEventCreate(&stopK);
-  cudaEventCreate(&startV);
-  cudaEventCreate(&stopV);
-  
-  iteration_time = 0;
-  wave_size = 0;
-  wave_processed_diff = 0;
   
   load_buffer_NONCuda();
   
+  gettimeofday(&start_time, NULL);
   while(buf.load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequências para encher o buffer
 
-    cudaEventRecord(startK,0);
-    busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca					
-    cudaEventRecord(stopK,0);
-    cudaEventSynchronize(stopK);
+    busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca	
 
-    cudaEventElapsedTime(&elapsedTimeK,startK,stopK);
-    iteration_time += elapsedTimeK;
-    if(debug){
-	    if(!silent)
-	    printf("Execucao da busca em %f ms\n",elapsedTimeK);
-	    printString("Execucao da busca:\n",NULL);
-	    //print_tempo_optional(elapsedTimeK);
-    }
-    cudaEventRecord(start,0);
-		    
 	    
     tam = buf.load;
-    p += tam;
+    processadas+= tam;
 	    
     for(i = 0; i < tam;i++){
       //Copia sequências senso e antisenso encontradas
-	      switch(resultados[i]){
-		      case SENSO:
-			      if(central_cut){
-				      central = (char*)malloc((blocoV+1)*sizeof(char));	
-				      gap = search_gaps[i];
-				      strncpy(central,buf.seq[i]+gap,blocoV);
-				      central[blocoV] = '\0';
-			      }else{				
-				      central = (char*)malloc((seqSize_an+1)*sizeof(char));					
-				      strncpy(central,buf.seq[i],seqSize_an+1);
-			      }
+      switch(resultados[i]){
+      case SENSO:
+	if(central_cut){
+	  central = (char*)malloc((blocoV+1)*sizeof(char));	
+	  gap = search_gaps[i];
+	  strncpy(central,buf.seq[i]+gap,blocoV);
+	  central[blocoV] = '\0';
+	}else{				
+	  central = (char*)malloc((seqSize_an+1)*sizeof(char));					
+	  strncpy(central,buf.seq[i],seqSize_an+1);
+	}
 
 
-			      if(regiao_5l){
-				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
+	if(regiao_5l){
+	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 
-				      gap = search_gaps[i] - dist_regiao_5l;
-				      strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
-				      cincol[tam_regiao_5l] = '\0';
-			      }else{
-				      cincol = NULL;
-			      }
+	  gap = search_gaps[i] - dist_regiao_5l;
+	  strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
+	  cincol[tam_regiao_5l] = '\0';
+	}else{
+	  cincol = NULL;
+	}
 			      
-		      fsensos++;
-		      wave_size++;
-		      hold_event = criar_elemento_fila_event(central,cincol,SENSO);
-		      enfileirar(toStore,hold_event);
-		      //printf("Guardei %s como senso\n",central);
-		      break;
-		      case ANTISENSO:
-			      if(central_cut){
-				      central = (char*)malloc((blocoV+1)*sizeof(char));
-				      gap = search_gaps[i];
-				      strncpy(central,buf.seq[i]+gap,blocoV);
-				      central[blocoV] = '\0';
-			      }else{						
-				      central = (char*)malloc((seqSize_an+1)*sizeof(char));			
-				      strncpy(central,buf.seq[i],seqSize_an+1);
-			      }
+	fsensos++;
+	hold_event = criar_elemento_fila_event(central,cincol,SENSO);
+	enfileirar(toStore,hold_event);
+	break;
+      case ANTISENSO:
+	if(central_cut){
+	  central = (char*)malloc((blocoV+1)*sizeof(char));
+	  gap = search_gaps[i];
+	  strncpy(central,buf.seq[i]+gap,blocoV);
+	  central[blocoV] = '\0';
+	}else{						
+	  central = (char*)malloc((seqSize_an+1)*sizeof(char));			
+	  strncpy(central,buf.seq[i],seqSize_an+1);
+	}
 
 			      
-			      if(regiao_5l){
-				      cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
+	if(regiao_5l){
+	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 				      
-				      gap = search_gaps[i] + dist_regiao_5l-1;
-				      strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
-				      cincol[tam_regiao_5l] = '\0';
-			      }else{
-				      cincol = NULL;
-			      }
+	  gap = search_gaps[i] + dist_regiao_5l-1;
+	  strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
+	  cincol[tam_regiao_5l] = '\0';
+	}else{
+	  cincol = NULL;
+	}
 
-			      fasensos++;
-		      wave_size++;
-		      hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-		      enfileirar(toStore,hold_event);
-		      //printf("Guardei %s como antisenso\n",central);
-		      if(central != NULL)
-			free(central);
-		      if(cincol != NULL)
-			free(cincol);
-		      break;
-		      default:
-		      break;
-	      }
+	fasensos++;
+	hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+	enfileirar(toStore,hold_event);
+	if(central != NULL)
+	  free(central);
+	if(cincol != NULL)
+	  free(cincol);
+	break;
+      default:
+	break;
+      }
     }
 	    
-	    // Aguarda o buffer estar cheio novamente
-   		  load_buffer_NONCuda();
-
-    if(debug && !silent)
-	    printf("Tempo aguardando encher o buffer: %.2f ms\n",elapsedTimeV);						
+    // Aguarda o buffer estar cheio novamente
+    buf.load = 0;
+    load_buffer_NONCuda();
+					
   }     
-
-  // if(!silent)
-  //     printf("Busca realizada em %.2f ms.\n",iteration_time);
-  
+  gettimeofday(&end_time, NULL);
+	
+  sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
+  if(!silent)
+    printf("Kernel de busca executado em %.2f s\n",sec);
   free(resultados);
   free(search_gaps);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
@@ -231,93 +201,101 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 
 void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Socket *gui_socket){
 	
-	Fila *toStore;
-	int blocoV;
-	//Inicializa
-	blocoV = blocos - bloco1 - bloco2+1;
-	prepare_buffer(&buf,buffer_size_NC);	
-    vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
-	toStore = criar_fila("toStore");
+  Fila *toStore;
+  int blocoV;
+  double sec;
+  struct timeval start_time, end_time;
+  //Inicializa
+  blocoV = blocos - bloco1 - bloco2+1;
+  prepare_buffer(&buf,buffer_size_NC);	
+  vertexes = (int*)malloc(buffer_size_NC*seqSize_an*sizeof(int));
+  toStore = criar_fila("toStore");
 			      
-	THREAD_DONE[THREAD_SEARCH] = FALSE;
-	THREAD_DONE[THREAD_QUEUE] = FALSE;
-	THREAD_DONE[THREAD_DATABASE] = FALSE;
-	#pragma omp parallel num_threads(OMP_NTHREADS)
-	{	
+  THREAD_DONE[THREAD_SEARCH] = FALSE;
+  THREAD_DONE[THREAD_QUEUE] = FALSE;
+  THREAD_DONE[THREAD_DATABASE] = FALSE;
+  gettimeofday(&start_time, NULL);
+#pragma omp parallel num_threads(OMP_NTHREADS)
+  {	
 		
-	  #pragma omp sections
-	  {
-	      #pragma omp section
-	      {
-	      	// Faz o processamento e adiciona resultado na queue
-		      nc_search_manager(bloco1,bloco2,blocos,seqSize_an,toStore);
-	      }
-	      #pragma omp section
-	      {
-	      	// Carrega resultados da queue e salva no db
-		      //nc_queue_manager(toStore);
-			  queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
-			  THREAD_DONE[THREAD_QUEUE] = TRUE;
-	      }
-	      #pragma omp section
-	      {
-	      	// Escrita de informacoes relevantes na stdout
-		      report_manager(gui_socket,toStore,&p,&sent_to_db,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
-  				THREAD_DONE[THREAD_DATABASE] = TRUE;
-	      }
-	  }
-	}
-	close_buffer(&buf);
-	return;
+#pragma omp sections
+    {
+#pragma omp section
+      {
+	// Faz o processamento e adiciona resultado na queue
+	nc_search_manager(bloco1,bloco2,blocos,seqSize_an,toStore);
+      }
+#pragma omp section
+      {
+	// Carrega resultados da queue e salva no db
+	//nc_queue_manager(toStore);
+	queue_manager(toStore,&sent_to_db,&THREAD_DONE[THREAD_SEARCH]);
+	THREAD_DONE[THREAD_QUEUE] = TRUE;
+      }
+#pragma omp section
+      {
+	// Escrita de informacoes relevantes na stdout
+	report_manager(gui_socket,toStore,&processadas,&sent_to_db,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
+	THREAD_DONE[THREAD_DATABASE] = TRUE;
+      }
+    }
+  }
+  gettimeofday(&end_time, NULL);
+  if(!silent){
+    sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
+    printf("Busca executada em %.2f s\n",sec);
+  }
+  close_buffer(&buf);
+  return;
 }
 
 void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
 	
-	int seqSize_an;//Elementos por sequência
-	float tempo;
-	Socket *gui_socket;
+  int seqSize_an;//Elementos por sequência
+  float tempo;
+  Socket *gui_socket;
 
-	// Inicializa variaveis
-	tempo = 0;
-	verbose = set.verbose;
-	silent = set.silent;
-	debug = set.debug;
-	central_cut = set.cut_central;
-	gui_run = set.gui_run;
-	dist_regiao_5l = set.dist_regiao_5l;
-	tam_regiao_5l = set.tam_regiao_5l;
-	if(dist_regiao_5l || tam_regiao_5l)
-		regiao_5l = TRUE;
-	else
-		regiao_5l = FALSE;
+  // Inicializa variaveis
+  tempo = 0;
+  verbose = set.verbose;
+  silent = set.silent;
+  debug = set.debug;
+  central_cut = set.cut_central;
+  gui_run = set.gui_run;
+  dist_regiao_5l = set.dist_regiao_5l;
+  tam_regiao_5l = set.tam_regiao_5l;
+  if(dist_regiao_5l || tam_regiao_5l)
+    regiao_5l = TRUE;
+  else
+    regiao_5l = FALSE;
 
-	  if(!silent)
-	gui_socket = (Socket*)malloc(sizeof(Socket));
-	printf("OpenMP Mode.\n");
-	printString("OpenMP Mode.\n",NULL);
-	printf("Buffer size: %d\n",buffer_size);
-	printStringInt("Buffer size: ",buffer_size);
+  if(!silent)
+    gui_socket = (Socket*)malloc(sizeof(Socket));
+  printf("OpenMP Mode.\n");
+  printString("OpenMP Mode.\n",NULL);
+  printf("Buffer size: %d\n",buffer_size);
+  printStringInt("Buffer size: ",buffer_size);
 	
-	seqSize_an = get_setup();
+  seqSize_an = get_setup();
 	
-	setup_without_cuda(c);
-	printString("Dados inicializados.\n",NULL);
-	printSet(seqSize_an);
-	printString("Iniciando iterações:\n",NULL);
+  setup_without_cuda(c);
+  printString("Dados inicializados.\n",NULL);
+  printSet(seqSize_an);
+  printString("Iniciando iterações:\n",NULL);
 	
-	NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an,gui_socket);
+  NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an,gui_socket);
     
-	printString("Iterações terminadas. Tempo: ",NULL);
-	print_tempo(tempo);
+  printString("Iterações terminadas. Tempo: ",NULL);
+  print_tempo(tempo);
 	
 
-	// Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
-	if(gui_run){
-		destroy_socket(gui_socket);
-	}else{
-		//db_select("SELECT * FROM events");
-	}
-	destroy_db_manager();
-	return;	
+  // Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
+  if(gui_run){
+    destroy_socket(gui_socket);
+  }else{
+    //db_select("SELECT * FROM events");
+  }
+  destroy_db_manager();
+  return;	
 }
 
