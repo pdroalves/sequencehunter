@@ -326,7 +326,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   toStore = criar_fila("toStore");
   cudaMalloc((void**)&data,buffer_size*sizeof(char*));	
 	
-  //THREAD_DONE[THREAD_BUFFER_LOADER] = FALSE;
   THREAD_DONE[THREAD_SEARCH] = FALSE;
   THREAD_DONE[THREAD_QUEUE] = FALSE;
   THREAD_DONE[THREAD_DATABASE] = FALSE;
@@ -336,10 +335,6 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   {		
 #pragma omp sections
     {
-//#pragma omp section
-//      {
-//	 buffer_manager(&buffer_load,seqSize_an,stream);
-//      }
 #pragma omp section
       {
   	search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV);
