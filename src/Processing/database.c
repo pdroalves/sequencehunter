@@ -42,8 +42,8 @@ void db_commit_transaction(){
 	char *sErrMsg;
 	sqlite3_exec(db, "COMMIT TRANSACTION", 0, 0, &sErrMsg);
 	if(sqlite3_memory_used() > MAX_DB_MEM_USE){
-		printf("Limpando...\n");
-		sqlite3_db_release_memory(db);
+		printf("Cleaning database...\n");
+		sqlite3_exec(db,"vacuum", NULL,NULL,&sErrMsg);
 	}
 	return;
 }
@@ -59,7 +59,7 @@ void db_create(char *filename){
 	
 	ret = sqlite3_open(filename,&db);
 	
-	printf("Total de memoria detectada: %u\n",getTotalSystemMemory());
+	printf("RAM: %u\n",getTotalSystemMemory());
 	
     if (!db)
         printf("Not sure why, but the database didn't open.\n");
@@ -113,7 +113,7 @@ void db_create(char *filename){
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
-		printf("Erro ao criar tabela: %s\n",sErrMsg);
+		printf("DB error %s\n",sErrMsg);
 		exit(1);
 	}
 
@@ -122,7 +122,7 @@ void db_create(char *filename){
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
-		printf("Erro ao criar tabela: %s\n",sErrMsg);
+		printf("DB error %s\n",sErrMsg);
 		exit(1);
 	}
 	
@@ -132,7 +132,7 @@ void db_create(char *filename){
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
-		printf("Erro ao criar tabela: %s\n",sErrMsg);
+		printf("DB error %s\n",sErrMsg);
 		exit(1);
 	}
 	count =0;

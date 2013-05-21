@@ -37,12 +37,12 @@ java:build_gui
 #########################################
 #########################################
 
-compile:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
+compile:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
 	echo "CLI Compiled."
 	
-build:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o processing_data.o linkedlist.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
+build:shunter-cmd.o log.o load_data.o go_hunter.o go_hunter_cuda.o go_hunter_noncuda.o operacoes.o busca.o fila.o cuda_functions.o database_manager.o socket.o database.o nc_busca.o build_control	
 	$(BIN)build_control $(SOURCE)Headers/version
-	$(CUDA_CC) -G -g $(OPT_CUDA) -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)processing_data.o $(OBJ)linkedlist.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)nc_busca.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
+	$(CUDA_CC) -G -g $(OPT_CUDA) -o $(BIN)$(CLI_NAME) $(OBJ)shunter-cmd.o $(OBJ)log.o $(OBJ)load_data.o $(OBJ)go_hunter.o $(OBJ)go_hunter_cuda.o $(OBJ)go_hunter_noncuda.o $(OBJ)operacoes.o $(OBJ)busca.o $(OBJ)fila.o $(OBJ)cuda_functions.o $(OBJ)database_manager.o $(OBJ)nc_busca.o $(OBJ)socket.o $(OBJ)database.o $(GLIB_LIBS) $(GIO_LIBS) $(OPENMP_CUDA) $(SQLITE3)
 	echo "CLI built"	
 	
 build_gui:$(JAVA_SOURCE)Sequence\ Hunter\ GUI/makefile
@@ -80,12 +80,6 @@ operacoes.o:$(SOURCE)Assist/operacoes.c
 	
 log.o:$(SOURCE)Assist/log.c
 	$(CC) -Wall  -g -c $(SOURCE)Assist/log.c -o $(OBJ)log.o $(GLIB_CFLAGS)
-	
-linkedlist.o:$(SOURCE)Processing/linkedlist.c
-	$(CC) -Wall  -g -c $(SOURCE)Processing/linkedlist.c -o $(OBJ)linkedlist.o $(GLIB_CFLAGS)
-	
-processing_data.o:$(SOURCE)Processing/processing_data.c
-	$(CC) -Wall  -g -c $(SOURCE)Processing/processing_data.c -o $(OBJ)processing_data.o $(GLIB_CFLAGS) 
 	
 fila.o:$(SOURCE)Processing/fila.c
 	$(CC) -Wall  -g -c $(SOURCE)Processing/fila.c -o $(OBJ)fila.o $(GLIB_CFLAGS)

@@ -67,7 +67,7 @@ void load_buffer_NONCuda(){
     for(i=0;i<loaded;i++){	  
       convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
       if( buf.seq[i][0]*(2+buf.seq[i][1]) != vertexes[i*n]){
-	printf("Erro na %d - %d %s\n",loaded,vertexes[i*n],buf.seq[i]);
+	printf("Error: %d - %d %s\n",loaded,vertexes[i*n],buf.seq[i]);
 	exit(1);
       }
     }
@@ -188,7 +188,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	
   sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
   if(!silent)
-    printf("Kernel de busca executado em %.2f s\n",sec);
+    printf("Search kernel executed on %.2f s\n",sec);
   free(resultados);
   free(search_gaps);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
@@ -243,7 +243,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
   gettimeofday(&end_time, NULL);
   if(!silent){
     sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
-    printf("Busca executada em %.2f s\n",sec);
+    printf("Search executed on %.2f s\n",sec);
   }
   close_buffer(&buf);
   return;
@@ -271,21 +271,20 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
 
   if(!silent)
     gui_socket = (Socket*)malloc(sizeof(Socket));
-  printf("OpenMP Mode.\n");
-  printString("OpenMP Mode.\n",NULL);
+  printf("CPU mode.\n");
+  printString("CPU mode.\n",NULL);
   printf("Buffer size: %d\n",buffer_size);
   printStringInt("Buffer size: ",buffer_size);
 	
   seqSize_an = get_setup();
 	
   setup_without_cuda(c);
-  printString("Dados inicializados.\n",NULL);
   printSet(seqSize_an);
-  printString("Iniciando iterações:\n",NULL);
+  printString("Starting hunt...\n",NULL);
 	
   NONcudaIteracoes(bloco1,bloco2,blocos,seqSize_an,gui_socket);
     
-  printString("Iterações terminadas. Tempo: ",NULL);
+  printString("Hunt done.",NULL);
   print_tempo(tempo);
 	
 

@@ -6,7 +6,7 @@
 #include <cuda_runtime_api.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/log.h"
-#include "../Headers/processing_data.h"
+
 
 #define TAM_MAX 10000
 
@@ -71,11 +71,11 @@ int open_file(char **entrada,int qnt,gboolean silent){
     checks[files] = f[files]!=NULL;
 
     if(!checks[files]){
-      printf("Arquivo %s não pode ser aberto.\n",entrada[files+1]);
-      printString("Arquivo não pode ser aberto: ",entrada[files+1]);
+      printf("%s can not be opened.\n",entrada[files+1]);
+      printString("File can not be opened: ",entrada[files+1]);
       files++;
     }else{
-      printf("Arquivo %s aberto.\n",entrada[abertos+1]);
+      printf("File %s is open.\n",entrada[abertos+1]);
       print_open_file(entrada[abertos+1]);
       files++;
       abertos++;
@@ -91,9 +91,9 @@ int check_sequencias_validas(gboolean silent){
     seqs_validas = get_sequencias_validas(f,files);
     if(!silent){
       if(seqs_validas >=0)
-	printf("Sequencias validas encontradas: %d\n",seqs_validas);
+	printf("Valid sequences founded: %d\n",seqs_validas);
       else
-	printf("Sequencias validas encontradas: %d\nATENÇÃO: Sequências de tamanho variável.\n",-seqs_validas);
+	printf("Valid sequences founded: %d\nWARNING: Sequences have variable length.\n",-seqs_validas);
     }
   }
   return seqs_validas;
@@ -141,7 +141,7 @@ void prepare_buffer(Buffer *b,int c){
 	
   b->load = 0;
   tamanho_do_buffer = itoaa(c);
-  printString("Buffer configurado para: ",tamanho_do_buffer);
+  printString("Buffer set to: ",tamanho_do_buffer);
 	
   free(tamanho_do_buffer);
   return;

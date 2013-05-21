@@ -47,8 +47,8 @@ Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo){
 		novo->seq_cincoL = seq_cincoL;
 		novo->tipo = tipo;
 	}else{
-		printStringInt("Impossível alocar memória.",sizeof(Event));
-		printString("Encerrando.",NULL);
+		printStringInt("Memory Error.",sizeof(Event));
+		printString("Aborting.",NULL);
 		exit(1);
 	}
 	return novo;

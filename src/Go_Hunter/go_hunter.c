@@ -75,7 +75,7 @@ void report_manager(	Socket *gui_socket,
   int new_p;
   int old_p;
   float rate;
-  int sleep_time = 10;
+  int sleep_time = 3;
   
     // if(verbose && !silent){
       // fp_enchimento = fopen("enchimento.dat","w");
@@ -93,8 +93,8 @@ void report_manager(	Socket *gui_socket,
 	      SLEEP(5);
 	      criar_socket(gui_socket,port);
 	      if(gui_socket == NULL){
-		      printf("Não foi possível estabelecer conexão com a GUI.\nEncerrando...");
-		      printString("Não foi possível estabelecer conexão com a GUI.\nEncerrando...",NULL);
+		      printf("Unable to establish connection to GUI.\nAborting...");
+		      printString("Unable to establish connection to GUI.\nAborting...",NULL);
 		      exit(1);
 	      }
 	  }
@@ -124,10 +124,10 @@ void report_manager(	Socket *gui_socket,
     if(verbose && !silent){
 	  sqlite3_mem_used = sqlite3_memory_used();
       printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
-      printf("Sequencias processadas: %d - S: %d, AS: %d\n",*p,*fsensos,*fasensos);
-      printf("Tamanho da fila: %d\n",pos_queue_size);
+      printf("Processed sequences: %d - S: %d, AS: %d\n",*p,*fsensos,*fasensos);
+      printf("DB queue: %d\n",pos_queue_size);
       rate = (new_p-old_p)/((float)(sleep_time));
-      printf("Taxa de processamento: %.1f seq/s\n\n",rate);
+      printf("Processing rate: %.1f seq/s\n\n",rate);
       //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
      //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	
@@ -156,7 +156,7 @@ void queue_manager(Fila *toStore,int *sent_to_db,int *THREAD_SEARCH_DONE){
 			cincoL = hold->seq_cincoL;
 
 			if(hold == NULL){
-			  printf("Erro alocando memoria - Queue.\n");
+			  printf("Memory error - Queue.\n");
 			  exit(1);
 			}
 

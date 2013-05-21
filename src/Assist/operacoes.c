@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <omp.h>
-#include "../Headers/processing_data.h"
+
 #define TAM_MAX 10000
 
 
@@ -116,4 +116,38 @@ int get_sequencias_validas(FILE **f,int files){
 	return seqs_validas;
 }
 
+
+int check_seq_valida(char *p){
+	int i;
+	int n;
+	
+	n = strlen(p);
+	
+	if(n == 0) return 0;
+	
+	for(i = 0; i < n;i++){
+			switch(p[i]){
+				case 'A':
+				break;
+				case 'a':
+				break;
+				case 'C':
+				break;
+				case 'c':
+				break;
+				case 'G':
+				break;
+				case 'g':
+				break;
+				case 'T':
+				break;
+				case 't':
+				break;
+				default:
+					return 0;
+			}
+	}
+	
+	return 1;
+}
 	

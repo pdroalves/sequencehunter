@@ -224,7 +224,7 @@ void search_manager(int *buffer_load,
 	
   sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
   if(!silent)
-    printf("Kernel de busca executado em %.2f s\n",sec);
+    printf("Search kernel executed on %.2f s\n",sec);
   
   cudaFree(d_resultados);
   free(h_resultados);
@@ -281,7 +281,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   gettimeofday(&end_time, NULL);
   if(!silent){
     sec = ((end_time.tv_sec  - start_time.tv_sec) * 1000000u + end_time.tv_usec - start_time.tv_usec) / 1.e6;
-    printf("Busca executada em %.2f s\n",sec);
+    printf("Search executed on %.2f s\n",sec);
   }
 	
 	
@@ -322,8 +322,8 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
     regiao_5l = FALSE;
   gui_socket = (Socket*)malloc(sizeof(Socket));
   if(!silent || gui_run)
-    printf("CUDA Mode.\n");
-  printString("CUDA Mode.\n",NULL);
+    printf("CUDA mode.\n");
+  printString("CUDA mode.\n",NULL);
 	
   printf("Buffer size: %d\n",buffer_size);
   printStringInt("Buffer size: ",buffer_size);
@@ -333,12 +333,13 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   //Inicializa
   setup_for_cuda(c);	
 
-  printString("Dados inicializados.\n",NULL);
   printSet(seqSize_an);
-  printString("Iniciando iterações:\n",NULL);
+  printString("Starting hunt...\n",NULL);
 	
   cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu,gui_socket);
   cudaThreadExit();
+  
+  printString("Hunt done...\n",NULL);
 
   if(gui_run){
     destroy_socket(gui_socket);

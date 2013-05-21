@@ -56,7 +56,7 @@ void prepareLog(char* output_dir,char *tempo,gboolean gui){
 	logfile = fopen(logfile_name,"a");
   
 	if(logfile == NULL){
-		printf("Erro! Impossível salvar log em %s\n",logfile_name);
+		printf("Error! Couldn't write log to %s\n",logfile_name);
 		exit(1);
 	}
    
@@ -73,7 +73,7 @@ void prepareLog(char* output_dir,char *tempo,gboolean gui){
 //Métodos específicos#######
 
 void print_open_file(char *c){
-	fprintf(logfile,"Arquivo %s aberto.\n",c);
+	fprintf(logfile,"Log file %s opened.\n",c);
 	return;
 }
 
@@ -91,7 +91,7 @@ void printString(char *c,char *s){
 }
 
 void printSet(int n){
-	fprintf(logfile,"Bases por sequência: %d.\n",n);
+	fprintf(logfile,"Sequences lengh: %d.\n",n);
 }
 
 
@@ -112,17 +112,11 @@ void print_tipos_seqs(int sensos,int antisensos){
 }
 
 void print_tempo(float tempo){
-	if(tempo > 0.5)
-		fprintf(logfile,"Tempo decorrido: %fs\n",tempo/1000.0);
-	else
-		fprintf(logfile,"Tempo decorrido: %fms\n",tempo);
+		fprintf(logfile,"Elapsed time: %fms\n",tempo);
 }
 
 void print_tempo_optional(float tempo){
-	if(tempo > 0.5)
-		fprintf(logfile,"Tempo decorrido: %fs\n",tempo/1000.0);
-	else
-		fprintf(logfile,"Tempo decorrido: %fms\n",tempo);	
+		fprintf(logfile,"Elapsed time: %fms\n",tempo);
 }
 
 void print_resultado(lista_ligada *p){
@@ -136,17 +130,17 @@ void print_string_float(char *s,float f){
 }
 
 void print_seqs_processadas(int total,int sensos,int antisensos){
-	fprintf(logfile,"Sequencias processadas: %d - S: %d, AS: %d\n",total,sensos,antisensos);
+	fprintf(logfile,"Processed sequences: %d - S: %d, AS: %d\n",total,sensos,antisensos);
 	return;
 }
 
-void print_seqs_filas(int sensos,int antisensos){
-	fprintf(logfile,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
+void print_seqs_Queue(int sensos,int antisensos){
+	fprintf(logfile,"Queue - S: %d, AS: %d\n\n",sensos,antisensos);
 	return;
 }
 
-void print_seqs_filas_optional(int sensos,int antisensos){
-	fprintf(logfile,"Filas - S: %d, AS: %d\n\n",sensos,antisensos);
+void print_seqs_Queue_optional(int sensos,int antisensos){
+	fprintf(logfile,"Queue - S: %d, AS: %d\n\n",sensos,antisensos);
 	return;
 }
 
