@@ -70,14 +70,14 @@ extern "C" void checkCudaError();
 ////////////////////////////////////////////////////////////////////////////////////////
 
 __global__ void k_buscador(int totalseqs,
-										int seqSize_an,
-										short int *vertexes,
-										short int *candidates,
-										short int *resultados,
-										short int *search_gaps,
-										int bloco1,
-										int bloco2,
-										int blocoV){
+			   int seqSize_an,
+			   short int *vertexes,
+			   short int *candidates,
+			   short int *resultados,
+			   short int *search_gaps,
+			   int bloco1,
+			   int bloco2,
+			   int blocoV){
 
   ////////		UM THREAD POR SEQUENCIA
   ////////
@@ -89,73 +89,83 @@ __global__ void k_buscador(int totalseqs,
   ////////
   ////////
   
-	unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
-	short int seqSize_bu = bloco1+bloco2+blocoV;;// Tamanho da sequencia alvo
-	short tipo;
-	short int *this_candidates = &candidates[seqId*seqSize_an];
-	short int *this_vertexes = &vertexes[seqId*seqSize_an];
-	short int num_sensos_candidates;
-	short int num_antisensos_candidates;
-	short int candidate_pos_sensos;
-	short int candidate_pos_antisensos;
-	short int i;
+  unsigned int seqId = threadIdx.x + blockIdx.x*blockDim.x;;// id da sequencia analisada
+  short int seqSize_bu = bloco1+bloco2+blocoV;;// Tamanho da sequencia alvo
+  short tipo;
+  short int *this_candidates = &candidates[seqId*seqSize_an];
+  short int *this_vertexes = &vertexes[seqId*seqSize_an];
+  short int num_sensos_candidates;
+  short int num_antisensos_candidates;
+  short int candidate_pos_sensos;
+  short int candidate_pos_antisensos;
+  short int i;
 
-	if(seqId < totalseqs){
-		num_sensos_candidates = get_candidate_table(d_matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-		tipo = 0;
-	  	for(i=0;i<num_sensos_candidates && !tipo;i++){
-			candidate_pos_sensos = this_candidates[i];
-			if(match_check(d_matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
-			  search_gaps[seqId] = i + bloco1;
-			  tipo = SENSO;  
-			}
-		}
-		if(!tipo){		
-			num_antisensos_candidates = get_candidate_table(d_matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
-			for(i=0;i<num_antisensos_candidates && !tipo;i++){
-			 candidate_pos_antisensos = this_candidates[i];
-			  if(match_check(d_matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
-			    search_gaps[seqId] = i + bloco2;
-			    tipo = ANTISENSO;
-			  }
-			}
-		}		
-								 
-		resultados[seqId] = tipo;	 
+  if(seqId < totalseqs){
+    num_sensos_candidates = get_candidate_table(d_matrix_senso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+    tipo = 0;
+    for(i=0;i<num_sensos_candidates && !tipo;i++){
+      candidate_pos_sensos = this_candidates[i];
+      if(match_check(d_matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
+	search_gaps[seqId] = i + bloco1;
+	tipo = SENSO;  
+      }
+    }
+    if(!tipo){		
+      num_antisensos_candidates = get_candidate_table(d_matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
+      for(i=0;i<num_antisensos_candidates && !tipo;i++){
+	candidate_pos_antisensos = this_candidates[i];
+	if(match_check(d_matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
+	  search_gaps[seqId] = i + bloco2;
+	  tipo = ANTISENSO;
 	}
-	return;
+      }
+    }		
+								 
+    resultados[seqId] = tipo;	 
+  }
+  return;
 }
 
-extern "C" void k_busca(const int loaded,const int seqSize_an,const int seqSize_bu,int bloco1,int bloco2,int blocoV,short int *vertexes,short int *candidates,short int *resultados,short int *search_gaps,char **founded,cudaStream_t stream){
-	int num_threads;
-	int num_blocks;
+extern "C" void k_busca(const int loaded,
+			const int seqSize_an,
+			const int seqSize_bu,
+			int bloco1,int bloco2,
+			int blocoV,
+			short int *vertexes,
+			short int *candidates,
+			short int *resultados,
+			short int *search_gaps,
+			cudaStream_t *stream){
+  int num_threads;
+  int num_blocks;
 	
-	if(loaded > MAX_CUDA_THREADS_PER_BLOCK){
-		num_threads = MAX_CUDA_THREADS_PER_BLOCK;
-		num_blocks = (float)loaded/(float)num_threads + 1;
-	}else{
-		num_threads = loaded;
-		num_blocks = 1;
-	}
+  if(loaded > MAX_CUDA_THREADS_PER_BLOCK){
+    num_threads = MAX_CUDA_THREADS_PER_BLOCK;
+    num_blocks = (float)loaded/(float)num_threads + 1;
+  }else{
+    num_threads = loaded;
+    num_blocks = 1;
+  }
 	
-	dim3 dimBlock(num_threads);
-	dim3 dimGrid(num_blocks);
+  dim3 dimBlock(num_threads);
+  dim3 dimGrid(num_blocks);
+
+  k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
 	
-	k_buscador<<<dimGrid,dimBlock,0>>>(loaded,seqSize_an,vertexes,candidates,resultados,search_gaps,bloco1,bloco2,blocoV);
-	
-	checkCudaError();
-	return;
+  checkCudaError();
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////   	Auxiliar     ///////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" void checkCudaError(){
-	char erro[100];
-	strcpy(erro,cudaGetErrorString(cudaGetLastError()));
-    if(strcmp(erro,"no error") != 0){
-		printf("%s\n",erro);
-    }   
+  char erro[100];
+  strcpy(erro,cudaGetErrorString(cudaGetLastError()));
+  if(strcmp(erro,"no error") != 0){
+    printf("%s\n",erro);
+    exit(1);
+  }   
 }
 
 
@@ -163,21 +173,21 @@ extern "C" void checkCudaError(){
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 void getMatrix(short int *matrix,char *str){
-	// Matrix já deve vir alocada
-	int size_y;
-	int i;
+  // Matrix já deve vir alocada
+  int size_y;
+  int i;
 
-	size_y = strlen(str);
+  size_y = strlen(str);
 
-	// Preenche matriz
-	for(i = 0; i < size_y;i++){
-		matrix[i] = str[i];
-	}	
+  // Preenche matriz
+  for(i = 0; i < size_y;i++){
+    matrix[i] = str[i];
+  }	
 
-	return;
+  return;
 }
 
- void set_grafo(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
+void set_grafo(char *senso,char *antisenso,short int *matrix_senso,short int *matrix_antisenso){
   // As matrizes já devem vir alocadas
   
   convert_target_to_graph(senso,strlen(senso),matrix_senso);
@@ -187,67 +197,57 @@ void getMatrix(short int *matrix,char *str){
 }
 
 char* get_antisenso(char *s){
-	int i;
-	char *antisenso;
-	int a_size;
+  int i;
+  char *antisenso;
+  int a_size;
 	
-	a_size = strlen(s);
-	antisenso = (char*)malloc((a_size+1)*sizeof(char));
-	strcpy(antisenso,"");
+  a_size = strlen(s);
+  antisenso = (char*)malloc((a_size+1)*sizeof(char));
+  strcpy(antisenso,"");
 	
-	for(i=0;i<a_size;i++){
-		switch(s[a_size - i-1]){
-			case 'A':
-				strcat(antisenso, "T");
-			break;
-			case 'C':
-				strcat(antisenso, "G");
-			break;
-			case 'T':
-				strcat(antisenso, "A");
-			break;
-			case 'G':
-				strcat(antisenso, "C");
-			break;
-			default:
-				strcat(antisenso,"N");
-				break;
-		}	
-	}
-	//strcat(antisenso,'\0');
+  for(i=0;i<a_size;i++){
+    switch(s[a_size - i-1]){
+    case 'A':
+      strcat(antisenso, "T");
+      break;
+    case 'C':
+      strcat(antisenso, "G");
+      break;
+    case 'T':
+      strcat(antisenso, "A");
+      break;
+    case 'G':
+      strcat(antisenso, "C");
+      break;
+    default:
+      strcat(antisenso,"N");
+      break;
+    }	
+  }
+  //strcat(antisenso,'\0');
 	
-	return antisenso;
+  return antisenso;
 }
 
 extern "C" void setup_for_cuda(char *seq){
-	// Recebe um vetor de caracteres com o padrão a ser procurado
-	short int *h_matrix_senso;
-	short int *h_matrix_antisenso;
-	int size = strlen(seq);
-	char *d_senso;
-	char *d_antisenso;
-	
-	h_matrix_senso = (short int*)malloc(size*sizeof(short int));
-	h_matrix_antisenso = (short int*)malloc(size*sizeof(short int));
+  // Recebe um vetor de caracteres com o padrão a ser procurado
+  short int *h_matrix_senso;
+  short int *h_matrix_antisenso;
+  int size = strlen(seq);
+
+  h_matrix_senso = (short int*)malloc(size*sizeof(short int));
+  h_matrix_antisenso = (short int*)malloc(size*sizeof(short int));
 	    
-    //Configura grafos direto na memória da GPU
-	set_grafo(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
+  //Configura grafos direto na memória da GPU
+  set_grafo(seq,get_antisenso(seq),h_matrix_senso,h_matrix_antisenso);
 	
-	// Copia dados
-	cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
-	/*cudaMalloc((void**)&d_senso,(size+1)*sizeof(char));
-	cudaMalloc((void**)&d_antisenso,(size+1)*sizeof(char));
+  // Copia dados
+  cudaMemcpyToSymbol(d_matrix_senso,h_matrix_senso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
+  cudaMemcpyToSymbol(d_matrix_antisenso,h_matrix_antisenso,size*sizeof(short int),0,cudaMemcpyHostToDevice);
+
+  free(h_matrix_senso);
+  free(h_matrix_antisenso);
 	
-	cudaMemcpy(d_senso,seq,(size+1)*sizeof(char),cudaMemcpyHostToDevice);
-	cudaMemcpy(d_antisenso,get_antisenso(seq),(size+1)*sizeof(char),cudaMemcpyHostToDevice);
-	*/
-	//printf("Verificando matrizes:...\n");
-	//check_matrix<<<1,size,0>>>(d_senso,d_antisenso);
-	
-	//printString("Grafo de busca configurado.",NULL);
-	free(h_matrix_senso);
-	free(h_matrix_antisenso);
-	
-	return;
+  return;
 }
+

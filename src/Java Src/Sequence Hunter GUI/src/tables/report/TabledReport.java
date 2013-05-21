@@ -20,32 +20,36 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableRowSorter;
 
 import database.DBManager;
 
-import auxiliares.WaitLayerUI;
+import auxiliares.WaitLayerHandle;
 
 
 public class TabledReport extends Report implements Observer{
-	private WaitLayerUI layerUI;
+	private WaitLayerHandle layerUIHandler;
 	private DBManager dbm;
 	private JPanel panel;
 	private JTable jte;
 	private JReportTableModel jrtm;
 	private EventHistogram eh;
+	private TableSorter<JReportTableModel> sorter ;
 	
 	public TabledReport(DBManager dbm,JReportTableModel jrtm){
 		panel = new JPanel(new BorderLayout());
-		layerUI = new WaitLayerUI();
+		layerUIHandler = new WaitLayerHandle();
 		this.dbm = dbm;
 		this.jrtm = jrtm;
 		eh = new EventHistogram();
+		sorter = new TableSorter<JReportTableModel>(jrtm,dbm);
 	}
 	
 	public JComponent createTabledReport(){
 		// Cria e configura tabela
 		jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(false);
+		jte.setRowSorter(sorter);
 		
 		// Table selection listener
 		ListSelectionModel cellSelectionModel = jte.getSelectionModel();
@@ -71,7 +75,7 @@ public class TabledReport extends Report implements Observer{
 				JScrollBar jsb = (JScrollBar) e.getSource();
 				int jsbMax = jsb.getMaximum();
 				int jsbPos = jsb.getValue();
-				System.out.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
+				System.err.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
 				if(jsbMax*0.6 <= jsbPos){
 					System.out.println("Loading...");
 					jrtm.load();
@@ -95,9 +99,9 @@ public class TabledReport extends Report implements Observer{
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
 		
 		panel.add(jsp,BorderLayout.CENTER);
-		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
+		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUIHandler);
 		if(!dbm.isReady()){
-			layerUI.start();
+			layerUIHandler.start();
 		}else{
 			eh.addTypeSet(dbm.getEvents());
 			eh.commit();
@@ -112,12 +116,17 @@ public class TabledReport extends Report implements Observer{
 	@Override
 	public void update(Observable o, Object arg) {
 		if(dbm.isReady()){
+			eh.clearAllBars();
 			eh.addTypeSet(dbm.getEvents());
 			eh.commit();
+			
 			jte.repaint();
 			panel.repaint();
 			jrtm.fireTableDataChanged();
-			layerUI.stop();
+			layerUIHandler.stop();
+		}else{
+			layerUIHandler.reset();
+			layerUIHandler.start();
 		}
 	}	
 }

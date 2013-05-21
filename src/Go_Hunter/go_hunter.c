@@ -72,6 +72,10 @@ void report_manager(	Socket *gui_socket,
   char *msg;
   float sqlite3_mem_used;
   int port = GUI_SOCKET_PORT;
+  int new_p;
+  int old_p;
+  float rate;
+  int sleep_time = 10;
   
     // if(verbose && !silent){
       // fp_enchimento = fopen("enchimento.dat","w");
@@ -101,9 +105,11 @@ void report_manager(	Socket *gui_socket,
     
     queue_size = tamanho_da_fila(toStore);
     pre_sent_to_db = *sent_to_db;
-    SLEEP(1);
+    old_p = *p;
+    SLEEP(sleep_time);
     pos_queue_size = tamanho_da_fila(toStore);
     pos_sent_to_db = *sent_to_db;
+    new_p = *p;
     
     count++;
     
@@ -119,8 +125,9 @@ void report_manager(	Socket *gui_socket,
 	  sqlite3_mem_used = sqlite3_memory_used();
       printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
       printf("Sequencias processadas: %d - S: %d, AS: %d\n",*p,*fsensos,*fasensos);
-      printf("Enchimento: %d seq/s - %d\n",pos_queue_size-queue_size,pos_queue_size);
-      printf("Esvaziamento: %d seq/s\n\n",pos_sent_to_db - pre_sent_to_db);
+      printf("Tamanho da fila: %d\n",pos_queue_size);
+      rate = (new_p-old_p)/((float)(sleep_time));
+      printf("Taxa de processamento: %.1f seq/s\n\n",rate);
       //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
      //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	

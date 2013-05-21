@@ -89,4 +89,7 @@ public class EventHistogram {
 		}
 	}
 
+	public void clearAllBars(){
+		dp.clearAllBars();
+	}
 } 
