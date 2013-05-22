@@ -18,7 +18,7 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define MAX_PER_TMP_FILE 500000
+#define MAX_PER_TMP_FILE 200000
 
 int data_added;
 char *db_filename;
