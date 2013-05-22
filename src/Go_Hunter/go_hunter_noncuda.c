@@ -182,6 +182,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     buf.load = 0;
     load_buffer_NONCuda();
 					
+	 while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }     
   gettimeofday(&end_time, NULL);
 	

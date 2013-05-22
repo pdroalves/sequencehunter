@@ -28,9 +28,9 @@ sqlite3_stmt *stmt_insert_link;
 sqlite3_stmt *stmt_update_senso_cincol;
 sqlite3_stmt *stmt_update_antisenso_cincol;
 
-unsigned long get_hash(char* original){
+int get_hash(char* original){
 	char *c;
-	unsigned long hash = 5381;
+	int hash = 5381;
 
 	while(c = *original++)
 		hash = ((hash << 5)+hash) + c;
@@ -96,11 +96,11 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}*/
-	/*sqlite3_exec(db,"PRAGMA cache_size = 5000000",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA cache_size = 5000000",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
-	}*/
+	}
 	sqlite3_exec(db,"PRAGMA shrink_memory",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
@@ -115,7 +115,7 @@ void db_create(char *filename){
 		
 	query = (char*)malloc(500*sizeof(char));
 	
-	strcpy(query,"CREATE TABLE main_sequences (id INTEGER,sequence TEXT NOT NULL UNIQUE,PRIMARY KEY(id,sequence))");
+	strcpy(query,"CREATE TABLE main_sequences (id INTEGER,sequence TEXT NOT NULL UNIQUE,PRIMARY KEY(id))");
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 	if(sErrMsg != NULL){
@@ -154,23 +154,23 @@ void db_create(char *filename){
 	// Main
 	//
 	// Compile insert-statement
-	sprintf(query, "INSERT OR IGNORE INTO main_sequences VALUES(@IDX,@SEQ)");
+	sprintf(query, "INSERT OR IGNORE INTO main_sequences (sequence) VALUES(@SEQ)");
 	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_insert_main, 0);
 	if(ret != SQLITE_OK){
-		printf("Error on statement compile 1 - %d.\n",ret);
+		printf("Error on statement compile 1a - %d.\n",ret);
 		exit(1);
 	}
 	
 	// Compile insert-statement
-	sprintf(query, "INSERT OR IGNORE INTO events (fk_main_seq) VALUES (@IDX)");
+	sprintf(query, "INSERT OR IGNORE INTO events (fk_main_seq) VALUES ((SELECT id FROM main_sequences WHERE sequence = @SEQ))");
 	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_insert, 0);
 	if(ret != SQLITE_OK){
-		printf("Error on statement compile 1 - %d.\n",ret);
+		printf("Error on statement compile 1b - %d.\n",ret);
 		exit(1);
 	}
 
 	// Sensos
-	sprintf(query, "UPDATE events SET qnt_sensos=qnt_sensos+1 WHERE fk_main_seq = @IDX");
+	sprintf(query, "UPDATE events SET qnt_sensos=qnt_sensos+1 WHERE fk_main_seq = (SELECT id FROM main_sequences WHERE sequence = @SEQ)");
 	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_update_senso, 0);
 	if(ret != SQLITE_OK){
 		printf("Error on statement compile 2 - %d.\n",ret);
@@ -178,7 +178,7 @@ void db_create(char *filename){
 	}
 	
 	// Antisensos
-	sprintf(query, "UPDATE events SET qnt_antisensos=qnt_antisensos+1 WHERE fk_main_seq = @IDX");
+	sprintf(query, "UPDATE events SET qnt_antisensos=qnt_antisensos+1 WHERE fk_main_seq = (SELECT id FROM main_sequences WHERE sequence = @SEQ)");
 	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_update_antisenso, 0);
 	if(ret != SQLITE_OK){
 		printf("Error on statement compile 3 - %d.\n",ret);
@@ -232,11 +232,9 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	int ret=0;
 	int id;
     char * sErrMsg;
-    unsigned long hash = get_hash(seq_central);
     
     // Insere seq_central
-	sqlite3_bind_int(stmt_insert_main,1,hash);
-	sqlite3_bind_text(stmt_insert_main,2,seq_central,-1,SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt_insert_main,1,seq_central,-1,SQLITE_TRANSIENT);
 	
 	ret = sqlite3_step(stmt_insert_main);	
 	
@@ -247,7 +245,8 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 		exit(1);
 	}
 	
-	sqlite3_bind_int(stmt_insert,1,hash);
+	
+	sqlite3_bind_text(stmt_insert,1,seq_central,-1,SQLITE_TRANSIENT);
 	
 	ret = sqlite3_step(stmt_insert);	
 	
@@ -287,7 +286,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
     
     if(tipo == SENSO){
 		// Atualiza contagem senso da seq_central
-		sqlite3_bind_int(stmt_update_senso,1,hash);
+		sqlite3_bind_text(stmt_update_senso,1,seq_central,-1,SQLITE_TRANSIENT);
 		
 		ret = sqlite3_step(stmt_update_senso);	
         
@@ -313,7 +312,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 		}*/	
 	}else{
 		// Atualiza contagem antisenso da seq_central
-		sqlite3_bind_int(stmt_update_antisenso,1,hash);
+		sqlite3_bind_text(stmt_update_antisenso,1,seq_central,-1,SQLITE_TRANSIENT);
 		
 		ret = sqlite3_step(stmt_update_antisenso);
 		

@@ -218,6 +218,7 @@ void search_manager(int *buffer_load,
     //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
     cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
 	 checkCudaError();
+	 while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }
   gettimeofday(&end_time, NULL);
 	
