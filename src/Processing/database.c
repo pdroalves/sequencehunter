@@ -86,7 +86,7 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA journal_mode = OFF",NULL,NULL,&sErrMsg);
+	sqlite3_exec(db,"PRAGMA journal_mode = MEMORY",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
@@ -101,11 +101,11 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}
-	sqlite3_exec(db,"PRAGMA shrink_memory",NULL,NULL,&sErrMsg);
+	/*sqlite3_exec(db,"PRAGMA shrink_memory",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
-	}		
+	}*/		
 	sqlite3_exec(db,"PRAGMA foreign_key = ON",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);

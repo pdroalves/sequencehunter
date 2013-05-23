@@ -19,14 +19,18 @@
 #ifdef _WIN32
 #include <Windows.h>
 #define SLEEP(a) Sleep(1000*a)
+#define gettime(a) GetTickCount(a)
 #else
 #define SLEEP(a) sleep(a)
+#define gettime(a) gettimeofday(a)
 #endif
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 
 
 int tmp = 0;
 int sent_to_db = 0;
+
+
 
 void send_setup_to_gui(Socket *gui_socket){
   char *msg;
@@ -150,7 +154,6 @@ void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 	char *central;
 	char *cincoL;
 	float tempo;
-  
 		
 	while(!(*THREAD_SEARCH_DONE) || tamanho_da_fila(toStore) > 0){
 	  if(tamanho_da_fila(toStore) > 0){
