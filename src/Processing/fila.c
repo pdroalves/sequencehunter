@@ -89,9 +89,10 @@ void enfileirar(Fila *f,void *data){
 	return;
 }
 
-Fila* desenfileirar(Fila *f){
-	Fila *to_return;
+Event* desenfileirar(Fila *f){
+	Event *to_return;
 	FilaItem *hold;
+
 	
 	//printf("Desenfileirando\n");
 	 
@@ -99,7 +100,7 @@ Fila* desenfileirar(Fila *f){
 		omp_set_lock(&f->fila_lock);
 		hold = f->first;		
 		f->first = f->first->prox;
-		to_return = hold->data;	
+		to_return = (Event*)hold->data;	
 		if(hold != NULL)
 			free(hold);
 		
