@@ -87,6 +87,7 @@ public class SummaryDrawer implements ActionListener{
 		lib.setAlignmentY(Component.TOP_ALIGNMENT);
 		libSummaryVBox.add(lib);
 		libs.add(libpath);
+		Drawer.setProgressBar((new File(libpath)).length());
 	}
 	
 	public static void removeLoadedLib(String libpath){

@@ -64,6 +64,7 @@ void report_manager(	Socket *gui_socket,
 						gboolean silent,
 						int *fsensos,
 						int *fasensos,
+			long long int *readCount,
 						int *THREAD_DONE_QUEUE
 						){
   clock_t cStartClock;
@@ -125,7 +126,8 @@ void report_manager(	Socket *gui_socket,
     rate_enqueue = (pos_sent_to_db - pre_sent_to_db)/((float)(sleep_time));
     
     if(gui_run){
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%d",*p,*fsensos,*fasensos,rate_processing,0);
+		
+      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,rate_processing,0,*readCount);
       send_msg_to_socket(gui_socket,msg);
       get_msg_to_socket(gui_socket);
     }
@@ -137,6 +139,7 @@ void report_manager(	Socket *gui_socket,
       printf("DB queue: %d\n",pos_queue_size);
       printf("Processing rate: %.1f seq/s\n",rate_processing);
       printf("Enqueue rate: %.1f seqs/s\n\n",rate_enqueue);
+      printf("%ld\n",*readCount);
       //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
      //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	

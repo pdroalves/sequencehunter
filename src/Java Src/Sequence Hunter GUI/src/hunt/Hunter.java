@@ -63,7 +63,7 @@ public class Hunter{
 		}else if (getOS().contains("NUX")){
 			// Linux
 			command = appName_nix +" "+ libsPath + " " + parameters;
-
+			
 			// On Linux/Mac
 			// Instancia ProcessBuilder
 			pb = new ProcessBuilder("bash","-c",command);

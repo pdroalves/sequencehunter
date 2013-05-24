@@ -151,19 +151,24 @@ void prepare_buffer_cuda(){
   hold = (char*)malloc(MAX_SEQ_SIZE*sizeof(char));
 }
 
-void fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
+long long int fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
   int i = 0;
   int j = 0;
-	
+  long long int count = 0;
+
   //Enche buffer
   for(j=0;j < files && i < MAX_TO_LOAD;j++){		
     while(i < MAX_TO_LOAD && !feof(f[j])){
       // Le sequencia, verifica se eh valida e incrementa a contagem
       fgets(hold,MAX_SEQ_SIZE,f[j]);
+      count += strlen(hold);
       fgets(seqs[i],MAX_SEQ_SIZE,f[j]);
       seqs[i][strlen(seqs[i])-1] = '\0';
+      count += strlen(seqs[i]);
       fgets(hold,MAX_SEQ_SIZE,f[j]);
+      count += strlen(hold);
       fgets(hold,MAX_SEQ_SIZE,f[j]);
+      count += strlen(hold);
       i++;
     }
     // Corrige contagem errada
@@ -175,7 +180,7 @@ void fill_buffer(char **seqs,int MAX_TO_LOAD,int *SEQS_LOADED){
 	
   *SEQS_LOADED = i;
 	
-  return;
+  return count;
 }
 
 

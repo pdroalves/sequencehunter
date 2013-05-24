@@ -48,7 +48,7 @@ short int *d_candidates;
 int processadas;
 int bytes_read = 0;
 Socket *gui_socket;
-
+long long int readCount_CUDA = 0;
 /*
  * Author:  David Robert Nadeau
  * Site:    http://NadeauSoftware.com/
@@ -171,7 +171,7 @@ int load_buffer_CUDA(char **h_seqs,int seq_size)
   int loaded;
   int n;
   int i;
-  fill_buffer(h_seqs,buffer_size,&loaded);	
+  readCount_CUDA += fill_buffer(h_seqs,buffer_size,&loaded);	
   n = strlen(h_seqs[0]);
   for(i=0;i<loaded;i++){    
     cuda_convert_to_graph(h_seqs[i],n,&h_vertexes[i*n]);
@@ -376,7 +376,7 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
       }
 #pragma omp section
       {
-  	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsenso,&fasenso,&THREAD_DONE[THREAD_QUEUE]);
+  	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsenso,&fasenso,&readCount_CUDA,&THREAD_DONE[THREAD_QUEUE]);
   	THREAD_DONE[THREAD_DATABASE] = TRUE;
       }
     }

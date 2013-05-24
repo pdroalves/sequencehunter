@@ -52,6 +52,7 @@ int *vertexes;
 int processadas;
 int fsensos,fasensos;
 unsigned long nc_bytes_read=0;
+long long int readCount_NCUDA = 0;
 
 const int buffer_size_NC = buffer_size;
 /*
@@ -163,7 +164,7 @@ void load_buffer_NONCuda(){
   int n;
   int loaded;
   if(buf.load == 0){//Se for >0 ainda existem elementos no buffer anterior e se for == -1 não há mais elementos a serem carregados
-    fill_buffer(buf.seq,buf.capacidade,&loaded);//Enche o buffer e guarda a quantidade de sequências carregadas.
+    readCount_NCUDA += fill_buffer(buf.seq,buf.capacidade,&loaded);//Enche o buffer e guarda a quantidade de sequências carregadas.
     n = strlen(buf.seq[0]);
     for(i=0;i<loaded;i++){	  
       convert_to_graph(buf.seq[i],n,&vertexes[i*n]);
@@ -338,7 +339,7 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
 #pragma omp section
       {
 	// Escrita de informacoes relevantes na stdout
-	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsensos,&fasensos,&THREAD_DONE[THREAD_QUEUE]);
+	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsensos,&fasensos,&readCount_NCUDA,&THREAD_DONE[THREAD_QUEUE]);
 	THREAD_DONE[THREAD_DATABASE] = TRUE;
       }
     }

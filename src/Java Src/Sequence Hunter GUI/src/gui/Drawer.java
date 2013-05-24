@@ -45,7 +45,8 @@ public class Drawer {
 	public final static int SETUP_TAB = 0;
 	public final static int SUMMARY_TAB = 1;
 	public final static int REPORT_TAB = 2;
-
+	private static long jprogMaxAbs = 0;
+	private static int jprogMaxRel = 100;
 	public Drawer(){
 		statusLog = new JTextArea();
 		statusLog.setLineWrap(true);
@@ -183,14 +184,17 @@ public class Drawer {
 		return statusPanel;
 	}
 
-	protected static void setProgressBar(int max){
-		jprog.setMaximum(max);
+	protected static void setProgressBar(long max){
+		jprogMaxAbs = max;
+		jprog.setMaximum(jprogMaxRel);
 		updateProgressBar(0);
 		enableProgressBar(false);
 	}
 	
-	public static void updateProgressBar(int br){
-		jprog.setValue(br);
+	public static void updateProgressBar(long br){
+		int valor = Math.round(br/jprogMaxAbs);
+		System.out.println(valor);
+		jprog.setValue(valor);
 	}
 	
 	public static void enableProgressBar(boolean b){
