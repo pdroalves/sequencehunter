@@ -42,7 +42,7 @@ public class DB {
 			if(rows != null){
 				// Itera em cima do set
 				if(rows.next()){
-					return new Evento(	rows.getString("sequence"),
+					return new Evento(	rows.getString("main_seq"),
 										rows.getInt("qnt_sensos"),
 										rows.getInt("qnt_antisensos"));
 				}
