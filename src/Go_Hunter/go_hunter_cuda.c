@@ -107,6 +107,8 @@ void search_manager(int *buffer_load,
   double sec;
   struct timeval start_time, end_time;
   fsenso=fasenso=0;
+  char *central_antisenso;
+  char *cincol_antisenso;
   
   //////////////////////////////////////////
   // Inicializa
@@ -202,9 +204,14 @@ void search_manager(int *buffer_load,
       	  }
 
       	  fasenso++;
-      	  hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+          central_antisenso = get_antisenso(central);
+          cincol_antisenso = get_antisenso(cincol);
+      	  hold_event = (void*)criar_elemento_fila_event(central_antisenso,cincol_antisenso,ANTISENSO);
       	  enfileirar(toStore,hold_event);
-      			
+      		if(central_antisenso != NULL)
+            free(central_antisenso);
+          if(cincol_antisenso != NULL)
+            free(cincol_antisenso);
       	  break;
       	}
       }

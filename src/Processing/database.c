@@ -91,7 +91,7 @@ void db_create(char *filename){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}	
-	sqlite3_exec(db,"PRAGMA page_size = 1024",NULL,NULL,&sErrMsg);
+	/*sqlite3_exec(db,"PRAGMA page_size = 1024",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
@@ -100,17 +100,17 @@ void db_create(char *filename){
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
-	}
+	}*/
 	sqlite3_exec(db,"PRAGMA shrink_memory",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
 	}		
-	sqlite3_exec(db,"PRAGMA foreign_key = ON",NULL,NULL,&sErrMsg);
+	/*sqlite3_exec(db,"PRAGMA foreign_key = ON",NULL,NULL,&sErrMsg);
 	if(sErrMsg != NULL){
 		printf("Pragma error: %s\n",sErrMsg);
 		exit(1);
-	}	
+	}*/	
 	
 		
 	query = (char*)malloc(500*sizeof(char));
@@ -179,7 +179,7 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 void db_destroy(){
     char * sErrMsg;
 	int ret;
-	char query[] = "UPDATE events SET pares = min(qnt_sensos,qnt_antisensos)";
+	char query[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
 	
 	if(!destroyed){
 		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
