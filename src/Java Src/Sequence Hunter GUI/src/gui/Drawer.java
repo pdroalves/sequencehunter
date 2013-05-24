@@ -192,9 +192,9 @@ public class Drawer {
 	}
 	
 	public static void updateProgressBar(long br){
-		int valor = Math.round(br/jprogMaxAbs);
-		System.out.println(valor);
-		jprog.setValue(valor);
+		double valor = Math.round((double)br*100/(double)jprogMaxAbs);
+		System.err.println("br "+br+",jProgMaxAbs: "+jprogMaxAbs+" valor:"+valor);
+		jprog.setValue((int)valor);
 	}
 	
 	public static void enableProgressBar(boolean b){

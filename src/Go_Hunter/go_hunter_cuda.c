@@ -86,71 +86,71 @@ long long int readCount_CUDA = 0;
 double getRealTimeC( )
 {
 #if defined(_WIN32)
-	FILETIME tm;
-	ULONGLONG t;
+  FILETIME tm;
+  ULONGLONG t;
 #if defined(NTDDI_WIN8) && NTDDI_VERSION >= NTDDI_WIN8
-	/* Windows 8, Windows Server 2012 and later. ---------------- */
-	GetSystemTimePreciseAsFileTime( &tm );
+  /* Windows 8, Windows Server 2012 and later. ---------------- */
+  GetSystemTimePreciseAsFileTime( &tm );
 #else
-	/* Windows 2000 and later. ---------------------------------- */
-	GetSystemTimeAsFileTime( &tm );
+  /* Windows 2000 and later. ---------------------------------- */
+  GetSystemTimeAsFileTime( &tm );
 #endif
-	t = ((ULONGLONG)tm.dwHighDateTime << 32) | (ULONGLONG)tm.dwLowDateTime;
-	return (double)t / 10000000.0;
+  t = ((ULONGLONG)tm.dwHighDateTime << 32) | (ULONGLONG)tm.dwLowDateTime;
+  return (double)t / 10000000.0;
 
 #elif (defined(__hpux) || defined(hpux)) || ((defined(__sun__) || defined(__sun) || defined(sun)) && (defined(__SVR4) || defined(__svr4__)))
-	/* HP-UX, Solaris. ------------------------------------------ */
-	return (double)gethrtime( ) / 1000000000.0;
+  /* HP-UX, Solaris. ------------------------------------------ */
+  return (double)gethrtime( ) / 1000000000.0;
 
 #elif defined(__MACH__) && defined(__APPLE__)
-	/* OSX. ----------------------------------------------------- */
-	static double timeConvert = 0.0;
-	if ( timeConvert == 0.0 )
-	{
-		mach_timebase_info_data_t timeBase;
-		(void)mach_timebase_info( &timeBase );
-		timeConvert = (double)timeBase.numer /
-			(double)timeBase.denom /
-			1000000000.0;
-	}
-	return (double)mach_absolute_time( ) * timeConvert;
+  /* OSX. ----------------------------------------------------- */
+  static double timeConvert = 0.0;
+  if ( timeConvert == 0.0 )
+    {
+      mach_timebase_info_data_t timeBase;
+      (void)mach_timebase_info( &timeBase );
+      timeConvert = (double)timeBase.numer /
+	(double)timeBase.denom /
+	1000000000.0;
+    }
+  return (double)mach_absolute_time( ) * timeConvert;
 
 #elif defined(_POSIX_VERSION)
-	/* POSIX. --------------------------------------------------- */
+  /* POSIX. --------------------------------------------------- */
 #if defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
-	{
-		struct timespec ts;
+  {
+    struct timespec ts;
 #if defined(CLOCK_MONOTONIC_PRECISE)
-		/* BSD. --------------------------------------------- */
-		const clockid_t id = CLOCK_MONOTONIC_PRECISE;
+    /* BSD. --------------------------------------------- */
+    const clockid_t id = CLOCK_MONOTONIC_PRECISE;
 #elif defined(CLOCK_MONOTONIC_RAW)
-		/* Linux. ------------------------------------------- */
-		const clockid_t id = CLOCK_MONOTONIC_RAW;
+    /* Linux. ------------------------------------------- */
+    const clockid_t id = CLOCK_MONOTONIC_RAW;
 #elif defined(CLOCK_HIGHRES)
-		/* Solaris. ----------------------------------------- */
-		const clockid_t id = CLOCK_HIGHRES;
+    /* Solaris. ----------------------------------------- */
+    const clockid_t id = CLOCK_HIGHRES;
 #elif defined(CLOCK_MONOTONIC)
-		/* AIX, BSD, Linux, POSIX, Solaris. ----------------- */
-		const clockid_t id = CLOCK_MONOTONIC;
+    /* AIX, BSD, Linux, POSIX, Solaris. ----------------- */
+    const clockid_t id = CLOCK_MONOTONIC;
 #elif defined(CLOCK_REALTIME)
-		/* AIX, BSD, HP-UX, Linux, POSIX. ------------------- */
-		const clockid_t id = CLOCK_REALTIME;
+    /* AIX, BSD, HP-UX, Linux, POSIX. ------------------- */
+    const clockid_t id = CLOCK_REALTIME;
 #else
-		const clockid_t id = (clockid_t)-1;	/* Unknown. */
+    const clockid_t id = (clockid_t)-1;	/* Unknown. */
 #endif /* CLOCK_* */
-		if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
-			return (double)ts.tv_sec +
-				(double)ts.tv_nsec / 1000000000.0;
-		/* Fall thru. */
-	}
+    if ( id != (clockid_t)-1 && clock_gettime( id, &ts ) != -1 )
+      return (double)ts.tv_sec +
+	(double)ts.tv_nsec / 1000000000.0;
+    /* Fall thru. */
+  }
 #endif /* _POSIX_TIMERS */
 
-	/* AIX, BSD, Cygwin, HP-UX, Linux, OSX, POSIX, Solaris. ----- */
-	struct timeval tm;
-	gettimeofday( &tm, NULL );
-	return (double)tm.tv_sec + (double)tm.tv_usec / 1000000.0;
+  /* AIX, BSD, Cygwin, HP-UX, Linux, OSX, POSIX, Solaris. ----- */
+  struct timeval tm;
+  gettimeofday( &tm, NULL );
+  return (double)tm.tv_sec + (double)tm.tv_usec / 1000000.0;
 #else
-	return -1.0;		/* Failed. */
+  return -1.0;		/* Failed. */
 #endif
 }
 // Lista de threads a serem criados
@@ -239,8 +239,8 @@ void search_manager(int *buffer_load,
   *buffer_load = load_buffer_CUDA(data,seqSize_an);
   //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
   cudaMemcpyAsync(d_vertexes,h_vertexes,*buffer_load*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
- checkCudaError();
- start_time = getRealTimeC();
+  checkCudaError();
+  start_time = getRealTimeC();
   while( *buffer_load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequencias para encher o buffer
     
@@ -311,7 +311,7 @@ void search_manager(int *buffer_load,
           cincol_antisenso = get_antisenso(cincol);
       	  hold_event = (void*)criar_elemento_fila_event(central_antisenso,cincol_antisenso,ANTISENSO);
       	  enfileirar(toStore,hold_event);
-      		if(central_antisenso != NULL)
+	  if(central_antisenso != NULL)
             free(central_antisenso);
           if(cincol_antisenso != NULL)
             free(cincol_antisenso);
@@ -327,8 +327,8 @@ void search_manager(int *buffer_load,
     *buffer_load = load_buffer_CUDA(data,seqSize_an);
     //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
     cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
-	 checkCudaError();
-	 while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
+    checkCudaError();
+    while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }
   end_time = getRealTimeC();
 	
@@ -450,13 +450,12 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   cudaThreadExit();
   
   printString("Hunt done...\n",NULL);
-
+  destroy_db_manager();
   if(gui_run){
     destroy_socket(gui_socket);
   }else{
     //db_select("SELECT * FROM events");
   }
-  destroy_db_manager();
   
   return;
 }

@@ -72,8 +72,7 @@ public class DB {
 			ResultSet rs = stat.executeQuery("SELECT COUNT(*) FROM events");
 			return rs.getInt(1);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Drawer.writeToLog(e.getMessage());
 		}
 		return 0;
 	}

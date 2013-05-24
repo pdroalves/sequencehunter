@@ -83,7 +83,7 @@ void report_manager(	Socket *gui_socket,
   int old_p;
   float rate_processing;
   float rate_enqueue;
-  int sleep_time = 3;
+  int sleep_time = 1;
   
     // if(verbose && !silent){
       // fp_enchimento = fopen("enchimento.dat","w");
