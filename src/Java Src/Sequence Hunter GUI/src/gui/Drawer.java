@@ -201,8 +201,8 @@ public class Drawer {
 		jprog.setVisible(b);
 	}
 	
-	protected int getTotalLibSize(ArrayList<String> libs){
-		int count = 0;
+	protected long getTotalLibSize(ArrayList<String> libs){
+		long count = 0;
 		Iterator<String> iterator = libs.iterator();
 		while(iterator.hasNext()){
 			File f = new File(iterator.next());
