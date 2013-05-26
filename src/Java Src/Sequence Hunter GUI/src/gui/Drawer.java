@@ -195,6 +195,7 @@ public class Drawer {
 		double valor = Math.round((double)br*100/(double)jprogMaxAbs);
 		System.err.println("br "+br+",jProgMaxAbs: "+jprogMaxAbs+" valor:"+valor);
 		jprog.setValue((int)valor);
+		jprog.setToolTipText(String.valueOf(valor));
 	}
 	
 	public static void enableProgressBar(boolean b){

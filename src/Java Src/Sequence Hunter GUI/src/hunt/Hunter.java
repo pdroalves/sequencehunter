@@ -2,9 +2,17 @@ package hunt;
 
 import gui.Drawer;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import xml.TranslationsManager;
 
 
 public class Hunter{
@@ -18,21 +26,22 @@ public class Hunter{
 	String command = "";
 	private CoreAppDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
-	
+	private TranslationsManager tm;
 	public Hunter(){
+		tm = TranslationsManager.getInstance();
 		if(getOS().contains("WIN")){
 			default_output_folder = new String(System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH"));
 		}else if(getOS().contains("MAC")){
-			
+
 		}else if(getOS().contains("NUX")){
 			default_output_folder = System.getenv("HOME");
 		}
 	}
-	
+
 	public void setOutput(String output){
 		output_folder = output;
 	}
-	
+
 	public String getOutput(){
 		if(output_folder != null){
 			return output_folder;
@@ -63,7 +72,7 @@ public class Hunter{
 		}else if (getOS().contains("NUX")){
 			// Linux
 			command = appName_nix +" "+ libsPath + " " + parameters;
-			
+
 			// On Linux/Mac
 			// Instancia ProcessBuilder
 			pb = new ProcessBuilder("bash","-c",command);
@@ -88,6 +97,44 @@ public class Hunter{
 		t.kill();
 	}
 
+	public int getCLIBuild(){
+		int build = -1;
+		String command = null;
+		
+		if (getOS().contains("WIN")){
+			//Windows
+			command = appName_win +" -b";
+			pb = new ProcessBuilder("cmd","/c",command);
+		}else if (getOS().contains("MAC")){
+			// Mac
+		}else if (getOS().contains("NUX")){
+			// Linux
+			command = appName_nix +" -b";
+
+			// On Linux/Mac
+			// Instancia ProcessBuilder
+			pb = new ProcessBuilder("bash","-c",command);
+			String path = System.getenv("PATH");
+			pb.environment().put("PATH",path);
+			pb.environment().put("LD_LIBRARY_PATH", "/usr/local/cuda/lib64:/usr/local/cuda/lib");
+		}
+		
+		try {
+			Process process = pb.start();
+			InputStream is = process.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			String msg = reader.readLine();
+			Pattern pattern = Pattern.compile("^[B][u][i][l][d][:]\\s([0-9])$");
+			Matcher matcher = pattern.matcher(msg);
+			if(matcher.find()){
+				build = Integer.parseInt(matcher.group(1));
+			}
+		} catch (IOException e) {
+			Drawer.writeToLog(tm.getText("NoCLIConnection") + " "+e.getMessage());
+		}
+
+		return build;
+	}
 	static public String getAppName(){
 		if (getOS().contains("WIN")){
 			return appName_win;			

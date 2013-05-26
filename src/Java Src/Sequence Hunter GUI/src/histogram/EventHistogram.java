@@ -90,6 +90,7 @@ public class EventHistogram {
 	}
 
 	public void clearAllBars(){
-		dp.clearAllBars();
+		if(data.size() > 0)
+			dp.clearAllBars();
 	}
 } 

@@ -63,6 +63,9 @@
 	<TextResource tag="menuFileItemExportGenericAllReports" text="Export all reports"></TextResource>
 	<TextResource tag="ExportDialogExportButton" text="Export"></TextResource>
 	<TextResource tag="ExportDialogCancelButton" text="Cancel"></TextResource>
-	<TextResource tag="reportLoadedFromFile" text="File loaded:"></TextResource>
+	<TextResource tag="reportLoadedFromFile" text="Report loaded: "></TextResource>
+	<TextResource tag="NoCLIConnection" text="Can't connect to CLI."></TextResource>
+	<TextResource tag="LoadingReport" text="Loading report, please wait..."></TextResource>
+	<TextResource tag="PleaseWaitDialog" text="Please wait..."></TextResource>
 </AllTextResource>
 	

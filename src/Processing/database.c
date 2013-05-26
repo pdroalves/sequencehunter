@@ -18,15 +18,7 @@ sqlite3 *db;
 // The number of query to be dbd,size of each query and pointer
 int count;
 int destroyed;
-sqlite3_stmt *stmt_insert_main;
 sqlite3_stmt *stmt_insert;
-sqlite3_stmt *stmt_update_senso;
-sqlite3_stmt *stmt_update_antisenso;
-sqlite3_stmt *stmt_select_cincol;
-sqlite3_stmt *stmt_insert_cincol;
-sqlite3_stmt *stmt_insert_link;
-sqlite3_stmt *stmt_update_senso_cincol;
-sqlite3_stmt *stmt_update_antisenso_cincol;
 
 int get_hash(char* original){
 	char *c;
@@ -182,17 +174,11 @@ void db_destroy(){
 	char query[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
 	
 	if(!destroyed){
+		db_start_transaction();
 		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
+		db_commit_transaction();
 		
-		sqlite3_finalize(stmt_insert_main);
 		sqlite3_finalize(stmt_insert);
-		//sqlite3_finalize(stmt_insert_cincol);
-		//sqlite3_finalize(stmt_insert_link);
-		//sqlite3_finalize(stmt_select_cincol);
-		sqlite3_finalize(stmt_update_antisenso);
-		//sqlite3_finalize(stmt_update_antisenso_cincol);
-		sqlite3_finalize(stmt_update_senso);
-		//sqlite3_finalize(stmt_update_senso_cincol);
 		sqlite3_close(db);
 		destroyed = 1;
 	}

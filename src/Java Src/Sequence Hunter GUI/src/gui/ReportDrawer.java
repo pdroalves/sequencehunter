@@ -1,6 +1,7 @@
  package gui;
 
 import gui.toolbar.OpenReportFileFilter;
+import gui.workers.ReportAddWorker;
 import hunt.Evento;
 
 import java.awt.BorderLayout;
@@ -22,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import database.DBManager;
+import dialogs.WaitDialog;
+import dialogs.WaitDialogHandler;
 
 import auxiliares.RemovableTabComponent;
 
@@ -42,6 +45,7 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 	private static List<List<Report>> data;
 	private static List<List<String>> tabNames;
 	private static List<String> reportName;
+	private static WaitDialogHandler waitdialog;
 
 	public ReportDrawer(){
 		super();
@@ -63,67 +67,11 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 
 	protected void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
-		JPanel jp = new JPanel();
-		jp.setLayout(new BorderLayout());
-		JTabbedPane jtp = new JTabbedPane(JTabbedPane.LEFT,JTabbedPane.SCROLL_TAB_LAYOUT);	
-		data.add(new ArrayList<Report>());
-		tabNames.add(new ArrayList<String>());
-		ReportFactory rf = new ReportFactory();
-
-		// Report	
-		JComponent jc;
-		String tabName;
-		if(libDatabase != null){
-			DBManager dbm = new DBManager(libDatabase);
-			dbm.addObserver(this);
-
-			// Central Cut paired
-			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
-			dbm.addObserver(jprtm);
-			tabledreport = rf.createTabledReport(dbm,jprtm);			
-			data.get(data.size()-1).add(tabledreport);
-			dbm.addObserver(tabledreport);
-			jc = tabledreport.createTabledReport();
-			tabName = tm.getText("reportCentralCutPairedDefaultName");
-			tabNames.get(tabNames.size()-1).add(tabName);
-			jtp.addTab(tabName,jc);
-
-			// Central Cut unpaired
-			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
-			dbm.addObserver(jtrtm);
-			tabledreport = rf.createTabledReport(dbm,jtrtm);
-			data.get(data.size()-1).add(tabledreport);
-			dbm.addObserver(tabledreport);
-			jc = tabledreport.createTabledReport();
-			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
-			tabNames.get(tabNames.size()-1).add(tabName);
-			jtp.addTab(tabName,jc);
-		}
-
-		// Log Report
-		if(log != null){
-			TextReport tr = rf.createTextReport(log);
-			jc = tr.getReport();
-			data.get(data.size()-1).add(tr);
-			tabName = tm.getText("reportHuntLogDefaultName");
-			tabNames.get(tabNames.size()-1).add(tabName);
-			jtp.addTab(tabName, jc);
-		}
-
-		/*JPanel insideJp = new JPanel();
-		insideJp.setLayout(new BorderLayout());
-		insideJp.add(seqInfo,BorderLayout.EAST);
-		insideJp.add(jtp,BorderLayout.CENTER);*/
-
-		jp.add(jtp,BorderLayout.CENTER);
-		
-		String reportTitle = libDatabase;
-		reportName.add(reportTitle);
-		reportTab.addTab(reportTitle,jp);
-		reportTab.setSelectedIndex(reportTab.getTabCount()-1);
-		
-		super.setChanged();
-		super.notifyObservers();
+		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
+		waitdialog.start();
+		Drawer.writeToLog(tm.getText("LoadingReport"));
+		ReportAddWorker worker = new ReportAddWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
+		worker.start();
 		return;
 	}
 
@@ -144,6 +92,14 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		
 		reportContainer.repaint();
 		Drawer.repaint();
+	}
+	
+	public void setReportAdded(DBManager dbm){
+		super.setChanged();
+		super.notifyObservers(dbm);
+		updateReportsView();
+		Drawer.moveToReportTab();
+		Drawer.enableProgressBar(false);
 	}
 
 	private static JPanel getEmptyJPanel(){
@@ -170,7 +126,7 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 			jfc.setMultiSelectionEnabled(false);
 			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
 				// O arquivo selecionado pode ser do tipo .db
-				Pattern databasePattern = Pattern.compile(".db");
+				Pattern databasePattern = Pattern.compile(".*[.][d][b]");
 				Matcher databaseMatcher = databasePattern.matcher(jfc.getSelectedFile().getName());
 				if(databaseMatcher.find()){
 					Drawer.setProgressBar(5);
@@ -179,10 +135,6 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 					String filepath = jfc.getSelectedFile().getAbsolutePath();
 					addMainReport(filepath,null);
 					updateReportsView();
-					Drawer.writeToLog(tm.getText("reportLoadedFromFile")+" "+filepath);
-					Drawer.updateProgressBar(5);
-					Drawer.moveToReportTab();
-					Drawer.enableProgressBar(false);
 				}
 			}
 			break;
@@ -193,6 +145,9 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 	@Override
 	public void update(Observable arg0, Object arg1) {
 		updateReportsView();
+		super.setChanged();
+		System.out.println("Vou notificar a galera");
+		this.notifyObservers();
 	}
 
 	public static int getReportsLoaded(){

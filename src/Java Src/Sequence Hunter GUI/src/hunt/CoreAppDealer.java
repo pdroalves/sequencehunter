@@ -77,7 +77,7 @@ public class CoreAppDealer extends Thread implements ISocketUser{
 			Drawer.setAntisensosFounded(Integer.parseInt(matcher.group(3)));
 			Drawer.setSPS(Integer.parseInt(matcher.group(4)));
 			System.out.println(matcher.group(5));
-			Drawer.updateProgressBar(Integer.parseInt(matcher.group(5)));
+			Drawer.updateProgressBar(Long.parseLong(matcher.group(5)));
 			System.err.println("Processing info.");
 		}else{
 			matcher = outputPattern.matcher(s);

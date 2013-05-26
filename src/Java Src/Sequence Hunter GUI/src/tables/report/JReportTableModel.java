@@ -21,9 +21,9 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 	private static final long serialVersionUID = 1L;
 	private DBManager dbm;
 	protected ArrayList<Evento> seqs;
-	
+
 	public JReportTableModel(){
-		
+
 	}
 
 	public JReportTableModel(DBManager dbm){
@@ -76,10 +76,12 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 
 	@Override
 	public void update(Observable o, Object arg) {
-		DBManager dbm = (DBManager) o;
-		if(dbm.isReady()){
-			startLoad();
-			fireTableDataChanged();
-		}
+		if(arg != null){
+			DBManager dbm = (DBManager) arg;
+			if(dbm.isReady()){
+				startLoad();
+				fireTableDataChanged();
+			}
+		}		
 	}
 }

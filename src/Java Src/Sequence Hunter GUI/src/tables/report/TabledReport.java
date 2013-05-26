@@ -1,5 +1,6 @@
 package tables.report;
 
+import gui.Drawer;
 import histogram.EventHistogram;
 import histogram.ReportHistogramPanel;
 
@@ -22,13 +23,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import xml.TranslationsManager;
+
 import database.DBManager;
 
 import auxiliares.WaitLayerHandle;
+import auxiliares.WaitLayerUI;
 
 
 public class TabledReport extends Report implements Observer{
-	private WaitLayerHandle layerUIHandler;
+	private WaitLayerUI layerUI;
 	private DBManager dbm;
 	private JPanel panel;
 	private JTable jte;
@@ -38,7 +42,7 @@ public class TabledReport extends Report implements Observer{
 	
 	public TabledReport(DBManager dbm,JReportTableModel jrtm){
 		panel = new JPanel(new BorderLayout());
-		layerUIHandler = new WaitLayerHandle();
+		layerUI = new WaitLayerUI();
 		this.dbm = dbm;
 		this.jrtm = jrtm;
 		eh = new EventHistogram();
@@ -99,9 +103,9 @@ public class TabledReport extends Report implements Observer{
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
 		
 		panel.add(jsp,BorderLayout.CENTER);
-		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUIHandler);
+		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
 		if(!dbm.isReady()){
-			layerUIHandler.start();
+			layerUI.start();
 		}else{
 			eh.addTypeSet(dbm.getEvents());
 			eh.commit();
@@ -123,10 +127,9 @@ public class TabledReport extends Report implements Observer{
 			jte.repaint();
 			panel.repaint();
 			jrtm.fireTableDataChanged();
-			layerUIHandler.stop();
+			layerUI.stop();
 		}else{
-			layerUIHandler.reset();
-			layerUIHandler.start();
+			layerUI.start();
 		}
 	}	
 }
