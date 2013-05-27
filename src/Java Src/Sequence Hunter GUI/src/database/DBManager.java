@@ -77,6 +77,8 @@ public class DBManager extends Observable{
 	}
 
 	private void setReady(boolean ready) {
+		if(ready == true)
+			System.out.println("Seqs size: "+seqs.size());
 		this.ready = ready;
 		// Avisa os observadores da mudanca
 		System.err.println("DBM: Update para "+super.countObservers()+" observadores");

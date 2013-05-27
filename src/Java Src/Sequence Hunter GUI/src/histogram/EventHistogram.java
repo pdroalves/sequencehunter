@@ -30,10 +30,6 @@ public class EventHistogram implements Observer{
 		panel.setVisible(false);
 		this.enableLinearize(true);
 		data = new ArrayList();
-		if(dbm.isReady()){
-			this.addTypeSet(dbm.getEvents());
-			this.commit();
-		}
 	}
 
 	public void setBarNames(boolean b){

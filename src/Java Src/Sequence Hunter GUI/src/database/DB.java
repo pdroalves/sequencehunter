@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DB {
-	private Connection databaseConn;
+	private static Connection databaseConn;
 	private ResultSet rows;
 
 	public DB(String databaseFilename){	

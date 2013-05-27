@@ -97,6 +97,7 @@ public class TabledReport extends Report implements Observer{
 		if(!dbm.isReady()){
 			layerUI.start();
 		}else{
+			System.err.println("Adicionando - "+name+" - size:"+dbm.getEvents().size());
 			eh.addTypeSet(dbm.getEvents());
 			eh.commit();
 			jsp.setDividerLocation(-1);			
@@ -112,7 +113,7 @@ public class TabledReport extends Report implements Observer{
 	public void update(Observable o, Object arg) {
 		dbm = (DBManager)arg;
 		if(dbm.isReady()){
-			System.err.println("Atualizando - "+name);
+			System.err.println("Atualizando - "+name+" - size:"+dbm.getEvents().size());
 			eh.addTypeSet(dbm.getEvents());
 			eh.commit();
 			jsp.setDividerLocation(-1);			
