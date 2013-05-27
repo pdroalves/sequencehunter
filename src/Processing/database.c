@@ -177,7 +177,8 @@ void db_destroy(){
 		db_start_transaction();
 		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
 		db_commit_transaction();
-		
+		ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);
+
 		sqlite3_finalize(stmt_insert);
 		sqlite3_close(db);
 		destroyed = 1;

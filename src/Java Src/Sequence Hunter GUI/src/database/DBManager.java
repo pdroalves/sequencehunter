@@ -12,6 +12,7 @@ public class DBManager extends Observable{
 	protected int defaultLoad = 100;
 
 	public DBManager(String databaseFilename){
+		super();
 		setReady(false);
 		database = new DB(databaseFilename);
 		int size = database.getSize();
@@ -67,7 +68,8 @@ public class DBManager extends Observable{
 	}
 
 	public void setDatabaseReady(){
-		setReady(true);
+		this.startLoad();
+		this.setReady(true);
 	}
 
 	public boolean isReady() {
@@ -77,9 +79,9 @@ public class DBManager extends Observable{
 	private void setReady(boolean ready) {
 		this.ready = ready;
 		// Avisa os observadores da mudanca
+		System.err.println("DBM: Update para "+super.countObservers()+" observadores");
 		super.setChanged();
-		super.notifyObservers();
-		System.out.println("Update!");
+		super.notifyObservers(this);
 	}
 
 	public ArrayList<Evento> getEvents() {
@@ -111,5 +113,10 @@ public class DBManager extends Observable{
 			seqs.add(e);
 		else 
 			return;
+	}
+	
+	public void destroy(){
+		seqs.clear();
+		database.close();
 	}
 }

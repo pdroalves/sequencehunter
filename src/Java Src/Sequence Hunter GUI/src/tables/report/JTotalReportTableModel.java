@@ -1,5 +1,6 @@
 package tables.report;
 
+import java.util.Observable;
 import java.util.Observer;
 
 import xml.TranslationsManager;
@@ -68,6 +69,12 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 			break;
 		}
 		return obj;
+	}
+
+	@Override
+	public void update(Observable observable, Object arg) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

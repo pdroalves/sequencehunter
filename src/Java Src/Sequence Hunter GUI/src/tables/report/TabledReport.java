@@ -1,6 +1,5 @@
 package tables.report;
 
-import gui.Drawer;
 import histogram.EventHistogram;
 import histogram.ReportHistogramPanel;
 
@@ -21,13 +20,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableRowSorter;
-
-import xml.TranslationsManager;
-
 import database.DBManager;
 
-import auxiliares.WaitLayerHandle;
 import auxiliares.WaitLayerUI;
 
 
@@ -39,17 +33,20 @@ public class TabledReport extends Report implements Observer{
 	private JReportTableModel jrtm;
 	private EventHistogram eh;
 	private TableSorter<JReportTableModel> sorter ;
+	private JSplitPane jsp;
+	private String name;
 	
-	public TabledReport(DBManager dbm,JReportTableModel jrtm){
+	public TabledReport(String name,DBManager dbm,JReportTableModel jrtm,EventHistogram eh){
 		panel = new JPanel(new BorderLayout());
 		layerUI = new WaitLayerUI();
 		this.dbm = dbm;
 		this.jrtm = jrtm;
-		eh = new EventHistogram();
+		this.name = name;
 		sorter = new TableSorter<JReportTableModel>(jrtm,dbm);
+		this.eh = eh;
 	}
 	
-	public JComponent createTabledReport(){
+	public JComponent getReport(){
 		// Cria e configura tabela
 		jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(false);
@@ -81,34 +78,24 @@ public class TabledReport extends Report implements Observer{
 				int jsbPos = jsb.getValue();
 				System.err.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
 				if(jsbMax*0.6 <= jsbPos){
-					System.out.println("Loading...");
+					System.err.println("Loading...");
 					jrtm.load();
 				}
 			}					
 		});
 		jte.setAutoscrolls(true);
-
-		/*Box seqInfo = Box.createVerticalBox();
-		seqInfo.add(new JLabel(tm.getText("reportSequenceInfoLabel")));
-		seqInfo.add(seqJLabel);
-		seqInfo.add(new JLabel(tm.getText("reportSequenceFrequencyInfoLabel")));
-		seqInfo.add(seqFreqJLabel);*/
 		
 		// Cria histograma
-		eh.enableLinearize(true);
 		ReportHistogramPanel rhp = eh.getPanel();
 		rhp.setBorder(new EmptyBorder(25,15,45,10));
 		// Table selection
 		rhp.setJTableToListen(jte);
-		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
+		jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
 		
 		panel.add(jsp,BorderLayout.CENTER);
 		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
 		if(!dbm.isReady()){
 			layerUI.start();
-		}else{
-			eh.addTypeSet(dbm.getEvents());
-			eh.commit();
 		}
 		return jlayer;
 	}
@@ -119,13 +106,14 @@ public class TabledReport extends Report implements Observer{
 	
 	@Override
 	public void update(Observable o, Object arg) {
+		dbm = (DBManager)arg;
 		if(dbm.isReady()){
-			eh.clearAllBars();
-			eh.addTypeSet(dbm.getEvents());
-			eh.commit();
+			System.err.println("Atualizando - "+name);
+			jsp.setDividerLocation(-1);
 			
 			jte.repaint();
 			panel.repaint();
+			eh.repaint();
 			jrtm.fireTableDataChanged();
 			layerUI.stop();
 		}else{

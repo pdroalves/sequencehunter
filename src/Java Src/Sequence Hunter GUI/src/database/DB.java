@@ -12,19 +12,19 @@ import java.sql.Statement;
 public class DB {
 	private Connection databaseConn;
 	private ResultSet rows;
-	
+
 	public DB(String databaseFilename){	
-	      try {
-	    	  // Carrega dinamicamente a lib
-	    	  Class.forName("org.sqlite.JDBC");
-		      databaseConn = DriverManager.getConnection("jdbc:sqlite:"+databaseFilename);
-			} catch (ClassNotFoundException e) {
-				Drawer.writeToLog("Database ERROR: "+e.getMessage());
-			} catch (SQLException e) {
-				Drawer.writeToLog("Database ERROR: "+e.getMessage());
-			}
+		try {
+			// Carrega dinamicamente a lib
+			Class.forName("org.sqlite.JDBC");
+			databaseConn = DriverManager.getConnection("jdbc:sqlite:"+databaseFilename);
+		} catch (ClassNotFoundException e) {
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		}
 	}
-	
+
 	public boolean loadQuery(String query){
 		try {
 			Statement stat = databaseConn.createStatement();
@@ -36,15 +36,15 @@ public class DB {
 		}
 		return false;
 	}
-	
+
 	public Evento getEvento(){
 		try {
 			if(rows != null){
 				// Itera em cima do set
 				if(rows.next()){
 					return new Evento(	rows.getString("main_seq"),
-										rows.getInt("qnt_sensos"),
-										rows.getInt("qnt_antisensos"));
+							rows.getInt("qnt_sensos"),
+							rows.getInt("qnt_antisensos"));
 				}
 			}
 		} catch (SQLException e) {
@@ -52,7 +52,7 @@ public class DB {
 		}
 		return null;
 	}
-	
+
 	public ResultSet executeQuery(String query){
 		try {
 			Statement stat = databaseConn.createStatement();
@@ -64,7 +64,7 @@ public class DB {
 		}
 		return null;
 	}
-	
+
 	public int getSize(){
 		Statement stat;
 		try {
@@ -76,11 +76,14 @@ public class DB {
 		}
 		return 0;
 	}
-	
+
 	public void close(){
 		try {
-			if(!rows.isClosed()){
-				rows.close();
+			if(!databaseConn.isClosed()){
+				/*if(!rows.isClosed()){
+					rows.close();
+				}*/
+				databaseConn.close();
 			}
 		} catch (SQLException e) {
 			Drawer.writeToLog("Database ERROR: "+e.getMessage());

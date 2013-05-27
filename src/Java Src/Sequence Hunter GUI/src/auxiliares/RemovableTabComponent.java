@@ -19,10 +19,12 @@ public class RemovableTabComponent extends JPanel implements ActionListener{
 	private JTabbedPane pane;
 	private JButton closeButton;
 	private ImageIcon icon;
+	private ReportDrawer rd;
 	private int tabIndex;
 	
-    public RemovableTabComponent(final JTabbedPane pane,int tabIndex) {
+    public RemovableTabComponent(final ReportDrawer rd,final JTabbedPane pane,int tabIndex) {
     	this.pane = pane;
+    	this.rd = rd;
     	this.tabIndex = tabIndex; 
     	
     	// Cria close button
@@ -47,8 +49,8 @@ public class RemovableTabComponent extends JPanel implements ActionListener{
     
     @Override
 	public void actionPerformed(ActionEvent e) {
-		    pane.removeTabAt(tabIndex);
-		    ReportDrawer.updateReportsView();
+    		rd.removeReport(tabIndex);
+		    rd.updateReportsView();
 	}
     
  }

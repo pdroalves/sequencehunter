@@ -10,33 +10,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import database.DBManager;
-import dialogs.WaitDialog;
 import dialogs.WaitDialogHandler;
 
 import auxiliares.RemovableTabComponent;
 
-import tables.report.JPartialReportTableModel;
-import tables.report.JTotalReportTableModel;
 import tables.report.Report;
-import tables.report.ReportFactory;
 import tables.report.TabledReport;
 import tables.report.TextReport;
 import xml.TranslationsManager;
 
-public class ReportDrawer extends Observable implements ActionListener, Observer{
+public class ReportDrawer extends Observable implements ActionListener{
 	private static JPanel reportContainer;
 	private static JTabbedPane reportTab;
 	private static JPanel emptyReportTab;
@@ -60,6 +56,24 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		tabNames = new ArrayList<List<String>>();
 		reportName = new ArrayList<String>();
 	}
+	
+	public void removeReport(int index){
+		reportTab.remove(index);
+		List<Report> reports = data.get(index);
+		Iterator<Report> iterator = reports.iterator();
+		while(iterator.hasNext()){
+			Report report = iterator.next();
+			if(report instanceof TabledReport){
+				TabledReport tr = (TabledReport) report;
+				tr.getDBM().destroy();
+			}
+			data.remove(report);
+		}
+		data.remove(index);
+		tabNames.get(index).clear();
+		tabNames.remove(index);
+		reportName.remove(index);		
+	}
 
 	public JPanel getContainer(){
 		return reportContainer;
@@ -67,9 +81,10 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 
 	protected void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
+		Drawer.writeToLog(tm.getText("LoadingReport"));
+		
 		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
 		waitdialog.start();
-		Drawer.writeToLog(tm.getText("LoadingReport"));
 		ReportAddWorker worker = new ReportAddWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
 		worker.start();
 		return;
@@ -80,7 +95,7 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		// To-do
 	}
 
-	public static void updateReportsView(){
+	public  void updateReportsView(){
 		if(reportTab.getTabCount() == 0){
 			reportTab.setVisible(false);
 			emptyReportTab.setVisible(true);
@@ -100,6 +115,9 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		updateReportsView();
 		Drawer.moveToReportTab();
 		Drawer.enableProgressBar(false);
+		if(waitdialog != null){
+			waitdialog.dispose();
+		}
 	}
 
 	private static JPanel getEmptyJPanel(){
@@ -109,10 +127,10 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		return panel;
 	}
 
-	private static void initTabsComponents(JTabbedPane pane){
+	private  void initTabsComponents(JTabbedPane pane){
 		if(pane != null){
 			for(int i=0;i < pane.getTabCount();i++){
-				pane.setTabComponentAt(i, new RemovableTabComponent(pane,i));
+				pane.setTabComponentAt(i, new RemovableTabComponent(this,pane,i));
 			}
 		}
 	}
@@ -141,15 +159,6 @@ public class ReportDrawer extends Observable implements ActionListener, Observer
 		}
 
 	}
-
-	@Override
-	public void update(Observable arg0, Object arg1) {
-		updateReportsView();
-		super.setChanged();
-		System.out.println("Vou notificar a galera");
-		this.notifyObservers();
-	}
-
 	public static int getReportsLoaded(){
 		return reportTab.getTabCount();
 	}

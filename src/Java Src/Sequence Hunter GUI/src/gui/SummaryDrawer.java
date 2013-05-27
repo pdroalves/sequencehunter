@@ -177,7 +177,7 @@ public class SummaryDrawer implements ActionListener{
 				Drawer.writeToLog(e.getMessage());
 			}
 			Drawer.getReportDrawer().addMainReport(libDatabase,logFile);
-			ReportDrawer.updateReportsView();
+			Drawer.getReportDrawer().updateReportsView();
 			Drawer.moveToReportTab();
 			Drawer.writeToLog(tm.getText("statusHuntDoneMsg"));
 			Drawer.writeToLog(tm.getText("statusCheckReportTabMsg"));

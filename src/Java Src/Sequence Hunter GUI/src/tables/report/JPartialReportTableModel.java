@@ -3,8 +3,6 @@ package tables.report;
 import java.util.Observable;
 import java.util.Observer;
 
-import xml.TranslationsManager;
-
 import database.DBManager;
 
 public class JPartialReportTableModel extends JReportTableModel implements Observer{

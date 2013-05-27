@@ -1,14 +1,15 @@
 package tables.report;
 
+import histogram.EventHistogram;
+
 import java.io.File;
 
 import database.DBManager;
 
 public class ReportFactory {
 
-	public TabledReport createTabledReport(DBManager dbm,JReportTableModel jtrtm){
-		return new TabledReport(dbm,jtrtm);
-		
+	public TabledReport createTabledReport(String name,DBManager dbm,JReportTableModel jtrtm,EventHistogram eh){
+		return new TabledReport(name,dbm,jtrtm,eh);		
 	}
 	
 	public TextReport createTextReport(File txtFile){

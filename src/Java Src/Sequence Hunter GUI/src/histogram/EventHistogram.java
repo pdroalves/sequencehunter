@@ -3,26 +3,35 @@ package histogram;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.BorderFactory;
 import javax.swing.border.BevelBorder;
 
+import database.DBManager;
+
 import myTypeData.GenType;
 
 
-public class EventHistogram {
+public class EventHistogram implements Observer{
 	private ReportHistogramPanel dp;
 	@SuppressWarnings("rawtypes")
 	private ArrayList data;
 	private int MaxBars = 100;
 
-	public EventHistogram() {
+	public EventHistogram(DBManager dbm) {
 		dp = new ReportHistogramPanel();
 		dp.setBackground(new Color(255, 255, 255));
 		dp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		data = new ArrayList<GenType>();
 		dp.setMaxBarWidth(50);
 		dp.setVisible(false);
+		this.enableLinearize(true);
+		if(dbm.isReady()){
+			this.addTypeSet(dbm.getEvents());
+			this.commit();
+		}
 	}
 
 	public void setBarNames(boolean b){
@@ -31,17 +40,16 @@ public class EventHistogram {
 
 	@SuppressWarnings("unchecked")
 	public void addType(GenType e) {
-		data.add(e);
+		if(data.size() < MaxBars)
+			data.add(e);
 		checkVisibleStatus();
 	}     
 
 	@SuppressWarnings("unchecked")
 	public void addTypeSet(@SuppressWarnings("rawtypes") ArrayList al){
-		Iterator<GenType> iterator = al.iterator();
-		int added = 0;
-		while(iterator.hasNext() && added < MaxBars){
-			data.add(iterator.next());
-		}
+		data.addAll(al);
+		for(int i = MaxBars;i < data.size();i++)
+			data.remove(i);
 		checkVisibleStatus();
 	}
 
@@ -61,9 +69,8 @@ public class EventHistogram {
 		return dp;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void commit(){
-		dp.setData(data);
+		this.addTypeSet(data);
 	}
 
 	public void enableLinearize(boolean b){
@@ -90,7 +97,23 @@ public class EventHistogram {
 	}
 
 	public void clearAllBars(){
-		if(data.size() > 0)
-			dp.clearAllBars();
+		if(data.size() > 0){
+			data.clear();
+			commit();
+			System.err.println("Barras removidas");
+		}
+	}
+	
+	public void repaint(){
+		dp.repaint();
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		System.out.println("EH updated!");
+		this.clearAllBars();
+		this.addTypeSet(((DBManager) arg).getEvents());
+		this.commit();
+		this.checkVisibleStatus();
 	}
 } 
