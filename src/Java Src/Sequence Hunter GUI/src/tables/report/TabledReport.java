@@ -36,17 +36,17 @@ public class TabledReport extends Report implements Observer{
 	private JSplitPane jsp;
 	private String name;
 	
-	public TabledReport(String name,DBManager dbm,JReportTableModel jrtm,EventHistogram eh){
+	public TabledReport(String name,DBManager dbm,JReportTableModel jrtm){
 		panel = new JPanel(new BorderLayout());
 		layerUI = new WaitLayerUI();
 		this.dbm = dbm;
 		this.jrtm = jrtm;
 		this.name = name;
 		sorter = new TableSorter<JReportTableModel>(jrtm,dbm);
-		this.eh = eh;
+		this.eh = new EventHistogram(dbm);
 	}
 	
-	public JComponent getReport(){
+	public JComponent getComponent(){
 		// Cria e configura tabela
 		jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(false);
@@ -96,6 +96,10 @@ public class TabledReport extends Report implements Observer{
 		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
 		if(!dbm.isReady()){
 			layerUI.start();
+		}else{
+			eh.addTypeSet(dbm.getEvents());
+			eh.commit();
+			jsp.setDividerLocation(-1);			
 		}
 		return jlayer;
 	}
@@ -109,8 +113,9 @@ public class TabledReport extends Report implements Observer{
 		dbm = (DBManager)arg;
 		if(dbm.isReady()){
 			System.err.println("Atualizando - "+name);
-			jsp.setDividerLocation(-1);
-			
+			eh.addTypeSet(dbm.getEvents());
+			eh.commit();
+			jsp.setDividerLocation(-1);			
 			jte.repaint();
 			panel.repaint();
 			eh.repaint();

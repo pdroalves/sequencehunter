@@ -58,14 +58,13 @@ public class ReportAddWorker extends Thread{
 		DBManager dbm = null;
 		if(libDatabase != null){
 			dbm = new DBManager(libDatabase);
-			EventHistogram eh = new EventHistogram(dbm);
 			
 			// Central Cut paired
 			System.err.println("Adicionando central cut paired");
 			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
-			TabledReport tabledreportPaired = rf.createTabledReport("central cut paired",dbm,jprtm,eh);	
+			TabledReport tabledreportPaired = rf.createTabledReport("central cut paired",dbm,jprtm);	
 			data.get(data.size()-1).add(tabledreportPaired);
-			jc = tabledreportPaired.getReport();
+			jc = tabledreportPaired.getComponent();
 			tabName = tm.getText("reportCentralCutPairedDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
 			jtp.addTab(tabName,jc);
@@ -73,15 +72,14 @@ public class ReportAddWorker extends Thread{
 			// Central Cut unpaired
 			System.err.println("Adicionando central cut unpaired");
 			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
-			TabledReport tabledreportUnpaired = rf.createTabledReport("central cut unpaired",dbm,jtrtm,eh);
+			TabledReport tabledreportUnpaired = rf.createTabledReport("central cut unpaired",dbm,jtrtm);
 			data.get(data.size()-1).add(tabledreportUnpaired);
-			jc = tabledreportUnpaired.getReport();
+			jc = tabledreportUnpaired.getComponent();
 			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
 			jtp.addTab(tabName,jc);
 			
 			// Observers
-			dbm.addObserver(eh);
 			dbm.addObserver(jprtm);		
 			dbm.addObserver(jtrtm);
 			dbm.addObserver(tabledreportPaired);

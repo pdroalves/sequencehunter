@@ -5,11 +5,9 @@ import javax.swing.JTable;
 import histogram.HistogramBar;
 import histogram.SimpleHistogramPanel;
 
+@SuppressWarnings("serial")
 public class ReportHistogramPanel extends SimpleHistogramPanel {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+	
 	private JTable jte;
 
 	public void setJTableToListen(JTable jte){

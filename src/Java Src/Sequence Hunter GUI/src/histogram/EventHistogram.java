@@ -15,19 +15,21 @@ import myTypeData.GenType;
 
 
 public class EventHistogram implements Observer{
-	private ReportHistogramPanel dp;
+	private ReportHistogramPanel panel;
 	@SuppressWarnings("rawtypes")
 	private ArrayList data;
 	private int MaxBars = 100;
 
+	@SuppressWarnings("rawtypes")
 	public EventHistogram(DBManager dbm) {
-		dp = new ReportHistogramPanel();
-		dp.setBackground(new Color(255, 255, 255));
-		dp.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
+		panel = new ReportHistogramPanel();
+		panel.setBackground(new Color(255, 255, 255));
+		panel.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		data = new ArrayList<GenType>();
-		dp.setMaxBarWidth(50);
-		dp.setVisible(false);
+		panel.setMaxBarWidth(50);
+		panel.setVisible(false);
 		this.enableLinearize(true);
+		data = new ArrayList();
 		if(dbm.isReady()){
 			this.addTypeSet(dbm.getEvents());
 			this.commit();
@@ -35,7 +37,7 @@ public class EventHistogram implements Observer{
 	}
 
 	public void setBarNames(boolean b){
-		dp.setBarNames(b);
+		panel.setBarNames(b);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -56,25 +58,26 @@ public class EventHistogram implements Observer{
 	private void checkVisibleStatus(){
 		if(data != null){
 			if(data.size() > 0){
-				dp.setVisible(true);
+				panel.setVisible(true);
 			}else{
-				dp.setVisible(false);
+				panel.setVisible(false);
 			}
 		}else{
-			dp.setVisible(false);
+			panel.setVisible(false);
 		}
 	}
 
 	public ReportHistogramPanel getPanel(){
-		return dp;
+		return panel;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void commit(){
-		this.addTypeSet(data);
+		panel.setData(data);
 	}
 
 	public void enableLinearize(boolean b){
-		dp.enableLinearize(b);
+		panel.enableLinearize(b);
 	} 
 
 	@SuppressWarnings("rawtypes")
@@ -89,9 +92,9 @@ public class EventHistogram implements Observer{
 		while(iterator.hasNext()){
 			GenType g = iterator.next();
 			if(g.getTag() == tag){
-				dp.drawMark(g);
+				panel.drawMark(g);
 			}else{
-				dp.dontDrawMark(g);
+				panel.dontDrawMark(g);
 			}
 		}
 	}
@@ -105,7 +108,7 @@ public class EventHistogram implements Observer{
 	}
 	
 	public void repaint(){
-		dp.repaint();
+		panel.repaint();
 	}
 
 	@Override

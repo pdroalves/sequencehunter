@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
-import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +36,6 @@ public class ReportDrawer extends Observable implements ActionListener{
 	private static JTabbedPane reportTab;
 	private static JPanel emptyReportTab;
 	private static TranslationsManager tm;
-	private TabledReport tabledreport;
 	private static List<List<Report>> data;
 	private static List<List<String>> tabNames;
 	private static List<String> reportName;
