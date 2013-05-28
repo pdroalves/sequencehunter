@@ -38,7 +38,7 @@ public class DBManager extends Observable{
 			switch(column){
 			case 1:
 				this.setMode(Evento.VALUE_PARES_REL);
-				dbst.setSortMode(dbst.SEQ_DESC);
+				dbst.setSortMode(dbst.PARES_DESC);
 				break;
 			case 3:
 				this.setMode(Evento.VALUE_SENSOS_REL);

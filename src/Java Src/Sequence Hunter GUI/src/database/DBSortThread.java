@@ -27,7 +27,7 @@ public class DBSortThread extends Thread{
 	public DBSortThread(DBManager caller,DB database){
 		this.caller = caller;
 		db = database;
-		sortQuery = defaultSort;
+		setSortMode(PARES_DESC);
 	}
 
 	public void setSortMode(int mode){
@@ -60,11 +60,11 @@ public class DBSortThread extends Thread{
 	}
 
 	public void run(){
+		System.err.println("Table sort! "+sortQuery);
 		boolean sortStatus = db.loadQuery(sortQuery+" limit 500");
 		if(!sortStatus){
 			Drawer.writeToLog("Database ERROR!");
 		}else{
-			System.err.println("Table sorted! "+sortQuery);
 			caller.setDatabaseReady();
 		}
 	}
