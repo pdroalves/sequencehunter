@@ -61,7 +61,7 @@ public class DBSortThread extends Thread{
 
 	public void run(){
 		System.err.println("Table sort! "+sortQuery);
-		boolean sortStatus = db.loadQuery(sortQuery+" limit 500");
+		boolean sortStatus = db.loadQuery(sortQuery);
 		if(!sortStatus){
 			Drawer.writeToLog("Database ERROR!");
 		}else{

@@ -14,9 +14,12 @@ public class DBManager extends Observable{
 	private ArrayList<Evento> seqs;
 	protected int defaultLoad = 100;
 	private int mode = Evento.VALUE_PARES_REL;
-	public final int DESC = 0;
-	public final int ASC = 1;
+	static public final int DESC = 0;
+	static public final int ASC = 1;
 	public int totalPares;
+	public int totalSensos;
+	public int totalAntisensos;
+	public int totalSequences;
 
 	public DBManager(String databaseFilename){
 		super();
@@ -25,6 +28,9 @@ public class DBManager extends Observable{
 		int size = database.getSize();
 		seqs = new ArrayList<Evento>(size) ;
  		totalPares = this.getTotalPares();
+ 		totalSensos = this.getTotalSensos();
+ 		totalAntisensos = this.getTotalAntisensos();
+ 		totalSequences = database.getSize();
 		if(database != null){
 			this.sort(getMode(), 0);
 		}
@@ -36,10 +42,6 @@ public class DBManager extends Observable{
 		DBSortThread dbst = new DBSortThread(this,database);
 		if(ordem == this.DESC){
 			switch(column){
-			case 1:
-				this.setMode(Evento.VALUE_PARES_REL);
-				dbst.setSortMode(dbst.PARES_DESC);
-				break;
 			case 3:
 				this.setMode(Evento.VALUE_SENSOS_REL);
 				dbst.setSortMode(dbst.SENSOS_DESC);
@@ -55,10 +57,6 @@ public class DBManager extends Observable{
 			}
 		}else{
 			switch(column){
-			case 1:
-				this.setMode(Evento.VALUE_PARES_REL);
-				dbst.setSortMode(dbst.SEQ_ASC);
-				break;
 			case 3:
 				this.setMode(Evento.VALUE_SENSOS_REL);
 				dbst.setSortMode(dbst.SENSOS_ASC);
@@ -97,14 +95,30 @@ public class DBManager extends Observable{
 	}
 	public void normalizeData(){
 		System.out.println("Normalizando");
+		float norma;
 			switch(mode){
+			case Evento.VALUE_SENSOS_REL:
+				norma = totalSensos;
+				for(int i = 0;i < seqs.size();i++){
+					Evento g = (Evento)seqs.get(i);
+					g.setRelativeFreq(g.getSensos()*100 / norma);
+					g.setMode(mode);
+				}
+				break;
+			case Evento.VALUE_ANTISENSO_REL:
+				norma = totalAntisensos;
+				for(int i = 0;i < seqs.size();i++){
+					Evento g = (Evento)seqs.get(i);
+					g.setRelativeFreq(g.getAntisensos()*100 / norma);
+					g.setMode(mode);
+				}
+				break;
 			default:
-				float norma = totalPares;
+				norma = totalPares;
 				for(int i = 0;i < seqs.size();i++){
 					Evento g = (Evento)seqs.get(i);
 					g.setRelativeFreq(g.getPares()*100 / norma);
 					g.setMode(mode);
-					System.out.println(g.getRelativeFreq());
 				}
 				break;
 			}		
@@ -148,6 +162,30 @@ public class DBManager extends Observable{
 
 	public int getTotalPares(){
 		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events");
+		int total = 0;
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error! - "+e.getMessage());
+		}
+		return total;
+	}
+	
+	public int getTotalSensos(){
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_sensos) FROM events");
+		int total = 0;
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error! - "+e.getMessage());
+		}
+		return total;
+	}
+	
+	public int getTotalAntisensos(){
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_antisensos) FROM events");
 		int total = 0;
 		try {
 			if(rs.next())

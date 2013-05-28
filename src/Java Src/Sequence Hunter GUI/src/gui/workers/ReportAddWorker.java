@@ -55,37 +55,35 @@ public class ReportAddWorker extends Thread{
 		// Report	
 		JComponent jc;
 		String tabName;
-		DBManager dbmPaired = null;
-		DBManager dbmUnpaired = null;
+		DBManager dbm = null;
 		if(libDatabase != null){
-			dbmPaired = new DBManager(libDatabase);
+			dbm = new DBManager(libDatabase);
 			
 			// Central Cut paired
 			System.err.println("Adicionando central cut paired");
-			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbmPaired);
-			TabledReport tabledreportPaired = rf.createTabledReport("central cut paired",dbmPaired,jprtm);	
+			JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
+			TabledReport tabledreportPaired = rf.createTabledReport("central cut paired",dbm,jprtm);	
 			data.get(data.size()-1).add(tabledreportPaired);
 			jc = tabledreportPaired.getComponent();
 			tabName = tm.getText("reportCentralCutPairedDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
 			jtp.addTab(tabName,jc);
 			// Observadores
-			dbmPaired.addObserver(jprtm);		
-			dbmPaired.addObserver(tabledreportPaired);
+			dbm.addObserver(jprtm);		
+			dbm.addObserver(tabledreportPaired);
 
-			dbmUnpaired = new DBManager(libDatabase);
 			// Central Cut unpaired
 			System.err.println("Adicionando central cut unpaired");
-			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbmUnpaired);
-			TabledReport tabledreportUnpaired = rf.createTabledReport("central cut unpaired",dbmUnpaired,jtrtm);
+			JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
+			TabledReport tabledreportUnpaired = rf.createTabledReport("central cut unpaired",dbm,jtrtm);
 			data.get(data.size()-1).add(tabledreportUnpaired);
 			jc = tabledreportUnpaired.getComponent();
 			tabName = tm.getText("reportCentralCutUnpairedDefaultName");
 			tabNames.get(tabNames.size()-1).add(tabName);
 			jtp.addTab(tabName,jc);
 			// Observadores
-			dbmUnpaired.addObserver(jtrtm);
-			dbmUnpaired.addObserver(tabledreportUnpaired);
+			dbm.addObserver(jtrtm);
+			dbm.addObserver(tabledreportUnpaired);
 		}
 
 		// Log Report

@@ -171,11 +171,13 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 void db_destroy(){
     char * sErrMsg;
 	int ret;
-	char query[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char createEventsQuery[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char dropTmpQuery[] = "DROP TABLE events_tmp";
 	
 	if(!destroyed){
 		db_start_transaction();
-		ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
+		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
+		ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
 		db_commit_transaction();
 		ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);
 

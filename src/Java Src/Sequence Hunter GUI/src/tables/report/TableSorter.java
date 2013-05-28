@@ -10,16 +10,24 @@ import database.DBManager;
 
 public class TableSorter<M extends AbstractTableModel> extends TableRowSorter<M> {
 	private DBManager dbm;
+	private int column;
 	private int ordem;
+	
 	public TableSorter(AbstractTableModel model,DBManager dbm){
 		super((M)model);
 		this.dbm = dbm;
-		ordem = 0;
+		column = 2;
+		ordem = DBManager.DESC;
 	}
 
 	@Override
 	public void toggleSortOrder(int column) {
-		ordem = (ordem+1) % 2;
+		if(this.column != column){
+			ordem = DBManager.DESC;
+		}else{
+			ordem = (ordem+1) % 2;
+		}
+		this.column = column;
 		dbm.sort(column,ordem);
 	}
 

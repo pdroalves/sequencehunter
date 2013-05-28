@@ -14,6 +14,8 @@ public class Evento extends GenType{
 	static public final int VALUE_SENSOS_REL = 3;
 	static public final int VALUE_ANTISENSO_ABS = 4;
 	static public final int VALUE_ANTISENSO_REL = 5;
+	static public final int VALUE_SEQUENCES_ABS = 6;
+	static public final int VALUE_SEQUENCES_REL = 7;
 
 	public Evento(String s,int qs,int qas){
 		super(s,Math.min(qs, qas));

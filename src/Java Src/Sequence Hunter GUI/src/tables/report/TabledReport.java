@@ -31,9 +31,9 @@ public class TabledReport extends Report implements Observer{
 	private JPanel panel;
 	private JTable jte;
 	private JReportTableModel jrtm;
-	private EventHistogram eh;
+	//private EventHistogram eh;
 	private TableSorter<JReportTableModel> sorter ;
-	private JSplitPane jsp;
+	//private JSplitPane jsp;
 	private String name;
 	
 	public TabledReport(String name,DBManager dbm,JReportTableModel jrtm){
@@ -43,7 +43,7 @@ public class TabledReport extends Report implements Observer{
 		this.jrtm = jrtm;
 		this.name = name;
 		sorter = new TableSorter<JReportTableModel>(jrtm,dbm);
-		this.eh = new EventHistogram(dbm);
+		//this.eh = new EventHistogram(dbm);
 	}
 	
 	public JComponent getComponent(){
@@ -64,7 +64,7 @@ public class TabledReport extends Report implements Observer{
 
 				for (int i = 0; i < selectedRow.length; i++) {
 					sequence = (String) jte.getValueAt(selectedRow[i], 1);	        
-					eh.enableBarHighlight(sequence, true);
+					//eh.enableBarHighlight(sequence, true);
 				}
 			}
 		});
@@ -86,22 +86,22 @@ public class TabledReport extends Report implements Observer{
 		jte.setAutoscrolls(true);
 		
 		// Cria histograma
-		ReportHistogramPanel rhp = eh.getPanel();
-		rhp.setBorder(new EmptyBorder(25,15,45,10));
+		//ReportHistogramPanel rhp = eh.getPanel();
+		//rhp.setBorder(new EmptyBorder(25,15,45,10));
 		// Table selection
-		rhp.setJTableToListen(jte);
-		jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
+		//rhp.setJTableToListen(jte);
+		//jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT,true,rhp,jscp);
 		
-		panel.add(jsp,BorderLayout.CENTER);
+		panel.add(jscp,BorderLayout.CENTER);
 		JLayer<JPanel> jlayer = new JLayer<JPanel>(panel, layerUI);
 		if(!dbm.isReady()){
 			layerUI.start();
 		}else{
 			System.err.println("Adicionando - "+name+" - size:"+dbm.getEvents().size());
 			dbm.normalizeData();
-			eh.addTypeSet(dbm.getEvents());
-			eh.commit();
-			jsp.setDividerLocation(-1);			
+			//eh.addTypeSet(dbm.getEvents());
+			//eh.commit();
+			//jsp.setDividerLocation(-1);			
 		}
 		return jlayer;
 	}
@@ -115,14 +115,14 @@ public class TabledReport extends Report implements Observer{
 		dbm = (DBManager)arg;
 		if(dbm.isReady()){
 			System.err.println("Atualizando - "+name+" - size:"+dbm.getEvents().size());
-			eh.clearAllBars();
+			//eh.clearAllBars();
 			dbm.normalizeData();
-			eh.addTypeSet(dbm.getEvents());
-			eh.commit();
-			jsp.setDividerLocation(-1);			
+			//eh.addTypeSet(dbm.getEvents());
+			//eh.commit();
+			//jsp.setDividerLocation(-1);			
 			jte.repaint();
 			panel.repaint();
-			eh.repaint();
+			//eh.repaint();
 			jrtm.fireTableDataChanged();
 			layerUI.stop();
 		}else{
