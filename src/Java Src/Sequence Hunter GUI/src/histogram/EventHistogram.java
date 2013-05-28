@@ -1,5 +1,7 @@
 package histogram;
 
+import hunt.Evento;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,7 +21,7 @@ public class EventHistogram implements Observer{
 	@SuppressWarnings("rawtypes")
 	private ArrayList data;
 	private int MaxBars = 100;
-
+	private DBManager dbm;
 	@SuppressWarnings("rawtypes")
 	public EventHistogram(DBManager dbm) {
 		panel = new ReportHistogramPanel();
@@ -30,6 +32,7 @@ public class EventHistogram implements Observer{
 		panel.setVisible(false);
 		this.enableLinearize(true);
 		data = new ArrayList();
+		this.dbm = dbm;
 	}
 
 	public void setBarNames(boolean b){
@@ -69,6 +72,20 @@ public class EventHistogram implements Observer{
 
 	@SuppressWarnings("unchecked")
 	public void commit(){
+		int[] mode = dbm.getMode();
+		int max = -1;
+		switch(mode[0]){
+		case Evento.VALUE_PARES_ABS:
+			break;
+		case Evento.VALUE_PARES_REL:
+			max = dbm.getTotalPares();
+			break;
+		case 2:
+			break;
+		}
+		if(max > 0){
+			dbm.normalizeData(max,mode[0]);
+		}
 		panel.setData(data);
 	}
 

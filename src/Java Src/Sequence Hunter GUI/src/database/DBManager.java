@@ -1,8 +1,13 @@
 package database;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Observable;
 
+import myTypeData.GenType;
+
+import gui.Drawer;
 import hunt.Evento;
 
 public class DBManager extends Observable{
@@ -10,6 +15,7 @@ public class DBManager extends Observable{
 	private boolean ready;
 	private ArrayList<Evento> seqs;
 	protected int defaultLoad = 100;
+	private int[] mode = {Evento.VALUE_PARES_REL,0};
 
 	public DBManager(String databaseFilename){
 		super();
@@ -18,8 +24,7 @@ public class DBManager extends Observable{
 		int size = database.getSize();
 		seqs = new ArrayList<Evento>(size) ;
 		if(database != null){
-			DBSortThread dbst = new DBSortThread(this,database);
-			dbst.start();
+			this.sort(getMode()[0], getMode()[1]);
 		}
 	}
 
@@ -27,6 +32,8 @@ public class DBManager extends Observable{
 		setReady(false);
 		seqs.clear();
 		DBSortThread dbst = new DBSortThread(this,database);
+		getMode()[0] = column;
+		getMode()[1] = ordem;
 		if(ordem == 0){
 			switch(column){
 			case 0:
@@ -79,11 +86,20 @@ public class DBManager extends Observable{
 	private void setReady(boolean ready) {
 		if(ready == true)
 			System.out.println("Seqs size: "+seqs.size());
+		
 		this.ready = ready;
 		// Avisa os observadores da mudanca
 		System.err.println("DBM: Update para "+super.countObservers()+" observadores");
 		super.setChanged();
 		super.notifyObservers(this);
+	}
+	public void normalizeData(int norma,int mode){
+		for(int i = 0;i < seqs.size();i++){
+			Evento g = (Evento)seqs.get(i);
+			g.setRelativeFreq(g.getValue()*100 / (float)norma);
+			g.setMode(mode);
+			System.out.println(g.getValue());
+		}
 	}
 
 	public ArrayList<Evento> getEvents() {
@@ -116,9 +132,29 @@ public class DBManager extends Observable{
 		else 
 			return;
 	}
-	
+
 	public void destroy(){
 		seqs.clear();
 		database.close();
+	}
+
+	public int getTotalPares(){
+		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events");
+		int total = 0;
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error! - "+e.getMessage());
+		}
+		return total;
+	}
+
+	public int[] getMode() {
+		return mode;
+	}
+
+	public void setMode(int[] mode) {
+		this.mode = mode;
 	}
 }

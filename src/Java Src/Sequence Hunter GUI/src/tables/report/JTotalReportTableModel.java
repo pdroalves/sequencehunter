@@ -23,7 +23,7 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 	}
 	
 	public int getColumnCount() {
-		return 5;
+		return 6;
 	}
 	
 	public String getColumnName(int column) {
@@ -35,6 +35,9 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 			break;
 		case 4:
 			name = tm.getText("reportAntisensosColumnLabel");
+			break;
+		case 5:
+			name = tm.getText("reportRelativeColumnLabel");
 			break;
 		default:
 			name = super.getColumnName(column);
@@ -66,6 +69,9 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 			break;
 			case 4:
 				obj = seqs.get(rowIndex).getAntisensos();
+			break;
+			case 5:
+				obj = seqs.get(rowIndex).getRelativeFreq();
 			break;
 		}
 		return obj;

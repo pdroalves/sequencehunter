@@ -57,7 +57,6 @@ public class DB {
 		try {
 			Statement stat = databaseConn.createStatement();
 			ResultSet set = stat.executeQuery(query);
-			stat.close();
 			return set;
 		} catch (SQLException e) {
 			Drawer.writeToLog("Database ERROR: "+e.getMessage());

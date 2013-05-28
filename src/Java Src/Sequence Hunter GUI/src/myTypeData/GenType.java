@@ -6,7 +6,7 @@ import java.awt.Color;
 public class GenType extends HistogramBar{
 	private String seq;
 	private int freq;
-	private double relativeFreq;
+	private float relativeFreq;
 	
 	public GenType(String s){
 		super();
@@ -54,11 +54,11 @@ public class GenType extends HistogramBar{
 		freq = n;
 	}
 	
-	public double getRelativeFreq(){
+	public float getRelativeFreq(){
 		return relativeFreq;
 	}
 
-	public void setRelativeFreq(double r){
+	public void setRelativeFreq(float r){
 		relativeFreq = r;
 	}
 	
