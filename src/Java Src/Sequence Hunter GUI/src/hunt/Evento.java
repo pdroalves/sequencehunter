@@ -71,4 +71,5 @@ public class Evento extends GenType{
 		return qantisensos;
 	}
 
+
 }

@@ -107,9 +107,9 @@ public class ReportDrawer extends Observable implements ActionListener{
 		Drawer.repaint();
 	}
 	
-	public void setReportAdded(DBManager dbm){
+	public void setReportAdded(){
 		super.setChanged();
-		super.notifyObservers(dbm);
+		super.notifyObservers();
 		updateReportsView();
 		Drawer.moveToReportTab();
 		Drawer.enableProgressBar(false);

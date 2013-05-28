@@ -13,12 +13,8 @@ import xml.TranslationsManager;
 import database.DBManager;
 
 
+@SuppressWarnings("serial")
 public abstract class JReportTableModel extends AbstractTableModel implements Observer{
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	private DBManager dbm;
 	protected ArrayList<Evento> seqs;
 
@@ -34,6 +30,10 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 			startLoad();
 			super.fireTableDataChanged();
 		}
+	}
+	
+	public ArrayList<Evento> getEvents(){
+		return dbm.getEvents();
 	}
 
 	public int getRowCount() {
@@ -84,4 +84,5 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 			}
 		}		
 	}
+	
 }

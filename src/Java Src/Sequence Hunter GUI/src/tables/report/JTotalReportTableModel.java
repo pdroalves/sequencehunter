@@ -71,7 +71,7 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 				obj = seqs.get(rowIndex).getAntisensos();
 			break;
 			case 5:
-				obj = seqs.get(rowIndex).getRelativeFreq();
+				obj =  String.format("%.4f",seqs.get(rowIndex).getRelativeFreq());
 			break;
 		}
 		return obj;

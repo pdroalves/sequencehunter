@@ -24,12 +24,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import javax.swing.JPanel;
 
+@SuppressWarnings("serial")
 public class SimpleHistogramPanel extends JPanel{
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	private ArrayList<HistogramBar> data;
 	private HistogramBar maxHistBar;
 	private boolean barNames = false;
@@ -245,7 +242,7 @@ public class SimpleHistogramPanel extends JPanel{
 						drawYWithoutNumbersMark(yGap*up);
 					}
 				}else{
-					setHistMax((int)(yMax*1.1));
+					setHistMax(yMax);
 					// Max
 					drawYNumbersMark(getHistMax(),histHeight);
 					// Min

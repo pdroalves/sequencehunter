@@ -5,12 +5,8 @@ import java.util.Observer;
 
 import database.DBManager;
 
+@SuppressWarnings("serial")
 public class JPartialReportTableModel extends JReportTableModel implements Observer{
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 
 	public JPartialReportTableModel(DBManager dbm){
 		super(dbm);

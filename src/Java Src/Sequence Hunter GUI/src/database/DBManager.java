@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Observable;
 
-import myTypeData.GenType;
-
 import gui.Drawer;
 import hunt.Evento;
 
@@ -15,7 +13,10 @@ public class DBManager extends Observable{
 	private boolean ready;
 	private ArrayList<Evento> seqs;
 	protected int defaultLoad = 100;
-	private int[] mode = {Evento.VALUE_PARES_REL,0};
+	private int mode = Evento.VALUE_PARES_REL;
+	public final int DESC = 0;
+	public final int ASC = 1;
+	public int totalPares;
 
 	public DBManager(String databaseFilename){
 		super();
@@ -23,8 +24,9 @@ public class DBManager extends Observable{
 		database = new DB(databaseFilename);
 		int size = database.getSize();
 		seqs = new ArrayList<Evento>(size) ;
+ 		totalPares = this.getTotalPares();
 		if(database != null){
-			this.sort(getMode()[0], getMode()[1]);
+			this.sort(getMode(), 0);
 		}
 	}
 
@@ -32,42 +34,42 @@ public class DBManager extends Observable{
 		setReady(false);
 		seqs.clear();
 		DBSortThread dbst = new DBSortThread(this,database);
-		getMode()[0] = column;
-		getMode()[1] = ordem;
-		if(ordem == 0){
+		if(ordem == this.DESC){
 			switch(column){
-			case 0:
-				dbst.setSortMode(dbst.PARES_DESC);
-				break;
 			case 1:
+				this.setMode(Evento.VALUE_PARES_REL);
 				dbst.setSortMode(dbst.SEQ_DESC);
 				break;
-			case 2:
-				dbst.setSortMode(dbst.PARES_DESC);
-				break;
 			case 3:
+				this.setMode(Evento.VALUE_SENSOS_REL);
 				dbst.setSortMode(dbst.SENSOS_DESC);
 				break;
 			case 4:
+				this.setMode(Evento.VALUE_ANTISENSO_REL);
 				dbst.setSortMode(dbst.ANTISENSOS_DESC);
+				break;
+			default:
+				this.setMode(Evento.VALUE_PARES_REL);
+				dbst.setSortMode(dbst.PARES_DESC);
 				break;
 			}
 		}else{
 			switch(column){
-			case 0:
-				dbst.setSortMode(dbst.PARES_ASC);
-				break;
 			case 1:
+				this.setMode(Evento.VALUE_PARES_REL);
 				dbst.setSortMode(dbst.SEQ_ASC);
 				break;
-			case 2:
-				dbst.setSortMode(dbst.PARES_ASC);
-				break;
 			case 3:
+				this.setMode(Evento.VALUE_SENSOS_REL);
 				dbst.setSortMode(dbst.SENSOS_ASC);
 				break;
 			case 4:
+				this.setMode(Evento.VALUE_ANTISENSO_REL);
 				dbst.setSortMode(dbst.ANTISENSOS_ASC);
+				break;
+			default:
+				this.setMode(Evento.VALUE_PARES_REL);
+				dbst.setSortMode(dbst.PARES_ASC);
 				break;
 			}
 		}
@@ -86,20 +88,26 @@ public class DBManager extends Observable{
 	private void setReady(boolean ready) {
 		if(ready == true)
 			System.out.println("Seqs size: "+seqs.size());
-		
+
 		this.ready = ready;
 		// Avisa os observadores da mudanca
 		System.err.println("DBM: Update para "+super.countObservers()+" observadores");
 		super.setChanged();
 		super.notifyObservers(this);
 	}
-	public void normalizeData(int norma,int mode){
-		for(int i = 0;i < seqs.size();i++){
-			Evento g = (Evento)seqs.get(i);
-			g.setRelativeFreq(g.getValue()*100 / (float)norma);
-			g.setMode(mode);
-			System.out.println(g.getValue());
-		}
+	public void normalizeData(){
+		System.out.println("Normalizando");
+			switch(mode){
+			default:
+				float norma = totalPares;
+				for(int i = 0;i < seqs.size();i++){
+					Evento g = (Evento)seqs.get(i);
+					g.setRelativeFreq(g.getPares()*100 / norma);
+					g.setMode(mode);
+					System.out.println(g.getRelativeFreq());
+				}
+				break;
+			}		
 	}
 
 	public ArrayList<Evento> getEvents() {
@@ -150,11 +158,11 @@ public class DBManager extends Observable{
 		return total;
 	}
 
-	public int[] getMode() {
+	public int getMode() {
 		return mode;
 	}
 
-	public void setMode(int[] mode) {
-		this.mode = mode;
+	public void setMode(int tipo) {
+		this.mode = tipo;
 	}
 }

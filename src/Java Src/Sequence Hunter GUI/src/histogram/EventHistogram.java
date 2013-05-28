@@ -22,6 +22,7 @@ public class EventHistogram implements Observer{
 	private ArrayList data;
 	private int MaxBars = 100;
 	private DBManager dbm;
+
 	@SuppressWarnings("rawtypes")
 	public EventHistogram(DBManager dbm) {
 		panel = new ReportHistogramPanel();
@@ -30,7 +31,7 @@ public class EventHistogram implements Observer{
 		data = new ArrayList<GenType>();
 		panel.setMaxBarWidth(50);
 		panel.setVisible(false);
-		this.enableLinearize(true);
+		panel.enableLinearize(true);
 		data = new ArrayList();
 		this.dbm = dbm;
 	}
@@ -66,38 +67,27 @@ public class EventHistogram implements Observer{
 		}
 	}
 
+	private Evento copyEvent(Evento e){
+		Evento copy = new Evento(e.getSeq(), e.getSensos(), e.getAntisensos());
+		copy.setFreq(e.getFreq());
+		copy.setRelativeFreq(e.getRelativeFreq());
+		return e;
+	}
+
 	public ReportHistogramPanel getPanel(){
 		return panel;
 	}
 
 	@SuppressWarnings("unchecked")
 	public void commit(){
-		int[] mode = dbm.getMode();
-		int max = -1;
-		switch(mode[0]){
-		case Evento.VALUE_PARES_ABS:
-			break;
-		case Evento.VALUE_PARES_REL:
-			max = dbm.getTotalPares();
-			break;
-		case 2:
-			break;
-		}
-		if(max > 0){
-			dbm.normalizeData(max,mode[0]);
-		}
 		panel.setData(data);
 	}
-
-	public void enableLinearize(boolean b){
-		panel.enableLinearize(b);
-	} 
 
 	@SuppressWarnings("rawtypes")
 	public ArrayList getData() {
 		return data;
 	}
-	
+
 	public void enableBarHighlight(String tag,boolean b){
 		// Ativa ou desativa highlight em barra vinculada ao GenType com essa tag
 		@SuppressWarnings("unchecked")
@@ -119,14 +109,14 @@ public class EventHistogram implements Observer{
 			System.err.println("Barras removidas");
 		}
 	}
-	
+
 	public void repaint(){
 		panel.repaint();
 	}
 
 	@Override
 	public void update(Observable o, Object arg) {
-		System.out.println("EH updated!");
+		System.err.println("EH updated!");
 		this.clearAllBars();
 		this.addTypeSet(((DBManager) arg).getEvents());
 		this.commit();
