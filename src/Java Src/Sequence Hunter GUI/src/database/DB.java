@@ -12,7 +12,7 @@ import java.sql.Statement;
 import xml.TranslationsManager;
 
 public class DB {
-	private static Connection databaseConn;
+	private Connection databaseConn;
 	private ResultSet rows;
 	private final int maxRepeats = 10;
 

@@ -31,11 +31,12 @@ int get_hash(char* original){
 
 void db_start_transaction(){
     char * sErrMsg;
-			printf("###########################################\n");
+    /*			printf("###########################################\n");
 			printf("###########################################\n");
 			printf("################### NOVA TRANSACTION ###### \n");
 			printf("###########################################\n");
 			printf("###########################################\n");
+    */
 	sqlite3_exec(db, "BEGIN TRANSACTION", 0, 0, &sErrMsg);
 	return;
 }
@@ -178,13 +179,13 @@ void db_destroy(){
 		db_start_transaction();
 		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
 		db_commit_transaction();
-		if(ret == SQLITE_DONE){
+		if(sErrMsg == NULL){
 			db_start_transaction();
 			ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
 			db_commit_transaction();
 			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
 		}else{
-			printf("Database ERROR! %d\n",ret);
+		  printf("Database ERROR! %s %d\n",sErrMsg);
 		}
 		
 		sqlite3_finalize(stmt_insert);

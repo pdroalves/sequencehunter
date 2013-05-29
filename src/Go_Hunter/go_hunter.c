@@ -127,11 +127,10 @@ void report_manager(	Socket *gui_socket,
     
     if(gui_run){
 		
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,rate_processing,0,*readCount);
+      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,rate_processing,*readCount);
       send_msg_to_socket(gui_socket,msg);
       get_msg_to_socket(gui_socket);
     }
-    printf("%d\n",pos_sent_to_db);
     if(verbose && !silent){
 	  sqlite3_mem_used = sqlite3_memory_used();
       printf("DB memory used: %.2f GB\n",sqlite3_mem_used/(float)GIGA);
@@ -139,7 +138,6 @@ void report_manager(	Socket *gui_socket,
       printf("DB queue: %d\n",pos_queue_size);
       printf("Processing rate: %.1f seq/s\n",rate_processing);
       printf("Enqueue rate: %.1f seqs/s\n\n",rate_enqueue);
-      printf("%ld\n",*readCount);
       //fprintf(fp_enchimento,"%d %d\n",count,pos_queue_size-queue_size);
      //fprintf(fp_esvaziamento,"%d %d\n",count,pos_sent_to_db - pre_sent_to_db);
     }	
