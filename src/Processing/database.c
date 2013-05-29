@@ -177,10 +177,16 @@ void db_destroy(){
 	if(!destroyed){
 		db_start_transaction();
 		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
-		ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
 		db_commit_transaction();
-		ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);
-
+		if(ret == SQLITE_DONE){
+			db_start_transaction();
+			ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
+			db_commit_transaction();
+			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
+		}else{
+			printf("Database ERROR! %d\n",ret);
+		}
+		
 		sqlite3_finalize(stmt_insert);
 		sqlite3_close(db);
 		destroyed = 1;
