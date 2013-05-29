@@ -225,12 +225,12 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	  central = (char*)malloc((blocoV+1)*sizeof(char));	
 	  gap = search_gaps[i];
 	  strncpy(central,buf.seq[i]+gap,blocoV);
+	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
 	}else{				
 	  central = (char*)malloc((seqSize_an+1)*sizeof(char));					
 	  strncpy(central,buf.seq[i],seqSize_an+1);
 	}
-
 
 	if(regiao_5l){
 	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));

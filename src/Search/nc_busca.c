@@ -83,7 +83,7 @@ void buscador(  const int bloco1,
     for(i=0;i<num_antisensos_candidates && !tipo;i++){
       candidate_pos_antisensos = this_candidates[i];
       if(match_check(matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
-        search_gaps[seqId] = candidate_pos_sensos + bloco2;
+        search_gaps[seqId] = candidate_pos_antisensos + bloco2;
         tipo = ANTISENSO;  
         //printf("Encontrei um antisenso %s\n",seq);
       }
