@@ -9,6 +9,7 @@
 package socket;
 
 import gui.Drawer;
+import gui.SummaryDrawer;
 
 import java.net.BindException;
 import java.net.Socket;
@@ -47,6 +48,7 @@ public class SocketManager {
 		}
 		catch(BindException e){
 			System.out.println(TranslationsManager.getInstance().getText("SocketPortConcurrency"));
+			SummaryDrawer.huntAbort();
 		}
 		catch (IOException e){
 			e.printStackTrace(System.err);

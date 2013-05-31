@@ -12,6 +12,7 @@ import javax.swing.JProgressBar;
 
 import xml.TranslationsManager;
 
+@SuppressWarnings("serial")
 public class WaitDialog extends JDialog implements Observer{
 	
 	private TranslationsManager tm = TranslationsManager.getInstance();

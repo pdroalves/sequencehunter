@@ -2,6 +2,8 @@ package gui.menubar;
 
 import gui.Drawer;
 import gui.ReportDrawer;
+import hunt.Hunter;
+
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +19,7 @@ import xml.TranslationsManager;
 
 import dialogs.AboutDialog;
 import dialogs.ExportDialog;
+import dialogs.SettingsDialog;
 
 public class SHMenuBar implements Observer, ActionListener{
 
@@ -27,10 +30,12 @@ public class SHMenuBar implements Observer, ActionListener{
 	private JMenu menuFile;
 	private JMenu menuHelp;
 	private JMenuItem menuItemExport;
+	private Hunter h;
 
-	public SHMenuBar(){
+	public SHMenuBar(Hunter h){
 		this.tm = TranslationsManager.getInstance();
 		menuItemExport = new JMenuItem(tm.getText("menuFileItemExportGeneric"));
+		this.h = h;
 	}
 
 	public JMenuBar getJMenuBar(){
@@ -45,11 +50,13 @@ public class SHMenuBar implements Observer, ActionListener{
 		JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
 		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
 		menuItemExport.setEnabled(false);
+		JMenuItem menuItemSettings = new JMenuItem(tm.getText("menuFileItemSettingsLabel"));
 		
 		menuItemExit.setActionCommand("Exit");
 		menuItemAbout.setActionCommand("About");
 		menuItemExport.setActionCommand("Export");
-
+		menuItemSettings.setActionCommand("Settings");
+		
 		//menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		//menuItemExit.setBorderPainted(true);
 		//menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -60,7 +67,9 @@ public class SHMenuBar implements Observer, ActionListener{
 		menuItemExport.addActionListener(this);
 		menuItemExit.addActionListener(this);
 		menuItemAbout.addActionListener(this);
+		menuItemSettings.addActionListener(this);
 		
+		menuFile.add(menuItemSettings);
 		menuFile.add(menuItemExport);
 		menuFile.addSeparator();
 		menuFile.add(menuItemExit);
@@ -87,6 +96,9 @@ public class SHMenuBar implements Observer, ActionListener{
 		}else if(e.getActionCommand().equals("About")){
 			JDialog about = new AboutDialog(Drawer.getJFrame());
 			about.setVisible(true);
+		}else if(e.getActionCommand().equals("Settings")){
+			JDialog settings = new SettingsDialog(Drawer.getJFrame(),h);
+			settings.setVisible(true);
 		}
 	}
 

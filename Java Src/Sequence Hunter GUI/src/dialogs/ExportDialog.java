@@ -6,25 +6,16 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.*;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Observer;
 import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,7 +29,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import database.DBManager;
 import dialogs.checkbox.CheckBoxNode;
 import dialogs.checkbox.CheckBoxNodeEditor;
 import dialogs.checkbox.CheckBoxNodeRenderer;
@@ -46,10 +36,7 @@ import dialogs.checkbox.NamedVector;
 
 import xml.TranslationsManager;
 
-import gui.Drawer;
 import gui.ReportDrawer;
-import hunt.Evento;
-
 public class ExportDialog extends JDialog implements ActionListener, ChangeListener{
 
 	/**

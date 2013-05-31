@@ -18,6 +18,7 @@
 	<TextResource tag="menuHelpLabel" text="Help"></TextResource>
 	<TextResource tag="menuFileItemExitLabel" text="Exit"></TextResource>
 	<TextResource tag="menuHelpItemAboutLabel" text="About"></TextResource>
+	<TextResource tag="menuFileItemSettingsLabel" text="Settings"></TextResource>
 	<TextResource tag="targetSequenceSetLabel" text="Sequence: "></TextResource>
 	<TextResource tag="targetSequenceLabel" text="Target Sequence: "></TextResource>
 	<TextResource tag="targetSequenceSetButton" text="Set"></TextResource>
@@ -63,6 +64,8 @@
 	<TextResource tag="menuFileItemExportGenericAllReports" text="Export all reports"></TextResource>
 	<TextResource tag="ExportDialogExportButton" text="Export"></TextResource>
 	<TextResource tag="ExportDialogCancelButton" text="Cancel"></TextResource>
+	<TextResource tag="SettingsDialogCancelButton" text="Cancel"></TextResource>
+	<TextResource tag="SettingsDialogOkButton" text="Ok"></TextResource>
 	<TextResource tag="reportLoadedFromFile" text="Report loaded: "></TextResource>
 	<TextResource tag="NoCLIConnection" text="Can't connect to CLI."></TextResource>
 	<TextResource tag="LoadingReport" text="Loading report, please wait..."></TextResource>
@@ -74,5 +77,8 @@
 	<TextResource tag="OutputFolderSet" text="Output folder set to: "></TextResource>
 	<TextResource tag="MaxSeqs" text="Maximum rows to export per report: "></TextResource>
 	<TextResource tag="SocketPortConcurrency" text ="Looks like there is another program using Sequence Hunter resources. Close it and try again."></TextResource>
+	<TextResource tag="ForceCudaMode" text="Force GPU processing (CUDA):"></TextResource>
+	<TextResource tag="ForceNonCudaMode" text="Force CPU processing:"></TextResource>
+	<TextResource tag="NonForceMode" text="Let Sequence Hunter choose the best processing mode:"></TextResource>
 </AllTextResource>
 	

@@ -61,7 +61,7 @@ public class Drawer {
 		jcprogress = drawProgressBarContainer(jprog);
 		tm = TranslationsManager.getInstance();
 		tm.setDefaultLanguage();
-		shmb = new SHMenuBar();
+		shmb = new SHMenuBar(h);
 
 		// Cria JFrame container
 		jfrm = new JFrame(tm.getText("appName"));

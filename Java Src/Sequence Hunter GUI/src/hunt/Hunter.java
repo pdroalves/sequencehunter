@@ -23,11 +23,17 @@ public class Hunter{
 	private static String appName_nix = "shunter-cli";
 	private static String default_output_folder;
 	private static String output_folder;
+	public static final int FORCE_CUDA_MODE = 0;
+	public static final int FORCE_NONCUDA_MODE = 1;
+	public static final int NON_FORCE_MODE = 2;
+	private int mode = NON_FORCE_MODE;
+	
 	String command = "";
 	private CoreAppDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	private TranslationsManager tm;
 	public Hunter(){
+		setMode(NON_FORCE_MODE);
 		tm = TranslationsManager.getInstance();
 		if(getOS().contains("WIN")){
 			default_output_folder = new String(System.getenv("HOMEDRIVE")+System.getenv("HOMEPATH"));
@@ -54,13 +60,23 @@ public class Hunter{
 
 		// Gera linha de parametros
 		String parameters = null;
-		if(output_folder != null){
-			parameters = new String("--target "+ target+ " -dt --gui -o \""+output_folder+"\"");
-		}else{
-			parameters = new String("--target "+ target+ " -dt --gui");	
+		String processingMode = "";
+	
+		switch(mode){
+		case FORCE_CUDA_MODE:
+			processingMode = "";
+			break;
+		case FORCE_NONCUDA_MODE:
+			processingMode = "-d";
+			break;
+		case NON_FORCE_MODE:
+			processingMode = "";
+			break;
 		}
 		if(output_folder != null){
-			parameters.concat(" -o "+output_folder);
+			parameters = new String("--target "+ target+ " -t --gui -o \""+output_folder+"\" "+processingMode);
+		}else{
+			parameters = new String("--target "+ target+ " -t --gui "+processingMode);
 		}
 		String libsPath = " ";
 		if(!libs.isEmpty()){
@@ -154,5 +170,13 @@ public class Hunter{
 
 	public static String getOS() {
 		return System.getProperty("os.name").toUpperCase();
+	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.mode = mode;
 	}
 }
