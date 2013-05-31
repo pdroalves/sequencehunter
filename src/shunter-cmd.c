@@ -64,6 +64,7 @@ gboolean keep = FALSE;
 gboolean gui_run = FALSE;
 gboolean regiao5l = FALSE;
 gint max_events = 20;
+gboolean fixdb = FALSE;
 //###############
 static GOptionEntry entries[] =
   {
@@ -79,8 +80,9 @@ static GOptionEntry entries[] =
     { "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Silent execution.", NULL },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose.", NULL },
     { "build", 'b', 0, G_OPTION_ARG_NONE, &check_build, "Gets build number.", NULL },
+    { "fixdb", 'x', 0, G_OPTION_ARG_NONE, &fixdb, "Try to fix a database file.", NULL },
     { "debug", NULL, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &debug, NULL, NULL },		
-    { "gui", NULL, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &gui_run, NULL, NULL },		
+    { "gui", NULL, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &gui_run, NULL, NULL },	
     { NULL }
   };
 
@@ -119,6 +121,7 @@ int main (int argc,char *argv[]) {
   Params set;
   time_t t;
   char *tempo;
+  Socket *gui_socket;
 
   //##########################
   //Carrega parametros de entrada
@@ -134,6 +137,12 @@ int main (int argc,char *argv[]) {
   if(check_build){
     printf("Build: %d\n",get_build());
     return 0;
+  }
+
+  if(fixdb){
+    printf("Trying to fix %s...\n",argv[1]);
+fix_database(argv[1]);
+exit(1);
   }
   if(!silent)
     printf("Starting Sequence Hunter...\nBuild: %d\n",get_build());
@@ -237,6 +246,9 @@ int main (int argc,char *argv[]) {
 
     c_size = b1_size+b2_size+bv_size;
 
+    // Cria objeto para se comunicar com a GUI
+  if(!silent)
+    gui_socket = (Socket*)malloc(sizeof(Socket));
 
     // Seta database
     if(cutmode)  
@@ -253,14 +265,15 @@ int main (int argc,char *argv[]) {
     set.dist_regiao_5l = dist_regiao_5l;
     set.tam_regiao_5l = tam_regiao_5l;
 		
+
     if(disable_cuda){
       if(!silent || gui_run)
 	printf("CPU mode.\n");
       printString("CPU mode.",NULL);
-      aux(0,c,b1_size,b2_size,c_size,set); 
+      aux(0,c,b1_size,b2_size,c_size,set,gui_socket); 
     }
     else{
-      aux(is_cuda_available,c,b1_size,b2_size,c_size,set);
+      aux(is_cuda_available,c,b1_size,b2_size,c_size,set,gui_socket);
     }
     free(c);
     //}
@@ -273,9 +286,14 @@ int main (int argc,char *argv[]) {
 
     close_file();
     destroy_db_manager();
+  if(gui_run){
+    destroy_socket(gui_socket);
+  }
 
     if(!silent)
       printf("Concluded.\n");
+
+    free(gui_socket);
 
     return 0;
   }

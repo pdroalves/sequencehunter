@@ -413,11 +413,9 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
   return;
 }
 
-void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set){
+void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set,Socket *gui_socket){
   float tempo;
   int seqSize_an;//Tamanho das sequencias analisadas
-  Socket *gui_socket;
-
   verbose = set.verbose;
   silent = set.silent;
   debug = set.debug;
@@ -430,7 +428,6 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
     regiao_5l = TRUE;
   else
     regiao_5l = FALSE;
-  gui_socket = (Socket*)malloc(sizeof(Socket));
   if(!silent || gui_run)
     printf("CUDA mode.\n");
   printString("CUDA mode.\n",NULL);
@@ -450,12 +447,6 @@ void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Par
   cudaThreadExit();
   
   printString("Hunt done...\n",NULL);
-  destroy_db_manager();
-  if(gui_run){
-    destroy_socket(gui_socket);
-  }else{
-    //db_select("SELECT * FROM events");
-  }
   
   return;
 }

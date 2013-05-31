@@ -97,3 +97,7 @@ int tamanho_db(){
 char* get_database_filename(){
 	return db_filename;
 }
+
+void fix_database(char *filename){
+	db_fix(filename);
+}

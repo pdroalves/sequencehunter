@@ -47,12 +47,28 @@ public class DB {
 				Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
 				if(e.getMessage().contains("full")){
 					Drawer.writeToLog(TranslationsManager.getInstance().getText("DiskFullForTmpFile"));
-					query.concat(" limit 1000");
+					Drawer.writeToLog(TranslationsManager.getInstance().getText("LowDiskSpaceMode"));
+					query.concat(" limit 100");
+				}else if(e.getMessage().contains("no such table")){
+					fixDatabase();
 				}
 			}
 			repeats++;
 		}
 		return false;
+	}
+	
+	private void fixDatabase(){
+		try{
+
+			Statement stat = databaseConn.createStatement();
+			stat.execute("CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq");
+			stat.execute("DROP TABLE events_tmp");
+			stat.execute("vacuum");			
+		} catch (SQLException e) {
+		Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
+	}
+		return;
 	}
 
 	public Evento getEvento(){

@@ -30,8 +30,6 @@
 int tmp = 0;
 int sent_to_db = 0;
 
-
-
 void send_setup_to_gui(Socket *gui_socket){
   char *msg;
   
@@ -127,7 +125,7 @@ void report_manager(	Socket *gui_socket,
     
     if(gui_run){
 		
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,rate_processing,*readCount);
+      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,0,*readCount);
       send_msg_to_socket(gui_socket,msg);
       get_msg_to_socket(gui_socket);
     }
@@ -184,11 +182,11 @@ void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
   return;
 }
 
-void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,Params set){
+void aux(int CUDA,char *c,const int bloco1,const int bloco2,const int blocos,Params set,Socket *socket){
 	if(CUDA)
-		auxCUDA(c,bloco1,bloco2,blocos,set);
+		auxCUDA(c,bloco1,bloco2,blocos,set,socket);
 	else
-		auxNONcuda(c,bloco1,bloco2,blocos,set);
+		auxNONcuda(c,bloco1,bloco2,blocos,set,socket);
     return; 
 }
 

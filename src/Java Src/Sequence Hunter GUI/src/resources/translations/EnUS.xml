@@ -67,5 +67,6 @@
 	<TextResource tag="NoCLIConnection" text="Can't connect to CLI."></TextResource>
 	<TextResource tag="LoadingReport" text="Loading report, please wait..."></TextResource>
 	<TextResource tag="PleaseWaitDialog" text="Please wait..."></TextResource>
+	<TextResource tag="LowDiskSpaceMode" text="Low disk space mode..."></TextResource>
 </AllTextResource>
 	

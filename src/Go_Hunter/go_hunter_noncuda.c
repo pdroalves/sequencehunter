@@ -353,11 +353,10 @@ void NONcudaIteracoes(int bloco1,int bloco2,int blocos,const int seqSize_an,Sock
   return;
 }
 
-void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set){
+void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Params set,Socket *gui_socket){
 	
   int seqSize_an;//Elementos por sequência
   float tempo;
-  Socket *gui_socket;
 
   // Inicializa variaveis
   tempo = 0;
@@ -373,8 +372,6 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
   else
     regiao_5l = FALSE;
 
-  if(!silent)
-    gui_socket = (Socket*)malloc(sizeof(Socket));
   printf("CPU mode.\n");
   printString("CPU mode.\n",NULL);
   printf("Buffer size: %d\n",buffer_size);
@@ -391,14 +388,6 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
   printString("Hunt done.",NULL);
   print_tempo(tempo);
 	
-
-  // Destruir a DB aqui eh gambiarra, mas tem de ser feito sempre antes de encerrar o socket
-  destroy_db_manager();
-  if(gui_run){
-    destroy_socket(gui_socket);
-  }else{
-    //db_select("SELECT * FROM events");
-  }
   return;	
 }
 

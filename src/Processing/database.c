@@ -19,6 +19,7 @@ sqlite3 *db;
 int count;
 int destroyed;
 sqlite3_stmt *stmt_insert;
+char *database_path;
 
 int get_hash(char* original){
 	char *c;
@@ -57,6 +58,8 @@ void db_create(char *filename){
 	char *query;
     sqlite3_stmt *stmt;
     destroyed = 0;
+
+    database_path = filename;
     
     MAX_DB_MEM_USE = (double)getTotalSystemMemory()*DB_FREE_MEMORY_FACTOR*1024;
 	
@@ -185,7 +188,10 @@ void db_destroy(){
 			db_commit_transaction();
 			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
 		}else{
-		  printf("Database ERROR! %s %d\n",sErrMsg);
+			if(ret == SQLITE_FULL)
+		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,database_path);
+		 	else
+		 		 printf("Database ERROR! %s\n",sErrMsg);
 		}
 		
 		sqlite3_finalize(stmt_insert);
@@ -194,25 +200,51 @@ void db_destroy(){
 	}
 }
 
-int callback(void *NotUsed,int argc,char **argv,char **azColName){
-	int i;
-  /*for(i=0;i<argc;i++){
-  	printf("%s ",azColName[i]);
-  }
-  printf("\n");
-*/
-  for(i=0; i<argc; i++){
-    if( argv[i] )
-        printf("%s ",argv[i]);
-    else
-        printf("NULL ");
-  }
-  printf("\n");
-  return 0;
+
+/*int callback_phase_one(void *NotUsed,int argc,char **argv,char **azColName){
 
 }
 
-void db_select(char *query){
+int callback_phase_one(void *NotUsed,int argc,char **argv,char **azColName){
+	// Verifica se tabela events existe
+	int i;
+  if(argc == 0){
+  	// Tabela events nao existe
+
+  }else{
+  	// Tabela events existe
+  }
+  return 0;
+
+}
+*/
+void db_fix(char *filename){
 	char *db_err;
-	sqlite3_exec(db,query,callback,0,&db_err);
+	int ret;
+	char *sErrMsg;
+	char createEventsQuery[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char dropTmpQuery[] = "DROP TABLE events_tmp";
+
+	ret = sqlite3_open(filename,&db);
+    
+    if (!db)
+        printf("Not sure why, but the database didn't open.\n");
+
+		db_start_transaction();
+		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
+		db_commit_transaction();
+		if(sErrMsg == NULL){
+			db_start_transaction();
+			ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
+			db_commit_transaction();
+			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
+		}else{
+			if(ret == SQLITE_FULL)
+		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,filename);
+		 	else
+		 		 printf("Database ERROR! %s\n",sErrMsg);
+		}
+		
+		sqlite3_close(db);
+	return;
 }

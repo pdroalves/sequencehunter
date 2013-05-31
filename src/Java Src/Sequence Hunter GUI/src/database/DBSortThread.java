@@ -14,7 +14,7 @@ public class DBSortThread extends Thread{
 	private final String sensosSortAsc = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_sensos ASC";
 	private final String antisensosSortAsc = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_antisensos ASC";
 	private final String seqSortDesc = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY main_seq DESC";
-	private final String defaultSort = paresSortDesc;
+	//private final String defaultSort = paresSortDesc;
 	public final int PARES_DESC = 0;
 	public final int SENSOS_DESC = 1;
 	public final int ANTISENSOS_DESC = 2;
