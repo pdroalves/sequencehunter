@@ -311,10 +311,10 @@ void search_manager(int *buffer_load,
           cincol_antisenso = get_antisenso(cincol);
       	  hold_event = (void*)criar_elemento_fila_event(central_antisenso,cincol_antisenso,ANTISENSO);
       	  enfileirar(toStore,hold_event);
-	  if(central_antisenso != NULL)
-            free(central_antisenso);
-          if(cincol_antisenso != NULL)
-            free(cincol_antisenso);
+	       if(central != NULL)
+            free(central);
+          if(cincol != NULL)
+            free(cincol);
       	  break;
       	}
       }
