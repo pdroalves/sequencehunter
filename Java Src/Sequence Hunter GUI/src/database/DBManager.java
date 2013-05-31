@@ -157,6 +157,17 @@ public class DBManager extends Observable{
 			return;
 	}
 
+	public void load(long quantity){
+		// Carrega sequencias ate atingir o tamanho de quantity 
+		// ou ate nao haverem mais sequencias
+		Evento e = this.getEvento();
+
+		while(e != null && seqs.size() < quantity) {
+			seqs.add(e);
+			e = this.getEvento();
+		}
+	}
+
 	public void destroy(){
 		seqs.clear();
 		database.close();

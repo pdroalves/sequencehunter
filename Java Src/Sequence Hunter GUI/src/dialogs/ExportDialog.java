@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Observer;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -27,6 +28,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -44,6 +46,7 @@ import dialogs.checkbox.NamedVector;
 
 import xml.TranslationsManager;
 
+import gui.Drawer;
 import gui.ReportDrawer;
 import hunt.Evento;
 
@@ -56,6 +59,7 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 	private JTree tree;
 	private ArrayList<CheckBoxNode> cbnList;
 	private long maxSeqsToExport = 200;
+	private JProgressBar jpb;
 
 	public ExportDialog(JFrame parent){
 		super(parent, "Export", true);
@@ -72,7 +76,6 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		c.weighty = 0.10;
 		c.weightx = 0.5;
 		c.gridy = 0;
-
 		///////////////////
 		// Export single
 		c.gridx = 0;
@@ -124,9 +127,9 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		SpinnerModel spinnermodel = new SpinnerNumberModel(maxSeqsToExport, 1, 1e20, 100);
 		JSpinner spinner = new JSpinner(spinnermodel); 
 		Dimension d = spinner.getPreferredSize();  
-        d.width = 50;  
-        spinner.setPreferredSize(d);  
-        spinner.addChangeListener(this);
+		d.width = 50;  
+		spinner.setPreferredSize(d);  
+		spinner.addChangeListener(this);
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 0.05;
 		c.weightx = 0.5;
@@ -138,7 +141,7 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		b.add(maxSeqs);
 		b.add(spinner);
 		jp.add(b,c);
-		
+
 		JButton exportButton = new JButton(tm.getText("ExportDialogExportButton"));
 		exportButton.setActionCommand("Export");
 		exportButton.addActionListener(this);
@@ -154,9 +157,21 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		jp.add(exportButton,c);
 		c.gridx=1;
 		jp.add(cancelButton,c);
+		
 
-		getContentPane().add(jp);
-
+		///////////////////
+		// JProgressBar
+		jpb = new JProgressBar();
+		jpb.setVisible(false);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.05;
+		c.weightx = 1;
+		c.gridy = 4;
+		c.gridx = 0;
+		c.gridwidth = 2;
+		jp.add(jpb,c);
+		
+		this.getContentPane().add(jp);
 		setSize(450, 250);
 		setLocationByPlatform(true);
 		setLocationRelativeTo(parent);
@@ -208,75 +223,24 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 			tree.setEnabled(false);			
 		}else if(ae.getActionCommand().equals("Export")){
 			// Escolhe o local para salvar o arquivo
-			JFileChooser jfc = new JFileChooser(System.getProperty("user.dir"));
-			jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			if(jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION){
-				Iterator<CheckBoxNode> iterator = cbnList.iterator();
-				try {
-					Calendar calendar = Calendar.getInstance();
-					File zipfile = new File(jfc.getSelectedFile()+"/"+"Export-"+calendar.getTime()+".zip");
-					zipfile.createNewFile();
-					ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipfile));
-					while(iterator.hasNext()){
-						CheckBoxNode cbn = iterator.next();
-						if(cbn.isSelected() || !tree.isEnabled()){
-							Object attribute = cbn.getAttribute();
-
-							if(attribute instanceof DBManager){
-								DBManager dbm = (DBManager) attribute;
-								List<Evento> eventos = dbm.getEvents();
-
-								System.out.println("Vou salvar : "+eventos.size()+" em "+jfc.getSelectedFile());
-
-								// name the file inside the zip  file
-								out.putNextEntry(new ZipEntry(cbn.getText()+".txt")); 
-								Iterator<Evento> eventoIterator = eventos.iterator();
-								while(eventoIterator.hasNext()){
-									Evento e = eventoIterator.next();
-									String str;
-									if(cbn.getText().contains("unpaired")){
-										str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"-"+e.getRelativeFreq()+"\n"; 
-									}else{
-										str = e.getSeq()+"-"+e.getPares()+"\n"; 
-									}
-									out.write(str.getBytes("UTF-8"), 0, str.length());
-								}
-
-							}else if(attribute instanceof File){
-								File f = (File) attribute;
-								FileInputStream in = new FileInputStream(f);
-								// out put file 
-
-								out.putNextEntry(new ZipEntry(f.getName())); 
-
-								byte[] b = new byte[1024];
-
-								int count;
-
-								while ((count = in.read(b)) > 0) {
-									System.out.println();
-
-									out.write(b, 0, count);
-								}
-								in.close();
-							}
-						}
-					}
-					out.close();
-				}catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
-			super.dispose();
+			this.setEnabled(false);
+			ExportWorker ew = new ExportWorker(this,jpb, cbnList, tree, maxSeqsToExport);
+			ew.start();
 		}else if(ae.getActionCommand().equals("Cancel")){
+			super.dispose();
+		}
+	}
+	
+	protected void setExported(boolean b){
+		if(b){
+			this.setEnabled(true);
 			super.dispose();
 		}
 	}
 
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		
+
 		Object obj = e.getSource();
 		if(obj instanceof JSpinner){
 			JSpinner spinner = (JSpinner)obj;

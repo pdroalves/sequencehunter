@@ -1,6 +1,5 @@
 package dialogs;
 
-import gui.ReportDrawer;
 
 import java.awt.BorderLayout;
 import java.util.Observable;
@@ -17,7 +16,7 @@ public class WaitDialog extends JDialog implements Observer{
 	
 	private TranslationsManager tm = TranslationsManager.getInstance();
 	
-	public WaitDialog(JFrame parent,ReportDrawer owner){
+	public WaitDialog(JFrame parent,Observable owner){
 		super(parent,"Please wait...",true);
 		this.setUndecorated(true);
 		owner.addObserver(this);
@@ -34,7 +33,6 @@ public class WaitDialog extends JDialog implements Observer{
 
 	@Override
 	public void update(Observable o, Object arg) {
-		System.out.println("Opa opa");
 		this.dispose();		
 	}
 
