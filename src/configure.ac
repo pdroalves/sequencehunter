@@ -1,0 +1,35 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.68])
+AC_INIT([SEQUENCE-HUNTER], [0.8.8.4504], [pdroalves@gmail.com])
+AC_CONFIG_SRCDIR([shunter-cmd.c])
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE([0.8.8 no-define])
+
+# Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CPP
+AC_PROG_INSTALL
+
+# Checks for libraries.
+# FIXME: Replace `main' with a function in `-lcuda':
+AC_CHECK_LIB([cuda], [main])
+# FIXME: Replace `main' with a function in `-lcudart':
+AC_CHECK_LIB([cudart], [main])
+# FIXME: Replace `main' with a function in `-lsqlite3':
+AC_CHECK_LIB([sqlite3], [main])
+
+# Checks for header files.
+AC_CHECK_HEADERS([mach/mach.h stdlib.h string.h sys/time.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_SIZE_T
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([clock_gettime gethrtime gettimeofday])
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
