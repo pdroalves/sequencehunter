@@ -14,7 +14,7 @@ import xml.TranslationsManager;
 public class DB {
 	private Connection databaseConn;
 	private ResultSet rows;
-	private final int maxRepeats = 10;
+	private final int maxRepeats = 3;
 
 	public DB(String databaseFilename){
 		boolean repeat = true;
@@ -57,17 +57,17 @@ public class DB {
 		}
 		return false;
 	}
-	
+
 	private void fixDatabase(){
 		try{
-
+			Drawer.writeToLog(TranslationsManager.getInstance().getText("FixDB"));
 			Statement stat = databaseConn.createStatement();
 			stat.execute("CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq");
 			stat.execute("DROP TABLE events_tmp");
 			stat.execute("vacuum");			
 		} catch (SQLException e) {
-		Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
-	}
+			Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
+		}
 		return;
 	}
 
@@ -88,12 +88,18 @@ public class DB {
 	}
 
 	public ResultSet executeQuery(String query){
-		try {
-			Statement stat = databaseConn.createStatement();
-			ResultSet set = stat.executeQuery(query);
-			return set;
-		} catch (SQLException e) {
-			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		int repeats = 0;
+		boolean repeat = true;
+		while(repeat == true && repeats < maxRepeats){
+			try {
+				Statement stat = databaseConn.createStatement();
+				ResultSet set = stat.executeQuery(query);
+				return set;
+			} catch (SQLException e) {
+				Drawer.writeToLog("Database ERROR: "+e.getMessage());
+				fixDatabase();
+			}
+			repeats++;
 		}
 		return null;
 	}

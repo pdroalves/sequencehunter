@@ -68,5 +68,7 @@
 	<TextResource tag="LoadingReport" text="Loading report, please wait..."></TextResource>
 	<TextResource tag="PleaseWaitDialog" text="Please wait..."></TextResource>
 	<TextResource tag="LowDiskSpaceMode" text="Low disk space mode..."></TextResource>
+	<TextResource tag="FixDB" text="Trying to fix database..."></TextResource>
+	<TextResource tag="CouldntLoad" text="Couldn't load the report..."></TextResource>
 </AllTextResource>
 	

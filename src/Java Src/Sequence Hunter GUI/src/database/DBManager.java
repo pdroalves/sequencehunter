@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Observable;
 
+import xml.TranslationsManager;
+
 import gui.Drawer;
 import hunt.Evento;
 
@@ -27,10 +29,10 @@ public class DBManager extends Observable{
 		database = new DB(databaseFilename);
 		int size = database.getSize();
 		seqs = new ArrayList<Evento>(size) ;
- 		totalPares = this.getTotalPares();
- 		totalSensos = this.getTotalSensos();
- 		totalAntisensos = this.getTotalAntisensos();
- 		totalSequences = database.getSize();
+		totalPares = this.getTotalPares();
+		totalSensos = this.getTotalSensos();
+		totalAntisensos = this.getTotalAntisensos();
+		totalSequences = database.getSize();
 		if(database != null){
 			this.sort(getMode(), 0);
 		}
@@ -96,32 +98,32 @@ public class DBManager extends Observable{
 	public void normalizeData(){
 		System.out.println("Normalizando");
 		float norma;
-			switch(mode){
-			case Evento.VALUE_SENSOS_REL:
-				norma = totalSensos;
-				for(int i = 0;i < seqs.size();i++){
-					Evento g = (Evento)seqs.get(i);
-					g.setRelativeFreq(g.getSensos()*100 / norma);
-					g.setMode(mode);
-				}
-				break;
-			case Evento.VALUE_ANTISENSO_REL:
-				norma = totalAntisensos;
-				for(int i = 0;i < seqs.size();i++){
-					Evento g = (Evento)seqs.get(i);
-					g.setRelativeFreq(g.getAntisensos()*100 / norma);
-					g.setMode(mode);
-				}
-				break;
-			default:
-				norma = totalPares;
-				for(int i = 0;i < seqs.size();i++){
-					Evento g = (Evento)seqs.get(i);
-					g.setRelativeFreq(g.getPares()*100 / norma);
-					g.setMode(mode);
-				}
-				break;
-			}		
+		switch(mode){
+		case Evento.VALUE_SENSOS_REL:
+			norma = totalSensos;
+			for(int i = 0;i < seqs.size();i++){
+				Evento g = (Evento)seqs.get(i);
+				g.setRelativeFreq(g.getSensos()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		case Evento.VALUE_ANTISENSO_REL:
+			norma = totalAntisensos;
+			for(int i = 0;i < seqs.size();i++){
+				Evento g = (Evento)seqs.get(i);
+				g.setRelativeFreq(g.getAntisensos()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		default:
+			norma = totalPares;
+			for(int i = 0;i < seqs.size();i++){
+				Evento g = (Evento)seqs.get(i);
+				g.setRelativeFreq(g.getPares()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		}		
 	}
 
 	public ArrayList<Evento> getEvents() {
@@ -161,37 +163,37 @@ public class DBManager extends Observable{
 	}
 
 	public int getTotalPares(){
+		int total = 0;
 		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events");
-		int total = 0;
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
 		} catch (SQLException e) {
-			Drawer.writeToLog("Database error! - "+e.getMessage());
+			Drawer.writeToLog("Database error!");
 		}
 		return total;
 	}
-	
+
 	public int getTotalSensos(){
-		ResultSet rs = database.executeQuery("SELECT SUM(qnt_sensos) FROM events");
 		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_sensos) FROM events");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
 		} catch (SQLException e) {
-			Drawer.writeToLog("Database error! - "+e.getMessage());
+			Drawer.writeToLog("Database error!");
 		}
 		return total;
 	}
-	
+
 	public int getTotalAntisensos(){
-		ResultSet rs = database.executeQuery("SELECT SUM(qnt_antisensos) FROM events");
 		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_antisensos) FROM events");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
 		} catch (SQLException e) {
-			Drawer.writeToLog("Database error! - "+e.getMessage());
+			Drawer.writeToLog("Database error!");
 		}
 		return total;
 	}
