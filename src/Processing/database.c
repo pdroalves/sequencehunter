@@ -240,7 +240,7 @@ void db_fix(char *filename){
 			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
 		}else{
 			if(ret == SQLITE_FULL)
-		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,filename);
+		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,database_path);
 		 	else
 		 		 printf("Database ERROR! %s\n",sErrMsg);
 		}
