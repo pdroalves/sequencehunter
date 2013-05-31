@@ -53,7 +53,12 @@ public class Hunter{
 	public void Set(String target,ArrayList<String> libs){	
 
 		// Gera linha de parametros
-		String parameters = new String("--target "+ target+ " -dt --gui");
+		String parameters = null;
+		if(output_folder != null){
+			parameters = new String("--target "+ target+ " -dt --gui -o \""+output_folder+"\"");
+		}else{
+			parameters = new String("--target "+ target+ " -dt --gui");	
+		}
 		if(output_folder != null){
 			parameters.concat(" -o "+output_folder);
 		}

@@ -1,5 +1,6 @@
 package dialogs;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -18,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -27,7 +29,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTree;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import database.DBManager;
 import dialogs.checkbox.CheckBoxNode;
@@ -40,7 +47,7 @@ import xml.TranslationsManager;
 import gui.ReportDrawer;
 import hunt.Evento;
 
-public class ExportDialog extends JDialog implements ActionListener{
+public class ExportDialog extends JDialog implements ActionListener, ChangeListener{
 
 	/**
 	 * 
@@ -48,6 +55,7 @@ public class ExportDialog extends JDialog implements ActionListener{
 	private static final long serialVersionUID = 1L;
 	private JTree tree;
 	private ArrayList<CheckBoxNode> cbnList;
+	private long maxSeqsToExport = 200;
 
 	public ExportDialog(JFrame parent){
 		super(parent, "Export", true);
@@ -113,6 +121,24 @@ public class ExportDialog extends JDialog implements ActionListener{
 
 		///////////////////
 		// Botoes
+		SpinnerModel spinnermodel = new SpinnerNumberModel(maxSeqsToExport, 1, 1e20, 100);
+		JSpinner spinner = new JSpinner(spinnermodel); 
+		Dimension d = spinner.getPreferredSize();  
+        d.width = 50;  
+        spinner.setPreferredSize(d);  
+        spinner.addChangeListener(this);
+		c.fill = GridBagConstraints.NONE;
+		c.weighty = 0.05;
+		c.weightx = 0.5;
+		c.gridy = 2;
+		c.gridx = 0;
+		c.gridwidth = 1;
+		JLabel maxSeqs = new JLabel(TranslationsManager.getInstance().getText("MaxSeqs"));
+		Box b = Box.createHorizontalBox();
+		b.add(maxSeqs);
+		b.add(spinner);
+		jp.add(b,c);
+		
 		JButton exportButton = new JButton(tm.getText("ExportDialogExportButton"));
 		exportButton.setActionCommand("Export");
 		exportButton.addActionListener(this);
@@ -122,7 +148,7 @@ public class ExportDialog extends JDialog implements ActionListener{
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 0.05;
 		c.weightx = 1;
-		c.gridy = 2;
+		c.gridy = 3;
 		c.gridx = 0;
 		c.gridwidth = 1;
 		jp.add(exportButton,c);
@@ -209,7 +235,7 @@ public class ExportDialog extends JDialog implements ActionListener{
 									Evento e = eventoIterator.next();
 									String str;
 									if(cbn.getText().contains("unpaired")){
-										str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"\n"; 
+										str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"-"+e.getRelativeFreq()+"\n"; 
 									}else{
 										str = e.getSeq()+"-"+e.getPares()+"\n"; 
 									}
@@ -245,6 +271,17 @@ public class ExportDialog extends JDialog implements ActionListener{
 			super.dispose();
 		}else if(ae.getActionCommand().equals("Cancel")){
 			super.dispose();
+		}
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		
+		Object obj = e.getSource();
+		if(obj instanceof JSpinner){
+			JSpinner spinner = (JSpinner)obj;
+			maxSeqsToExport = Math.round((Double) spinner.getValue());
+			System.err.println("Maximo: "+maxSeqsToExport);
 		}
 	}
 }

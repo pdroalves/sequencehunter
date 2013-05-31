@@ -63,8 +63,9 @@ public class DB {
 			Drawer.writeToLog(TranslationsManager.getInstance().getText("FixDB"));
 			Statement stat = databaseConn.createStatement();
 			stat.execute("CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq");
-			//stat.execute("DROP TABLE events_tmp");
-			//stat.execute("vacuum");			
+			stat.execute("DROP TABLE events_tmp");
+			stat.execute("vacuum");			
+			Drawer.writeToLog(TranslationsManager.getInstance().getText("FixDBDone"));
 		} catch (SQLException e) {
 			Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
 		}

@@ -97,7 +97,7 @@ public class TabledReport extends Report implements Observer{
 		if(!dbm.isReady()){
 			layerUI.start();
 		}else{
-			System.err.println("Adicionando - "+name+" - size:"+dbm.getEvents().size());
+			//System.err.println("Adicionando - "+name+" - size:"+dbm.getEvents().size());
 			dbm.normalizeData();
 			//eh.addTypeSet(dbm.getEvents());
 			//eh.commit();

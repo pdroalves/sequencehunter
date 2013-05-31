@@ -57,6 +57,7 @@ public class ReportDrawer extends Observable implements ActionListener{
 	
 	public void removeReport(int index){
 		reportTab.remove(index);
+		// Pega os subreports vinculados ao report main
 		List<Report> reports = data.get(index);
 		Iterator<Report> iterator = reports.iterator();
 		while(iterator.hasNext()){
@@ -65,12 +66,15 @@ public class ReportDrawer extends Observable implements ActionListener{
 				TabledReport tr = (TabledReport) report;
 				tr.getDBM().destroy();
 			}
-			data.remove(report);
 		}
+		reports.removeAll(reports);
 		data.remove(index);
+		System.out.println("Oi");
 		tabNames.get(index).clear();
 		tabNames.remove(index);
-		reportName.remove(index);		
+		reportName.remove(index);	
+		this.setChanged();
+		this.notifyObservers();
 	}
 
 	public JPanel getContainer(){

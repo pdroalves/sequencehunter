@@ -10,6 +10,7 @@ package socket;
 
 import gui.Drawer;
 
+import java.net.BindException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.util.regex.Matcher;
@@ -17,6 +18,8 @@ import java.util.regex.Pattern;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+
+import xml.TranslationsManager;
 
 public class SocketManager {
 
@@ -41,6 +44,9 @@ public class SocketManager {
 		ServerSocket sock = null;
 		try {
 			sock = new ServerSocket(serverPort);
+		}
+		catch(BindException e){
+			System.out.println(TranslationsManager.getInstance().getText("SocketPortConcurrency"));
 		}
 		catch (IOException e){
 			e.printStackTrace(System.err);

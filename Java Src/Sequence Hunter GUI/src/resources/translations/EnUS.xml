@@ -69,6 +69,10 @@
 	<TextResource tag="PleaseWaitDialog" text="Please wait..."></TextResource>
 	<TextResource tag="LowDiskSpaceMode" text="Low disk space mode..."></TextResource>
 	<TextResource tag="FixDB" text="Trying to fix database..."></TextResource>
+	<TextResource tag="FixDBDone" text="Database fixed!"></TextResource>
 	<TextResource tag="CouldntLoad" text="Couldn't load the report..."></TextResource>
+	<TextResource tag="OutputFolderSet" text="Output folder set to: "></TextResource>
+	<TextResource tag="MaxSeqs" text="Maximum rows to export per report: "></TextResource>
+	<TextResource tag="SocketPortConcurrency" text ="Looks like there is another program using Sequence Hunter resources. Close it and try again."></TextResource>
 </AllTextResource>
 	

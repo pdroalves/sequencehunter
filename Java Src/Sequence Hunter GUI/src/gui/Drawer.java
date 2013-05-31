@@ -47,6 +47,7 @@ public class Drawer {
 	public final static int REPORT_TAB = 2;
 	private static long jprogMaxAbs = 0;
 	private static int jprogMaxRel = 100;
+	
 	public Drawer(){
 		statusLog = new JTextArea();
 		statusLog.setLineWrap(true);

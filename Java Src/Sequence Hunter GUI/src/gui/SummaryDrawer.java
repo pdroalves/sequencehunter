@@ -35,52 +35,52 @@ public class SummaryDrawer implements ActionListener{
 	private static Drawer drawer;
 	private static ArrayList<String> libs;
 	private static TranslationsManager tm;
-	
+
 	public SummaryDrawer(Drawer d,Hunter hunterInstance){
 		drawer = d;
 		h = hunterInstance;
 		SummaryDrawer.tm = TranslationsManager.getInstance();
 		libs = new ArrayList<String>();
-		
+
 		// Start cancel buttons
 		startButton = new JButton(tm.getText("summaryStartButton"));
 		startButton.addActionListener(this);
 		abortButton = new JButton(tm.getText("summaryAbortButton"));
 		abortButton.setEnabled(false);
 		abortButton.addActionListener(this);
-		
+
 		// Instancia elementos do Panel
 		searchSeqJLabel = new JLabel("");
 		libSummaryVBox = Box.createVerticalBox();
-		
+
 		// Instancia output options
 		outputFolderSummaryVBox = Box.createHorizontalBox();
-		
+
 		browseOutputButton = new JButton(tm.getText("summaryBrowseButton"));
 		browseOutputButton.addActionListener(this);
-		browseOutputButton.setEnabled(false);
-		
+		browseOutputButton.setActionCommand("Browse");
+
 		outputfolderTF = new JTextField(50);
 		outputfolderTF.setEditable(false);
-		
+
 		outputfolderTF.setText(h.getOutput());
 		outputFolderSummaryVBox.add(outputfolderTF);
 		outputFolderSummaryVBox.add(browseOutputButton);
-		
+
 		// Initial draw
 		summaryContainer = new JPanel(new BorderLayout());
 		drawSummaryContainer();
 	}
-	
+
 	public JPanel getContainer(){
 		return summaryContainer;
 	}
-	
+
 	public static void setTargetSeq(String targetSeq){
 		searchSeq = targetSeq;
 		searchSeqJLabel.setText(targetSeq);
 	}
-	
+
 	public static void addLoadedLib(String libpath){
 		// Adiciona lib
 		JLabel lib = new JLabel(libpath);
@@ -89,7 +89,7 @@ public class SummaryDrawer implements ActionListener{
 		libs.add(libpath);
 		Drawer.setProgressBar((new File(libpath)).length());
 	}
-	
+
 	public static void removeLoadedLib(String libpath){
 		// Remove lib
 		for(int i=0;i < libSummaryVBox.getComponentCount();i++){
@@ -100,74 +100,74 @@ public class SummaryDrawer implements ActionListener{
 		}
 		libs.remove(libpath);
 	}
-	
+
 	private void drawSummaryContainer(){
 		JPanel jp = new JPanel();
 		jp.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		// Line - Target Sequence
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.15;
-	    c.weightx = 0.3;
-	    c.gridx = 0;
-	    c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.15;
+		c.weightx = 0.3;
+		c.gridx = 0;
+		c.gridy = 0;
 		jp.add(new JLabel(tm.getText("targetSequenceLabel")),c);
 
 		// Line - Target Sequence
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.1;
-	    c.weightx = 0.3;
-	    c.gridx = 1;
-	    c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.1;
+		c.weightx = 0.3;
+		c.gridx = 1;
+		c.gridy = 0;
 		jp.add(searchSeqJLabel,c);
 
 		// Line - Loaded libraries
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weightx = 0.3;
-	    c.gridx = 0;
-	    c.gridy = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 0.3;
+		c.gridx = 0;
+		c.gridy = 1;
 		jp.add(new JLabel(tm.getText("librariesLoadedLabel")),c);
 
 		// Line - Loaded libraries
-	    c.fill = GridBagConstraints.BOTH;
-	    c.weighty = 0.65;
-	    c.weightx = 0.7;
-	    c.gridx = 1;
-	    c.gridy = 1;
+		c.fill = GridBagConstraints.BOTH;
+		c.weighty = 0.65;
+		c.weightx = 0.7;
+		c.gridx = 1;
+		c.gridy = 1;
 		JScrollPane jscrp = new JScrollPane(libSummaryVBox);
 		jp.add(jscrp,c);
-		
+
 		// Line - Output Folder
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.05;
-	    c.weightx = 0.3;
-	    c.gridx = 0;
-	    c.gridy = 2;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.05;
+		c.weightx = 0.3;
+		c.gridx = 0;
+		c.gridy = 2;
 		jp.add(new JLabel(tm.getText("summaryOutputFolder")),c);
 
 		// Line - Output Folder
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.05;
-	    c.weightx = 0.4;
-	    c.gridx = 1;
-	    c.gridy = 2;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.05;
+		c.weightx = 0.4;
+		c.gridx = 1;
+		c.gridy = 2;
 		jp.add(outputFolderSummaryVBox,c);
 
 		// Line - Start/Abort buttons
 		Box hbox = Box.createHorizontalBox();
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.1;
-	    c.weightx = 0.3;
-	    c.gridx = 1;
-	    c.gridy = 3;		
-	    hbox.add(startButton);
-	    hbox.add(abortButton);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.1;
+		c.weightx = 0.3;
+		c.gridx = 1;
+		c.gridy = 3;		
+		hbox.add(startButton);
+		hbox.add(abortButton);
 		jp.add(hbox,c);
 		summaryContainer.add(jp,BorderLayout.CENTER);
 		return;
 	}
-	
+
 	static public void huntDone(String libDatabase,File logFile){
 		if(libDatabase != null){
 			abortButton.setEnabled(false);
@@ -184,7 +184,7 @@ public class SummaryDrawer implements ActionListener{
 		}else{
 			Drawer.writeToLog(tm.getText("statusErrorProcessingMsg"));
 		}
-		
+
 		startButton.setEnabled(true);
 		abortButton.setEnabled(false);
 		Drawer.enableStatusJLabels(false);
@@ -197,7 +197,7 @@ public class SummaryDrawer implements ActionListener{
 		abortButton.setEnabled(false);
 		Drawer.enableStatusJLabels(false);
 	}
-	
+
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		switch(ae.getActionCommand()){
@@ -223,6 +223,7 @@ public class SummaryDrawer implements ActionListener{
 			if(jfcBrowse.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
 				h.setOutput(jfcBrowse.getSelectedFile().getAbsolutePath());
 				outputfolderTF.setText(h.getOutput());
+				Drawer.writeToLog(tm.getText("OutputFolderSet")+h.getOutput());
 			}
 			break;
 		}
