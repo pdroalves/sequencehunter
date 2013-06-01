@@ -209,10 +209,10 @@ void search_manager(int *buffer_load,
   cudaStream_t stream;
   double sec;
   double start_time,end_time;
-  fsenso=fasenso=0;
   char *central_antisenso;
   char *cincol_antisenso;
   
+  fsenso=fasenso=0;
   //////////////////////////////////////////
   // Inicializa
   //////////////////////////////////////////
