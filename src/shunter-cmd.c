@@ -54,6 +54,7 @@ gchar *output_dir;
 gint dist_regiao_5l = 0;
 gint tam_regiao_5l = 0;
 gboolean disable_cuda = FALSE;
+gboolean disable_cpu = FALSE;
 gboolean verbose = FALSE;
 gboolean silent = FALSE;
 gboolean check_build = FALSE;
@@ -74,7 +75,8 @@ static GOptionEntry entries[] =
     { "output", 'o', 0, G_OPTION_ARG_STRING, &output_dir, "Defines output folder (home folder by default).", NULL },
     //{ "dist5l", NULL, 0, G_OPTION_ARG_INT, &dist_regiao_5l, "Define a quantidade de bases entre o inicio do bloco variavel e o inicio da regiao 5' a esquerda.", NULL },
     //{ "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
-    { "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Disable CUDA for processing.", NULL },
+    { "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Force processing by CPU.", NULL },
+    { "disablecpu", 'e', 0, G_OPTION_ARG_NONE, &disable_cpu, "Force processing by GPU.", NULL },
     { "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Loads hunt settings from a text file.", NULL },
     { "cutseqs", 't', 0, G_OPTION_ARG_NONE, &cutmode, "Stores only variable block.", NULL },
     { "silent", 's', 0, G_OPTION_ARG_NONE, &silent, "Silent execution.", NULL },
@@ -116,7 +118,7 @@ int main (int argc,char *argv[]) {
   int b1_size;
   int b2_size;
   int bv_size;
-  int is_cuda_available = 1;
+  int is_cuda_available;
   int bibliotecas_validas;
   Params set;
   time_t t;
@@ -267,13 +269,18 @@ exit(1);
 		
 
     if(disable_cuda){
+      // Forca execucao pela CPU
       if(!silent || gui_run)
-	printf("CPU mode.\n");
-      printString("CPU mode.",NULL);
       aux(0,c,b1_size,b2_size,c_size,set,gui_socket); 
-    }
-    else{
+    }else{
+      if(disable_cpu){
+      // Forca execucao pela GPU
+      aux(1,c,b1_size,b2_size,c_size,set,gui_socket);
+  }else{
+    // SH determina a melhor forma de execucao
+      is_cuda_available  = check_gpu_mode();
       aux(is_cuda_available,c,b1_size,b2_size,c_size,set,gui_socket);
+    }
     }
     free(c);
     //}

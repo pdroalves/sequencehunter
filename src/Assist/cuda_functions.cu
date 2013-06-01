@@ -15,74 +15,7 @@ extern "C" int check_gpu_mode(){
 	
 	return gpuDeviceInit(findCudaDevice());
 }
-extern "C" int escolhe_GPU(){
-	  int num_devices, device,max_multiprocessors,max_device;
-	  cudaDeviceProp properties;	
 
-	  cudaGetDeviceCount(&num_devices);
-	  max_device = 0;
-		
-	  if (num_devices > 1) {
-			max_multiprocessors = 0;
-			  
-			for (device = 0; device < num_devices; device++) {//Busca a melhor GPU comparando a quantidade de multi processadores           
-			  cudaGetDeviceProperties(&properties, device);
-			  if (max_multiprocessors < properties.multiProcessorCount) {
-				max_multiprocessors = properties.multiProcessorCount;
-				max_device = device;
-			  }
-			}
-			cudaSetDevice(max_device);
-		  }
-			
-		  return max_device;
-		}
-
-extern "C" void getDevice(int deviceCount,cudaDeviceProp deviceProp,bool verbose){
-
-	  int i;
-	  int device;
-	  cudaError_t erro;
-
-		 printf("Dispositivos encontrados:\n");
-		  for(i=0;i<deviceCount;i++)
-			{
-			  erro = cudaGetDeviceProperties(&deviceProp,i);
-				if(erro != cudaSuccess) exit(1);
-			  printf("%d) %s\n",i,deviceProp.name);
-			}
-
-		  printf("\n Usar dispositivo:");
-		  scanf("%d",&device);
-			
-		  while(device > deviceCount)
-			{
-			  printf("Dispositivo invalido\n");
-			  scanf("%d",&device);
-			}
-		
-		//Libera o dispositivo em uso
-		erro = cudaThreadExit();
-		if(erro != cudaSuccess) exit(1);
-		
-		//Configura qual dispositivo deve ser usado
-		erro = cudaSetDevice(device);
-		if(erro != cudaSuccess) exit(1);
-			
-		//O dispositivo foi escolhido
-		erro = cudaGetDeviceProperties(&deviceProp,device);
-		if(erro != cudaSuccess) exit(1);
-		
-		if(verbose) printf("Dispositivo configurado para uso: %s\n\n",deviceProp.name); 
-	 
-	}
-	
-	
-extern "C" void copyStrToDevice(char *src,char *dst,int size){
-	cudaMemcpy(src,dst,size,cudaMemcpyHostToDevice);
-	return;
-}
-	
 	//#######################
 	
 	// General GPU Device CUDA Initialization
@@ -104,16 +37,13 @@ extern "C" int gpuDeviceInit(int devID)
     cudaDeviceProp deviceProp;
    cudaGetDeviceProperties(&deviceProp, devID);
 
-    if (deviceProp.major < 2)
+    if (deviceProp.major < 1)
     {
-        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 2.0.\n");
+        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 1.0.\n");
         return 0;                                                  
     }
-    
-    cudaSetDevice(devID);
-    printf("gpuDeviceInit() CUDA Device [%d]: \"%s\n", devID, deviceProp.name);
 
-    return 1;
+    return deviceCount;
 }
 
 extern "C" inline int _ConvertSMVer2Cores(int major, int minor)
@@ -215,7 +145,7 @@ extern "C" int findCudaDevice()
     devID = gpuGetMaxGflopsDeviceId();
     cudaSetDevice( devID );
     cudaGetDeviceProperties(&deviceProp, devID);
-    printf("GPU Device %d: \"%s\" with compute capability %d.%d\n\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+    printf("GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
     
     return devID;
 }
