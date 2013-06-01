@@ -371,7 +371,7 @@ void auxNONcuda(char *c,const int bloco1,const int bloco2,const int blocos,Param
     regiao_5l = TRUE;
   else
     regiao_5l = FALSE;
-
+  omp_set_nested(TRUE);
   printf("CPU mode.\n");
   printString("CPU mode.\n",NULL);
   printf("Buffer size: %d\n",buffer_size);

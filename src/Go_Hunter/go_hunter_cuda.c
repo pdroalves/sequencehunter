@@ -396,19 +396,11 @@ void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,cons
 	
 	
   //printf("Iterações executadas: %d.\n",iter);
-  //free(tmp);
   cudaDeviceReset();
+  if(d_vertexes != NULL)
   cudaFree(d_vertexes);
+if(d_candidates != NULL)
   cudaFree(d_candidates);
-  //cudaStreamDestroy(stream1);
-  //cudaStreamDestroy(stream2);
-  /*for(i=0;i<buffer_size;i++){
-    cudaFreeHost(founded[i]);
-    cudaFreeHost(data[i]);
-    }	
-    cudaFreeHost(founded);
-    cudaFreeHost(data);
-    cudaFreeHost(d_data);*/
   cudaFree(data);
   return;
 }
