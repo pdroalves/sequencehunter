@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <omp.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/operacoes.h"
 
@@ -58,7 +59,6 @@ void buscador(  const int bloco1,
                 int *search_gaps,
                 const int seqId){  
   
-  const char *seq = buf->seq[seqId];
   int *this_candidates = &candidates[seqId*seqSize_an];
   int *this_vertexes = &vertexes[seqId*seqSize_an];
   int num_sensos_candidates;
@@ -112,6 +112,7 @@ void busca( const int bloco1,
 	int i;
 	int seqSize_an = strlen(buffer->seq[0]);
 
+	#pragma omp parallel for
 	for(i=0; i < buffer->load; i++)
 		buscador( bloco1,
               bloco2,

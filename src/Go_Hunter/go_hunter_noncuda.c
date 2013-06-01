@@ -31,7 +31,7 @@ enum threads {
   THREAD_DATABASE,
   OMP_NTHREADS
 };
-#define buffer_size 512 // Capacidade máxima do buffer
+#define buffer_size 12080 // Capacidade máxima do buffer
 #define LOADER_QUEUE_MAX_SIZE 1e6
 #define GUI_SOCKET_PORT 9332
 #define GIGA 1073741824 

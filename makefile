@@ -88,7 +88,7 @@ database.o:$(SOURCE)Processing/database.c
 	$(CC) -Wall  -g -c $(SOURCE)Processing/database.c -o $(OBJ)database.o $(SQLITE3)  $(OPENMP)
 
 nc_busca.o:$(SOURCE)Search/nc_busca.c
-	$(CC) -Wall  -g -c  $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o
+	$(CC) -Wall  -g -c  $(SOURCE)Search/nc_busca.c -o $(OBJ)nc_busca.o $(OPENMP)
 
 #########################################
 ############ NVCC LINUX##################

@@ -113,7 +113,6 @@ int main (int argc,char *argv[]) {
   GError *error = NULL;
   GOptionContext *context;
   char *c;
-  char *nome;
   int c_size;
   int b1_size;
   int b2_size;
@@ -143,8 +142,8 @@ int main (int argc,char *argv[]) {
 
   if(fixdb){
     printf("Trying to fix %s...\n",argv[1]);
-fix_database(argv[1]);
-exit(1);
+    fix_database(argv[1]);
+    exit(1);
   }
   if(!silent)
     printf("Starting Sequence Hunter...\nBuild: %d\n",get_build());
@@ -163,7 +162,7 @@ exit(1);
     if(!silent)
       printf("Output: %s\n",output_dir);
   }else{	
-    output_dir = (char*)malloc(100*sizeof(char));
+    output_dir = (char*)malloc(1000*sizeof(char));
     if(!silent)	  
       printf("Output: %s\n",DEFAULT_OUTPUT_DIR);
     strcpy(output_dir,DEFAULT_OUTPUT_DIR);
@@ -173,7 +172,6 @@ exit(1);
   prepareLog(output_dir,tempo,gui_run);
   printString("Output Folder: ",output_dir);		
   c = NULL;
-  nome = NULL;
 
   /*if(just_process){
     if(!silent || gui_run)
@@ -218,16 +216,11 @@ exit(1);
       printf("Read error.\n");
       exit(1);
     }
-    nome = (char*)malloc((1000)*sizeof(char));
-    fscanf(set,"%s",nome);
-
+   
   }else{
     if(target_seq){
       strcpy(c,target_seq);
-      if(target_name){
-	nome = (char*)malloc((10000)*sizeof(char));
-	strcpy(nome,target_name);
-      }
+     
     }else{
       if(!silent)
 	printf("Target sequence: ");
@@ -239,68 +232,70 @@ exit(1);
     }
   }
 
-    if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
-      printf("Invalid target sequence.\n");
-      exit(1);
-    }  
-    if(c)
-      printString("Target sequence: ",c);
+  if(!check_seq(c,&b1_size,&b2_size,&bv_size)){
+    printf("Invalid target sequence.\n");
+    exit(1);
+  }  
+  if(c)
+    printString("Target sequence: ",c);
 
-    c_size = b1_size+b2_size+bv_size;
+  c_size = b1_size+b2_size+bv_size;
 
-    // Cria objeto para se comunicar com a GUI
+  // Cria objeto para se comunicar com a GUI
   if(!silent)
     gui_socket = (Socket*)malloc(sizeof(Socket));
 
-    // Seta database
-    if(cutmode)  
-      criar_db_manager(output_dir,tempo,bv_size,silent);
-    else
-      criar_db_manager(output_dir,tempo,get_setup(),silent);
+  // Seta database
+  if(cutmode)  
+    criar_db_manager(output_dir,tempo,bv_size,silent);
+  else
+    criar_db_manager(output_dir,tempo,get_setup(),silent);
 
-    //Guarda parametros
-    set.verbose = verbose;
-    set.silent = silent;
-    set.debug = debug;
-    set.cut_central = cutmode;
-    set.gui_run = gui_run;
-    set.dist_regiao_5l = dist_regiao_5l;
-    set.tam_regiao_5l = tam_regiao_5l;
+  //Guarda parametros
+  set.verbose = verbose;
+  set.silent = silent;
+  set.debug = debug;
+  set.cut_central = cutmode;
+  set.gui_run = gui_run;
+  set.dist_regiao_5l = dist_regiao_5l;
+  set.tam_regiao_5l = tam_regiao_5l;
 		
 
-    if(disable_cuda){
-      // Forca execucao pela CPU
-      if(!silent || gui_run)
+  if(disable_cuda){
+    // Forca execucao pela CPU
+    if(!silent || gui_run)
       aux(0,c,b1_size,b2_size,c_size,set,gui_socket); 
-    }else{
-      if(disable_cpu){
+  }else{
+    if(disable_cpu){
       // Forca execucao pela GPU
       aux(1,c,b1_size,b2_size,c_size,set,gui_socket);
-  }else{
-    // SH determina a melhor forma de execucao
+    }else{
+      // SH determina a melhor forma de execucao
       is_cuda_available  = check_gpu_mode();
       aux(is_cuda_available,c,b1_size,b2_size,c_size,set,gui_socket);
     }
-    }
-    free(c);
-    //}
+  }
+  free(c);
+  //}
 
-    //resultados = processar(bv_size,max_events,silent,gui_run);
+  //resultados = processar(bv_size,max_events,silent,gui_run);
 
 
-    //if(!gui_run)
-    //	imprimir(resultados,tempo,max_events,silent,gui_run);
+  //if(!gui_run)
+  //	imprimir(resultados,tempo,max_events,silent,gui_run);
 
-    close_file();
-    destroy_db_manager();
+  close_file();
+  destroy_db_manager();
   if(gui_run){
     destroy_socket(gui_socket);
   }
 
-    if(!silent)
-      printf("Concluded.\n");
+  if(!silent)
+    printf("Concluded.\n");
 
-    free(gui_socket);
+  free(gui_socket);
+  if(output_dir != NULL)
+    free(output_dir);
 
-    return 0;
-  }
+  return 0;
+}
