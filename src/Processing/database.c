@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <omp.h>
-#include "sqlite3.h"
+#include <sqlite3.h>
 #include "../Headers/operacoes.h"
 #include "../Headers/estruturas.h"
 #include "../Headers/load_data.h"
@@ -22,7 +22,7 @@ sqlite3_stmt *stmt_insert;
 char *database_path;
 
 int get_hash(char* original){
-	char *c;
+	char c;
 	int hash = 5381;
 
 	while(c = *original++)

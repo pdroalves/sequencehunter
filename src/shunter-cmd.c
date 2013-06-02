@@ -23,6 +23,7 @@
 #include "Headers/version.h"
 #include "Headers/database_manager.h"
 #include "Headers/database.h"
+#include "Headers/socket.h"
 #ifdef _WIN32
 #include <Windows.h>
 const char* get_windows_homefolder(){

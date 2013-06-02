@@ -209,6 +209,8 @@ void search_manager(int *buffer_load,
   cudaStream_t stream;
   double sec;
   double start_time,end_time;
+  double sec_internal;
+  double start_time_internal,end_time_internal;
   char *central_antisenso;
   char *cincol_antisenso;
   
@@ -246,8 +248,14 @@ void search_manager(int *buffer_load,
     
     loaded = *buffer_load;
     // Execuca iteracao
-    k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,&stream);//Kernel de busca
-		
+  start_time_internal = getRealTimeC();
+    k_busca(*buffer_load,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV,d_vertexes,d_candidates,d_resultados,d_search_gaps,&stream);//Kernel de busca		
+  end_time_internal = getRealTimeC();
+  
+  sec_internal = (end_time_internal - start_time_internal);
+  if(debug)
+    printf("Kernel processing time: %.2f s\n",sec_internal);
+  
     // Inicia processamento dos resultados
     processadas += loaded;
     cudaStreamSynchronize(stream);
@@ -283,7 +291,7 @@ void search_manager(int *buffer_load,
       	  }
       			
       	  fsenso++;
-      	  hold_event = (void*)criar_elemento_fila_event(central,cincol,SENSO);
+      	  hold_event = criar_elemento_fila_event(central,cincol,SENSO);
       	  enfileirar(toStore,hold_event);
       	  break;
       	case ANTISENSO:
@@ -309,7 +317,7 @@ void search_manager(int *buffer_load,
       	  fasenso++;
           central_antisenso = get_antisenso(central);
           cincol_antisenso = get_antisenso(cincol);
-      	  hold_event = (void*)criar_elemento_fila_event(central_antisenso,cincol_antisenso,ANTISENSO);
+      	  hold_event = criar_elemento_fila_event(central_antisenso,cincol_antisenso,ANTISENSO);
       	  enfileirar(toStore,hold_event);
 	       if(central != NULL)
             free(central);
@@ -324,7 +332,14 @@ void search_manager(int *buffer_load,
     //////////////////////////////////////////
     // Carrega o buffer //////////////////////
     //////////////////////////////////////////
-    *buffer_load = load_buffer_CUDA(data,seqSize_an);
+  start_time_internal = getRealTimeC();
+    *buffer_load = load_buffer_CUDA(data,seqSize_an);	
+  end_time_internal = getRealTimeC();
+  
+  sec_internal = (end_time_internal - start_time_internal);
+  if(debug)
+    printf("Reading sequences from library time: %.2f s\n",sec_internal);
+
     //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
     cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
     checkCudaError();
