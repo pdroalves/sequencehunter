@@ -18,16 +18,17 @@ import xml.TranslationsManager;
 public class Hunter{
 
 	private ProcessBuilder pb;
-	private static String appName_win = "%SHUNTER%";
-	private static String appName_mac = "";
-	private static String appName_nix = "shunter-cli";
+	private final static String appName = "Sequence Hunter";
+	private static String appFileName_win = "%SHUNTER%";
+	private static String appFileName_mac = "";
+	private static String appFileName_nix = "shunter-cli";
 	private static String default_output_folder;
 	private static String output_folder;
 	public static final int FORCE_CUDA_MODE = 0;
 	public static final int FORCE_NONCUDA_MODE = 1;
 	public static final int NON_FORCE_MODE = 2;
 	private int mode = NON_FORCE_MODE;
-	
+
 	String command = "";
 	private CoreAppDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
@@ -61,7 +62,7 @@ public class Hunter{
 		// Gera linha de parametros
 		String parameters = null;
 		String processingMode = "";
-	
+
 		switch(mode){
 		case FORCE_CUDA_MODE:
 			processingMode = "";
@@ -86,13 +87,13 @@ public class Hunter{
 
 		if (getOS().contains("WIN")){
 			//Windows
-			command = appName_win +" "+ libsPath + " " + parameters;
+			command = appFileName_win +" "+ libsPath + " " + parameters;
 			pb = new ProcessBuilder("cmd","/c",command);
 		}else if (getOS().contains("MAC")){
 			// Mac
 		}else if (getOS().contains("NUX")){
 			// Linux
-			command = appName_nix +" "+ libsPath + " " + parameters;
+			command = appFileName_nix +" "+ libsPath + " " + parameters;
 
 			// On Linux/Mac
 			// Instancia ProcessBuilder
@@ -121,16 +122,16 @@ public class Hunter{
 	public int getCLIBuild(){
 		int build = -1;
 		String command = null;
-		
+
 		if (getOS().contains("WIN")){
 			//Windows
-			command = appName_win +" -b";
+			command = appFileName_win +" -b";
 			pb = new ProcessBuilder("cmd","/c",command);
 		}else if (getOS().contains("MAC")){
 			// Mac
 		}else if (getOS().contains("NUX")){
 			// Linux
-			command = appName_nix +" -b";
+			command = appFileName_nix +" -b";
 
 			// On Linux/Mac
 			// Instancia ProcessBuilder
@@ -139,7 +140,7 @@ public class Hunter{
 			pb.environment().put("PATH",path);
 			pb.environment().put("LD_LIBRARY_PATH", "/usr/local/cuda/lib64:/usr/local/cuda/lib");
 		}
-		
+
 		try {
 			Process process = pb.start();
 			InputStream is = process.getInputStream();
@@ -156,16 +157,52 @@ public class Hunter{
 
 		return build;
 	}
-	static public String getAppName(){
+	static public String getFileAppName(){
 		if (getOS().contains("WIN")){
-			return appName_win;			
+			return appFileName_win;			
 		}else if (getOS().contains("MAC")){
-			return appName_mac;
+			return appFileName_mac;
 		}else if (getOS().contains("NUX")){
-			return appName_nix;			
+			return appFileName_nix;			
 		}else{
 			return null;
 		}
+	}
+
+	static  public String getAppName(){
+		return appName + " "+Hunter.getVersion();
+	}
+
+	static public String getVersion(){
+		String command = "";
+		String build = "-1";
+		ProcessBuilder pb = null;
+		if (getOS().contains("WIN")){
+			//Windows
+			command = appFileName_win +" -b";
+			pb = new ProcessBuilder("cmd","/c",command);
+		}else if (getOS().contains("MAC")){
+			// Mac
+		}else if (getOS().contains("NUX")){
+			// Linux
+			command = appFileName_nix +" -b";
+
+			// On Linux/Mac
+			// Instancia ProcessBuilder
+			pb = new ProcessBuilder("bash","-c",command);
+			String path = System.getenv("PATH");
+			pb.environment().put("PATH",path);
+			pb.environment().put("LD_LIBRARY_PATH", "/usr/local/cuda/lib64:/usr/local/cuda/lib");
+		}
+
+		try {
+			Process process = pb.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			build = reader.readLine();
+		} catch (IOException e) {
+			Drawer.writeToLog(TranslationsManager.getInstance().getText("NoCLIConnection"));
+		}
+		return build;
 	}
 
 	public static String getOS() {

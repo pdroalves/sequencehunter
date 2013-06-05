@@ -24,6 +24,9 @@
 #include "Headers/database_manager.h"
 #include "Headers/database.h"
 #include "Headers/socket.h"
+
+#define VERSION "v0.9.0"
+
 #ifdef _WIN32
 #include <Windows.h>
 const char* get_windows_homefolder(){
@@ -137,7 +140,7 @@ int main (int argc,char *argv[]) {
   //###########################
 
   if(check_build){
-    printf("Build: %d\n",get_build());
+    printf("%s.%d\n",VERSION,get_build());
     return 0;
   }
 

@@ -112,7 +112,7 @@ public class CoreAppDealer extends Thread implements ISocketUser{
 		String OS = Hunter.getOS();
 		if (OS.contains("WIN")){
 			//Windows
-			String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + Hunter.getAppName() + "\"" ;
+			String processData = "cmd /c tasklist /FI " + "\"" + "IMAGENAME eq " + Hunter.getFileAppName() + "\"" ;
 			Pattern taskIdPattern = Pattern.compile("(\\d+)");
 			try {
 				Process process = Runtime.getRuntime().exec(processData);
@@ -141,7 +141,7 @@ public class CoreAppDealer extends Thread implements ISocketUser{
 			// Mac
 		}else if (OS.contains("NUX")){
 			// Linux
-			String tkProcess = "killall "+Hunter.getAppName();
+			String tkProcess = "killall "+Hunter.getFileAppName();
 			System.err.println(tkProcess);
 			try {
 				Runtime.getRuntime().exec(tkProcess);
