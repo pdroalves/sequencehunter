@@ -1,8 +1,6 @@
 package xml;
 
 import gui.Drawer;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -45,7 +43,7 @@ public class XMLReader {
 		
 		for(int i = 0;i < nList.getLength();i++){
 			Element e = (Element) nList.item(i);
-			textHM.put(e.getAttribute("tag"),e.getAttribute("text"));			
+			textHM.put(e.getAttribute("tag"),e.getTextContent());			
 		}
 		
 		return textHM;
