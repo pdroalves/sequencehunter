@@ -198,6 +198,8 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   Event *hold_event;
   double sec;
   double start_time,end_time;
+  double sec_internal;
+  double start_time_internal,end_time_internal;
   processadas = 0;
   fsensos=fasensos=0;
   
@@ -210,8 +212,14 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   start_time = getRealTimeNC();
   while(buf.load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequências para encher o buffer
-
-    busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca	
+	  
+  start_time_internal = getRealTimeNC();
+    busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca		
+  end_time_internal = getRealTimeNC();
+  
+  sec_internal = (end_time_internal - start_time_internal);
+  if(debug)
+    printf("Kernel processing time: %.2f s\n",sec_internal);
 
 	    
     tam = buf.load;
@@ -269,7 +277,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 
 	fasensos++;
-	hold_event = (void*)criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+	hold_event = criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 	enfileirar(toStore,hold_event);
 	if(central != NULL)
 	  free(central);
@@ -283,7 +291,13 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	    
     // Aguarda o buffer estar cheio novamente
     buf.load = 0;
+  start_time_internal = getRealTimeNC();
     load_buffer_NONCuda();
+  end_time_internal = getRealTimeNC();
+  
+  sec_internal = (end_time_internal - start_time_internal);
+  if(debug)
+    printf("Reading sequences from library time: %.2f s\n",sec_internal);
 					
     while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }     
