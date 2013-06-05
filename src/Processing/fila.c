@@ -100,11 +100,10 @@ Event* desenfileirar(Fila *f){
 		omp_set_lock(&f->fila_lock);
 		hold = f->first;		
 		f->first = f->first->prox;
+		f->size--;
 		to_return = (Event*)hold->data;	
 		if(hold != NULL)
-			free(hold);
-		
-		f->size--;
+			free(hold);		
 		omp_unset_lock(&f->fila_lock);
 	}else{
 		to_return = NULL;
