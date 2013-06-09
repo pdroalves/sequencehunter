@@ -23,6 +23,7 @@
 #define SKT_MSG_CLOSE "bye"
 #define SKT_MSG_GETSIZE "size"
 #define SKT_MSG_PROCESS "processDB"
+#define SKT_MSG_ABORT "abort"
 
 struct event{
 	char *seq_central;

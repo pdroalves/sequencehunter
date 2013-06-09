@@ -139,6 +139,13 @@ int main (int argc,char *argv[]) {
     }
   //###########################
 
+    if(gui_run){
+    // Handshake com a GUI
+    gui_socket = (Socket*)malloc(sizeof(Socket));
+    configure_socket(gui_socket);
+  }
+
+
   if(check_build){
     printf("%s.%d\n",VERSION,get_build());
     return 0;
@@ -147,12 +154,18 @@ int main (int argc,char *argv[]) {
   if(fixdb){
     printf("Trying to fix %s...\n",argv[1]);
     fix_database(argv[1]);
+    if(gui_run){
+      send_msg_to_socket(gui_socket,SKT_MSG_ABORT);
+      destroy_socket(gui_socket);
+    }
     exit(1);
   }
   if(!silent)
     printf("Starting Sequence Hunter...\nBuild: %d\n",get_build());
   if(verbose && !silent)
     printf("Verbose Mode\n");
+
+
 
   // Inicializa
   // Seta nome padrao de saida
@@ -187,20 +200,33 @@ int main (int argc,char *argv[]) {
 
   if(c == NULL){
     printf("Memory error.\n");
+    if(gui_run){
+      send_msg_to_socket(gui_socket,SKT_MSG_ABORT);
+      destroy_socket(gui_socket);
+    }
     exit(1);
   }
 
+  
   ////////////////////////////////////////////////////////
   ////////////////// Abre arquivos de bibliotecas/////////
   ////////////////////////////////////////////////////////
   if(argc == 1){
     printf("Please, enter a valid fastm library.\n");
+    if(gui_run){
+      send_msg_to_socket(gui_socket,SKT_MSG_ABORT);
+      destroy_socket(gui_socket);
+    }
     exit(1);
   }
 
   bibliotecas_validas = open_file(argv,argc,silent);
   if(bibliotecas_validas == 0){
     printf("Please, enter a valid fastm library.\n");
+    if(gui_run){
+      send_msg_to_socket(gui_socket,SKT_MSG_ABORT);
+      destroy_socket(gui_socket);
+    }
     exit(1);
   }
  
@@ -246,8 +272,6 @@ int main (int argc,char *argv[]) {
   c_size = b1_size+b2_size+bv_size;
 
   // Cria objeto para se comunicar com a GUI
-  if(!silent)
-    gui_socket = (Socket*)malloc(sizeof(Socket));
 
   // Seta database
   if(cutmode)  

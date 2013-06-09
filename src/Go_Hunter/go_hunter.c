@@ -91,19 +91,6 @@ void report_manager(	Socket *gui_socket,
   
   
   if(gui_run){
-	  msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-	  
-	  
-	  criar_socket(gui_socket,port);
-	  if(gui_socket == NULL){
-	      SLEEP(5);
-	      criar_socket(gui_socket,port);
-	      if(gui_socket == NULL){
-		      printf("Unable to establish connection to GUI.\nAborting...");
-		      printString("Unable to establish connection to GUI.\nAborting...",NULL);
-		      exit(1);
-	      }
-	  }
 	  send_setup_to_gui(gui_socket);
   }
   
