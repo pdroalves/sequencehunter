@@ -33,6 +33,7 @@ import com.lnbio.dialogs.checkbox.CheckBoxNode;
 import com.lnbio.dialogs.checkbox.CheckBoxNodeEditor;
 import com.lnbio.dialogs.checkbox.CheckBoxNodeRenderer;
 import com.lnbio.dialogs.checkbox.NamedVector;
+import com.lnbio.gui.Drawer;
 import com.lnbio.gui.ReportDrawer;
 import com.lnbio.xml.TranslationsManager;
 
@@ -60,24 +61,19 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 
 		///////////////////
 		// Line - Export type
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.weighty = 0.10;
-		c.weightx = 0.5;
-		c.gridy = 0;
+		Box horizontal = Box.createHorizontalBox();
 		///////////////////
 		// Export single
-		c.gridx = 0;
 		JRadioButton selectExportTypeSingle = new JRadioButton();
 		selectExportTypeSingle.setActionCommand("SingleExport");
 		selectExportTypeSingle.setSelected(true);
 		JLabel singleExportJLabel = new JLabel(tm.getText("menuFileItemExportGenericSingleReport"));
 		item.add(selectExportTypeSingle);
 		item.add(singleExportJLabel);
-		jp.add(item,c);
+		horizontal.add(item);
 
 		///////////////////
 		// Export all
-		c.gridx = 1;
 		item = new JPanel(new FlowLayout());
 		JRadioButton selectExportTypeAll = new JRadioButton();
 		selectExportTypeAll.setActionCommand("FullExport");
@@ -85,7 +81,15 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		JLabel fullExportJLabel = new JLabel(tm.getText("menuFileItemExportGenericAllReports"));
 		item.add(selectExportTypeAll);
 		item.add(fullExportJLabel);
-		jp.add(item);
+		horizontal.add(item);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0.10;
+		c.weightx = 1;
+		c.gridy = 0;
+		c.gridx = 0;
+		c.gridwidth = 2;
+		jp.add(horizontal,c);
 
 		ButtonGroup bgroup = new ButtonGroup();
 		bgroup.add(selectExportTypeSingle);
@@ -222,6 +226,7 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 	protected void setExported(boolean b){
 		if(b){
 			this.setEnabled(true);
+			Drawer.writeToLog(TranslationsManager.getInstance().getText("Exported"));
 			super.dispose();
 		}
 	}

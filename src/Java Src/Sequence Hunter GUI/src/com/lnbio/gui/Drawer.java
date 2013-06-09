@@ -140,8 +140,8 @@ public class Drawer {
 
 	}
 
-	@SuppressWarnings("unused")
-	/*private JToolBar drawToolbar(){
+	/*@SuppressWarnings("unused")
+	private JToolBar drawToolbar(){
 		JToolBar jtb = new JToolBar();
 		// Botoes
 		NewJButton newhunt = new NewJButton();
@@ -188,6 +188,7 @@ public class Drawer {
 	protected static void setProgressBar(long max){
 		jprogMaxAbs = max;
 		jprog.setMaximum(jprogMaxRel);
+		jprog.setStringPainted(true);
 		updateProgressBar(0);
 		enableProgressBar(false);
 	}
@@ -196,6 +197,11 @@ public class Drawer {
 		double valor = Math.round((double)br*100/(double)jprogMaxAbs);
 		System.err.println("br "+br+",jProgMaxAbs: "+jprogMaxAbs+" valor:"+valor);
 		jprog.setValue((int)valor);
+		if(valor >= 98){
+			jprog.setIndeterminate(true);
+		}else{
+			jprog.setIndeterminate(false);
+		}
 		jprog.setToolTipText(String.valueOf(valor));
 	}
 	

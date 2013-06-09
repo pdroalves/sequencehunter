@@ -44,19 +44,48 @@ public class SocketManager {
 
 	private ServerSocket createServerSocket(int port){
 		ServerSocket sock = null;
-		try {
-			sock = new ServerSocket(serverPort);
-		}
-		catch(BindException e){
-			System.out.println(TranslationsManager.getInstance().getText("SocketPortConcurrency"));
-			SummaryDrawer.huntAbort();
-		}
-		catch (IOException e){
-			e.printStackTrace(System.err);
-			Drawer.writeToLog("Error on connection to CLI.");
-			SummaryDrawer.huntAbort();
+		boolean repeat = true;
+		int count = 0;
+		int maxTries = 5;
+		while(repeat && count < maxTries)
+		{
+			try {
+				sock = new ServerSocket(serverPort);
+				sock.setSoTimeout(3000);
+				repeat = false;
+			}
+			catch(BindException e){
+				if(count < maxTries){
+				}else{
+					System.err.println(TranslationsManager.getInstance().getText("SocketPortConcurrency"));
+					Drawer.writeToLog(TranslationsManager.getInstance().getText("SocketPortConcurrency"));	
+					this.abort();
+				}
+			}
+			catch (IOException e){
+				if(count < maxTries){
+
+				}else{
+					e.printStackTrace(System.err);
+					Drawer.writeToLog("Error on connection to CLI.");
+					this.abort();
+				}
+			}
 		}
 		return sock;
+	}
+	
+	private void finish(){
+		try {
+			serverSock.close();
+		} catch (IOException e) {
+			Drawer.writeToLog(e.getMessage());
+		}
+	}
+	
+	private void abort(){
+		this.finish();
+		SummaryDrawer.huntAbort();
 	}
 
 	private void handleConnection(InputStream sockInput, OutputStream sockOutput) {
@@ -93,7 +122,7 @@ public class SocketManager {
 				}
 				data = new String(buf, 0, bytes_read);
 				System.err.println("Socket said: "+data);
-				
+
 				Matcher helloMatcher = helloPattern.matcher(data);
 				Matcher closeMatcher = closePattern.matcher(data);
 				Matcher abortMatcher = abortPattern.matcher(data);
@@ -104,20 +133,20 @@ public class SocketManager {
 					sendMsg(sockOutput,closeMsgBytes,0,closeMsgBytes.length);
 					end = true;
 				}else if(abortMatcher.find()){
-					SummaryDrawer.huntAbort();
+					this.abort();
 					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 				}else{
 					sendMsg(sockOutput,doneMsgBytes,0,doneMsgBytes.length);
 					isu.translate(data);
 				}
-							
+
 				// This call to flush() is optional - we're saying go
 				// ahead and send the data now instead of buffering
 				// it.
 				sockOutput.flush();
 			}
 			catch (IOException e){
-				SummaryDrawer.huntAbort();
+				this.abort();
 				Drawer.writeToLog(e.getMessage());
 			}
 		}
@@ -137,45 +166,44 @@ public class SocketManager {
 		InputStream sockInput = null;
 		OutputStream sockOutput = null;
 		try {
-				// This method call, accept(), blocks and waits
-				// (forever if necessary) until some other program
-				// opens a socket connection to our server.  When some
-				// other program opens a connection to our server,
-				// accept() creates a new socket to represent that
-				// connection and returns.
-				sock = serverSock.accept();
-				System.err.println("Have accepted new socket.");
+			// This method call, accept(), blocks and waits
+			// (forever if necessary) until some other program
+			// opens a socket connection to our server.  When some
+			// other program opens a connection to our server,
+			// accept() creates a new socket to represent that
+			// connection and returns.
+			sock = serverSock.accept();
+			System.err.println("Have accepted new socket.");
 
-				// From this point on, no new socket connections can
-				// be made to our server until we call accept() again.
+			// From this point on, no new socket connections can
+			// be made to our server until we call accept() again.
 
-				sockInput = sock.getInputStream();
-				sockOutput = sock.getOutputStream();
-			
-	
-				// Do something with the socket - read bytes from the
-				// socket and write them back to the socket until the
-				// other side closes the connection.
-				handleConnection(sockInput, sockOutput);
-	
-				// Now we close the socket.
-				System.err.println("Closing socket.");
-				sockInput.close();
-				sockOutput.close();
-				sock.close();
-				serverSock.close();
-			
+			sockInput = sock.getInputStream();
+			sockOutput = sock.getOutputStream();
+
+
+			// Do something with the socket - read bytes from the
+			// socket and write them back to the socket until the
+			// other side closes the connection.
+			handleConnection(sockInput, sockOutput);
+
+			// Now we close the socket.
+			System.err.println("Closing socket.");
+			sockInput.close();
+			sockOutput.close();
+			sock.close();
+			this.finish();
+
 		}catch (IOException e){
-				System.err.println("Exception:" + e.getMessage());
-				SummaryDrawer.huntAbort();
-			}
+			System.err.println("Exception:" + e.getMessage());
+			this.abort();
+		}
 		catch (NullPointerException e){
 			System.err.println("Exception:" + e.getMessage());
-			SummaryDrawer.huntAbort();
-			
+			this.abort();
 		}
 
-			System.err.println("Finished with socket.");	
+		System.err.println("Finished with socket.");	
 	}
 
 }

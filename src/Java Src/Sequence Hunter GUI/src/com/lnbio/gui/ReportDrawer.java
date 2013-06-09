@@ -85,13 +85,13 @@ public class ReportDrawer extends Observable{
 	protected void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
 		Drawer.writeToLog(tm.getText("LoadingReport"));
-		
 		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
 		waitdialog.start();
 		ReportAddWorker worker = new ReportAddWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
 		worker.start();
 		return;
 	}
+	
 
 	protected static void addSubReport(String query,String mainLibDatabase){
 		// Cria tabledReport com dados relativos a uma query em cima de determinada db

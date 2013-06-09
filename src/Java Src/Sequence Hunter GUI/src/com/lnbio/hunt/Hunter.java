@@ -66,7 +66,7 @@ public class Hunter{
 
 		switch(mode){
 		case FORCE_CUDA_MODE:
-			processingMode = "";
+			processingMode = "-e";
 			break;
 		case FORCE_NONCUDA_MODE:
 			processingMode = "-d";

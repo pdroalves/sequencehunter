@@ -86,5 +86,6 @@
 <TextResource tag="SummaryForceCudaMode">The hunt will be made with the GPU.</TextResource>
 <TextResource tag="SummaryForceNonCudaMode">The hunt will be made with the CPU.</TextResource>
 <TextResource tag="SummaryNonForceMode">Sequence Hunter will choose the best strategy to the hunt.</TextResource>
-
+<TextResource tag="reportRelativeColumnLabel">Frequency</TextResource>
+<TextResource tag="Exported">Exported</TextResource>
 </AllTextResource>

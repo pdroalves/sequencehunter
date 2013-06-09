@@ -2,11 +2,13 @@ package com.lnbio.gui.modules;
 
 
 import java.awt.Color;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -56,6 +58,7 @@ public class SHMenuBar implements Observer, ActionListener{
 		menuItemExport.setEnabled(false);
 		JMenuItem menuItemSettings = new JMenuItem(tm.getText("menuFileItemSettingsLabel"));
 		
+		// ActionCommand
 		menuItemNew.setActionCommand("New");
 		menuItemOpenLibrary.setActionCommand("Open");
 		menuItemExit.setActionCommand("Exit");
@@ -63,6 +66,19 @@ public class SHMenuBar implements Observer, ActionListener{
 		menuItemExport.setActionCommand("Export");
 		menuItemSettings.setActionCommand("Settings");
 		
+		// Icons
+		ImageIcon iconNew = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/New16.gif")));
+		ImageIcon iconOpen = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/Open16.gif")));
+		ImageIcon iconExit = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/Stop16.gif")));
+		ImageIcon iconAbout = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/Information16.gif")));
+		ImageIcon iconExport = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/Export16.gif")));
+		ImageIcon iconSettings = new ImageIcon(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/toolbarButtonGraphics/general/Preferences16.gif")));
+		menuItemNew.setIcon(iconNew);
+		menuItemOpenLibrary.setIcon(iconOpen);
+		menuItemExit.setIcon(iconExit);
+		menuItemAbout.setIcon(iconAbout);
+		menuItemExport.setIcon(iconExport);
+		menuItemSettings.setIcon(iconSettings);
 		//menuItemExit.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		//menuItemExit.setBorderPainted(true);
 		//menuItemAbout.setBorder(BorderFactory.createLineBorder(Color.BLACK));

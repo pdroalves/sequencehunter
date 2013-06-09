@@ -3,6 +3,7 @@ package com.lnbio.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -125,22 +126,23 @@ public class SearchDrawer implements ActionListener{
 		seqBuscaLeftPanel.add(hbox,c);
 
 		// Adiciona nova linha hbox
-		hbox = Box.createHorizontalBox();
+		JPanel loads = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton loadLib = new JButton(tm.getText("loadButton"));
-		loadLib.setActionCommand("Load");
-		loadLib.addActionListener(this);
-		hbox.add(loadLib);
 		JButton unloadLib = new JButton(tm.getText("unloadButton"));
+		loadLib.setActionCommand("Load");
 		unloadLib.setActionCommand("Unload");
+		loadLib.addActionListener(this);
 		unloadLib.addActionListener(this);
-		hbox.add(unloadLib);
+		loads.add(loadLib);
+		loads.add(unloadLib);
 		// Configura linha
 	    c.fill = GridBagConstraints.NONE;
 	    c.weighty = 0.05;
-	    c.weightx = 0.2;
-	    c.gridx = 0;
+	    c.weightx = 1;
+	    c.gridx = 1;
 	    c.gridy = 3;
-		seqBuscaLeftPanel.add(hbox,c);
+	    c.anchor = GridBagConstraints.EAST;
+		seqBuscaLeftPanel.add(loads,c);
 	
 
 		// Configura linha

@@ -44,8 +44,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 		JLabel forceCudaModeLabel = new JLabel(tm.getText("ForceCudaMode"));
 		JLabel forceNonCudaModeLabel = new JLabel(tm.getText("ForceNonCudaMode"));
 		JLabel nonForceModeLabel = new JLabel(tm.getText("NonForceMode"));
-		JCheckBox forceCudaModeCheckBox = new JCheckBox();
-		JCheckBox forceNonCudaModeCheckBox = new JCheckBox();
+		final JCheckBox forceCudaModeCheckBox = new JCheckBox();
+		final JCheckBox forceNonCudaModeCheckBox = new JCheckBox();
 		JCheckBox nonForceModeCheckBox = new JCheckBox();
 		JButton okButton = new JButton(tm.getText("SettingsDialogOkButton"));
 		JButton cancelButton = new JButton(tm.getText("SettingsDialogCancelButton"));
@@ -79,6 +79,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange() == ItemEvent.SELECTED){
 					mode = Hunter.NON_FORCE_MODE;
+					forceCudaModeCheckBox.setEnabled(false);
+					forceNonCudaModeCheckBox.setEnabled(false);
+				}else if(e.getStateChange() == ItemEvent.DESELECTED){
+					forceCudaModeCheckBox.setEnabled(true);
+					forceNonCudaModeCheckBox.setEnabled(true);
 				}
 			}
 
@@ -92,7 +97,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
 		ButtonGroup bgroup = new ButtonGroup();
 		bgroup.add(forceCudaModeCheckBox);
 		bgroup.add(forceNonCudaModeCheckBox);
-		bgroup.add(nonForceModeCheckBox);
 
 		Box horizontal = new Box(BoxLayout.X_AXIS);
 		horizontal.setAlignmentX(LEFT_ALIGNMENT);

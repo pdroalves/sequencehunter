@@ -43,12 +43,10 @@ void send_setup_to_gui(Socket *gui_socket){
   sprintf(msg,"DB %s",get_database_filename());
   
   send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
   
   sprintf(msg,"Log %s",get_log_filename());
   
   send_msg_to_socket(gui_socket,msg);
-  get_msg_to_socket(gui_socket);
   
   free(msg);
   return;
@@ -110,11 +108,11 @@ void report_manager(	Socket *gui_socket,
     rate_processing = (new_p-old_p)/((float)(sleep_time));
     rate_enqueue = (pos_sent_to_db - pre_sent_to_db)/((float)(sleep_time));
     
-    if(gui_run){
-		
-      sprintf(msg,"T%dS%dAS%dSPS%dBR%ld",*p,*fsensos,*fasensos,0,*readCount);
+    if(gui_run){		
+      msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
+      sprintf(msg,"T%dS%dAS%dSPS%.0fBR%ld",*p,*fsensos,*fasensos,rate_enqueue,*readCount);
       send_msg_to_socket(gui_socket,msg);
-      get_msg_to_socket(gui_socket);
+      free(msg);
     }
     if(verbose && !silent){
 	  sqlite3_mem_used = sqlite3_memory_used();

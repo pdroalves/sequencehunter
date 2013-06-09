@@ -97,18 +97,29 @@ int get_build(){
   return build;
 }
 
-char* trocar_barra(char *s){
+void trocar_barra(char *s){
   const int len = strlen(s);
-  char *n_s = (char*)malloc((len+1)*sizeof(char));
   int i;
   for(i=0;i<=len;i++){
     if(s[i] == '\\'){
-      n_s[i] = '/';
-    }else{
-      n_s[i] = s[i];
+      s[i] = '/';
     }
   }
-  return n_s;
+  return ;
+}
+
+void remove_barra_final(char *s){
+  const int len = strlen(s);
+  s[len-1] = '\0';
+  return;
+}
+
+void processar_output_path(char *s){
+  // Inverte barras, se necessario
+    trocar_barra(output_dir);
+  // Remove barra final, se existir
+    remove_barra_final(output_dir);
+return;
 }
 
 //####################
@@ -174,17 +185,15 @@ int main (int argc,char *argv[]) {
   strcpy(tempo,ctime(&t));	
   tempo[strlen(tempo)-1] = '\0';
   if(output_dir != NULL){
-    //if(output_dir[strlen(output_dir)-1] == '/')
-    //	output_dir[strlen(output_dir)-1] = '\0';
-    if(!silent)
-      printf("Output: %s\n",output_dir);
+    processar_output_path(output_dir);
   }else{	
     output_dir = (char*)malloc(1000*sizeof(char));
-    if(!silent)	  
-      printf("Output: %s\n",DEFAULT_OUTPUT_DIR);
     strcpy(output_dir,DEFAULT_OUTPUT_DIR);
-    output_dir = trocar_barra(output_dir);
+    processar_output_path(output_dir);
   }
+    if(!silent)
+      printf("Output: %s\n",output_dir);
+
   // Seta log
   prepareLog(output_dir,tempo,gui_run);
   printString("Output Folder: ",output_dir);		
@@ -316,12 +325,12 @@ int main (int argc,char *argv[]) {
   destroy_db_manager();
   if(gui_run){
     destroy_socket(gui_socket);
+    if(gui_socket != NULL)
+      free(gui_socket);
   }
 
   if(!silent)
     printf("Concluded.\n");
-
-  free(gui_socket);
   if(output_dir != NULL)
     free(output_dir);
 
