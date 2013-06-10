@@ -110,7 +110,8 @@ void trocar_barra(char *s){
 
 void remove_barra_final(char *s){
   const int len = strlen(s);
-  s[len-1] = '\0';
+  if(s[len-1] == '/')
+	  s[len-1] = '\0';
   return;
 }
 

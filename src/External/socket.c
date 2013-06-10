@@ -5,7 +5,6 @@
 #include <gio/gio.h>
 #include "../Headers/estruturas.h"
 #include "../Headers/log.h"
-#include <gnu/libc-version.h>
 #ifdef _WIN32
 #include <Windows.h>
 #define SLEEP(a) Sleep(1000*a)
@@ -49,9 +48,10 @@ void criar_socket(Socket *sock,int port){
   char *result;
   GSocketAddress *address;
 
-  if(gnu_get_libc_version() < "2.36")
+#ifdef _WIN32
   // A versao da GLib para Windows ainda precisa disso
     g_type_init ();
+#endif
   sock->client =  g_socket_client_new();
   g_socket_client_set_timeout(sock->client,3000);
   sock->connection = g_socket_client_connect_to_host (sock->client,
