@@ -142,13 +142,14 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		cancelButton.addActionListener(this);
 		c.fill = GridBagConstraints.NONE;
 		c.weighty = 0.05;
-		c.weightx = 1;
+		c.weightx = 0.5;
 		c.gridy = 3;
 		c.gridx = 0;
-		c.gridwidth = 1;
-		jp.add(exportButton,c);
-		c.gridx=1;
-		jp.add(cancelButton,c);
+		c.gridwidth = 2;
+		Box hbox = Box.createHorizontalBox();
+		hbox.add(exportButton);
+		hbox.add(cancelButton);
+		jp.add(hbox,c);
 		
 
 		///////////////////

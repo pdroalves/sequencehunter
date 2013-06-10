@@ -33,7 +33,7 @@ public class CoreAppDealer extends Thread implements ISocketUser{
 	public CoreAppDealer(ProcessBuilder p){
 		pb = p;
 		stop = false;
-		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)BR(\\d+)");
+		seqReadPattern = Pattern.compile("T(\\d+)S(\\d+)AS(\\d+)SPS(\\d+)BR([-,0-9]+)");
 		outputPattern = Pattern.compile("DB (.*)");
 		logPattern = Pattern.compile("Log (.*)");
 	}
