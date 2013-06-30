@@ -48,7 +48,7 @@ short int *d_candidates;
 int processadas;
 int bytes_read = 0;
 Socket *gui_socket;
-long long int readCount_CUDA = 0;
+long double readCount_CUDA = 0;
 /*
  * Author:  David Robert Nadeau
  * Site:    http://NadeauSoftware.com/

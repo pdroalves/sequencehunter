@@ -52,7 +52,7 @@ int *vertexes;
 int processadas;
 int fsensos,fasensos;
 unsigned long nc_bytes_read=0;
-long long int readCount_NCUDA = 0;
+long double readCount_NCUDA = 0;
 
 const int buffer_size_NC = buffer_size;
 /*

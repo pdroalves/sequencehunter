@@ -60,7 +60,7 @@ void report_manager(	Socket *gui_socket,
 						gboolean silent,
 						int *fsensos,
 						int *fasensos,
-			long long int *readCount,
+			long double *readCount,
 						int *THREAD_DONE_QUEUE
 						){
   clock_t cStartClock;
@@ -110,7 +110,7 @@ void report_manager(	Socket *gui_socket,
     
     if(gui_run){		
       msg = (char*)malloc(MAX_SOCKET_MSG_SIZE*sizeof(char));
-      sprintf(msg,"T%dS%dAS%dSPS%.0fBR%ld",*p,*fsensos,*fasensos,rate_enqueue,*readCount);
+      sprintf(msg,"T%dS%dAS%dSPS%.0fBR%lf",*p,*fsensos,*fasensos,rate_enqueue,*readCount);
       send_msg_to_socket(gui_socket,msg);
       free(msg);
     }
