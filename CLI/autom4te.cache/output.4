@@ -5176,16 +5176,32 @@ if test "${with_cuda+set}" = set; then :
 fi
 
 
+ARCH64="x86_64"
+ARCH32="i686"
+ARCH=`uname -m`
+
 if test -n "$with_cuda"
 then
    CUDA_CFLAGS="-I$with_cuda/include"
    CUDA_LIBS="-lcudart"
-   CUDA_LDFLAGS="-L$with_cuda/lib64$SUFFIX"
+   if test "$ARCH" == "$ARCH64" 
+   then      
+      CUDA_LDFLAGS="-L$with_cuda/lib64$SUFFIX"
+   elif test "$ARCH" == "$ARCH32"
+   then
+      CUDA_LDFLAGS="-L$with_cuda/lib$SUFFIX"
+   fi
    NVCC="$with_cuda/bin/nvcc"
 else
    CUDA_CFLAGS="-I/usr/local/cuda/include"
    CUDA_LIBS="-lcudart"
-   CUDA_LDFLAGS="-L/usr/local/cuda/lib64$SUFFIX"
+   if test "$ARCH"=="$ARCH64"
+   then      
+       CUDA_LDFLAGS="-L/usr/local/cuda/lib64$SUFFIX"
+   elif test "$ARCH"=="$ARCH32" 
+   then
+      CUDA_LDFLAGS="-L/usr/local/cuda/lib$SUFFIX"
+   fi
    NVCC="nvcc"
 fi
 
