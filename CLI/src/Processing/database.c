@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> 
 #include <string.h>
 #include <stdlib.h>
 #include <omp.h>
@@ -16,9 +16,9 @@ double MAX_DB_MEM_USE;
 // Create a db for database connection, create a pointer to sqlite3
 sqlite3 *db;
 // The number of query to be dbd,size of each query and pointer
-int count;
 int destroyed;
-sqlite3_stmt *stmt_insert;
+sqlite3_stmt *stmt_insert_main;
+sqlite3_stmt *stmt_insert_5l;
 char *database_path;
 
 int get_hash(char* original){
@@ -111,7 +111,7 @@ void db_create(char *filename){
 		
 	query = (char*)malloc(500*sizeof(char));
 	
-	// Create the SQL query for creating a table
+	// Main table
 	strcpy(query,"CREATE TABLE events_tmp (id INTEGER NOT NULL,main_seq TEXT,senso INTEGER DEFAULT 0,antisenso INTEGER DEFAULT 0,PRIMARY KEY(id))");
 	// Execute the query for creating the table
 	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
@@ -119,21 +119,33 @@ void db_create(char *filename){
 		printf("DB error: %s - %s\n",sErrMsg,filename);
 		exit(1);
 	}
+	// 5l region
+	strcpy(query,"CREATE TABLE events_5l_tmp (id INTEGER NOT NULL,seq TEXT,senso INTEGER DEFAULT 0,antisenso INTEGER DEFAULT 0,PRIMARY KEY(id))");
+	// Execute the query for creating the table
+	ret = sqlite3_exec(db,query,NULL, NULL,&sErrMsg);
+	if(sErrMsg != NULL){
+		printf("DB error: %s - %s\n",sErrMsg,filename);
+		exit(1);
+	}
 
-	count =0;
-	
 	// Main
 	//
 	// Compile insert-statement
-	sprintf(query, "INSERT OR IGNORE INTO events_tmp (main_seq,senso,antisenso) VALUES (@SEQ,@SEN,@ANT)");
-	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_insert, 0);
+	sprintf(query, "INSERT INTO events_tmp (main_seq,senso,antisenso) VALUES (@SEQ,@SEN,@ANT)");
+	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_insert_main, 0);
+	if(ret != SQLITE_OK){
+		printf("Error on statement compile 1b - %d.\n",ret);
+		exit(1);
+	}
+	sprintf(query, "INSERT INTO events_5l_tmp (seq,senso,antisenso) VALUES (@SEQ,@SEN,@ANT)");
+	ret = sqlite3_prepare_v2(db,  query, -1, &stmt_insert_5l, 0);
 	if(ret != SQLITE_OK){
 		printf("Error on statement compile 1b - %d.\n",ret);
 		exit(1);
 	}
 
 	
-	sqlite3_soft_heap_limit64(MAX_DB_MEM_USE);
+	sqlite3_soft_heap_limit64(MAX_DB_MEM_USE*0.8);
 	
 	destroyed = 0;
 
@@ -146,55 +158,98 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	int id;
     char * sErrMsg;
 
-    sqlite3_bind_text(stmt_insert,1,seq_central,-1,SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt_insert_main,1,seq_central,-1,SQLITE_TRANSIENT);
+    if(seq_cincoL != NULL){
+    	sqlite3_bind_text(stmt_insert_5l,1,seq_cincoL,-1,SQLITE_TRANSIENT);
+    }
 
     if(tipo == SENSO){
 		// Atualiza contagem senso da seq_central
 		
-   		sqlite3_bind_int(stmt_insert,2,1);
-   		sqlite3_bind_int(stmt_insert,3,0);
-        
+   		sqlite3_bind_int(stmt_insert_main,2,1);
+   		sqlite3_bind_int(stmt_insert_main,3,0);
+
+   		if(seq_cincoL != NULL){
+	   		// Atualiza contagem senso 5l
+
+	   		sqlite3_bind_int(stmt_insert_5l,2,1);
+	   		sqlite3_bind_int(stmt_insert_5l,3,0);
+        }
 	}else{
 		// Atualiza contagem antisenso da seq_centrall
 		
-   		sqlite3_bind_int(stmt_insert,2,0);
-   		sqlite3_bind_int(stmt_insert,3,1);
+   		sqlite3_bind_int(stmt_insert_5l,2,0);
+   		sqlite3_bind_int(stmt_insert_5l,3,1);
+	
+   		if(seq_cincoL != NULL){
+	   		// Atualiza contagem senso 5l
+	   		
+	   		sqlite3_bind_int(stmt_insert_5l,2,0);
+	   		sqlite3_bind_int(stmt_insert_5l,3,1);
+        }
 	}
 
-	ret = sqlite3_step(stmt_insert);
-	sqlite3_clear_bindings(stmt_insert);
-	sqlite3_reset(stmt_insert);
+	ret = sqlite3_step(stmt_insert_main);
+	sqlite3_clear_bindings(stmt_insert_main);
+	sqlite3_reset(stmt_insert_main);
 	if(ret != SQLITE_DONE){
 		printf("Error on SQLite step 4 - %d. => %s\n",ret,seq_central);
 		exit(1);
 	}
-	count++;
+
+	if(seq_cincoL != NULL){
+		ret = sqlite3_step(stmt_insert_5l);
+		sqlite3_clear_bindings(stmt_insert_5l);
+		sqlite3_reset(stmt_insert_5l);
+		if(ret != SQLITE_DONE){
+			printf("Error on SQLite step 4 - %d. => %s\n",ret,seq_cincoL);
+			exit(1);
+		}
+	}
+
+
 	return;
 }
 
 void db_destroy(){
-    char * sErrMsg;
+    char *sErrMsgMain,*sErrMsg5l,*sErrMsg;
 	int ret;
 	char createEventsQuery[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char create5lEventsQuery[] = "CREATE TABLE events_5l as SELECT seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_5l_tmp GROUP BY seq";
 	char dropTmpQuery[] = "DROP TABLE events_tmp";
+	char drop5lTmpQuery[] = "DROP TABLE events_5l_tmp";
+	int errorMain,error5l;
 	
 	if(!destroyed){
+		// Main events
 		db_start_transaction();
-		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
+		errorMain = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsgMain);
+		error5l = sqlite3_exec(db,create5lEventsQuery,NULL, NULL,&sErrMsg5l);
 		db_commit_transaction();
-		if(sErrMsg == NULL){
+
+		if(sErrMsg5l == NULL && sErrMsgMain == NULL){
+			// 5l events
 			db_start_transaction();
-			ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
+			sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsgMain);
+			sqlite3_exec(db,drop5lTmpQuery,NULL, NULL,&sErrMsg5l);
 			db_commit_transaction();
-			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
+
+			// Clean
+			sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
 		}else{
-			if(ret == SQLITE_FULL)
-		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,database_path);
-		 	else
-		 		 printf("Database ERROR! %s\n",sErrMsg);
+			if(errorMain == SQLITE_FULL){
+				printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsgMain,database_path);
+		 	}else{
+		 		if(error5l == SQLITE_FULL){
+		 			printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg5l,database_path);
+		 		}else{		 		
+		 			printf("Database ERROR! \nMain: %s\n5l: %s\n",sErrMsgMain,sErrMsg5l);
+		 		}
+		 	}
 		}
 		
-		sqlite3_finalize(stmt_insert);
+		sqlite3_finalize(stmt_insert_main);
+		sqlite3_finalize(stmt_insert_5l);
 		sqlite3_close(db);
 		destroyed = 1;
 	}

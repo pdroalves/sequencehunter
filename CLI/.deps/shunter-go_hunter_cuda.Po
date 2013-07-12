@@ -112,17 +112,12 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/string.h \
  /usr/include/x86_64-linux-gnu/bits/string2.h \
- /usr/include/x86_64-linux-gnu/bits/string3.h \
- /usr/local/cuda/include/cuda.h \
- /usr/local/cuda/include/cuda_runtime_api.h \
- /usr/local/cuda/include/host_defines.h \
- /usr/local/cuda/include/builtin_types.h \
- /usr/local/cuda/include/device_types.h \
- /usr/local/cuda/include/driver_types.h \
- /usr/local/cuda/include/surface_types.h \
- /usr/local/cuda/include/texture_types.h \
- /usr/local/cuda/include/vector_types.h \
- /usr/local/cuda/include/cuda_device_runtime_api.h \
+ /usr/include/x86_64-linux-gnu/bits/string3.h /usr/include/cuda.h \
+ /usr/include/cuda_runtime_api.h /usr/include/host_defines.h \
+ /usr/include/builtin_types.h /usr/include/device_types.h \
+ /usr/include/driver_types.h /usr/include/surface_types.h \
+ /usr/include/texture_types.h /usr/include/vector_types.h \
+ /usr/include/cuda_device_runtime_api.h \
  src/Go_Hunter/../Headers/database_manager.h \
  src/Go_Hunter/../Headers/database.h \
  src/Go_Hunter/../Headers/estruturas.h \
@@ -417,25 +412,25 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
 
 /usr/include/x86_64-linux-gnu/bits/string3.h:
 
-/usr/local/cuda/include/cuda.h:
+/usr/include/cuda.h:
 
-/usr/local/cuda/include/cuda_runtime_api.h:
+/usr/include/cuda_runtime_api.h:
 
-/usr/local/cuda/include/host_defines.h:
+/usr/include/host_defines.h:
 
-/usr/local/cuda/include/builtin_types.h:
+/usr/include/builtin_types.h:
 
-/usr/local/cuda/include/device_types.h:
+/usr/include/device_types.h:
 
-/usr/local/cuda/include/driver_types.h:
+/usr/include/driver_types.h:
 
-/usr/local/cuda/include/surface_types.h:
+/usr/include/surface_types.h:
 
-/usr/local/cuda/include/texture_types.h:
+/usr/include/texture_types.h:
 
-/usr/local/cuda/include/vector_types.h:
+/usr/include/vector_types.h:
 
-/usr/local/cuda/include/cuda_device_runtime_api.h:
+/usr/include/cuda_device_runtime_api.h:
 
 src/Go_Hunter/../Headers/database_manager.h:
 
