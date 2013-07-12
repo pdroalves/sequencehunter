@@ -106,20 +106,20 @@ __global__ void k_buscador(int totalseqs,
     for(i=0;i<num_sensos_candidates && !tipo;i++){
       candidate_pos_sensos = this_candidates[i];
       if(match_check(d_matrix_senso,seqSize_bu,&this_vertexes[candidate_pos_sensos])){
-	search_gaps[seqId] = i + bloco1;
-	tipo = SENSO;  
+  search_gaps[seqId] = candidate_pos_sensos + bloco1;
+  tipo = SENSO;  
       }
     }
-    if(!tipo){		
+    if(!tipo){    
       num_antisensos_candidates = get_candidate_table(d_matrix_antisenso[0],this_vertexes,seqSize_an-seqSize_bu+1,this_candidates);
       for(i=0;i<num_antisensos_candidates && !tipo;i++){
-	candidate_pos_antisensos = this_candidates[i];
-	if(match_check(d_matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
-	  search_gaps[seqId] = i + bloco2;
-	  tipo = ANTISENSO;
-	}
+  candidate_pos_antisensos = this_candidates[i];
+  if(match_check(d_matrix_antisenso,seqSize_bu,&this_vertexes[candidate_pos_antisensos])){
+    search_gaps[seqId] = candidate_pos_antisensos + bloco2;
+    tipo = ANTISENSO;
+  }
       }
-    }		
+    }   
 								 
     resultados[seqId] = tipo;	 
   }
