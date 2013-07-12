@@ -77,8 +77,8 @@ static GOptionEntry entries[] =
     //Entrada de posicoes
     { "target", 'a', 0, G_OPTION_ARG_STRING, &target_seq, "Defines target sequence.", NULL },
     { "output", 'o', 0, G_OPTION_ARG_STRING, &output_dir, "Defines output folder (home folder by default).", NULL },
-    //{ "dist5l", NULL, 0, G_OPTION_ARG_INT, &dist_regiao_5l, "Define a quantidade de bases entre o inicio do bloco variavel e o inicio da regiao 5' a esquerda.", NULL },
-    //{ "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
+    { "dist5l", NULL, 0, G_OPTION_ARG_INT, &dist_regiao_5l, "Define a quantidade de bases entre o inicio do bloco variavel e o inicio da regiao 5' a esquerda.", NULL },
+    { "tam5l", NULL, 0, G_OPTION_ARG_INT, &tam_regiao_5l, "Define o tamanho da regiao 5'.", NULL },
     { "disablecuda", 'd', 0, G_OPTION_ARG_NONE, &disable_cuda, "Force processing by CPU.", NULL },
     { "disablecpu", 'e', 0, G_OPTION_ARG_NONE, &disable_cpu, "Force processing by GPU.", NULL },
     { "fromFile", 'f', 0, G_OPTION_ARG_STRING, &fromFile, "Loads hunt settings from a text file.", NULL },

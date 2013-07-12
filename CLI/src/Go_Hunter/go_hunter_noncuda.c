@@ -229,9 +229,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
       //Copia sequências senso e antisenso encontradas
       switch(resultados[i]){
       case SENSO:
-	if(central_cut){
+    gap = search_gaps[i];
+	if(central_cut&& (gap + blocoV < strlen(buf.seq[i])) ){
 	  central = (char*)malloc((blocoV+1)*sizeof(char));	
-	  gap = search_gaps[i];
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
@@ -240,10 +240,10 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	  strncpy(central,buf.seq[i],seqSize_an+1);
 	}
 
-	if(regiao_5l){
+    gap = search_gaps[i] - bloco1 - dist_regiao_5l;
+	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
 	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 
-	  gap = search_gaps[i] - dist_regiao_5l;
 	  strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
 	  cincol[tam_regiao_5l] = '\0';
 	}else{
@@ -255,9 +255,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	enfileirar(toStore,hold_event);
 	break;
       case ANTISENSO:
-	if(central_cut){
+    gap = search_gaps[i];
+	if(central_cut&& (gap + blocoV < strlen(buf.seq[i])) ){
 	  central = (char*)malloc((blocoV+1)*sizeof(char));
-	  gap = search_gaps[i];
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  central[blocoV] = '\0';
 	}else{						
@@ -266,10 +266,10 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 
 			      
-	if(regiao_5l){
+    gap = search_gaps[i] +  bloco2 + dist_regiao_5l;
+	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
 	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 				      
-	  gap = search_gaps[i] + dist_regiao_5l-1;
 	  strncpy(cincol,buf.seq[i] + gap,tam_regiao_5l);
 	  cincol[tam_regiao_5l] = '\0';
 	}else{

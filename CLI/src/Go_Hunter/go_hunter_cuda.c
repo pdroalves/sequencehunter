@@ -272,21 +272,24 @@ void search_manager(int *buffer_load,
       	switch(h_resultados[i]){		
       	case SENSO:
       	  central = (char*)malloc((seqSize_an+1)*sizeof(char));
-      	  if(central_cut){
-      	    gap = h_search_gaps[i];
+            gap = h_search_gaps[i];
+      	  if(central_cut && (gap + blocoV < strlen(data[i])) ){
       	    strncpy(central,data[i]+gap,blocoV);
       	    central[blocoV] = '\0';
       	  }else{
       	    strncpy(central,data[i],seqSize_an+1);
       	  }
 
-      	  if(regiao_5l){
+            gap = h_search_gaps[i] - bloco1 - dist_regiao_5l;
+      	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
+            printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
       	    cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 
-      	    gap = h_search_gaps[i] - dist_regiao_5l;
       	    strncpy(cincol,data[i] + gap,tam_regiao_5l);
       	    cincol[tam_regiao_5l] = '\0';
-      	  }else{
+      	  }else{ 
+            printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
+          
       	    cincol = NULL;
       	  }
       			
@@ -296,18 +299,17 @@ void search_manager(int *buffer_load,
       	  break;
       	case ANTISENSO:
       	  central = (char*)malloc((seqSize_an+1)*sizeof(char));
-      	  if(central_cut){
-      	    gap = h_search_gaps[i];
+          gap = h_search_gaps[i];
+      	  if(central_cut && (gap + blocoV < strlen(data[i])) ){
       	    strncpy(central,data[i]+gap,blocoV);
       	    central[blocoV] = '\0';
       	  }else{
       	    strncpy(central,data[i],seqSize_an+1);
       	  }
 
-      			
-      	  if(regiao_5l){
+          gap = h_search_gaps[i] +  bloco2 + dist_regiao_5l;      			
+      	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
       	    cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
-      	    gap = h_search_gaps[i] + dist_regiao_5l-1;
       	    strncpy(cincol,data[i] + gap,tam_regiao_5l);
       	    cincol[tam_regiao_5l] = '\0';
       	  }else{

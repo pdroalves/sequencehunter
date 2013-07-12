@@ -72,7 +72,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.9"
+#define VERSION "1.1"
 
 /* Define to rpl_malloc if the replacement function should be used. */
 /* #undef malloc */
