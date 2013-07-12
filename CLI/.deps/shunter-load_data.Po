@@ -111,17 +111,12 @@ shunter-load_data.o: src/External/load_data.c /usr/include/stdio.h \
  /usr/include/glib-2.0/glib/deprecated/grel.h \
  /usr/include/glib-2.0/glib/deprecated/gthread.h /usr/include/pthread.h \
  /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/local/cuda/include/cuda.h \
- /usr/local/cuda/include/cuda_runtime_api.h \
- /usr/local/cuda/include/host_defines.h \
- /usr/local/cuda/include/builtin_types.h \
- /usr/local/cuda/include/device_types.h \
- /usr/local/cuda/include/driver_types.h \
- /usr/local/cuda/include/surface_types.h \
- /usr/local/cuda/include/texture_types.h \
- /usr/local/cuda/include/vector_types.h \
- /usr/local/cuda/include/cuda_device_runtime_api.h \
+ /usr/include/x86_64-linux-gnu/bits/setjmp.h /usr/include/cuda.h \
+ /usr/include/cuda_runtime_api.h /usr/include/host_defines.h \
+ /usr/include/builtin_types.h /usr/include/device_types.h \
+ /usr/include/driver_types.h /usr/include/surface_types.h \
+ /usr/include/texture_types.h /usr/include/vector_types.h \
+ /usr/include/cuda_device_runtime_api.h \
  src/External/../Headers/estruturas.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.6/include/omp.h \
  src/External/../Headers/log.h
@@ -404,25 +399,25 @@ shunter-load_data.o: src/External/load_data.c /usr/include/stdio.h \
 
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
 
-/usr/local/cuda/include/cuda.h:
+/usr/include/cuda.h:
 
-/usr/local/cuda/include/cuda_runtime_api.h:
+/usr/include/cuda_runtime_api.h:
 
-/usr/local/cuda/include/host_defines.h:
+/usr/include/host_defines.h:
 
-/usr/local/cuda/include/builtin_types.h:
+/usr/include/builtin_types.h:
 
-/usr/local/cuda/include/device_types.h:
+/usr/include/device_types.h:
 
-/usr/local/cuda/include/driver_types.h:
+/usr/include/driver_types.h:
 
-/usr/local/cuda/include/surface_types.h:
+/usr/include/surface_types.h:
 
-/usr/local/cuda/include/texture_types.h:
+/usr/include/texture_types.h:
 
-/usr/local/cuda/include/vector_types.h:
+/usr/include/vector_types.h:
 
-/usr/local/cuda/include/cuda_device_runtime_api.h:
+/usr/include/cuda_device_runtime_api.h:
 
 src/External/../Headers/estruturas.h:
 
