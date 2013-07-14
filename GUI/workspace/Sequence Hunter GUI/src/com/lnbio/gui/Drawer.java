@@ -103,7 +103,7 @@ public class Drawer {
 		jtp.addTab(tm.getText("setupTabName"),null,getSearchDrawer().getContainer(),tm.getText("setupTabHint"));
 
 		// Monta summaryContainer
-		jtp.addTab(tm.getText("summaryTabName"),null,getSummaryDrawer().getContainer(),tm.getText("summaryTabHint"));
+		jtp.addTab(tm.getText("summaryTabName"),null,SummaryDrawer.getContainer(),tm.getText("summaryTabHint"));
 
 		// Monta reportContainer
 		jtp.addTab(tm.getText("reportTabName"),null,getReportDrawer().getContainer(),tm.getText("reportTabHint"));

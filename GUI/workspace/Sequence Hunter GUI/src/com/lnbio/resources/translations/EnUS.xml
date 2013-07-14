@@ -88,9 +88,13 @@
 <TextResource tag="SummaryNonForceMode">Sequence Hunter will choose the best strategy to the hunt.</TextResource>
 <TextResource tag="reportRelativeColumnLabel">Frequency</TextResource>
 <TextResource tag="Exported">Exported</TextResource>
-<TextResource tag="parameterStoreFullSequence">Store the entire sequence</TextResource>
-<TextResource tag="willStoreFullSequence">Sequence Hunter will store the entire sequence after processing</TextResource>
-<TextResource tag="wontStoreFullSequence">Sequence Hunter will not store the entire sequence after processing</TextResource>
-<TextResource tag="willStoreCincoLSequences">Sequence Hunter will search for a 5' cut with length %d1 and %d2 bases before central cut</TextResource>
-<TextResource tag="wontStoreCincoLSequences">Sequence Hunter will not search for a 5' cut before central cut</TextResource>
+<TextResource tag="parameterStoreFullSequence">Store the entire sequence.</TextResource>
+<TextResource tag="parameter5lCutSequence">5' Cut:</TextResource>
+<TextResource tag="willStoreFullSequence">Sequence Hunter will store the entire sequence after processing.</TextResource>
+<TextResource tag="wontStoreFullSequence">Sequence Hunter will not store the entire sequence after processing.</TextResource>
+<TextResource tag="willStoreCincoLSequences">Sequence Hunter will search for a 5' cut with length %d1 and %d2 bases before the target sequence.</TextResource>
+<TextResource tag="wontStoreCincoLSequences">Sequence Hunter will not search for a 5' cut before the target sequence.</TextResource>
+<TextResource tag="parameter5lCutDistOption">Bases from target sequence </TextResource>
+<TextResource tag="parameter5lCutTamOption">Length of 5' cut </TextResource>
+<TextResource tag="parameterOptionsLabel">Options:</TextResource>
 </AllTextResource>

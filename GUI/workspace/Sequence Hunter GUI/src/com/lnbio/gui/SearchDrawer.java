@@ -2,10 +2,11 @@ package com.lnbio.gui;
 
 
 import java.awt.BorderLayout;
-import java.awt.Checkbox;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,15 +29,21 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import com.lnbio.auxiliares.JBaseTextField;
 import com.lnbio.auxiliares.JTxtFileFilter;
-import com.lnbio.hunt.Hunter;
 import com.lnbio.hunt.Library;
 import com.lnbio.tables.JLibPreviewTableModel;
 import com.lnbio.tables.JTableRenderer;
@@ -53,8 +60,8 @@ public class SearchDrawer implements ActionListener{
 	private DefaultListModel<String> listModel;
 	private JTabbedPane libContainer;
 	private boolean emptyLibPreview;
-	private int xSize = 700;
-	private int ySize = 1000;
+	private int xSize = 100;
+	private int ySize = 100;
 	private ArrayList<String> libs = new ArrayList<String>();
 	private JPanel seqBuscaPanel;
 	private JPanel seqBuscaRightPanel;
@@ -67,14 +74,15 @@ public class SearchDrawer implements ActionListener{
 		this.ySize = ySize;
 		this.tm = TranslationsManager.getInstance();
 		seqOriginal = new JBaseTextField(25);
-		seqOriginal.setMaximumSize(new Dimension(xSize*2, 30));
+		seqOriginal.setMaximumSize(new Dimension(2*xSize, 30));
 		seqBusca = new JLabel();
 		jl = new JList<String>();
 		listModel = new DefaultListModel<String>();  
+		jl.setModel(listModel);
 		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 		seqBuscaPanel = new JPanel();
 		seqBuscaRightPanel = new JPanel(new BorderLayout());
-		seqBuscaLeftPanel = new JPanel(new BorderLayout());
+		seqBuscaLeftPanel = new JPanel();
 		drawSearchContainer();
 	}
 
@@ -85,7 +93,8 @@ public class SearchDrawer implements ActionListener{
 	private void drawSearchContainer(){		
 		GridBagConstraints c = new GridBagConstraints();
 		// Configura tab para sequencias
-		seqBuscaLeftPanel.setLayout(new GridLayout(5,1));
+		seqBuscaLeftPanel.setLayout(new GridBagLayout());
+		seqBuscaLeftPanel.setBorder(new EmptyBorder(10,10,10,10));
 		
 		//Adiciona nova linha hbox
 		Box hbox = Box.createHorizontalBox();
@@ -101,19 +110,21 @@ public class SearchDrawer implements ActionListener{
 	    c.weightx = 1;
 	    c.gridx = 0;
 	    c.gridy = 0;
+	    c.gridwidth = 2;
 		seqBuscaLeftPanel.add(hbox);
 		
 		// Adiciona nova linha hbox
 		hbox = Box.createHorizontalBox();
 		hbox.add(new JLabel(tm.getText("targetSequenceLabel")));
 		hbox.add(seqBusca);
-		hbox.setMaximumSize(new Dimension(xSize*2,20));
+		hbox.setMaximumSize(new Dimension(2*xSize,20));
 		// Configura linha
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.05;
 	    c.weightx = 1;
 	    c.gridx = 0;
 	    c.gridy = 1;
+	    c.gridwidth = 2;
 		seqBuscaLeftPanel.add(hbox,c);			
 		
 		// Nova linha com as previews
@@ -121,7 +132,6 @@ public class SearchDrawer implements ActionListener{
 		hbox.add(new JLabel(tm.getText("librariesLoadedLabel")));
 		// Configura linha na libsLoaded
 		JScrollPane jscrlp = new JScrollPane(jl);
-		jl.setModel(listModel);
 		hbox.add(jscrlp);
 		// Configura linha
 	    c.fill = GridBagConstraints.NONE;
@@ -129,6 +139,7 @@ public class SearchDrawer implements ActionListener{
 	    c.weightx = 1;
 	    c.gridx = 0;
 	    c.gridy = 2;
+	    c.gridwidth = 2;
 		seqBuscaLeftPanel.add(hbox,c);
 
 		// Adiciona nova linha hbox
@@ -147,12 +158,18 @@ public class SearchDrawer implements ActionListener{
 	    c.weightx = 1;
 	    c.gridx = 1;
 	    c.gridy = 3;
+	    c.gridwidth = 1;
 	    c.anchor = GridBagConstraints.EAST;
 		seqBuscaLeftPanel.add(loads,c);
 		
 		// Adiciona nova linha hbox
-		JPanel parameters = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		JPanel parameters = new JPanel(new BorderLayout());
+		Box vbox = Box.createVerticalBox();
+
+		// Full Sequence
+		JPanel fulLSequencePanel = new JPanel(new BorderLayout());
 		JCheckBox fullSequenceCheckBox = new JCheckBox(tm.getText("parameterStoreFullSequence"));
+		fullSequenceCheckBox.setSelected(false);
 		fullSequenceCheckBox.addItemListener(new ItemListener(){
 
 			@Override
@@ -165,19 +182,94 @@ public class SearchDrawer implements ActionListener{
 			}
 
 		});
-		parameters.add(fullSequenceCheckBox);		
-		// Configura linha
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.05;
-	    c.weightx = 1;
-	    c.gridx = 1;
-	    c.gridy = 4;
-		seqBuscaLeftPanel.add(parameters,c);
+		fulLSequencePanel.add(fullSequenceCheckBox,BorderLayout.WEST);
 
+		// CLinha		
+		JCheckBox CLinhaCutCheckBox = new JCheckBox(tm.getText("parameter5lCutSequence"));
+		CLinhaCutCheckBox.setSelected(false);
+		JPanel ClDistPanel = new JPanel();
+		JPanel ClTamPanel = new JPanel();
+		SpinnerModel spinnermodelTam = new SpinnerNumberModel(0, 0, 1e20, 1);
+		SpinnerModel spinnermodelDist = new SpinnerNumberModel(0, 0, 1e20, 1);
+		final JSpinner spinnerTam = new JSpinner(spinnermodelTam); 
+		final JSpinner spinnerDist = new JSpinner(spinnermodelDist); 
+		Dimension d = spinnerTam.getPreferredSize();  
+		d.width = 50;  
+		spinnerTam.setPreferredSize(d);  
+		spinnerDist.setPreferredSize(d);  
+		spinnerTam.setEnabled(false);
+		spinnerDist.setEnabled(false);
+		spinnerTam.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				Object obj = arg0.getSource();
+				if(obj instanceof JSpinner){
+					JSpinner spinner = (JSpinner)obj;
+					SummaryDrawer.set5lTam(Math.round((Double)spinner.getValue()));
+				}
+			}
+		});
+		spinnerDist.addChangeListener(new ChangeListener(){
+			
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				Object obj = arg0.getSource();
+				if(obj instanceof JSpinner){
+					JSpinner spinner = (JSpinner)obj;
+					SummaryDrawer.set5lDim(Math.round((Double)spinner.getValue()));
+				}
+			}
+		});
+		CLinhaCutCheckBox.addItemListener(new ItemListener(){
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if(e.getStateChange() == ItemEvent.SELECTED){
+					spinnerTam.setEnabled(true);
+					spinnerDist.setEnabled(true);
+					SummaryDrawer.setCLinhaSequences(true);
+				}else if(e.getStateChange() == ItemEvent.DESELECTED){
+					spinnerTam.setEnabled(false);
+					spinnerDist.setEnabled(false);
+					SummaryDrawer.setCLinhaSequences(false);
+				}
+			}
+
+		});
+		JPanel CLinhaPanel = new JPanel(new BorderLayout());
+		Box vboxInterno = Box.createVerticalBox();
+		ClDistPanel.add(new JLabel(tm.getText("parameter5lCutDistOption")));
+		ClDistPanel.add(spinnerDist);
+		ClTamPanel.add(new JLabel(tm.getText("parameter5lCutTamOption")));
+		ClTamPanel.add(spinnerTam);
+		vboxInterno.add(ClDistPanel);
+		vboxInterno.add(ClTamPanel);
+		CLinhaPanel.add(CLinhaCutCheckBox,BorderLayout.WEST);
+		CLinhaPanel.add(vboxInterno,BorderLayout.EAST);		
+		// Configura linha
+	    c.fill = GridBagConstraints.BOTH;
+	    c.weighty = 0.20;
+	    c.weightx = 1;
+	    c.gridx = 0;
+	    c.gridy = 4;
+	    c.gridwidth = 2;
+	    
+	    JLabel optionsLabel = new JLabel(tm.getText("parameterOptionsLabel"));
+	    optionsLabel.setFont(optionsLabel.getFont().deriveFont(optionsLabel.getFont().getStyle() | Font.BOLD));
+	    
+		vbox.add(optionsLabel);
+		vbox.add(fulLSequencePanel);
+		vbox.add(CLinhaPanel);
+		parameters.add(vbox);
+		seqBuscaLeftPanel.add(parameters,c);
+		
 		// Configura linha
 		drawEmptyLibsContainer();
 	    seqBuscaRightPanel.add(libContainer);  
-		seqBuscaPanel.setLayout(new GridLayout(1,1));
+	    
+		seqBuscaPanel.setLayout(new BorderLayout());
+		//JScrollPane jscrp = new JScrollPane(seqBuscaLeftPanel);
 		jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,true,seqBuscaLeftPanel,seqBuscaRightPanel);
 		jsp.setOneTouchExpandable(true);
 	    c.fill = GridBagConstraints.BOTH;
@@ -185,7 +277,7 @@ public class SearchDrawer implements ActionListener{
 	    c.weightx = 1;
 	    c.gridx = 0;
 	    c.gridy = 0;
-		seqBuscaPanel.add(jsp,c);
+		seqBuscaPanel.add(jsp,BorderLayout.CENTER);
 
 		return;
 	}

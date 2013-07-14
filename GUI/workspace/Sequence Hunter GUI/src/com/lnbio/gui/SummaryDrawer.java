@@ -31,7 +31,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 	private static Hunter h;
 	private static JButton startButton;
 	private static JButton abortButton;
-	private JPanel summaryContainer;
+	private static JPanel summaryContainer;
 	private static Box libSummaryVBox;
 	private Box outputFolderSummaryVBox;
 	private JButton browseOutputButton;
@@ -43,8 +43,8 @@ public class SummaryDrawer implements ActionListener,Observer {
 	private static JLabel CLinhaStrategy;
 	private static boolean storeFullSequence;
 	private static boolean storeCLinhaSequences;
-	private static int tamCLinha;
-	private static int distCLinha;
+	private static long tamCLinha;
+	private static long distCLinha;
 
 	public SummaryDrawer(Drawer d,Hunter hunterInstance){
 		drawer = d;
@@ -103,7 +103,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 		drawSummaryContainer();
 	}
 
-	public JPanel getContainer(){
+	public static JPanel getContainer(){
 		return summaryContainer;
 	}
 
@@ -302,10 +302,22 @@ public class SummaryDrawer implements ActionListener,Observer {
 			tamCLinha = 0;
 			distCLinha = 0;
 			storeCLinhaSequences = b;
-			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha).replace("%d2",String.valueOf(distCLinha))));
+			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
 		}else{
 			storeCLinhaSequences = b;
 			CLinhaStrategy.setText(tm.getText("wontStoreCincoLSequences"));
 		}
+	}
+	
+	public static void set5lTam(long n){
+		tamCLinha = n;
+		if(storeCLinhaSequences)
+			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
+	}
+	
+	public static void set5lDim(long n){
+		distCLinha = n;
+		if(storeCLinhaSequences)
+			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
 	}
 }
