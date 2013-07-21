@@ -178,8 +178,8 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 	}else{
 		// Atualiza contagem antisenso da seq_centrall
 		
-   		sqlite3_bind_int(stmt_insert_5l,2,0);
-   		sqlite3_bind_int(stmt_insert_5l,3,1);
+   		sqlite3_bind_int(stmt_insert_main,2,0);
+   		sqlite3_bind_int(stmt_insert_main,3,1);
 	
    		if(seq_cincoL != NULL){
 	   		// Atualiza contagem senso 5l
@@ -214,21 +214,21 @@ void db_add(char *seq_central,char *seq_cincoL,int tipo){
 void db_destroy(){
     char *sErrMsgMain,*sErrMsg5l,*sErrMsg;
 	int ret;
-	char createEventsQuery[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
-	char create5lEventsQuery[] = "CREATE TABLE events_5l as SELECT seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_5l_tmp GROUP BY seq";
+	char createEventsQuery[] = "CREATE TABLE IF NOT EXISTS events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char create5lEventsQuery[] = "CREATE TABLE IF NOT EXISTS events_5l as SELECT seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_5l_tmp GROUP BY seq";
 	char dropTmpQuery[] = "DROP TABLE events_tmp";
 	char drop5lTmpQuery[] = "DROP TABLE events_5l_tmp";
 	int errorMain,error5l;
 	
 	if(!destroyed){
-		// Main events
+		// Create tables
 		db_start_transaction();
 		errorMain = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsgMain);
 		error5l = sqlite3_exec(db,create5lEventsQuery,NULL, NULL,&sErrMsg5l);
 		db_commit_transaction();
 
 		if(sErrMsg5l == NULL && sErrMsgMain == NULL){
-			// 5l events
+			// Drop tables
 			db_start_transaction();
 			sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsgMain);
 			sqlite3_exec(db,drop5lTmpQuery,NULL, NULL,&sErrMsg5l);
@@ -275,29 +275,42 @@ int callback_phase_one(void *NotUsed,int argc,char **argv,char **azColName){
 */
 void db_fix(char *filename){
 	char *db_err;
-	int ret;
-	char *sErrMsg;
-	char createEventsQuery[] = "CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	int errorMain,error5l;
+    char *sErrMsgMain,*sErrMsg5l,*sErrMsg;
+	char createEventsQuery[] = "CREATE TABLE IF NOT EXISTS events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq";
+	char create5lEventsQuery[] = "CREATE TABLE IF NOT EXISTS events_5l as SELECT seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_5l_tmp GROUP BY seq";
 	char dropTmpQuery[] = "DROP TABLE events_tmp";
+	char drop5lTmpQuery[] = "DROP TABLE events_5l_tmp";
 
-	ret = sqlite3_open(filename,&db);
+	sqlite3_open(filename,&db);
     
-    if (!db)
+    if (!db){
         printf("Not sure why, but the database didn't open.\n");
-
+		exit(1);
+	}
+		// Create tables
 		db_start_transaction();
-		ret = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsg);
+		errorMain = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsgMain);
+		error5l = sqlite3_exec(db,create5lEventsQuery,NULL, NULL,&sErrMsg5l);
 		db_commit_transaction();
-		if(sErrMsg == NULL){
+		if(sErrMsg5l == NULL && sErrMsgMain == NULL){
+			// Drop tables
 			db_start_transaction();
-			ret = sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsg);
+			errorMain = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsgMain);
+			error5l = sqlite3_exec(db,create5lEventsQuery,NULL, NULL,&sErrMsg5l);
 			db_commit_transaction();
-			ret = sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
+			
+			sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);	
 		}else{
-			if(ret == SQLITE_FULL)
-		 	 printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg,database_path);
-		 	else
-		 		 printf("Database ERROR! %s\n",sErrMsg);
+			if(errorMain == SQLITE_FULL){
+				printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsgMain,database_path);
+		 	}else{
+		 		if(error5l == SQLITE_FULL){
+		 			printf("Database ERROR! %s\nPlease, free up some hard disk space and run Sequence Hunter again passing '%s --fixdb' as parameter.\n",sErrMsg5l,database_path);
+		 		}else{		 		
+		 			printf("Database ERROR! \nMain: %s\n5l: %s\n",sErrMsgMain,sErrMsg5l);
+		 		}
+		 	}
 		}
 		
 		sqlite3_close(db);

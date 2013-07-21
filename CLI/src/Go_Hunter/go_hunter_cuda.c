@@ -282,13 +282,13 @@ void search_manager(int *buffer_load,
 
             gap = h_search_gaps[i] - bloco1 - dist_regiao_5l;
       	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
-            printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
+            //printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
       	    cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
 
       	    strncpy(cincol,data[i] + gap,tam_regiao_5l);
       	    cincol[tam_regiao_5l] = '\0';
       	  }else{ 
-            printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
+           // printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
           
       	    cincol = NULL;
       	  }
