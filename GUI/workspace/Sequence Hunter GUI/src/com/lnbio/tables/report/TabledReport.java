@@ -81,7 +81,7 @@ public class TabledReport extends Report implements Observer{
 				System.err.println(jsbPos+"/"+jsbMax+" - "+(float)(jsbPos)*100/jsbMax+"%");
 				if(jsbMax*0.6 <= jsbPos){
 					System.err.println("Loading...");
-					jrtm.load();
+					jrtm.centralCutLoad();
 				}
 			}					
 		});
@@ -116,7 +116,7 @@ public class TabledReport extends Report implements Observer{
 	public void update(Observable o, Object arg) {
 		dbm = (DBManager)arg;
 		if(dbm.isReady()){
-			System.err.println("Atualizando - "+name+" - size:"+dbm.getEvents().size());
+			System.err.println("Atualizando - "+name+" - size:"+dbm.getCentralCutEvents().size());
 			//eh.clearAllBars();
 			dbm.normalizeData();
 			//eh.addTypeSet(dbm.getEvents());

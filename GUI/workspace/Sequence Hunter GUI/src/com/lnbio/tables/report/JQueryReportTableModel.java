@@ -38,15 +38,15 @@ public class JQueryReportTableModel extends JTotalReportTableModel implements Ob
 	}
 
 	@Override
-	protected void startLoad() {
+	protected void startCentralCutLoad() {
 		// TODO Auto-generated method stub
-		super.startLoad();
+		super.startCentralCutLoad();
 	}
 
 	@Override
-	public void load() {
+	public void centralCutLoad() {
 		// TODO Auto-generated method stub
-		super.load();
+		super.centralCutLoad();
 	}
 
 	@Override

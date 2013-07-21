@@ -56,8 +56,8 @@ public class ExportWorker extends Thread {
 							DBManager dbm = (DBManager) attribute;
 							jpb.setVisible(true);
 							jpb.setIndeterminate(true);
-							dbm.load(maxSeqsToExport);
-							List<Evento> eventos = dbm.getEvents();
+							dbm.centralCutLoad(maxSeqsToExport);
+							List<Evento> eventos = dbm.getCentralCutEvents();
 							jpb.setIndeterminate(false);
 							jpb.setMaximum(eventos.size());
 							jpb.setValue(0);

@@ -29,7 +29,7 @@ public class TableSorter<M extends AbstractTableModel> extends TableRowSorter<M>
 			ordem = (ordem+1) % 2;
 		}
 		this.column = column;
-		dbm.sort(column,ordem);
+		dbm.sortCentralCut(column,ordem);
 	}
 
 }

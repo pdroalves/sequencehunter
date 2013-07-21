@@ -21,8 +21,8 @@ public class JPartialReportTableModel extends JReportTableModel implements Obser
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Object obj = null;
 
-		while(seqs.size() < rowIndex){
-			load();		
+		while(centralCutSeqs.size() < rowIndex){
+			centralCutLoad();		
 		}
 
 		switch(columnIndex){
@@ -30,10 +30,10 @@ public class JPartialReportTableModel extends JReportTableModel implements Obser
 			obj = rowIndex+1;
 			break;
 		case 1:
-			obj = seqs.get(rowIndex).getSeq();
+			obj = centralCutSeqs.get(rowIndex).getSeq();
 			break;
 		case 2:
-			obj = seqs.get(rowIndex).getPares();
+			obj = centralCutSeqs.get(rowIndex).getPares();
 			break;
 		}
 		return obj;
@@ -44,7 +44,7 @@ public class JPartialReportTableModel extends JReportTableModel implements Obser
 		if(arg != null){
 			DBManager dbm = (DBManager) arg;
 			if(dbm.isReady()){
-				super.startLoad();
+				super.startCentralCutLoad();
 				super.fireTableDataChanged();
 			}
 		}

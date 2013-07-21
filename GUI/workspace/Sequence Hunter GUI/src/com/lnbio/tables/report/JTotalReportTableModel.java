@@ -51,8 +51,8 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		Object obj = null;
 		
-		while(seqs.size() < rowIndex){
-			load();		
+		while(centralCutSeqs.size() < rowIndex){
+			centralCutLoad();		
 		}
 		
 		switch(columnIndex){
@@ -60,19 +60,19 @@ public class JTotalReportTableModel extends JReportTableModel implements Observe
 				obj = rowIndex+1;
 			break;
 			case 1:
-				obj = seqs.get(rowIndex).getSeq();
+				obj = centralCutSeqs.get(rowIndex).getSeq();
 			break;
 			case 2:
-				obj = seqs.get(rowIndex).getPares();
+				obj = centralCutSeqs.get(rowIndex).getPares();
 			break;
 			case 3:
-				obj = seqs.get(rowIndex).getSensos();
+				obj = centralCutSeqs.get(rowIndex).getSensos();
 			break;
 			case 4:
-				obj = seqs.get(rowIndex).getAntisensos();
+				obj = centralCutSeqs.get(rowIndex).getAntisensos();
 			break;
 			case 5:
-				obj =  String.format("%.4f",seqs.get(rowIndex).getRelativeFreq());
+				obj =  String.format("%.4f",centralCutSeqs.get(rowIndex).getRelativeFreq());
 			break;
 		}
 		return obj;

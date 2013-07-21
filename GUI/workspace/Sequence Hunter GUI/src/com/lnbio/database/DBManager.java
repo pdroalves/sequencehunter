@@ -7,119 +7,188 @@ import java.util.Observable;
 
 import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
-import com.lnbio.xml.TranslationsManager;
-
-
 
 public class DBManager extends Observable{
 	private DB database;
-	private boolean ready;
-	private ArrayList<Evento> seqs;
+	private boolean centralCutReady;
+	private boolean fiveCutReady;
+	private ArrayList<Evento> seqsCentralCut;
+	private ArrayList<Evento> seqsFiveCut;
 	protected int defaultLoad = 100;
 	private int mode = Evento.VALUE_PARES_REL;
 	static public final int DESC = 0;
 	static public final int ASC = 1;
-	public int totalPares;
-	public int totalSensos;
-	public int totalAntisensos;
-	public int totalSequences;
+	private int totalCentralCutPares;
+	private int totalCentralCutSensos;
+	private int totalCentralCutAntisensos;
+	private int totalCentralCutSequences;
+	private int totalFiveCutSequences;
+	private boolean fiveCutSupported;
+	private int totalFiveCutAntisensos;
+	private int totalFiveCutSensos;
+	private int totalFiveCutPares;
 
 	public DBManager(String databaseFilename){
 		super();
-		setReady(false);
+		setCentralCutReady(false);
+		setFiveCutReady(false);
 		database = new DB(databaseFilename);
-		int size = database.getSize();
-		seqs = new ArrayList<Evento>(size) ;
-		totalPares = this.getTotalPares();
-		totalSensos = this.getTotalSensos();
-		totalAntisensos = this.getTotalAntisensos();
-		totalSequences = database.getSize();
+		totalFiveCutSequences = database.getFiveCutSize();
+		totalCentralCutSequences = database.getCentralCutSize();
+		seqsCentralCut = new ArrayList<Evento>(totalCentralCutSequences);
+		seqsFiveCut = new ArrayList<Evento>(totalFiveCutSequences);
+		totalCentralCutPares = this.getTotalCentralCutPares();
+		totalCentralCutSensos = this.getTotalCentralCutSensos();
+		totalCentralCutAntisensos = this.getTotalCentralCutAntisensos();
+		totalFiveCutPares = this.getTotalFiveCutPares();
+		totalFiveCutSensos = this.getTotalFiveCutSensos();
+		totalFiveCutAntisensos = this.getTotalFiveCutAntisensos();
+		if(totalFiveCutSequences > 0)
+			setFiveCutSupported(true);
 		if(database != null){
-			this.sort(getMode(), 0);
+			this.sortCentralCut(getMode(), 0);
+			this.sortFiveCut(getMode(), 0);
 		}
 	}
 
-	public void sort(int column,int ordem){
-		setReady(false);
-		seqs.clear();
-		DBSortThread dbst = new DBSortThread(this,database);
-		if(ordem == this.DESC){
+	public void sortCentralCut(int column,int ordem){
+		setCentralCutReady(false);
+		seqsCentralCut.clear();
+		DBSortThread dbstCentralCut = new DBSortThread(this,database,DBSortThread.CENTRAL_CUT_SORT);		
+		
+		if(ordem == DBManager.DESC){
 			switch(column){
 			case 3:
 				this.setMode(Evento.VALUE_SENSOS_REL);
-				dbst.setSortMode(dbst.SENSOS_DESC);
+				dbstCentralCut.setSortMode(dbstCentralCut.SENSOS_DESC);
 				break;
 			case 4:
 				this.setMode(Evento.VALUE_ANTISENSO_REL);
-				dbst.setSortMode(dbst.ANTISENSOS_DESC);
+				dbstCentralCut.setSortMode(dbstCentralCut.ANTISENSOS_DESC);
 				break;
 			default:
 				this.setMode(Evento.VALUE_PARES_REL);
-				dbst.setSortMode(dbst.PARES_DESC);
+				dbstCentralCut.setSortMode(dbstCentralCut.PARES_DESC);
 				break;
 			}
 		}else{
 			switch(column){
 			case 3:
 				this.setMode(Evento.VALUE_SENSOS_REL);
-				dbst.setSortMode(dbst.SENSOS_ASC);
+				dbstCentralCut.setSortMode(dbstCentralCut.SENSOS_ASC);
 				break;
 			case 4:
 				this.setMode(Evento.VALUE_ANTISENSO_REL);
-				dbst.setSortMode(dbst.ANTISENSOS_ASC);
+				dbstCentralCut.setSortMode(dbstCentralCut.ANTISENSOS_ASC);
 				break;
 			default:
 				this.setMode(Evento.VALUE_PARES_REL);
-				dbst.setSortMode(dbst.PARES_ASC);
+				dbstCentralCut.setSortMode(dbstCentralCut.PARES_ASC);
 				break;
 			}
 		}
-		dbst.start();
+		dbstCentralCut.start();
 	}
 
-	public void setDatabaseReady(){
-		this.startLoad();
-		this.setReady(true);
+	public void sortFiveCut(int column,int ordem){
+		setFiveCutReady(false);
+		seqsFiveCut.clear();
+		DBSortThread dbstFiveCut = new DBSortThread(this,database,DBSortThread.FIVE_CUT_SORT);		
+		
+		if(ordem == DBManager.DESC){
+			switch(column){
+			case 3:
+				this.setMode(Evento.VALUE_SENSOS_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.SENSOS_DESC);
+				break;
+			case 4:
+				this.setMode(Evento.VALUE_ANTISENSO_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.ANTISENSOS_DESC);
+				break;
+			default:
+				this.setMode(Evento.VALUE_PARES_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.PARES_DESC);
+				break;
+			}
+		}else{
+			switch(column){
+			case 3:
+				this.setMode(Evento.VALUE_SENSOS_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.SENSOS_ASC);
+				break;
+			case 4:
+				this.setMode(Evento.VALUE_ANTISENSO_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.ANTISENSOS_ASC);
+				break;
+			default:
+				this.setMode(Evento.VALUE_PARES_REL);
+				dbstFiveCut.setSortMode(dbstFiveCut.PARES_ASC);
+				break;
+			}
+		}
+		dbstFiveCut.start();
+	}
+	
+	public void setCentralCutDatabaseReady(){
+		this.startCentralCutLoad();
+		this.setCentralCutReady(true);
+	}
+	
+	public void setFiveCutDatabaseReady(){
+		this.startFiveCutLoad();
+		this.setFiveCutReady(true);
 	}
 
 	public boolean isReady() {
-		return ready;
+		return centralCutReady;
 	}
 
-	private void setReady(boolean ready) {
-		if(ready == true)
-			System.out.println("Seqs size: "+seqs.size());
+	private void setCentralCutReady(boolean ready) {
+		if(ready)
+			System.out.println("Seqs size: "+seqsCentralCut.size());
 
-		this.ready = ready;
+		this.centralCutReady = ready;
 		// Avisa os observadores da mudanca
 		System.err.println("DBM: Update para "+super.countObservers()+" observadores");
 		super.setChanged();
 		super.notifyObservers(this);
 	}
+	
+	private void setFiveCutReady(boolean ready) {
+		if(ready)
+			System.out.println("Seqs size: "+seqsFiveCut.size());
+
+		this.fiveCutReady = ready;
+		// Avisa os observadores da mudanca
+		System.err.println("DBM: Update para "+super.countObservers()+" observadores");
+		super.setChanged();
+		super.notifyObservers(this);
+	}
+	
 	public void normalizeData(){
 		System.out.println("Normalizando");
 		float norma;
 		switch(mode){
 		case Evento.VALUE_SENSOS_REL:
-			norma = totalSensos;
-			for(int i = 0;i < seqs.size();i++){
-				Evento g = (Evento)seqs.get(i);
+			norma = totalCentralCutSensos;
+			for(int i = 0;i < seqsCentralCut.size();i++){
+				Evento g = (Evento)seqsCentralCut.get(i);
 				g.setRelativeFreq(g.getSensos()*100 / norma);
 				g.setMode(mode);
 			}
 			break;
 		case Evento.VALUE_ANTISENSO_REL:
-			norma = totalAntisensos;
-			for(int i = 0;i < seqs.size();i++){
-				Evento g = (Evento)seqs.get(i);
+			norma = totalCentralCutAntisensos;
+			for(int i = 0;i < seqsCentralCut.size();i++){
+				Evento g = (Evento)seqsCentralCut.get(i);
 				g.setRelativeFreq(g.getAntisensos()*100 / norma);
 				g.setMode(mode);
 			}
 			break;
 		default:
-			norma = totalPares;
-			for(int i = 0;i < seqs.size();i++){
-				Evento g = (Evento)seqs.get(i);
+			norma = totalCentralCutPares;
+			for(int i = 0;i < seqsCentralCut.size();i++){
+				Evento g = (Evento)seqsCentralCut.get(i);
 				g.setRelativeFreq(g.getPares()*100 / norma);
 				g.setMode(mode);
 			}
@@ -127,54 +196,78 @@ public class DBManager extends Observable{
 		}		
 	}
 
-	public ArrayList<Evento> getEvents() {
-		return seqs;
+	public ArrayList<Evento> getCentralCutEvents() {
+		return seqsCentralCut;
 	}
 
 	public DB getDB(){
 		return database;
 	}
 
-	public Evento getEvento(){
-		return database.getEvento();
+	public Evento getCentralCutEvento(){
+		return database.getCentralCutEvento();
+	}
+	
+	public Evento getFiveCutEvento(){
+		return database.getFiveCutEvento();
 	}
 
-	public void startLoad(){
+	public void startCentralCutLoad(){
 		for(int i = 0; i < defaultLoad;i++){
-			Evento e = this.getEvento();
+			Evento e = this.getCentralCutEvento();
 			if(e != null){
-				seqs.add(e);
+				seqsCentralCut.add(e);
 			}else{
 				return;
 			}
 		}
 	}
 
-	public void load(){
-		Evento e = this.getEvento();
+	public void startFiveCutLoad(){
+		for(int i = 0; i < defaultLoad;i++){
+			Evento e = this.getFiveCutEvento();
+			if(e != null){
+				seqsFiveCut.add(e);
+			}else{
+				return;
+			}
+		}
+	}
+
+	public void centralCutLoad(){
+		Evento e = this.getCentralCutEvento();
 		if(e != null) 
-			seqs.add(e);
+			seqsCentralCut.add(e);
+		else 
+			return;
+	}
+	
+	public void fiveCutLoad(){
+		Evento e = this.getFiveCutEvento();
+		if(e != null) 
+			seqsFiveCut.add(e);
 		else 
 			return;
 	}
 
-	public void load(long quantity){
+	public void centralCutLoad(long quantity){
 		// Carrega sequencias ate atingir o tamanho de quantity 
 		// ou ate nao haverem mais sequencias
-		Evento e = this.getEvento();
+		Evento e = this.getCentralCutEvento();
 
-		while(e != null && seqs.size() < quantity) {
-			seqs.add(e);
-			e = this.getEvento();
+		while(e != null && seqsCentralCut.size() < quantity) {
+			seqsCentralCut.add(e);
+			e = this.getCentralCutEvento();
 		}
 	}
 
 	public void destroy(){
-		seqs.clear();
+		seqsCentralCut.clear();
+		seqsFiveCut.clear();
 		database.close();
 	}
 
-	public int getTotalPares(){
+	public int getTotalCentralCutPares(){
 		int total = 0;
 		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events");
 		try {
@@ -186,7 +279,7 @@ public class DBManager extends Observable{
 		return total;
 	}
 
-	public int getTotalSensos(){
+	public int getTotalCentralCutSensos(){
 		int total = 0;
 		ResultSet rs = database.executeQuery("SELECT SUM(qnt_sensos) FROM events");
 		try {
@@ -198,9 +291,45 @@ public class DBManager extends Observable{
 		return total;
 	}
 
-	public int getTotalAntisensos(){
+	public int getTotalCentralCutAntisensos(){
 		int total = 0;
 		ResultSet rs = database.executeQuery("SELECT SUM(qnt_antisensos) FROM events");
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error!");
+		}
+		return total;
+	}
+
+	public int getTotalFiveCutPares(){
+		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events_5l");
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error!");
+		}
+		return total;
+	}
+
+	public int getTotalFiveCutSensos(){
+		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_sensos) FROM events_5l");
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error!");
+		}
+		return total;
+	}
+
+	public int getTotalFiveCutAntisensos(){
+		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT SUM(qnt_antisensos) FROM events_5l");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
@@ -216,5 +345,13 @@ public class DBManager extends Observable{
 
 	public void setMode(int tipo) {
 		this.mode = tipo;
+	}
+
+	public boolean isFiveCutSupported() {
+		return fiveCutSupported;
+	}
+
+	public void setFiveCutSupported(boolean supportCincoL) {
+		this.fiveCutSupported = supportCincoL;
 	}
 }

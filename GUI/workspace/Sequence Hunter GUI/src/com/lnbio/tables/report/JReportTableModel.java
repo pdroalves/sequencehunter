@@ -17,7 +17,8 @@ import com.lnbio.xml.TranslationsManager;
 @SuppressWarnings("serial")
 public abstract class JReportTableModel extends AbstractTableModel implements Observer{
 	private DBManager dbm;
-	protected ArrayList<Evento> seqs;
+	protected ArrayList<Evento> centralCutSeqs;
+	protected ArrayList<Evento> fiveCutSeqs;
 
 	public JReportTableModel(){
 
@@ -26,19 +27,20 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 	public JReportTableModel(DBManager dbm){
 		super();
 		this.dbm = dbm;
-		seqs = dbm.getEvents();
+		centralCutSeqs = dbm.getCentralCutEvents();
+		fiveCutSeqs = dbm.getCentralCutEvents();
 		if(dbm.isReady()){
-			startLoad();
+			startCentralCutLoad();
 			super.fireTableDataChanged();
 		}
 	}
 	
-	public ArrayList<Evento> getEvents(){
-		return dbm.getEvents();
+	public ArrayList<Evento> getCentralCutEvents(){
+		return dbm.getCentralCutEvents();
 	}
 
 	public int getRowCount() {
-		return seqs.size();
+		return centralCutSeqs.size();
 	}
 
 	public abstract int getColumnCount();
@@ -67,12 +69,20 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 		return name;
 	}
 
-	protected void startLoad(){
-		dbm.startLoad();
+	protected void startCentralCutLoad(){
+		dbm.startCentralCutLoad();
+	}
+	
+	protected void startFiveCutLoad(){
+		dbm.startFiveCutLoad();
 	}
 
-	public void load(){
-		dbm.load();
+	public void centralCutLoad(){
+		dbm.centralCutLoad();
+	}
+	
+	public void fiveCutLoad(){
+		dbm.fiveCutLoad();
 	}
 
 	@Override
@@ -80,7 +90,8 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 		if(arg != null){
 			DBManager dbm = (DBManager) arg;
 			if(dbm.isReady()){
-				startLoad();
+				startCentralCutLoad();
+				startFiveCutLoad();
 				fireTableDataChanged();
 			}
 		}		

@@ -14,7 +14,8 @@ import com.lnbio.xml.TranslationsManager;
 
 public class DB {
 	private Connection databaseConn;
-	private ResultSet rows;
+	private ResultSet centralCutRows;
+	private ResultSet fiveCutRows;
 	private final int maxRepeats = 3;
 
 	public DB(String databaseFilename){
@@ -34,22 +35,47 @@ public class DB {
 		}
 	}
 
-	public boolean loadQuery(String query){
+	public boolean loadCentralCutQuery(String centralCutQuery){
 		boolean repeat = true;
 		int repeats = 0;
 		Statement stat = null;
 		while(repeat == true && repeats < maxRepeats){
 			try {
 				stat = databaseConn.createStatement();
-				rows = stat.executeQuery(query);
-				if(rows != null) 
+				centralCutRows = stat.executeQuery(centralCutQuery);
+				if(centralCutRows != null ) 
 					return true;
 			} catch (SQLException e) {
 				Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
 				if(e.getMessage().contains("full")){
 					Drawer.writeToLog(TranslationsManager.getInstance().getText("DiskFullForTmpFile"));
 					Drawer.writeToLog(TranslationsManager.getInstance().getText("LowDiskSpaceMode"));
-					query.concat(" limit 100");
+					centralCutQuery.concat(" limit 1000");
+				}else if(e.getMessage().contains("no such table")){
+					fixDatabase();
+				}
+			}
+			repeats++;
+		}
+		return false;
+	}
+	
+	public boolean loadFiveCutQuery(String fiveCutQuery){
+		boolean repeat = true;
+		int repeats = 0;
+		Statement stat = null;
+		while(repeat == true && repeats < maxRepeats){
+			try {
+				stat = databaseConn.createStatement();
+				fiveCutRows = stat.executeQuery(fiveCutQuery);
+				if(fiveCutRows != null ) 
+					return true;
+			} catch (SQLException e) {
+				Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
+				if(e.getMessage().contains("full")){
+					Drawer.writeToLog(TranslationsManager.getInstance().getText("DiskFullForTmpFile"));
+					Drawer.writeToLog(TranslationsManager.getInstance().getText("LowDiskSpaceMode"));
+					fiveCutQuery.concat(" limit 1000");
 				}else if(e.getMessage().contains("no such table")){
 					fixDatabase();
 				}
@@ -65,6 +91,8 @@ public class DB {
 			Statement stat = databaseConn.createStatement();
 			stat.execute("CREATE TABLE events as SELECT main_seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_tmp GROUP BY main_seq");
 			stat.execute("DROP TABLE events_tmp");
+			stat.execute("CREATE TABLE events_5l as SELECT seq,SUM(senso) qnt_sensos,SUM(antisenso) qnt_antisensos,min(SUM(senso),SUM(antisenso)) pares FROM events_5l_tmp GROUP BY seq");
+			stat.execute("DROP TABLE events_5l_tmp");
 			stat.execute("vacuum");			
 			Drawer.writeToLog(TranslationsManager.getInstance().getText("FixDBDone"));
 		} catch (SQLException e) {
@@ -73,14 +101,30 @@ public class DB {
 		return;
 	}
 
-	public Evento getEvento(){
+	public Evento getCentralCutEvento(){
 		try {
-			if(rows != null){
+			if(centralCutRows != null){
 				// Itera em cima do set
-				if(rows.next()){
-					return new Evento(	rows.getString("main_seq"),
-							rows.getInt("qnt_sensos"),
-							rows.getInt("qnt_antisensos"));
+				if(centralCutRows.next()){
+					return new Evento(	centralCutRows.getString("main_seq"),
+							centralCutRows.getInt("qnt_sensos"),
+							centralCutRows.getInt("qnt_antisensos"));
+				}
+			}
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database ERROR: "+e.getMessage());
+		}
+		return null;
+	}
+	
+	public Evento getFiveCutEvento(){
+		try {
+			if(fiveCutRows != null){
+				// Itera em cima do set
+				if(fiveCutRows.next()){
+					return new Evento(	fiveCutRows.getString("seq"),
+							fiveCutRows.getInt("qnt_sensos"),
+							fiveCutRows.getInt("qnt_antisensos"));
 				}
 			}
 		} catch (SQLException e) {
@@ -106,11 +150,23 @@ public class DB {
 		return null;
 	}
 
-	public int getSize(){
+	public int getCentralCutSize(){
 		Statement stat;
 		try {
 			stat = databaseConn.createStatement();
 			ResultSet rs = stat.executeQuery("SELECT COUNT(*) FROM events");
+			return rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog(e.getMessage());
+		}
+		return 0;
+	}
+	
+	public int getFiveCutSize(){
+		Statement stat;
+		try {
+			stat = databaseConn.createStatement();
+			ResultSet rs = stat.executeQuery("SELECT COUNT(*) FROM events_5l");
 			return rs.getInt(1);
 		} catch (SQLException e) {
 			Drawer.writeToLog(e.getMessage());

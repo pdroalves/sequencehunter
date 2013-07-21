@@ -3,8 +3,6 @@
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,15 +20,12 @@ import com.lnbio.auxiliares.RemovableTabComponent;
 import com.lnbio.database.DBManager;
 import com.lnbio.dialogs.WaitDialogHandler;
 import com.lnbio.gui.modules.OpenReportFileFilter;
-import com.lnbio.gui.modules.ReportAddWorker;
+import com.lnbio.gui.modules.ReportWorker;
 import com.lnbio.hunt.Evento;
 import com.lnbio.tables.report.Report;
 import com.lnbio.tables.report.TabledReport;
 import com.lnbio.tables.report.TextReport;
 import com.lnbio.xml.TranslationsManager;
-
-
-
 
 public class ReportDrawer extends Observable{
 	private static JPanel reportContainer;
@@ -87,7 +82,7 @@ public class ReportDrawer extends Observable{
 		Drawer.writeToLog(tm.getText("LoadingReport"));
 		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
 		waitdialog.start();
-		ReportAddWorker worker = new ReportAddWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
+		ReportWorker worker = new ReportWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
 		worker.start();
 		return;
 	}
@@ -175,7 +170,7 @@ public class ReportDrawer extends Observable{
 		Object obj = data.get(mainIndex).get(subIndex);
 		if(obj instanceof DBManager){
 			DBManager dbm = (DBManager) obj;
-			return dbm.getEvents();
+			return dbm.getCentralCutEvents();
 		}else{
 			return null;
 		}

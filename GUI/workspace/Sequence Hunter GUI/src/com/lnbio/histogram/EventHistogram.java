@@ -119,7 +119,7 @@ public class EventHistogram implements Observer{
 	public void update(Observable o, Object arg) {
 		System.err.println("EH updated!");
 		this.clearAllBars();
-		this.addTypeSet(((DBManager) arg).getEvents());
+		this.addTypeSet(((DBManager) arg).getCentralCutEvents());
 		this.commit();
 		this.checkVisibleStatus();
 	}
