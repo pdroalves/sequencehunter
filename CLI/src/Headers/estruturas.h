@@ -26,6 +26,7 @@
 #define SKT_MSG_ABORT "abort"
 
 struct event{
+	char *seq_full;
 	char *seq_central;
 	char *seq_cincoL;
 	int tipo;

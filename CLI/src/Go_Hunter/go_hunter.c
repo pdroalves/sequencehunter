@@ -135,6 +135,7 @@ void report_manager(	Socket *gui_socket,
 
 void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 	Event *hold;
+	char *full_seq;
 	char *central;
 	char *cincoL;
 	float tempo;
@@ -143,6 +144,7 @@ void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 	  if(tamanho_da_fila(toStore) > 0){
 	 	 hold = desenfileirar(toStore);
 		  if(hold != NULL){
+			full_seq = hold->seq_full;
 			central = hold->seq_central;
 			cincoL = hold->seq_cincoL;
 
@@ -151,8 +153,10 @@ void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 			  exit(1);
 			}
 
-			adicionar_db(central,cincoL,hold->tipo);
+			adicionar_db(full_seq,central,cincoL,hold->tipo);
 			sent_to_db++;
+			if(full_seq != NULL)
+				free(full_seq);
 			if(central != NULL)
 			  free(central);
 			if(cincoL != NULL)

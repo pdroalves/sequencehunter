@@ -35,7 +35,7 @@ Fila* criar_fila(char *nome){
 	return f;
 }
 
-Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo){
+Event* criar_elemento_fila_event(char *seq_full,char *seq_central,char *seq_cincoL,int tipo){
 	// Essa funcao nao aloca memoria para os dados recebidos.
 	// Se voce enfileirar um elemento e depois liberar alguma de suas sequencias
 	// com free(), vai dar problema.
@@ -43,6 +43,7 @@ Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo){
 	
 	novo = (Event*)malloc(sizeof(Event));
 	if(novo != NULL){
+		novo->seq_full = seq_full;
 		novo->seq_central = seq_central;
 		novo->seq_cincoL = seq_cincoL;
 		novo->tipo = tipo;

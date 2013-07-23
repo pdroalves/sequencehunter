@@ -72,14 +72,14 @@ void destroy_db_manager(){
 	return;
 }
 
-void adicionar_db(char *central,char *cincol,int tipo){
+void adicionar_db(char *full_seq,char *central,char *cincol,int tipo){
 	
 	if(data_added > MAX_PER_TMP_FILE){
 		db_commit_transaction();
 		db_start_transaction();
 		data_added = 0;
 	}
-	db_add(central,cincol,tipo);
+	db_add(full_seq,central,cincol,tipo);
 	data_added++;
 	
 	return;

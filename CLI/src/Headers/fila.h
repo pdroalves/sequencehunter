@@ -1,7 +1,7 @@
 #ifndef FILA_H
 #define FILA_H
 Fila* criar_fila(char *nome);
-Event* criar_elemento_fila_event(char *seq_central,char *seq_cincoL,int tipo);
+Event* criar_elemento_fila_event(char *seq_full,char *seq_central,char *seq_cincoL,int tipo);
 void print_fila(Fila *f);
 void enfileirar(Fila *f,void *data);
 Event* desenfileirar(Fila *f);

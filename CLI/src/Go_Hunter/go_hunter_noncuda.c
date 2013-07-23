@@ -192,6 +192,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   char *central;
   char *cincol;
   char *seqToSave;
+  char *full_seq;
   float iteration_time;
   const int blocoV = blocos-bloco1-bloco2;
   int *candidates;
@@ -229,16 +230,17 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
       //Copia sequências senso e antisenso encontradas
       switch(resultados[i]){
       case SENSO:
-    gap = search_gaps[i];
-	if(central_cut&& (gap + blocoV < strlen(buf.seq[i])) ){
+	gap = search_gaps[i];
+	if(central_cut && (gap + blocoV < strlen(buf.seq[i])) ){
 	  central = (char*)malloc((blocoV+1)*sizeof(char));	
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
-	}else{				
-	  central = (char*)malloc((seqSize_an+1)*sizeof(char));					
-	  strncpy(central,buf.seq[i],seqSize_an+1);
-	}
+	}				
+	
+	full_seq = (char*)malloc((strlen(buf.seq[i])+1)*sizeof(char));					
+	strcpy(full_seq,buf.seq[i]);
+	
 
     gap = search_gaps[i] - bloco1 - dist_regiao_5l;
 	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
@@ -251,22 +253,21 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 			      
 	fsensos++;
-	hold_event = criar_elemento_fila_event(central,cincol,SENSO);
+	hold_event = criar_elemento_fila_event(full_seq,central,cincol,SENSO);
 	enfileirar(toStore,hold_event);
 	break;
       case ANTISENSO:
-    gap = search_gaps[i];
+    	gap = search_gaps[i];
 	if(central_cut&& (gap + blocoV < strlen(buf.seq[i])) ){
 	  central = (char*)malloc((blocoV+1)*sizeof(char));
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  central[blocoV] = '\0';
-	}else{						
-	  central = (char*)malloc((seqSize_an+1)*sizeof(char));			
-	  strncpy(central,buf.seq[i],seqSize_an+1);
-	}
+	}						
+	  full_seq = get_antisenso(buf.seq[i]);
+	
 
 			      
-    gap = search_gaps[i] +  bloco2 + dist_regiao_5l;
+    	gap = search_gaps[i] +  bloco2 + dist_regiao_5l;
 	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
 	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 				      
@@ -277,7 +278,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 
 	fasensos++;
-	hold_event = criar_elemento_fila_event(get_antisenso(central),get_antisenso(cincol),ANTISENSO);
+	hold_event = criar_elemento_fila_event(full_seq,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
 	enfileirar(toStore,hold_event);
 	if(central != NULL)
 	  free(central);
