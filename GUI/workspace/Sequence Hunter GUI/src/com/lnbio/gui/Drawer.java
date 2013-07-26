@@ -95,8 +95,8 @@ public class Drawer {
 		
 		// Cria tabbed pane
 		jtp = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
-		searchDrawer = new SearchDrawer(xSize, ySize);
 		summaryDrawer = new SummaryDrawer(this, h);
+		searchDrawer = new SearchDrawer(xSize, ySize);
 		reportDrawer = new ReportDrawer();
 
 		// Monta searchContainer		

@@ -45,7 +45,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 	private static boolean storeCLinhaSequences;
 	private static long tamCLinha;
 	private static long distCLinha;
-
+	
 	public SummaryDrawer(Drawer d,Hunter hunterInstance){
 		drawer = d;
 		h = hunterInstance;
@@ -102,6 +102,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 		summaryContainer = new JPanel(new BorderLayout());
 		drawSummaryContainer();
 	}
+	
 
 	public static JPanel getContainer(){
 		return summaryContainer;
@@ -290,6 +291,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 
 	public static void setStoreFullSequence(boolean b){
 		storeFullSequence = b;
+		h.setFullSequenceStorage(b);
 		if(b){
 			fullSequenceStrategy.setText(tm.getText("willStoreFullSequence"));
 		}else{
@@ -298,25 +300,27 @@ public class SummaryDrawer implements ActionListener,Observer {
 	}
 
 	public static void setCLinhaSequences(boolean b){
+		storeCLinhaSequences = b;
+		h.setCLinhaStorage(b);
 		if(b){
 			tamCLinha = 0;
 			distCLinha = 0;
-			storeCLinhaSequences = b;
 			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
 		}else{
-			storeCLinhaSequences = b;
 			CLinhaStrategy.setText(tm.getText("wontStoreCincoLSequences"));
 		}
 	}
 	
 	public static void set5lTam(long n){
 		tamCLinha = n;
+		h.setTamCLinha(n);
 		if(storeCLinhaSequences)
 			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
 	}
 	
 	public static void set5lDim(long n){
 		distCLinha = n;
+		h.setDistCLinha(n);
 		if(storeCLinhaSequences)
 			CLinhaStrategy.setText(tm.getText("willStoreCincoLSequences").replace("%d1",String.valueOf(tamCLinha)).replace("%d2",String.valueOf(distCLinha)));
 	}

@@ -100,7 +100,14 @@ public class TabledReport extends Report implements Observer{
 			layerUI.start();
 		}else{
 			//System.err.println("Adicionando - "+name+" - size:"+dbm.getEvents().size());
-			dbm.normalizeData();
+			switch(jrtm.getKind()){
+			case JReportTableModel.CENTRAL_CUT:
+				dbm.normalizeCentralCutData();
+				break;
+			case JReportTableModel.FIVE_CUT:
+				dbm.normalizeFiveCutData();
+				break;
+			}
 			//eh.addTypeSet(dbm.getEvents());
 			//eh.commit();
 			//jsp.setDividerLocation(-1);			
@@ -118,7 +125,14 @@ public class TabledReport extends Report implements Observer{
 		if(dbm.isReady()){
 			System.err.println("Atualizando - "+name+" - size:"+dbm.getCentralCutEvents().size());
 			//eh.clearAllBars();
-			dbm.normalizeData();
+			switch(jrtm.getKind()){
+			case JReportTableModel.CENTRAL_CUT:
+				dbm.normalizeCentralCutData();
+				break;
+			case JReportTableModel.FIVE_CUT:
+				dbm.normalizeFiveCutData();				
+				break;
+			}
 			//eh.addTypeSet(dbm.getEvents());
 			//eh.commit();
 			//jsp.setDividerLocation(-1);			

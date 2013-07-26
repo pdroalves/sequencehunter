@@ -170,8 +170,9 @@ public class SearchDrawer implements ActionListener{
 		JPanel fulLSequencePanel = new JPanel(new BorderLayout());
 		JCheckBox fullSequenceCheckBox = new JCheckBox(tm.getText("parameterStoreFullSequence"));
 		fullSequenceCheckBox.setSelected(false);
+		SummaryDrawer.setStoreFullSequence(false);
 		fullSequenceCheckBox.addItemListener(new ItemListener(){
-
+			// Ativa suporte a armazenamento total das sequencias processadas
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange() == ItemEvent.SELECTED){
@@ -200,7 +201,7 @@ public class SearchDrawer implements ActionListener{
 		spinnerTam.setEnabled(false);
 		spinnerDist.setEnabled(false);
 		spinnerTam.addChangeListener(new ChangeListener() {
-			
+			// Seta tamanho da região 5l
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
 				Object obj = arg0.getSource();
@@ -211,7 +212,7 @@ public class SearchDrawer implements ActionListener{
 			}
 		});
 		spinnerDist.addChangeListener(new ChangeListener(){
-			
+			// Seta posição da região 5l
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
 				Object obj = arg0.getSource();
@@ -222,7 +223,7 @@ public class SearchDrawer implements ActionListener{
 			}
 		});
 		CLinhaCutCheckBox.addItemListener(new ItemListener(){
-
+			// Ativa recorte 5l
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if(e.getStateChange() == ItemEvent.SELECTED){

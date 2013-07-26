@@ -19,6 +19,7 @@ import com.lnbio.auxiliares.checkbox.CheckBoxNode;
 import com.lnbio.database.DBManager;
 import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
+import com.lnbio.xml.TranslationsManager;
 
 
 public class ExportWorker extends Thread {
@@ -64,15 +65,25 @@ public class ExportWorker extends Thread {
 							System.out.println("Vou salvar até : "+maxSeqsToExport+" em "+jfc.getSelectedFile());
 
 							// name the file inside the zip  file
-							out.putNextEntry(new ZipEntry(cbn.getText()+".txt")); 
+							out.putNextEntry(new ZipEntry(cbn.getText()+".csv")); 
 							Iterator<Evento> eventoIterator = eventos.iterator();
+							
+							// Imprime header
+							String str;
+							if(cbn.getText().contains("unpaired")){
+								str = TranslationsManager.getInstance().getText("unpairedCSVHeader")+"\n"; 
+							}else{
+								str = TranslationsManager.getInstance().getText("pairedCSVHeader")+"\n"; 
+							}
+							out.write(str.getBytes("UTF-8"), 0, str.length());
+							jpb.setValue(jpb.getValue() + 1);
+							
 							while(eventoIterator.hasNext()){
 								Evento e = eventoIterator.next();
-								String str;
 								if(cbn.getText().contains("unpaired")){
-									str = e.getSeq()+"-"+e.getPares()+"-"+e.getSensos()+"-"+e.getAntisensos()+"-"+e.getRelativeFreq()+"\n"; 
+									str = e.getSeq()+","+e.getPares()+","+e.getSensos()+","+e.getAntisensos()+","+e.getRelativeFreq()+"\n"; 
 								}else{
-									str = e.getSeq()+"-"+e.getPares()+"-"+e.getRelativeFreq()+"\n"; 
+									str = e.getSeq()+","+e.getPares()+","+e.getRelativeFreq()+"\n"; 
 								}
 								out.write(str.getBytes("UTF-8"), 0, str.length());
 								jpb.setValue(jpb.getValue() + 1);

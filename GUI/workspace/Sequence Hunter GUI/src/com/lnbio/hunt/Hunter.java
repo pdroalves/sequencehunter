@@ -22,19 +22,28 @@ public class Hunter{
 	private final static String appName = "Sequence Hunter";
 	private static String appFileName_win = "%SHUNTER%";
 	private static String appFileName_mac = "";
-	private static String appFileName_nix = "shunter-cli";
+	private static String appFileName_nix = "shunter";
 	private static String default_output_folder;
 	private static String output_folder;
 	public static final int FORCE_CUDA_MODE = 0;
 	public static final int FORCE_NONCUDA_MODE = 1;
 	public static final int NON_FORCE_MODE = 2;
 	private int mode = NON_FORCE_MODE;
+	private boolean storeCLinhaSequences;
+	private boolean storeFullSequence;
+	private long tamCLinha;
+	private long distCLinha;
 
 	String command = "";
 	private CoreAppDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	private TranslationsManager tm;
+	
 	public Hunter(){
+		setCLinhaStorage(false);
+		setFullSequenceStorage(false);
+		setTamCLinha(0);
+		setDistCLinha(0);
 		setMode(NON_FORCE_MODE);
 		tm = TranslationsManager.getInstance();
 		if(getOS().contains("WIN")){
@@ -61,25 +70,31 @@ public class Hunter{
 	public void Set(String target,ArrayList<String> libs){	
 
 		// Gera linha de parametros
-		String parameters = null;
-		String processingMode = "";
+		String parameters = new String("--target "+ target+ " --gui ");
 
 		switch(mode){
 		case FORCE_CUDA_MODE:
-			processingMode = "-e";
+			parameters = parameters.concat("-e ");
 			break;
 		case FORCE_NONCUDA_MODE:
-			processingMode = "-d";
+			parameters = parameters.concat("-d ");
 			break;
-		case NON_FORCE_MODE:
-			processingMode = "";
+		default:
 			break;
 		}
+		
 		if(output_folder != null){
-			parameters = new String("--target "+ target+ " -t --gui -o \""+output_folder+"\" "+processingMode);
-		}else{
-			parameters = new String("--target "+ target+ " -t --gui "+processingMode);
+			parameters = parameters.concat("-o \""+output_folder+"\" ");
 		}
+		
+		if(!isFullSequenceStored()){
+			parameters = parameters.concat("-t ");
+		}
+		
+		if(isCLinhaStored()){
+			parameters = parameters.concat(" --dist5l="+getDistCLinha()+" --tam5l="+getTamCLinha());
+		}
+		
 		String libsPath = " ";
 		if(!libs.isEmpty()){
 			for(int i=0;i<libs.size();i++)
@@ -216,5 +231,37 @@ public class Hunter{
 
 	public void setMode(int mode) {
 		this.mode = mode;
+	}
+
+	public boolean isCLinhaStored() {
+		return storeCLinhaSequences;
+	}
+
+	public void setCLinhaStorage(boolean storeCLinhaSequences) {
+		this.storeCLinhaSequences = storeCLinhaSequences;
+	}
+
+	public boolean isFullSequenceStored() {
+		return storeFullSequence;
+	}
+
+	public void setFullSequenceStorage(boolean storeFullSequence) {
+		this.storeFullSequence = storeFullSequence;
+	}
+
+	public long getTamCLinha() {
+		return tamCLinha;
+	}
+
+	public void setTamCLinha(long n) {
+		this.tamCLinha = n;
+	}
+
+	public long getDistCLinha() {
+		return distCLinha;
+	}
+
+	public void setDistCLinha(long distCLinha) {
+		this.distCLinha = distCLinha;
 	}
 }

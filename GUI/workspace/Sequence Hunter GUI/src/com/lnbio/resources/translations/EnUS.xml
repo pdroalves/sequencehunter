@@ -49,6 +49,8 @@
 <TextResource tag="reportHuntLogDefaultName">Hunt log</TextResource>
 <TextResource tag="reportCentralCutPairedDefaultName">Central cut paired</TextResource>
 <TextResource tag="reportCentralCutUnpairedDefaultName">Central cut unpaired</TextResource>
+<TextResource tag="reportFiveCutPairedDefaultName">Five Cut paired</TextResource>
+<TextResource tag="reportFiveCutUnpairedDefaultName">Five Cut unpaired</TextResource>
 <TextResource tag="statusStartMsg">Sequence Hunter started...</TextResource>
 <TextResource tag="statusLabel">Status:</TextResource>
 <TextResource tag="statusProgressTotal">Total:</TextResource>
@@ -97,4 +99,6 @@
 <TextResource tag="parameter5lCutDistOption">Bases from target sequence </TextResource>
 <TextResource tag="parameter5lCutTamOption">Length of 5' cut </TextResource>
 <TextResource tag="parameterOptionsLabel">Options:</TextResource>
+<TextResource tag="unpairedCSVHeader">sequence,pairs,sensos,antisensos,relative frequency</TextResource>
+<TextResource tag="pairedCSVHeader">sequence,pairs,relative frequency</TextResource>
 </AllTextResource>

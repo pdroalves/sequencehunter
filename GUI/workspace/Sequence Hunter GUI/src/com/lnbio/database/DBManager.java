@@ -156,7 +156,7 @@ public class DBManager extends Observable{
 	
 	private void setFiveCutReady(boolean ready) {
 		if(ready)
-			System.out.println("Seqs size: "+seqsFiveCut.size());
+			System.out.println("Seqs size five cut: "+seqsFiveCut.size());
 
 		this.fiveCutReady = ready;
 		// Avisa os observadores da mudanca
@@ -165,8 +165,8 @@ public class DBManager extends Observable{
 		super.notifyObservers(this);
 	}
 	
-	public void normalizeData(){
-		System.out.println("Normalizando");
+	public void normalizeCentralCutData(){
+		System.err.println("Normalizando Central Cut");
 		float norma;
 		switch(mode){
 		case Evento.VALUE_SENSOS_REL:
@@ -195,26 +195,61 @@ public class DBManager extends Observable{
 			break;
 		}		
 	}
+	
+	public void normalizeFiveCutData(){
+		System.err.println("Normalizando 5\' Cut");
+		float norma;
+		switch(mode){
+		case Evento.VALUE_SENSOS_REL:
+			norma = totalFiveCutSensos;
+			for(int i = 0;i < seqsFiveCut.size();i++){
+				Evento g = (Evento)seqsFiveCut.get(i);
+				g.setRelativeFreq(g.getSensos()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		case Evento.VALUE_ANTISENSO_REL:
+			norma = totalFiveCutAntisensos;
+			for(int i = 0;i < seqsFiveCut.size();i++){
+				Evento g = (Evento)seqsFiveCut.get(i);
+				g.setRelativeFreq(g.getAntisensos()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		default:
+			norma = totalFiveCutPares;
+			for(int i = 0;i < seqsFiveCut.size();i++){
+				Evento g = (Evento)seqsFiveCut.get(i);
+				g.setRelativeFreq(g.getPares()*100 / norma);
+				g.setMode(mode);
+			}
+			break;
+		}		
+	}
 
 	public ArrayList<Evento> getCentralCutEvents() {
 		return seqsCentralCut;
+	}
+	
+	public ArrayList<Evento> getFiveCutEvents() {
+		return seqsFiveCut;
 	}
 
 	public DB getDB(){
 		return database;
 	}
 
-	public Evento getCentralCutEvento(){
+	public Evento getCentralCutEvent(){
 		return database.getCentralCutEvento();
 	}
 	
-	public Evento getFiveCutEvento(){
+	public Evento getFiveCutEvent(){
 		return database.getFiveCutEvento();
 	}
 
 	public void startCentralCutLoad(){
 		for(int i = 0; i < defaultLoad;i++){
-			Evento e = this.getCentralCutEvento();
+			Evento e = this.getCentralCutEvent();
 			if(e != null){
 				seqsCentralCut.add(e);
 			}else{
@@ -225,7 +260,7 @@ public class DBManager extends Observable{
 
 	public void startFiveCutLoad(){
 		for(int i = 0; i < defaultLoad;i++){
-			Evento e = this.getFiveCutEvento();
+			Evento e = this.getFiveCutEvent();
 			if(e != null){
 				seqsFiveCut.add(e);
 			}else{
@@ -235,7 +270,7 @@ public class DBManager extends Observable{
 	}
 
 	public void centralCutLoad(){
-		Evento e = this.getCentralCutEvento();
+		Evento e = this.getCentralCutEvent();
 		if(e != null) 
 			seqsCentralCut.add(e);
 		else 
@@ -243,7 +278,7 @@ public class DBManager extends Observable{
 	}
 	
 	public void fiveCutLoad(){
-		Evento e = this.getFiveCutEvento();
+		Evento e = this.getFiveCutEvent();
 		if(e != null) 
 			seqsFiveCut.add(e);
 		else 
@@ -253,11 +288,11 @@ public class DBManager extends Observable{
 	public void centralCutLoad(long quantity){
 		// Carrega sequencias ate atingir o tamanho de quantity 
 		// ou ate nao haverem mais sequencias
-		Evento e = this.getCentralCutEvento();
+		Evento e = this.getCentralCutEvent();
 
 		while(e != null && seqsCentralCut.size() < quantity) {
 			seqsCentralCut.add(e);
-			e = this.getCentralCutEvento();
+			e = this.getCentralCutEvent();
 		}
 	}
 

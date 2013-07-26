@@ -4,7 +4,6 @@ package com.lnbio.tables.report;
 import java.io.File;
 
 import com.lnbio.database.DBManager;
-import com.lnbio.histogram.EventHistogram;
 
 
 public class ReportFactory {

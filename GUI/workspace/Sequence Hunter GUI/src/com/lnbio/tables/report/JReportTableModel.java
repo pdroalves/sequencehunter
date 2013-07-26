@@ -19,28 +19,49 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 	private DBManager dbm;
 	protected ArrayList<Evento> centralCutSeqs;
 	protected ArrayList<Evento> fiveCutSeqs;
+	public static final int CENTRAL_CUT = 0;
+	public static final int FIVE_CUT = 1;
+	private int kind;
 
 	public JReportTableModel(){
 
+		this.kind = CENTRAL_CUT;
 	}
 
 	public JReportTableModel(DBManager dbm){
 		super();
 		this.dbm = dbm;
+		this.kind = CENTRAL_CUT;
 		centralCutSeqs = dbm.getCentralCutEvents();
-		fiveCutSeqs = dbm.getCentralCutEvents();
+		fiveCutSeqs = dbm.getFiveCutEvents();
 		if(dbm.isReady()){
 			startCentralCutLoad();
 			super.fireTableDataChanged();
 		}
 	}
-	
+
+	public void setKind(int kind){
+
+		this.kind = kind;
+	}
+
+	public int getKind(){
+		return kind;
+	}
+
 	public ArrayList<Evento> getCentralCutEvents(){
 		return dbm.getCentralCutEvents();
 	}
 
 	public int getRowCount() {
-		return centralCutSeqs.size();
+		switch(this.getKind()){
+		case CENTRAL_CUT:
+			return centralCutSeqs.size();
+		case FIVE_CUT:
+			return fiveCutSeqs.size();
+		default:
+			return 0;
+		}
 	}
 
 	public abstract int getColumnCount();
@@ -72,7 +93,7 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 	protected void startCentralCutLoad(){
 		dbm.startCentralCutLoad();
 	}
-	
+
 	protected void startFiveCutLoad(){
 		dbm.startFiveCutLoad();
 	}
@@ -80,7 +101,7 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 	public void centralCutLoad(){
 		dbm.centralCutLoad();
 	}
-	
+
 	public void fiveCutLoad(){
 		dbm.fiveCutLoad();
 	}
@@ -96,5 +117,5 @@ public abstract class JReportTableModel extends AbstractTableModel implements Ob
 			}
 		}		
 	}
-	
+
 }
