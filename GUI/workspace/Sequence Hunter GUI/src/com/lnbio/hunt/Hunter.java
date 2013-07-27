@@ -33,13 +33,15 @@ public class Hunter{
 	private boolean storeFullSequence;
 	private long tamCLinha;
 	private long distCLinha;
+	public static Hunter instance;
+	private String targetSequence;
 
 	String command = "";
 	private CoreAppDealer t;
 	final static Charset ENCODING = StandardCharsets.UTF_8;
 	private TranslationsManager tm;
 	
-	public Hunter(){
+	private Hunter(){
 		setCLinhaStorage(false);
 		setFullSequenceStorage(false);
 		setTamCLinha(0);
@@ -53,6 +55,14 @@ public class Hunter{
 		}else if(getOS().contains("NUX")){
 			default_output_folder = System.getenv("HOME");
 		}
+	}
+	
+	public static Hunter getInstance(){
+		if(instance == null){
+			instance = new Hunter();
+		}
+		
+		return instance;
 	}
 
 	public void setOutput(String output){
@@ -70,7 +80,8 @@ public class Hunter{
 	public void Set(String target,ArrayList<String> libs){	
 
 		// Gera linha de parametros
-		String parameters = new String("--target "+ target+ " --gui ");
+		setTargetSequence(target);
+		String parameters = new String("--target "+getTargetSequence()+ " --gui ");
 
 		switch(mode){
 		case FORCE_CUDA_MODE:
@@ -263,5 +274,13 @@ public class Hunter{
 
 	public void setDistCLinha(long distCLinha) {
 		this.distCLinha = distCLinha;
+	}
+
+	public String getTargetSequence() {
+		return targetSequence;
+	}
+
+	public void setTargetSequence(String targetSequence) {
+		this.targetSequence = targetSequence;
 	}
 }

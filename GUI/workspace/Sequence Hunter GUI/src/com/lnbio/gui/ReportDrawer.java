@@ -1,4 +1,4 @@
- package com.lnbio.gui;
+package com.lnbio.gui;
 
 
 import java.awt.BorderLayout;
@@ -11,6 +11,7 @@ import java.util.Observable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,10 +20,14 @@ import javax.swing.JTabbedPane;
 import com.lnbio.auxiliares.RemovableTabComponent;
 import com.lnbio.database.DBManager;
 import com.lnbio.dialogs.WaitDialogHandler;
+import com.lnbio.gui.modules.CustomFiveCutReportWorker;
 import com.lnbio.gui.modules.OpenReportFileFilter;
 import com.lnbio.gui.modules.ReportWorker;
 import com.lnbio.hunt.Evento;
+import com.lnbio.tables.report.JFiveCutQueryReportTableModel;
+import com.lnbio.tables.report.JTotalReportTableModel;
 import com.lnbio.tables.report.Report;
+import com.lnbio.tables.report.ReportFactory;
 import com.lnbio.tables.report.TabledReport;
 import com.lnbio.tables.report.TextReport;
 import com.lnbio.xml.TranslationsManager;
@@ -50,7 +55,7 @@ public class ReportDrawer extends Observable{
 		tabNames = new ArrayList<List<String>>();
 		reportName = new ArrayList<String>();
 	}
-	
+
 	public void removeReport(int index){
 		reportTab.remove(index);
 		// Pega os subreports vinculados ao report main
@@ -86,11 +91,16 @@ public class ReportDrawer extends Observable{
 		worker.start();
 		return;
 	}
-	
 
-	protected static void addSubReport(String query,String mainLibDatabase){
-		// Cria tabledReport com dados relativos a uma query em cima de determinada db
-		// To-do
+
+	protected void addFiveCutSubReport(int mainTabIndex,String centralCutSeq){
+		// Inicia wait dialog
+		Drawer.writeToLog(tm.getText("LoadingReport"));
+		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
+		waitdialog.start();
+		CustomFiveCutReportWorker worker = new CustomFiveCutReportWorker(this,centralCutSeq,mainTabIndex,data,tabNames,reportName,reportTab);
+		worker.start();
+		return;
 	}
 
 	public  void updateReportsView(){
@@ -102,11 +112,11 @@ public class ReportDrawer extends Observable{
 			reportTab.setVisible(true);
 			emptyReportTab.setVisible(false);
 		}
-		
+
 		reportContainer.repaint();
 		Drawer.repaint();
 	}
-	
+
 	public void setReportAdded(){
 		super.setChanged();
 		super.notifyObservers();
@@ -134,23 +144,23 @@ public class ReportDrawer extends Observable{
 	}
 	public void openLibrary(){
 		System.out.println("Report!");
-			// Abre arquivo
-			JFileChooser jfc = new JFileChooser();
-			jfc.setFileFilter(new OpenReportFileFilter());
-			jfc.setMultiSelectionEnabled(false);
-			if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
-				// O arquivo selecionado pode ser do tipo .db
-				Pattern databasePattern = Pattern.compile(".*[.][d][b]");
-				Matcher databaseMatcher = databasePattern.matcher(jfc.getSelectedFile().getName());
-				if(databaseMatcher.find()){
-					Drawer.setProgressBar(5);
-					Drawer.enableProgressBar(true);
-					Drawer.updateProgressBar(1);
-					String filepath = jfc.getSelectedFile().getAbsolutePath();
-					addMainReport(filepath,null);
-					updateReportsView();
-				}
+		// Abre arquivo
+		JFileChooser jfc = new JFileChooser();
+		jfc.setFileFilter(new OpenReportFileFilter());
+		jfc.setMultiSelectionEnabled(false);
+		if(jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+			// O arquivo selecionado pode ser do tipo .db
+			Pattern databasePattern = Pattern.compile(".*[.][d][b]");
+			Matcher databaseMatcher = databasePattern.matcher(jfc.getSelectedFile().getName());
+			if(databaseMatcher.find()){
+				Drawer.setProgressBar(5);
+				Drawer.enableProgressBar(true);
+				Drawer.updateProgressBar(1);
+				String filepath = jfc.getSelectedFile().getAbsolutePath();
+				addMainReport(filepath,null);
+				updateReportsView();
 			}
+		}
 	}
 	public static int getReportsLoaded(){
 		return reportTab.getTabCount();
@@ -175,7 +185,7 @@ public class ReportDrawer extends Observable{
 			return null;
 		}
 	}
-	
+
 	public static File getLog(int mainIndex,int subIndex){
 		Object obj = data.get(mainIndex).get(subIndex);
 		if(obj instanceof File){
@@ -184,25 +194,25 @@ public class ReportDrawer extends Observable{
 			return null;
 		}
 	}
-	
+
 	public static String getTabName(int mainIndex,int subIndex){
 		// Retorna o nome de uma subtab
 		return tabNames.get(mainIndex).get(subIndex);
 	}
-	
+
 	public static List<List<String>> getAllTabNames(){
 		// Retorna o nome de subtabs
 		return tabNames;
 	}
-	
+
 	public static String getReportTitle(int mainIndex){
 		return reportName.get(mainIndex);
 	}
-	
+
 	public static List<String> getAllReportTitles(){
 		return reportName;
 	}
-	
+
 	public static Object getReport(int mainReport,int subReport){
 		Object obj = data.get(mainReport).get(subReport);
 		if(obj instanceof TabledReport){

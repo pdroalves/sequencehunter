@@ -9,8 +9,8 @@ import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
 
 public class DBManager extends Observable{
-	private DB database;
-	private boolean centralCutReady;
+	private  DB database;
+	private  boolean centralCutReady;
 	private boolean fiveCutReady;
 	private ArrayList<Evento> seqsCentralCut;
 	private ArrayList<Evento> seqsFiveCut;
@@ -18,25 +18,36 @@ public class DBManager extends Observable{
 	private int mode = Evento.VALUE_PARES_REL;
 	static public final int DESC = 0;
 	static public final int ASC = 1;
-	private int totalCentralCutPares;
-	private int totalCentralCutSensos;
-	private int totalCentralCutAntisensos;
-	private int totalCentralCutSequences;
-	private int totalFiveCutSequences;
-	private boolean fiveCutSupported;
-	private int totalFiveCutAntisensos;
-	private int totalFiveCutSensos;
-	private int totalFiveCutPares;
-
-	public DBManager(String databaseFilename){
+	private  int totalCentralCutPares;
+	private  int totalCentralCutSensos;
+	private  int totalCentralCutAntisensos;
+	private  int totalCentralCutSequences;
+	private  int totalFiveCutSequences;
+	private  boolean fiveCutSupported;
+	private  int totalFiveCutAntisensos;
+	private  int totalFiveCutSensos;
+	private  int totalFiveCutPares;
+	public static DBManager instance;
+	
+	private DBManager(){
 		super();
 		setCentralCutReady(false);
 		setFiveCutReady(false);
+		seqsCentralCut = new ArrayList<Evento>(totalCentralCutSequences);
+		seqsFiveCut = new ArrayList<Evento>(totalFiveCutSequences);
+	}
+	
+	public static DBManager getInstance(){
+		if(instance == null){
+			instance = new DBManager();
+		}
+		return instance;
+	}
+	
+	public void setDBFile(String databaseFilename){
 		database = new DB(databaseFilename);
 		totalFiveCutSequences = database.getFiveCutSize();
 		totalCentralCutSequences = database.getCentralCutSize();
-		seqsCentralCut = new ArrayList<Evento>(totalCentralCutSequences);
-		seqsFiveCut = new ArrayList<Evento>(totalFiveCutSequences);
 		totalCentralCutPares = this.getTotalCentralCutPares();
 		totalCentralCutSensos = this.getTotalCentralCutSensos();
 		totalCentralCutAntisensos = this.getTotalCentralCutAntisensos();
@@ -50,6 +61,7 @@ public class DBManager extends Observable{
 			this.sortFiveCut(getMode(), 0);
 		}
 	}
+	
 
 	public void sortCentralCut(int column,int ordem){
 		setCentralCutReady(false);
@@ -388,5 +400,9 @@ public class DBManager extends Observable{
 
 	public void setFiveCutSupported(boolean supportCincoL) {
 		this.fiveCutSupported = supportCincoL;
+	}
+	
+	public ResultSet customQuery(String query){
+		return database.executeQuery(query);
 	}
 }

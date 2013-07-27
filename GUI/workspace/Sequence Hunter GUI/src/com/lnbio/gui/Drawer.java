@@ -56,7 +56,7 @@ public class Drawer {
 		sensosFounded = new JLabel("");
 		antisensosFounded = new JLabel("");
 		calcSPS = new JLabel("");
-		h = new Hunter();
+		h = Hunter.getInstance();
 		jprog = new JProgressBar();
 		jcprogress = drawProgressBarContainer(jprog);
 		tm = TranslationsManager.getInstance();

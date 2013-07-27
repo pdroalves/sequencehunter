@@ -46,11 +46,11 @@ public class TabledReport extends Report implements Observer{
 		this.name = name;
 		sorter = new TableSorter<JReportTableModel>(jrtm,dbm);
 		//this.eh = new EventHistogram(dbm);
+		jte = new JTable(jrtm); 
 	}
 	
 	public JComponent getComponent(){
 		// Cria e configura tabela
-		jte = new JTable(jrtm); 
 		jte.setAutoCreateRowSorter(false);
 		jte.setRowSorter(sorter);
 		
@@ -145,4 +145,8 @@ public class TabledReport extends Report implements Observer{
 			layerUI.start();
 		}
 	}	
+	
+	public JTable getJTable(){
+		return jte;
+	}
 }

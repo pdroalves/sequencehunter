@@ -45,6 +45,7 @@
 <TextResource tag="reportSensosColumnLabel"># Sensos</TextResource>
 <TextResource tag="reportAntisensosColumnLabel"># Antisensos</TextResource>
 <TextResource tag="reportSequenceInfoLabel">Sequence: </TextResource>
+<TextResource tag="reportQuantityInfoLabel">Quantity</TextResource>
 <TextResource tag="reportSequenceFrequencyInfoLabel">Sequence frequency: </TextResource>
 <TextResource tag="reportHuntLogDefaultName">Hunt log</TextResource>
 <TextResource tag="reportCentralCutPairedDefaultName">Central cut paired</TextResource>
