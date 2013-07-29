@@ -11,7 +11,6 @@ import java.util.Observable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,13 +20,11 @@ import com.lnbio.auxiliares.RemovableTabComponent;
 import com.lnbio.database.DBManager;
 import com.lnbio.dialogs.WaitDialogHandler;
 import com.lnbio.gui.modules.CustomFiveCutReportWorker;
+import com.lnbio.gui.modules.CustomReportBuilderWorker;
 import com.lnbio.gui.modules.OpenReportFileFilter;
 import com.lnbio.gui.modules.ReportWorker;
 import com.lnbio.hunt.Evento;
-import com.lnbio.tables.report.JFiveCutQueryReportTableModel;
-import com.lnbio.tables.report.JTotalReportTableModel;
 import com.lnbio.tables.report.Report;
-import com.lnbio.tables.report.ReportFactory;
 import com.lnbio.tables.report.TabledReport;
 import com.lnbio.tables.report.TextReport;
 import com.lnbio.xml.TranslationsManager;
@@ -82,7 +79,7 @@ public class ReportDrawer extends Observable{
 		return reportContainer;
 	}
 
-	protected void addMainReport(String libDatabase,File log){
+	public void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
 		Drawer.writeToLog(tm.getText("LoadingReport"));
 		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
@@ -93,12 +90,12 @@ public class ReportDrawer extends Observable{
 	}
 
 
-	protected void addFiveCutSubReport(int mainTabIndex,String centralCutSeq){
+	public void addFiveCutSubReport(int mainTabIndex,String centralCutSeq){
 		// Inicia wait dialog
-		Drawer.writeToLog(tm.getText("LoadingReport"));
-		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
-		waitdialog.start();
-		CustomFiveCutReportWorker worker = new CustomFiveCutReportWorker(this,centralCutSeq,mainTabIndex,data,tabNames,reportName,reportTab);
+		//Drawer.writeToLog(tm.getText("LoadingReport"));
+		//waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
+		//waitdialog.start();
+		CustomReportBuilderWorker worker = new CustomReportBuilderWorker(this, centralCutSeq, mainTabIndex, data, tabNames, reportName, reportTab);
 		worker.start();
 		return;
 	}
