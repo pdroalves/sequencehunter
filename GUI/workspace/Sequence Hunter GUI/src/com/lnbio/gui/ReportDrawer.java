@@ -19,7 +19,6 @@ import javax.swing.JTabbedPane;
 import com.lnbio.auxiliares.RemovableTabComponent;
 import com.lnbio.database.DBManager;
 import com.lnbio.dialogs.WaitDialogHandler;
-import com.lnbio.gui.modules.CustomFiveCutReportWorker;
 import com.lnbio.gui.modules.CustomReportBuilderWorker;
 import com.lnbio.gui.modules.OpenReportFileFilter;
 import com.lnbio.gui.modules.ReportWorker;
@@ -90,12 +89,12 @@ public class ReportDrawer extends Observable{
 	}
 
 
-	public void addFiveCutSubReport(int mainTabIndex,String centralCutSeq){
+	public void addFiveCutSubReport(DBManager dbm,int mainTabIndex,String centralCutSeq) throws Exception{
 		// Inicia wait dialog
 		//Drawer.writeToLog(tm.getText("LoadingReport"));
 		//waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
 		//waitdialog.start();
-		CustomReportBuilderWorker worker = new CustomReportBuilderWorker(this, centralCutSeq, mainTabIndex, data, tabNames, reportName, reportTab);
+		CustomReportBuilderWorker worker = new CustomReportBuilderWorker(this, dbm,centralCutSeq, mainTabIndex, data, tabNames, reportName, reportTab);
 		worker.start();
 		return;
 	}

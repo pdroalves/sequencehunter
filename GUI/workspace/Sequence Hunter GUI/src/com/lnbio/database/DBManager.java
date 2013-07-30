@@ -27,22 +27,17 @@ public class DBManager extends Observable{
 	private  int totalFiveCutAntisensos;
 	private  int totalFiveCutSensos;
 	private  int totalFiveCutPares;
-	public static DBManager instance;
+	private int totalFullSequences;
+	public boolean customFiveCutSupported;
 	
-	private DBManager(){
+	public DBManager(){
 		super();
 		setCentralCutReady(false);
 		setFiveCutReady(false);
 		seqsCentralCut = new ArrayList<Evento>(totalCentralCutSequences);
 		seqsFiveCut = new ArrayList<Evento>(totalFiveCutSequences);
 	}
-	
-	public static DBManager getInstance(){
-		if(instance == null){
-			instance = new DBManager();
-		}
-		return instance;
-	}
+
 	
 	public void setDBFile(String databaseFilename){
 		database = new DB(databaseFilename);
@@ -54,8 +49,15 @@ public class DBManager extends Observable{
 		totalFiveCutPares = this.getTotalFiveCutPares();
 		totalFiveCutSensos = this.getTotalFiveCutSensos();
 		totalFiveCutAntisensos = this.getTotalFiveCutAntisensos();
+		totalFullSequences = this.getTotalFullSequences();
 		if(totalFiveCutSequences > 0)
 			setFiveCutSupported(true);
+		else
+			setFiveCutSupported(false);
+		if(totalFullSequences > 0)
+			setCustomFiveCutSupported(true);
+		else
+			setCustomFiveCutSupported(false);
 		if(database != null){
 			this.sortCentralCut(getMode(), 0);
 			this.sortFiveCut(getMode(), 0);
@@ -386,6 +388,18 @@ public class DBManager extends Observable{
 		return total;
 	}
 
+	public int getTotalFullSequences(){
+		int total = 0;
+		ResultSet rs = database.executeQuery("SELECT COUNT(*) FROM events_full GROUP BY seq");
+		try {
+			if(rs.next())
+				total = rs.getInt(1);
+		} catch (SQLException e) {
+			Drawer.writeToLog("Database error!");
+		}
+		return total;
+	}
+	
 	public int getMode() {
 		return mode;
 	}
@@ -394,12 +408,20 @@ public class DBManager extends Observable{
 		this.mode = tipo;
 	}
 
+	public boolean isCustomFiveCutSupported(){
+		return customFiveCutSupported;
+	}
+
 	public boolean isFiveCutSupported() {
 		return fiveCutSupported;
 	}
 
 	public void setFiveCutSupported(boolean supportCincoL) {
 		this.fiveCutSupported = supportCincoL;
+	}
+	
+	public void setCustomFiveCutSupported(boolean supportCustomFC){
+		this.customFiveCutSupported = supportCustomFC;
 	}
 	
 	public ResultSet customQuery(String query){

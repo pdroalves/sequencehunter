@@ -16,7 +16,7 @@ import com.lnbio.xml.TranslationsManager;
 
 @SuppressWarnings("serial")
 public abstract class JReportTableModel extends AbstractTableModel implements Observer{
-	private DBManager dbm;
+	protected DBManager dbm;
 	protected ArrayList<Evento> centralCutSeqs;
 	protected ArrayList<Evento> fiveCutSeqs;
 	public static final int CENTRAL_CUT = 0;

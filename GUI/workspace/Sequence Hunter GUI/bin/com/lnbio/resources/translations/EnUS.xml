@@ -103,4 +103,5 @@
 <TextResource tag="unpairedCSVHeader">sequence,pairs,sensos,antisensos,relative frequency</TextResource>
 <TextResource tag="pairedCSVHeader">sequence,pairs,relative frequency</TextResource>
 <TextResource tag="genFiveCutReportFromCentralCutSeq">Generate 5' cut for this central cut sequence</TextResource>
+<TextResource tag="reportCustomFiveCutName">Custom Report</TextResource>
 </AllTextResource>
