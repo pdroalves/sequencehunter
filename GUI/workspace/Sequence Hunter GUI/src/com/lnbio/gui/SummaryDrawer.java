@@ -2,6 +2,7 @@ package com.lnbio.gui;
 
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -19,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
 
 import com.lnbio.hunt.Hunter;
 import com.lnbio.xml.TranslationsManager;
@@ -100,6 +103,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 		distCLinha = 0;
 		// Initial draw
 		summaryContainer = new JPanel(new BorderLayout());
+		summaryContainer.setBorder(BorderFactory.createLineBorder(Color.gray));
 		drawSummaryContainer();
 	}
 	
@@ -136,6 +140,7 @@ public class SummaryDrawer implements ActionListener,Observer {
 	private void drawSummaryContainer(){
 		JPanel jp = new JPanel();
 		jp.setLayout(new GridBagLayout());
+		jp.setBorder(new EmptyBorder(10,10,10,10));
 		GridBagConstraints c = new GridBagConstraints();
 
 		// Line - Target Sequence

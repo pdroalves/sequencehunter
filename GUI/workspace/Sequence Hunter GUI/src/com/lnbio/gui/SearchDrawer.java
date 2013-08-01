@@ -2,6 +2,7 @@ package com.lnbio.gui;
 
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -19,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -81,6 +83,7 @@ public class SearchDrawer implements ActionListener{
 		jl.setModel(listModel);
 		libContainer = new JTabbedPane(JTabbedPane.TOP,JTabbedPane.SCROLL_TAB_LAYOUT);
 		seqBuscaPanel = new JPanel();
+		seqBuscaPanel.setBorder(BorderFactory.createLineBorder(Color.gray));
 		seqBuscaRightPanel = new JPanel(new BorderLayout());
 		seqBuscaLeftPanel = new JPanel();
 		drawSearchContainer();
@@ -91,56 +94,80 @@ public class SearchDrawer implements ActionListener{
 	}
 
 	private void drawSearchContainer(){		
-		GridBagConstraints c = new GridBagConstraints();
 		// Configura tab para sequencias
 		seqBuscaLeftPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 		seqBuscaLeftPanel.setBorder(new EmptyBorder(10,10,10,10));
 		
 		//Adiciona nova linha hbox
-		Box hbox = Box.createHorizontalBox();
-		hbox.add(new JLabel(tm.getText("targetSequenceSetLabel")));
-		hbox.add(seqOriginal);
+		// Configura linha
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.2;
+	    c.gridx = 0;
+	    c.gridy = 0;
+	    c.gridwidth = 1;
+		seqBuscaLeftPanel.add(new JLabel(tm.getText("targetSequenceSetLabel")),c);
+		
+		// Configura linha
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.7;
+	    c.gridx = 1;
+	    c.gridy = 0;
+	    c.gridwidth = 1;
+	    seqBuscaLeftPanel.add(seqOriginal,c);
+	    
+		// Configura linha
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.1;
+	    c.gridx = 2;
+	    c.gridy = 0;
+	    c.gridwidth = 1;
 		setSeqButton = new JButton(tm.getText("targetSequenceSetButton"));
 		setSeqButton.addActionListener(this);
 		setSeqButton.setActionCommand("Set");
-		hbox.add(setSeqButton);
-		// Configura linha
-	    c.fill = GridBagConstraints.HORIZONTAL;
-	    c.weighty = 0.05;
-	    c.weightx = 1;
-	    c.gridx = 0;
-	    c.gridy = 0;
-	    c.gridwidth = 2;
-		seqBuscaLeftPanel.add(hbox);
+		seqBuscaLeftPanel.add(setSeqButton,c);
 		
-		// Adiciona nova linha hbox
-		hbox = Box.createHorizontalBox();
-		hbox.add(new JLabel(tm.getText("targetSequenceLabel")));
-		hbox.add(seqBusca);
-		hbox.setMaximumSize(new Dimension(2*xSize,20));
 		// Configura linha
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.05;
-	    c.weightx = 1;
+	    c.weightx = 0.2;
 	    c.gridx = 0;
 	    c.gridy = 1;
-	    c.gridwidth = 2;
-		seqBuscaLeftPanel.add(hbox,c);			
-		
-		// Nova linha com as previews
-		hbox = Box.createHorizontalBox();
-		hbox.add(new JLabel(tm.getText("librariesLoadedLabel")));
-		// Configura linha na libsLoaded
-		JScrollPane jscrlp = new JScrollPane(jl);
-		hbox.add(jscrlp);
+	    c.gridwidth = 1;
+	    seqBuscaLeftPanel.add(new JLabel(tm.getText("targetSequenceLabel")),c);
+	    
 		// Configura linha
-	    c.fill = GridBagConstraints.NONE;
-	    c.weighty = 0.20;
-	    c.weightx = 1;
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.8;
+	    c.gridx = 1;
+	    c.gridy = 1;
+	    c.gridwidth = 2;
+	    seqBuscaLeftPanel.add(seqBusca,c);
+	
+		// Nova linha com as previews
+		// Configura linha
+	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.weighty = 0.05;
+	    c.weightx = 0.2;
 	    c.gridx = 0;
 	    c.gridy = 2;
+	    c.gridwidth = 1;
+	    seqBuscaLeftPanel.add(new JLabel(tm.getText("librariesLoadedLabel")),c);
+	    
+		// Configura linha na libsLoaded
+		JScrollPane jscrlp = new JScrollPane(jl);
+		// Configura linha
+	    c.fill = GridBagConstraints.BOTH;
+	    c.weighty = 0.20;
+	    c.weightx = 0.8;
+	    c.gridx = 1;
+	    c.gridy = 2;
 	    c.gridwidth = 2;
-		seqBuscaLeftPanel.add(hbox,c);
+		seqBuscaLeftPanel.add(jscrlp,c);
 
 		// Adiciona nova linha hbox
 		JPanel loads = new JPanel(new FlowLayout(FlowLayout.RIGHT));

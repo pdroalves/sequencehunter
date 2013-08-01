@@ -2,6 +2,7 @@ package com.lnbio.gui;
 
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.util.ArrayList;
@@ -11,10 +12,12 @@ import java.util.Observable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.border.EmptyBorder;
 
 import com.lnbio.auxiliares.RemovableTabComponent;
 import com.lnbio.database.DBManager;
@@ -41,8 +44,10 @@ public class ReportDrawer extends Observable{
 	public ReportDrawer(){
 		super();
 		reportContainer = new JPanel(new BorderLayout());
+		reportContainer.setBorder(BorderFactory.createLineBorder(Color.gray));
 		ReportDrawer.tm = TranslationsManager.getInstance();
 		reportTab = new JTabbedPane(JTabbedPane.NORTH,JTabbedPane.SCROLL_TAB_LAYOUT);
+		reportTab.setBorder(new EmptyBorder(10,10,10,10));
 		emptyReportTab = getEmptyJPanel();
 		reportContainer.add(reportTab,BorderLayout.CENTER);
 		reportContainer.add(emptyReportTab,BorderLayout.NORTH);
