@@ -1,13 +1,10 @@
 package com.lnbio.gui.modules;
 
-
-import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
@@ -19,7 +16,6 @@ import com.lnbio.dialogs.ExportDialog;
 import com.lnbio.dialogs.SettingsDialog;
 import com.lnbio.gui.Drawer;
 import com.lnbio.gui.ReportDrawer;
-import com.lnbio.gui.SearchDrawer;
 import com.lnbio.hunt.Hunter;
 import com.lnbio.xml.TranslationsManager;
 
@@ -52,6 +48,7 @@ public class SHMenuBar implements Observer, ActionListener{
 		
 		// Item do menu  
 		JMenuItem menuItemNew = new JMenuItem(tm.getText("menuFileItemNew"));
+		menuItemNew.setBorderPainted(true);
 		JMenuItem menuItemOpenLibrary = new JMenuItem(tm.getText("menuFileItemOpenLibrary"));
 		JMenuItem menuItemExit = new JMenuItem(tm.getText("menuFileItemExitLabel"));  		
 		JMenuItem menuItemAbout = new JMenuItem(tm.getText("menuHelpItemAboutLabel"));
@@ -104,9 +101,6 @@ public class SHMenuBar implements Observer, ActionListener{
 		
 		menuBar.add(menuFile); 
 		menuBar.add(menuHelp);
-
-		menuBar.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		menuBar.setBorderPainted(true);
 
 		return menuBar;
 	}

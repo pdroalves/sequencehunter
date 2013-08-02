@@ -183,7 +183,7 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 				Object obj = ReportDrawer.getReport(i, j);
 				String name = ReportDrawer.getReportTitle(i);
 
-				Pattern pattern = Pattern.compile("^.*(SH_.*).db$");
+				Pattern pattern = Pattern.compile("^.*"+System.getProperty("file.separator")+"(.*).db$");
 				Matcher matcher = pattern.matcher(name);
 				if(matcher.find()){
 					name = matcher.group(1);

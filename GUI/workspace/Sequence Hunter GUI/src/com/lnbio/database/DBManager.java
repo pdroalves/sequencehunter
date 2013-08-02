@@ -390,7 +390,7 @@ public class DBManager extends Observable{
 
 	public int getTotalFullSequences(){
 		int total = 0;
-		ResultSet rs = database.executeQuery("SELECT COUNT(*) FROM events_full GROUP BY seq");
+		ResultSet rs = database.executeQuery("SELECT COUNT(*) FROM events_full");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);

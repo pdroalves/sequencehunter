@@ -277,9 +277,12 @@ void search_manager(int *buffer_load,
       	    strncpy(central,data[i]+gap,blocoV);
       	    central[blocoV] = '\0';
 	  }
-	  full_seq = (char*)malloc((strlen(data[i])+1)*sizeof(char));
-	  strcpy(full_seq,data[i]);
-
+	  
+	  full_seq = NULL;
+	  if(!central_cut){
+		  full_seq = (char*)malloc((strlen(data[i])+1)*sizeof(char));
+		  strcpy(full_seq,data[i]);
+		}
 	  gap = h_search_gaps[i] - bloco1 - dist_regiao_5l;
       	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
             //printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
@@ -304,7 +307,9 @@ void search_manager(int *buffer_load,
       	    strncpy(central,data[i]+gap,blocoV);
       	    central[blocoV] = '\0';
       	  }
-	  full_seq =  get_antisenso(data[i]);
+	     full_seq = NULL;
+	     	  if(!central_cut)
+	     full_seq =  get_antisenso(data[i]);
 
           gap = h_search_gaps[i] +  bloco2 + dist_regiao_5l;      			
       	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){

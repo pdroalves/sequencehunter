@@ -237,10 +237,11 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
 	}				
-	
+		     full_seq = NULL;
+	     	  if(!central_cut){
 	full_seq = (char*)malloc((strlen(buf.seq[i])+1)*sizeof(char));					
 	strcpy(full_seq,buf.seq[i]);
-	
+}
 
     gap = search_gaps[i] - bloco1 - dist_regiao_5l;
 	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
@@ -262,7 +263,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	  central = (char*)malloc((blocoV+1)*sizeof(char));
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  central[blocoV] = '\0';
-	}						
+	}				
+		     full_seq = NULL;
+	     	  if(!central_cut)		
 	  full_seq = get_antisenso(buf.seq[i]);
 	
 
