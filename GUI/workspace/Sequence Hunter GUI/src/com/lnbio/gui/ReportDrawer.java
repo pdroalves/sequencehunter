@@ -26,6 +26,7 @@ import com.lnbio.gui.modules.CustomReportBuilderWorker;
 import com.lnbio.gui.modules.OpenReportFileFilter;
 import com.lnbio.gui.modules.ReportWorker;
 import com.lnbio.hunt.Evento;
+import com.lnbio.tables.report.JFiveCutQueryReportTableModel;
 import com.lnbio.tables.report.Report;
 import com.lnbio.tables.report.TabledReport;
 import com.lnbio.tables.report.TextReport;
@@ -217,7 +218,12 @@ public class ReportDrawer extends Observable{
 	public static Object getReport(int mainReport,int subReport){
 		Object obj = data.get(mainReport).get(subReport);
 		if(obj instanceof TabledReport){
-			return ((TabledReport) obj).getDBM();
+			TabledReport tr = ((TabledReport) obj);
+			if(tr.getJTable().getModel() instanceof JFiveCutQueryReportTableModel){
+				return tr.getJTable().getModel();
+			}else{
+				return tr.getDBM();
+			}
 		}else{
 			return ((TextReport) obj).getFile();
 		}

@@ -298,6 +298,16 @@ public class DBManager extends Observable{
 		else 
 			return;
 	}
+	
+	public void fiveCutLoad(long quantity){
+		Evento e = this.getFiveCutEvent();
+		
+		while(e != null && seqsFiveCut.size() < quantity) {
+			seqsFiveCut.add(e);
+			e = this.getFiveCutEvent();
+		}
+		return;
+	}
 
 	public void centralCutLoad(long quantity){
 		// Carrega sequencias ate atingir o tamanho de quantity 

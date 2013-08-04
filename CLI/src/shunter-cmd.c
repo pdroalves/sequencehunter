@@ -25,7 +25,7 @@
 #include "Headers/database.h"
 #include "Headers/socket.h"
 
-#define VERSION "v0.9.0"
+#define VERSION "v1.1.0"
 
 #ifdef _WIN32
 #include <Windows.h>

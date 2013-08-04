@@ -277,7 +277,7 @@ public class Hunter{
 	}
 
 	public String getTargetSequence() {
-		return targetSequence;
+		return this.targetSequence;
 	}
 
 	public void setTargetSequence(String targetSequence) {

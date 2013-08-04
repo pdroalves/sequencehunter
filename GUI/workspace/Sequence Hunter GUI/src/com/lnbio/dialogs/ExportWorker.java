@@ -19,6 +19,7 @@ import com.lnbio.auxiliares.checkbox.CheckBoxNode;
 import com.lnbio.database.DBManager;
 import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
+import com.lnbio.tables.report.JFiveCutQueryReportTableModel;
 import com.lnbio.xml.TranslationsManager;
 
 
@@ -29,7 +30,7 @@ public class ExportWorker extends Thread {
 	private long maxSeqsToExport;
 	private JTree tree;
 	private ExportDialog owner;
-	
+
 	public ExportWorker(ExportDialog owner,JProgressBar jpb,List<CheckBoxNode> cbnList,JTree tree,long maxSeqsToExport){
 		this.jpb = jpb;
 		this.cbnList = cbnList;
@@ -45,7 +46,7 @@ public class ExportWorker extends Thread {
 			Iterator<CheckBoxNode> iterator = cbnList.iterator();
 			try {
 				Calendar calendar = Calendar.getInstance();
-				File zipfile = new File(jfc.getSelectedFile()+"/"+"Export-"+calendar.getTime()+".zip");
+				File zipfile = new File(jfc.getSelectedFile()+System.getProperty("file.separator")+"Export-"+calendar.getTime()+".zip");
 				zipfile.createNewFile();
 				ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipfile));
 				while(iterator.hasNext()){
@@ -57,33 +58,47 @@ public class ExportWorker extends Thread {
 							DBManager dbm = (DBManager) attribute;
 							jpb.setVisible(true);
 							jpb.setIndeterminate(true);
-							dbm.centralCutLoad(maxSeqsToExport);
-							List<Evento> eventos = dbm.getCentralCutEvents();
+							List<Evento> eventos = null;
+							if(cbn.getText().contains("Central")){
+								dbm.centralCutLoad(maxSeqsToExport);
+								eventos = dbm.getCentralCutEvents();
+							}else if(cbn.getText().contains("Five")){
+								dbm.fiveCutLoad(maxSeqsToExport);
+								eventos = dbm.getFiveCutEvents();
+							}else{
+								Drawer.writeToLog(TranslationsManager.getInstance().getText("statusErrorProcessingMsg"));
+								System.err.println("Error: Don't know what to do with report "+cbn.getText());
+								owner.dispose();
+								return;
+							}
 							jpb.setIndeterminate(false);
 							jpb.setMaximum(eventos.size());
 							jpb.setValue(0);
-							System.out.println("Vou salvar até : "+maxSeqsToExport+" em "+jfc.getSelectedFile());
 
 							// name the file inside the zip  file
 							out.putNextEntry(new ZipEntry(cbn.getText()+".csv")); 
 							Iterator<Evento> eventoIterator = eventos.iterator();
-							
+
 							// Imprime header
 							String str;
 							if(cbn.getText().contains("unpaired")){
-								str = TranslationsManager.getInstance().getText("unpairedCSVHeader")+"\n"; 
+								str = TranslationsManager.getInstance().getText("unpairedCSVHeader")+System.getProperty("line.separator"); 
+							}else if(cbn.getText().contains("paired")){
+								str = TranslationsManager.getInstance().getText("pairedCSVHeader")+System.getProperty("line.separator");
 							}else{
-								str = TranslationsManager.getInstance().getText("pairedCSVHeader")+"\n"; 
+								str = "";
 							}
 							out.write(str.getBytes("UTF-8"), 0, str.length());
 							jpb.setValue(jpb.getValue() + 1);
-							
+
 							while(eventoIterator.hasNext()){
 								Evento e = eventoIterator.next();
 								if(cbn.getText().contains("unpaired")){
-									str = e.getSeq()+","+e.getPares()+","+e.getSensos()+","+e.getAntisensos()+","+e.getRelativeFreq()+"\n"; 
+									str = e.getSeq()+","+e.getPares()+","+e.getSensos()+","+e.getAntisensos()+","+e.getRelativeFreq()+System.getProperty("line.separator"); 
+								}else if(cbn.getText().contains("paired")){
+									str = e.getSeq()+","+e.getPares()+","+e.getRelativeFreq()+System.getProperty("line.separator"); 				
 								}else{
-									str = e.getSeq()+","+e.getPares()+","+e.getRelativeFreq()+"\n"; 
+									str = "";
 								}
 								out.write(str.getBytes("UTF-8"), 0, str.length());
 								jpb.setValue(jpb.getValue() + 1);
@@ -100,11 +115,38 @@ public class ExportWorker extends Thread {
 							int count;
 
 							while ((count = in.read(b)) > 0) {
-								System.out.println();
-
 								out.write(b, 0, count);
 							}
 							in.close();
+
+						}else if(attribute instanceof JFiveCutQueryReportTableModel){
+							JFiveCutQueryReportTableModel model = (JFiveCutQueryReportTableModel) attribute;
+							List<Evento> eventos = null;
+							jpb.setVisible(true);
+							jpb.setIndeterminate(true);
+							model.customHuntLoad(maxSeqsToExport);
+							eventos = ((JFiveCutQueryReportTableModel) attribute).getData();
+
+							jpb.setIndeterminate(false);
+							jpb.setMaximum(eventos.size());
+							jpb.setValue(0);
+
+							// name the file inside the zip  file
+							out.putNextEntry(new ZipEntry(cbn.getText()+".csv")); 
+							Iterator<Evento> eventoIterator = eventos.iterator();
+
+							// Imprime header
+							String 	str = TranslationsManager.getInstance().getText("customCSVHeader")+System.getProperty("line.separator");
+							out.write(str.getBytes("UTF-8"), 0, str.length());
+							jpb.setValue(jpb.getValue() + 1);
+
+							while(eventoIterator.hasNext()){
+								Evento e = eventoIterator.next();
+								str = e.getSeq()+","+e.getSensos()+System.getProperty("line.separator"); 
+								out.write(str.getBytes("UTF-8"), 0, str.length());
+								jpb.setValue(jpb.getValue() + 1);
+							}
+
 						}
 					}
 				}

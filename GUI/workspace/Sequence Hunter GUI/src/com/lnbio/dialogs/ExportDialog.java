@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -176,19 +177,25 @@ public class ExportDialog extends JDialog implements ActionListener, ChangeListe
 		List<List<String>> tabNames = ReportDrawer.getAllTabNames();
 
 		Object rootNodes[] = new Object[reportNames.size()];
+		
+		Random rand = new Random(1023232);
 
 		for(int i=0; i < reportNames.size();i++){
 			CheckBoxNode mainReport[] = new CheckBoxNode[tabNames.get(i).size()];
-			for(int j=0;j < tabNames.get(i).size();j++){
+			List<String> tabSet = tabNames.get(i);
+			String reportId = String.valueOf(rand.nextInt(100000000));
+			for(int j=0;j < tabSet.size();j++){
 				Object obj = ReportDrawer.getReport(i, j);
 				String name = ReportDrawer.getReportTitle(i);
 
 				Pattern pattern = Pattern.compile("^.*"+System.getProperty("file.separator")+"(.*).db$");
 				Matcher matcher = pattern.matcher(name);
 				if(matcher.find()){
-					name = matcher.group(1);
+					name = matcher.group(1)+"_"+reportId;
+				}else{
+					name = "Report "+reportId+"_"+rand.nextInt(100000);
 				}
-				CheckBoxNode subReport = new CheckBoxNode(name+" - "+tabNames.get(i).get(j),obj,false);
+				CheckBoxNode subReport = new CheckBoxNode(name+" - "+tabSet.get(j),obj,false);
 				cbnList.add(subReport);
 				mainReport[j] = subReport;
 			}

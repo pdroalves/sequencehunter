@@ -112,7 +112,7 @@ public class SearchDrawer implements ActionListener{
 		// Configura linha
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.05;
-	    c.weightx = 0.7;
+	    c.weightx = 0.6;
 	    c.gridx = 1;
 	    c.gridy = 0;
 	    c.gridwidth = 1;
@@ -121,7 +121,7 @@ public class SearchDrawer implements ActionListener{
 		// Configura linha
 	    c.fill = GridBagConstraints.HORIZONTAL;
 	    c.weighty = 0.05;
-	    c.weightx = 0.1;
+	    c.weightx = 0.2;
 	    c.gridx = 2;
 	    c.gridy = 0;
 	    c.gridwidth = 1;
