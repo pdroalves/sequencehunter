@@ -119,7 +119,7 @@ public class SearchDrawer implements ActionListener{
 	    seqBuscaLeftPanel.add(seqOriginal,c);
 	    
 		// Configura linha
-	    c.fill = GridBagConstraints.HORIZONTAL;
+	    c.fill = GridBagConstraints.BOTH;
 	    c.weighty = 0.05;
 	    c.weightx = 0.2;
 	    c.gridx = 2;
@@ -128,6 +128,7 @@ public class SearchDrawer implements ActionListener{
 		setSeqButton = new JButton(tm.getText("targetSequenceSetButton"));
 		setSeqButton.addActionListener(this);
 		setSeqButton.setActionCommand("Set");
+		setSeqButton.setMinimumSize(new Dimension(10,10));
 		seqBuscaLeftPanel.add(setSeqButton,c);
 		
 		// Configura linha

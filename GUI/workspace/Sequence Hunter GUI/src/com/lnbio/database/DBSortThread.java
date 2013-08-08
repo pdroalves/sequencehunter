@@ -7,23 +7,23 @@ public class DBSortThread extends Thread{
 	private DBManager caller;
 	private String centralCutSortQuery;
 	private String fiveCutSortQuery;
-	private final String paresSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY pares DESC";
-	private final String sensosSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_sensos DESC";
-	private final String antisensosSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_antisensos DESC";
-	private final String seqSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY main_seq ASC";
-	private final String paresSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY pares ASC";
-	private final String sensosSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_sensos ASC";
-	private final String antisensosSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY qnt_antisensos ASC";
-	private final String seqSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,pares FROM events ORDER BY main_seq DESC";
+	private final String paresSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,MIN(qnt_sensos,qnt_antisensos) pares FROM events ORDER BY pares DESC";
+	private final String sensosSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY qnt_sensos DESC";
+	private final String antisensosSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY qnt_antisensos DESC";
+	private final String seqSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY main_seq ASC";
+	private final String paresSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos,MIN(qnt_sensos,qnt_antisensos) pares FROM events ORDER BY pares ASC";
+	private final String sensosSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY qnt_sensos ASC";
+	private final String antisensosSortAscCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY qnt_antisensos ASC";
+	private final String seqSortDescCC = "SELECT main_seq,qnt_sensos,qnt_antisensos FROM events ORDER BY main_seq DESC";
 
-	private final String paresSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY pares DESC";
-	private final String sensosSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY qnt_sensos DESC";
-	private final String antisensosSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY qnt_antisensos DESC";
-	private final String seqSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY seq ASC";
-	private final String paresSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY pares ASC";
-	private final String sensosSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY qnt_sensos ASC";
-	private final String antisensosSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY qnt_antisensos ASC";
-	private final String seqSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos,pares FROM events_5l ORDER BY seq DESC";
+	private final String paresSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos,MIN(qnt_sensos,qnt_antisensos) pares FROM events_5l ORDER BY pares DESC";
+	private final String sensosSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY qnt_sensos DESC";
+	private final String antisensosSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY qnt_antisensos DESC";
+	private final String seqSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY seq ASC";
+	private final String paresSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos,MIN(qnt_sensos,qnt_antisensos) pares FROM events_5l ORDER BY pares ASC";
+	private final String sensosSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY qnt_sensos ASC";
+	private final String antisensosSortAscFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY qnt_antisensos ASC";
+	private final String seqSortDescFC = "SELECT seq,qnt_sensos,qnt_antisensos FROM events_5l ORDER BY seq DESC";
 
 
 	//private final String defaultSort = paresSortDesc;

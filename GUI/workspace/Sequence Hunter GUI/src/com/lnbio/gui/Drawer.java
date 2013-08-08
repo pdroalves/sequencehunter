@@ -11,12 +11,7 @@ import java.util.Iterator;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
-
-import com.lnbio.gui.modules.NewJButton;
-import com.lnbio.gui.modules.OpenJButton;
 import com.lnbio.gui.modules.SHMenuBar;
-import com.lnbio.gui.modules.SaveAllJButton;
-import com.lnbio.gui.modules.SaveJButton;
 import com.lnbio.hunt.Hunter;
 import com.lnbio.xml.TranslationsManager;
 

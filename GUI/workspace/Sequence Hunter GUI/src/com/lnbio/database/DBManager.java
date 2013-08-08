@@ -328,7 +328,7 @@ public class DBManager extends Observable{
 
 	public int getTotalCentralCutPares(){
 		int total = 0;
-		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events");
+		ResultSet rs = database.executeQuery("SELECT SUM(MIN(qnt_sensos,qnt_antisensos)) FROM events");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
@@ -364,7 +364,7 @@ public class DBManager extends Observable{
 
 	public int getTotalFiveCutPares(){
 		int total = 0;
-		ResultSet rs = database.executeQuery("SELECT SUM(pares) FROM events_5l");
+		ResultSet rs = database.executeQuery("SELECT SUM(MIN(qnt_sensos,qnt_antisensos)) FROM events_5l");
 		try {
 			if(rs.next())
 				total = rs.getInt(1);
