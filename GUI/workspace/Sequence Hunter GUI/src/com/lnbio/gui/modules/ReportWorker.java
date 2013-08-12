@@ -68,8 +68,7 @@ public class ReportWorker extends Thread{
 				JPartialReportTableModel jprtm = new JPartialReportTableModel(dbm);
 				TabledReport tabledreportPaired = rf.createTabledReport("central cut paired",dbm,jprtm);	
 				JTable table = tabledreportPaired.getJTable();
-				if(dbm.isCustomFiveCutSupported())
-					table.addMouseListener(new CentralCutMenuMouseAdapter(owner,dbm,reportTab.getTabCount(),table));
+				table.addMouseListener(new CentralCutMenuMouseAdapter(owner,dbm,reportTab.getTabCount(),table));
 				data.get(data.size()-1).add(tabledreportPaired);
 				jc = tabledreportPaired.getComponent();
 				tabName = tm.getText("reportCentralCutPairedDefaultName");
@@ -84,8 +83,7 @@ public class ReportWorker extends Thread{
 				JTotalReportTableModel jtrtm = new JTotalReportTableModel(dbm);
 				TabledReport tabledreportUnpaired = rf.createTabledReport("central cut unpaired",dbm,jtrtm);
 				table = tabledreportUnpaired.getJTable();
-				if(dbm.isCustomFiveCutSupported())
-					table.addMouseListener(new CentralCutMenuMouseAdapter(owner,dbm,reportTab.getTabCount(),table));
+				table.addMouseListener(new CentralCutMenuMouseAdapter(owner,dbm,reportTab.getTabCount(),table));
 				data.get(data.size()-1).add(tabledreportUnpaired);
 				jc = tabledreportUnpaired.getComponent();
 				tabName = tm.getText("reportCentralCutUnpairedDefaultName");

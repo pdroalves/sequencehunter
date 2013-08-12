@@ -6,13 +6,14 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Observable;
 
 import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
 import com.lnbio.xml.TranslationsManager;
 
 
-public class DB {
+public class DB extends Observable{
 	private Connection databaseConn;
 	private ResultSet centralCutRows;
 	private ResultSet fiveCutRows;
@@ -95,6 +96,8 @@ public class DB {
 			stat.execute("DROP TABLE events_5l_tmp");
 			stat.execute("vacuum");			
 			Drawer.writeToLog(TranslationsManager.getInstance().getText("FixDBDone"));
+			super.setChanged();
+			super.notifyObservers();
 		} catch (SQLException e) {
 			Drawer.writeToLog("Database ERROR on loadQuery: "+e.getMessage());
 		}
@@ -172,6 +175,18 @@ public class DB {
 			Drawer.writeToLog(e.getMessage());
 		}
 		return 0;
+	}
+	
+	public boolean createView(String viewName,String query){
+		Statement stat;
+		try{
+			stat = databaseConn.createStatement();
+			stat.executeQuery("CREATE VIEW "+viewName+" AS "+query);
+		}catch(SQLException e){
+			Drawer.writeToLog(e.getMessage());
+			return false;
+		}
+		return true;
 	}
 
 	public void close(){

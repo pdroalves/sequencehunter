@@ -15,12 +15,11 @@ import com.lnbio.gui.Drawer;
 import com.lnbio.xml.TranslationsManager;
 
 
-
 public class Hunter{
 
 	private ProcessBuilder pb;
 	private final static String appName = "Sequence Hunter";
-	private static String appFileName_win = "%SHUNTER%";
+	private static String appFileName_win = Hunter.class.getProtectionDomain().getCodeSource().getLocation().getPath()+System.getProperty("file.separator")+"shuunter-cli.exe";
 	private static String appFileName_mac = "";
 	private static String appFileName_nix = "shunter";
 	private static String default_output_folder;

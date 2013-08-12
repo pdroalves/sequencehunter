@@ -218,6 +218,7 @@ public class CustomReportBuilderWorker extends Thread implements ActionListener 
 		} catch (Exception e) {
 			Drawer.writeToLog(e.getMessage());
 		}
+		table.getColumnModel().getColumn(0).setMaxWidth(80);
 		JScrollPane jscp = new JScrollPane(table);
 		JScrollBar jsb = jscp.getVerticalScrollBar();
 		jsb.addAdjustmentListener(new AdjustmentListener(){
@@ -268,6 +269,7 @@ public class CustomReportBuilderWorker extends Thread implements ActionListener 
 	public void actionPerformed(ActionEvent e) {
 		CustomFiveCutReportWorker worker = new CustomFiveCutReportWorker(owner,dbm,getCentralCutSeq(),dist,tam,mainTabIndex,data,tabNames,reportName,reportTab);
 		mainTab.removeTabAt(mainTab.getTabCount()-1);
+		owner.startWaitDialog();
 		worker.start();
 	}
 

@@ -18,8 +18,7 @@ public class JFullSeqReportTableModel extends JReportTableModel {
 	private ArrayList<Evento> seqs;
 	private ResultSet data;
 	private int defaultLoad = 100;
-	private final String standardQuery = "SELECT seq fiveCutSeq,COUNT(*) count FROM events_full WHERE central_cut = \'CC\' LIMIT 100";
-
+	private final String standardQuery = "SELECT seq fiveCutSeq FROM events_full WHERE central_cut = \'CC\' LIMIT 10";
 	public JFullSeqReportTableModel(DBManager dbm,String centralCutSeq,int dist,int tam) throws Exception {
 		// Esse tipo de tabela gera uma query e gerencia diretamente seus elementos
 		super(dbm);
@@ -86,7 +85,7 @@ public class JFullSeqReportTableModel extends JReportTableModel {
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		try {
 			while(seqs.size() < rowIndex && data.next()){
-				seqs.add(new Evento(data.getString(1),data.getInt(2),0));
+				seqs.add(new Evento(data.getString(1),0,0));
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -142,9 +141,6 @@ public class JFullSeqReportTableModel extends JReportTableModel {
 			break;
 		case 1:
 			name = tm.getText("reportSequenceInfoLabel");
-			break;
-		case 2:
-			name = tm.getText("reportQuantityInfoLabel");
 			break;
 		}
 		return name;

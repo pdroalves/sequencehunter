@@ -8,7 +8,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -38,7 +37,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -54,7 +52,9 @@ import com.lnbio.xml.TranslationsManager;
 
 
 public class SearchDrawer implements ActionListener{
-	private String searchSeq;
+	private static String searchSeq;
+	private static int tamCL;
+	private static int distCL;
 	private JBaseTextField seqOriginal;
 	private static JLabel seqBusca;
 	private JButton setSeqButton;
@@ -62,7 +62,7 @@ public class SearchDrawer implements ActionListener{
 	private DefaultListModel<String> listModel;
 	private JTabbedPane libContainer;
 	private boolean emptyLibPreview;
-	private int xSize = 100;
+	//private int xSize = 100;
 	private int ySize = 100;
 	private ArrayList<String> libs = new ArrayList<String>();
 	private JPanel seqBuscaPanel;
@@ -72,9 +72,12 @@ public class SearchDrawer implements ActionListener{
 	private TranslationsManager tm;
 
 	public SearchDrawer(int xSize,int ySize){
-		this.xSize = xSize;
+		//this.xSize = xSize;
 		this.ySize = ySize;
 		this.tm = TranslationsManager.getInstance();
+		searchSeq = "";
+		setTamCL(0);
+		setDistCL(0);
 		seqOriginal = new JBaseTextField(25);
 		seqOriginal.setMaximumSize(new Dimension(2*xSize, 30));
 		seqBusca = new JLabel();
@@ -170,7 +173,6 @@ public class SearchDrawer implements ActionListener{
 	    c.gridwidth = 2;
 		seqBuscaLeftPanel.add(jscrlp,c);
 
-		// Adiciona nova linha hbox
 		JPanel loads = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		JButton loadLib = new JButton(tm.getText("loadButton"));
 		JButton unloadLib = new JButton(tm.getText("unloadButton"));
@@ -235,7 +237,10 @@ public class SearchDrawer implements ActionListener{
 				Object obj = arg0.getSource();
 				if(obj instanceof JSpinner){
 					JSpinner spinner = (JSpinner)obj;
-					SummaryDrawer.set5lTam(Math.round((Double)spinner.getValue()));
+					long newTam = Math.round((Double)spinner.getValue());
+					SummaryDrawer.set5lTam(newTam);
+					SearchDrawer.setTamCL(Integer.parseInt(String.valueOf(newTam)));
+					libContainer.repaint();
 				}
 			}
 		});
@@ -246,7 +251,10 @@ public class SearchDrawer implements ActionListener{
 				Object obj = arg0.getSource();
 				if(obj instanceof JSpinner){
 					JSpinner spinner = (JSpinner)obj;
-					SummaryDrawer.set5lDim(Math.round((Double)spinner.getValue()));
+					long newDist = Math.round((Double)spinner.getValue());
+					SummaryDrawer.set5lDim(newDist);
+					SearchDrawer.setDistCL(Integer.parseInt(String.valueOf(newDist)));
+					libContainer.repaint();
 				}
 			}
 		});
@@ -347,9 +355,9 @@ public class SearchDrawer implements ActionListener{
 			jtabPreviewLibs.getColumnModel().getColumn(0).setCellRenderer(new JTableRenderer(indexRenderer));
 			DefaultTableCellRenderer seqRenderer = new DefaultTableCellRenderer();
 			jtabPreviewLibs.getColumnModel().getColumn(1).setCellRenderer(new JTableRenderer(seqRenderer));
-			jtabPreviewLibs.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-			jtabPreviewLibs.getColumnModel().getColumn(0).setPreferredWidth(40);
-			jtabPreviewLibs.getColumnModel().getColumn(1).setPreferredWidth((int)(ySize*0.84));
+			//jtabPreviewLibs.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+			jtabPreviewLibs.getColumnModel().getColumn(0).setMaxWidth(80);
+			jtabPreviewLibs.getColumnModel().getColumn(1).setPreferredWidth((int)(ySize*0.94));
 			//SelectionListener listener = new SelectionListener(jtabPreviewLibs);
 			jtabPreviewLibs.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			jtabPreviewLibs.setAutoscrolls(true);
@@ -480,6 +488,22 @@ public class SearchDrawer implements ActionListener{
 		unloadAllLibPreviews();
 		unsetTarget();
 		Drawer.writeToLog(tm.getText("cleanHuntMsg"));
+	}
+
+	public static int getTamCL() {
+		return tamCL;
+	}
+
+	public static void setTamCL(int tamCL) {
+		SearchDrawer.tamCL = tamCL;
+	}
+
+	public static int getDistCL() {
+		return distCL;
+	}
+
+	public static void setDistCL(int distCL) {
+		SearchDrawer.distCL = distCL;
 	}
 
 }

@@ -4,11 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Observable;
+import java.util.Observer;
 
 import com.lnbio.gui.Drawer;
 import com.lnbio.hunt.Evento;
 
-public class DBManager extends Observable{
+public class DBManager extends Observable implements Observer{
 	private  DB database;
 	private  boolean centralCutReady;
 	private boolean fiveCutReady;
@@ -41,6 +42,11 @@ public class DBManager extends Observable{
 	
 	public void setDBFile(String databaseFilename){
 		database = new DB(databaseFilename);
+		database.addObserver(this);
+		this.configureManager();
+	}
+	
+	private void configureManager(){
 		totalFiveCutSequences = database.getFiveCutSize();
 		totalCentralCutSequences = database.getCentralCutSize();
 		totalCentralCutPares = this.getTotalCentralCutPares();
@@ -436,5 +442,13 @@ public class DBManager extends Observable{
 	
 	public ResultSet customQuery(String query){
 		return database.executeQuery(query);
+	}
+
+
+	@Override
+	public void update(Observable o, Object arg) {
+		this.configureManager();
+		this.setChanged();
+		this.notifyObservers();
 	}
 }

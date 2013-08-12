@@ -87,8 +87,7 @@ public class ReportDrawer extends Observable{
 	public void addMainReport(String libDatabase,File log){
 		// Inicia wait dialog
 		Drawer.writeToLog(tm.getText("LoadingReport"));
-		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
-		waitdialog.start();
+		startWaitDialog();
 		ReportWorker worker = new ReportWorker(this,libDatabase,log,data,tabNames,reportName,reportTab);
 		worker.start();
 		return;
@@ -98,11 +97,22 @@ public class ReportDrawer extends Observable{
 	public void addFiveCutSubReport(DBManager dbm,int mainTabIndex,String centralCutSeq) throws Exception{
 		// Inicia wait dialog
 		//Drawer.writeToLog(tm.getText("LoadingReport"));
-		//waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
-		//waitdialog.start();
+		startWaitDialog();
 		CustomReportBuilderWorker worker = new CustomReportBuilderWorker(this, dbm,centralCutSeq, mainTabIndex, data, tabNames, reportName, reportTab);
 		worker.start();
 		return;
+	}
+	
+	public void startWaitDialog(){
+		stopWaitDialog();
+		waitdialog = new WaitDialogHandler(Drawer.getJFrame(),this);
+		waitdialog.start();
+	}
+	
+	public void stopWaitDialog(){
+		if(waitdialog != null){
+			waitdialog.dispose();
+		}
 	}
 
 	public  void updateReportsView(){
@@ -114,7 +124,7 @@ public class ReportDrawer extends Observable{
 			reportTab.setVisible(true);
 			emptyReportTab.setVisible(false);
 		}
-
+		stopWaitDialog();
 		reportContainer.repaint();
 		Drawer.repaint();
 	}
