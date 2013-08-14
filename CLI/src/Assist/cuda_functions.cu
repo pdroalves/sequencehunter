@@ -26,7 +26,7 @@ extern "C" int gpuDeviceInit(int devID)
 
     if (deviceCount == 0)
     {
-        fprintf(stderr, "gpuDeviceInit() CUDA error: no devices supporting CUDA.\n");
+        //fprintf(stderr, "gpuDeviceInit() CUDA error: no devices supporting CUDA.\n");
         return 0;
     }
 
@@ -39,7 +39,7 @@ extern "C" int gpuDeviceInit(int devID)
 
     if (deviceProp.major < 1)
     {
-        fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 1.0.\n");
+        //fprintf(stderr, "gpuDeviceInit(): GPU device does not support CUDA. Revision < 1.0.\n");
         return 0;                                                  
     }
 
@@ -71,7 +71,7 @@ extern "C" inline int _ConvertSMVer2Cores(int major, int minor)
 		}
 		index++;
 	}
-	printf("MapSMtoCores undefined SMversion %d.%d!\n", major, minor);
+	//printf("MapSMtoCores undefined SMversion %d.%d!\n", major, minor);
 	return -1;
 }
 
@@ -140,13 +140,16 @@ extern "C" int findCudaDevice()
 {
     cudaDeviceProp deviceProp;
     int devID = 0;
+    int deviceCount = 0;
     
     // Escolhe o device com maior taxa de Gflops/s
-    devID = gpuGetMaxGflopsDeviceId();
-    cudaSetDevice( devID );
-    cudaGetDeviceProperties(&deviceProp, devID);
-    printf("GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
-    
+    cudaGetDeviceCount(&deviceCount);
+    if(deviceCount > 0){
+    	devID = gpuGetMaxGflopsDeviceId();
+    	cudaSetDevice( devID );
+    	cudaGetDeviceProperties(&deviceProp, devID);
+   	 printf("GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+    }
     return devID;
 }
 // end of CUDA Helper Functions
