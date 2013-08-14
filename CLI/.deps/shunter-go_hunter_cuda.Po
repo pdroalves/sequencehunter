@@ -11,9 +11,7 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
  /usr/include/_G_config.h /usr/include/wchar.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
- /usr/include/x86_64-linux-gnu/bits/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/sys_errlist.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endian.h \
@@ -24,11 +22,9 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/sigset.h \
  /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/select2.h \
  /usr/include/x86_64-linux-gnu/sys/sysmacros.h \
  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.6/include/omp.h \
  /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
  /usr/include/glib-2.0/glib/gtypes.h \
@@ -110,14 +106,16 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
  /usr/include/glib-2.0/glib/deprecated/gthread.h /usr/include/pthread.h \
  /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h /usr/include/string.h \
- /usr/include/x86_64-linux-gnu/bits/string.h \
- /usr/include/x86_64-linux-gnu/bits/string2.h \
- /usr/include/x86_64-linux-gnu/bits/string3.h /usr/include/cuda.h \
- /usr/include/cuda_runtime_api.h /usr/include/host_defines.h \
- /usr/include/builtin_types.h /usr/include/device_types.h \
- /usr/include/driver_types.h /usr/include/surface_types.h \
- /usr/include/texture_types.h /usr/include/vector_types.h \
- /usr/include/cuda_device_runtime_api.h \
+ /usr/local/cuda/include/cuda.h \
+ /usr/local/cuda/include/cuda_runtime_api.h \
+ /usr/local/cuda/include/host_defines.h \
+ /usr/local/cuda/include/builtin_types.h \
+ /usr/local/cuda/include/device_types.h \
+ /usr/local/cuda/include/driver_types.h \
+ /usr/local/cuda/include/surface_types.h \
+ /usr/local/cuda/include/texture_types.h \
+ /usr/local/cuda/include/vector_types.h \
+ /usr/local/cuda/include/cuda_device_runtime_api.h \
  src/Go_Hunter/../Headers/database_manager.h \
  src/Go_Hunter/../Headers/database.h \
  src/Go_Hunter/../Headers/estruturas.h \
@@ -129,7 +127,6 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h /usr/include/getopt.h \
- /usr/include/x86_64-linux-gnu/bits/unistd.h \
  /usr/include/x86_64-linux-gnu/sys/time.h
 
 /usr/include/stdio.h:
@@ -166,10 +163,6 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
 
 /usr/include/x86_64-linux-gnu/bits/sys_errlist.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
-
 /usr/include/stdlib.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
@@ -196,8 +189,6 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
 
 /usr/include/x86_64-linux-gnu/bits/time.h:
 
-/usr/include/x86_64-linux-gnu/bits/select2.h:
-
 /usr/include/x86_64-linux-gnu/sys/sysmacros.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
@@ -205,8 +196,6 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
 /usr/include/alloca.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/4.6/include/omp.h:
 
@@ -406,31 +395,25 @@ shunter-go_hunter_cuda.o: src/Go_Hunter/go_hunter_cuda.c \
 
 /usr/include/string.h:
 
-/usr/include/x86_64-linux-gnu/bits/string.h:
+/usr/local/cuda/include/cuda.h:
 
-/usr/include/x86_64-linux-gnu/bits/string2.h:
+/usr/local/cuda/include/cuda_runtime_api.h:
 
-/usr/include/x86_64-linux-gnu/bits/string3.h:
+/usr/local/cuda/include/host_defines.h:
 
-/usr/include/cuda.h:
+/usr/local/cuda/include/builtin_types.h:
 
-/usr/include/cuda_runtime_api.h:
+/usr/local/cuda/include/device_types.h:
 
-/usr/include/host_defines.h:
+/usr/local/cuda/include/driver_types.h:
 
-/usr/include/builtin_types.h:
+/usr/local/cuda/include/surface_types.h:
 
-/usr/include/device_types.h:
+/usr/local/cuda/include/texture_types.h:
 
-/usr/include/driver_types.h:
+/usr/local/cuda/include/vector_types.h:
 
-/usr/include/surface_types.h:
-
-/usr/include/texture_types.h:
-
-/usr/include/vector_types.h:
-
-/usr/include/cuda_device_runtime_api.h:
+/usr/local/cuda/include/cuda_device_runtime_api.h:
 
 src/Go_Hunter/../Headers/database_manager.h:
 
@@ -463,7 +446,5 @@ src/Go_Hunter/../Headers/socket.h:
 /usr/include/x86_64-linux-gnu/bits/confname.h:
 
 /usr/include/getopt.h:
-
-/usr/include/x86_64-linux-gnu/bits/unistd.h:
 
 /usr/include/x86_64-linux-gnu/sys/time.h:

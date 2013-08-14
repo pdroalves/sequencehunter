@@ -250,14 +250,14 @@ void db_destroy(){
 	
   if(!destroyed){
     // Create tables
-    printf("Creating main events table...");
+    //printf("Creating main events table...");
     db_start_transaction();   
     errorMain = sqlite3_exec(db,createEventsQuery,NULL, NULL,&sErrMsgMain);
     sqlite3_exec(db,dropTmpQuery,NULL, NULL,&sErrMsgMain);
     db_commit_transaction();
     
 
-    printf("Creating 5l events table...");
+    //printf("Creating 5l events table...");
     db_start_transaction();   
     error5l = sqlite3_exec(db,create5lEventsQuery,NULL, NULL,&sErrMsg5l);
     sqlite3_exec(db,drop5lTmpQuery,NULL, NULL,&sErrMsg5l);
@@ -274,14 +274,14 @@ void db_destroy(){
       	}
     }
 
-    printf("Vacuum...");
+  //  printf("Vacuum...");
     // Clean
     //sqlite3_exec(db,"vacuum",NULL, NULL,&sErrMsg);  
 
     sqlite3_finalize(stmt_insert_main);
     sqlite3_finalize(stmt_insert_5l);
     sqlite3_finalize(stmt_insert_full);
-    printf("Closing...");
+//    printf("Closing...");
     sqlite3_close(db);
     destroyed = 1;
   }

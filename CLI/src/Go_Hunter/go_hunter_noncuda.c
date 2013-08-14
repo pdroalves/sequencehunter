@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <omp.h> 
 #include <glib.h>
 #include <string.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <time.h>
 #ifdef _WIN32
 #include <Windows.h>
 #define SLEEP(a) Sleep(1000*a)
@@ -22,7 +24,6 @@
 #include "../Headers/go_hunter.h"
 #include "../Headers/socket.h"
 #include "sqlite3.h"
-#include <time.h>
 
 // Lista de threads a serem criados
 enum threads { 
@@ -269,8 +270,6 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	full_seq = NULL;
 	if(!central_cut)		
 	  full_seq = get_antisenso(buf.seq[i]);
-	
-
 			      
     	gap = search_gaps[i] +  bloco2 + dist_regiao_5l;
 	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
@@ -287,10 +286,10 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
           cincol_antisenso = get_antisenso(cincol);
           hold_event = criar_elemento_fila_event(full_seq,central_antisenso,cincol_antisenso,ANTISENSO);
           enfileirar(toStore,hold_event);
-    if(central != NULL)
+    /*if(central != NULL)
             free(central);
           if(cincol != NULL)
-            free(cincol);
+            free(cincol);*/
           break;
         }
       }
