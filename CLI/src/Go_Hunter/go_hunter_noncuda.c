@@ -201,6 +201,8 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   double start_time,end_time;
   double sec_internal;
   double start_time_internal,end_time_internal;
+  char *central_antisenso;
+  char *cincol_antisenso;
   processadas = 0;
   fsensos=fasensos=0;
   
@@ -214,13 +216,13 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
   while(buf.load != GATHERING_DONE){
     //Realiza loop enquanto existirem sequências para encher o buffer
 	  
-  start_time_internal = getRealTimeNC();
+    start_time_internal = getRealTimeNC();
     busca(bloco1,bloco2,blocos,&buf,vertexes,candidates,resultados,search_gaps);//Kernel de busca		
-  end_time_internal = getRealTimeNC();
+    end_time_internal = getRealTimeNC();
   
-  sec_internal = (end_time_internal - start_time_internal);
-  if(debug)
-    printf("Kernel processing time: %.2f s\n",sec_internal);
+    sec_internal = (end_time_internal - start_time_internal);
+    if(debug)
+      printf("Kernel processing time: %.2f s\n",sec_internal);
 
 	    
     tam = buf.load;
@@ -237,13 +239,13 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
 	}				
-		     full_seq = NULL;
-	     	  if(!central_cut){
-	full_seq = (char*)malloc((strlen(buf.seq[i])+1)*sizeof(char));					
-	strcpy(full_seq,buf.seq[i]);
-}
+	full_seq = NULL;
+	if(!central_cut){
+	  full_seq = (char*)malloc((strlen(buf.seq[i])+1)*sizeof(char));					
+	  strcpy(full_seq,buf.seq[i]);
+	}
 
-    gap = search_gaps[i] - bloco1 - dist_regiao_5l;
+	gap = search_gaps[i] - bloco1 - dist_regiao_5l;
 	if(regiao_5l && (gap + tam_regiao_5l < strlen(buf.seq[i])) ){
 	  cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
 
@@ -259,13 +261,13 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	break;
       case ANTISENSO:
     	gap = search_gaps[i];
-	if(central_cut&& (gap + blocoV < strlen(buf.seq[i])) ){
+	if(central_cut && (gap + blocoV < strlen(buf.seq[i])) ){
 	  central = (char*)malloc((blocoV+1)*sizeof(char));
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  central[blocoV] = '\0';
 	}				
-		     full_seq = NULL;
-	     	  if(!central_cut)		
+	full_seq = NULL;
+	if(!central_cut)		
 	  full_seq = get_antisenso(buf.seq[i]);
 	
 
@@ -281,27 +283,27 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 
 	fasensos++;
-	hold_event = criar_elemento_fila_event(full_seq,get_antisenso(central),get_antisenso(cincol),ANTISENSO);
-	enfileirar(toStore,hold_event);
-	if(central != NULL)
-	  free(central);
-	if(cincol != NULL)
-	  free(cincol);
-	break;
-      default:
-	break;
+          central_antisenso = get_antisenso(central);
+          cincol_antisenso = get_antisenso(cincol);
+          hold_event = criar_elemento_fila_event(full_seq,central_antisenso,cincol_antisenso,ANTISENSO);
+          enfileirar(toStore,hold_event);
+    if(central != NULL)
+            free(central);
+          if(cincol != NULL)
+            free(cincol);
+          break;
+        }
       }
-    }
 	    
     // Aguarda o buffer estar cheio novamente
     buf.load = 0;
-  start_time_internal = getRealTimeNC();
+    start_time_internal = getRealTimeNC();
     load_buffer_NONCuda();
-  end_time_internal = getRealTimeNC();
+    end_time_internal = getRealTimeNC();
   
-  sec_internal = (end_time_internal - start_time_internal);
-  if(debug)
-    printf("Reading sequences from library time: %.2f s\n",sec_internal);
+    sec_internal = (end_time_internal - start_time_internal);
+    if(debug)
+      printf("Reading sequences from library time: %.2f s\n",sec_internal);
 					
     while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }     
