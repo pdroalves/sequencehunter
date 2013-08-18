@@ -57,7 +57,7 @@ char* get_antisenso(char *s){
 		strcpy(antisenso,"");
 		
 		for(i=0;i<a_size;i++){
-			switch(s[a_size - i-1]){
+			switch(s[a_size - i - 1]){
 				case 'A':
 					strcat(antisenso, "T");
 				break;

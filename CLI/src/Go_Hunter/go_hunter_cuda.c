@@ -280,9 +280,9 @@ void search_manager(int *buffer_load,
 	  
 	  full_seq = NULL;
 	  if(!central_cut){
-		  full_seq = (char*)malloc((strlen(data[i])+1)*sizeof(char));
-		  strcpy(full_seq,data[i]);
-		}
+	    full_seq = (char*)malloc((strlen(data[i])+1)*sizeof(char));
+	    strcpy(full_seq,data[i]);
+	  }
 	  gap = h_search_gaps[i] - bloco1 - dist_regiao_5l;
       	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
             //printf("%d - h_search_gaps[i] - bloco1 - dist_regiao_5l + tam_regiao_5l < strlen(data[i]):  %d - %d - %d + %d < %d - %s => %s\n",regiao_5l,h_search_gaps[i],bloco1,dist_regiao_5l,tam_regiao_5l,strlen(data[i]),data[i],data[i]+gap);
@@ -307,13 +307,13 @@ void search_manager(int *buffer_load,
       	    strncpy(central,data[i]+gap,blocoV);
       	    central[blocoV] = '\0';
       	  }
-	     full_seq = NULL;
-	     	  if(!central_cut)
-	     full_seq =  get_antisenso(data[i]);
+	  full_seq = NULL;
+	  if(!central_cut)
+	    full_seq =  get_antisenso(data[i]);
 
           gap = h_search_gaps[i] +  bloco2 + dist_regiao_5l;      			
       	  if(regiao_5l && (gap + tam_regiao_5l < strlen(data[i])) ){
-      	    cincol = (char*)malloc((seqSize_an+1)*sizeof(char));
+      	    cincol = (char*)malloc((tam_regiao_5l+1)*sizeof(char));
       	    strncpy(cincol,data[i] + gap,tam_regiao_5l);
       	    cincol[tam_regiao_5l] = '\0';
       	  }else{
@@ -333,133 +333,133 @@ void search_manager(int *buffer_load,
       	
 	}
       }
-	checkCudaError();
+    checkCudaError();
 	
-	//////////////////////////////////////////
-	// Carrega o buffer //////////////////////
-	//////////////////////////////////////////
-	start_time_internal = getRealTimeC();
-	*buffer_load = load_buffer_CUDA(data,seqSize_an);	
-	end_time_internal = getRealTimeC();
+    //////////////////////////////////////////
+    // Carrega o buffer //////////////////////
+    //////////////////////////////////////////
+    start_time_internal = getRealTimeC();
+    *buffer_load = load_buffer_CUDA(data,seqSize_an);	
+    end_time_internal = getRealTimeC();
   
-	sec_internal = (end_time_internal - start_time_internal);
-	if(debug)
-	  printf("Reading sequences from library time: %.2f s\n",sec_internal);
+    sec_internal = (end_time_internal - start_time_internal);
+    if(debug)
+      printf("Reading sequences from library time: %.2f s\n",sec_internal);
 
-	//cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
-	cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
-	checkCudaError();
-	while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
-      }
-    end_time = getRealTimeC();
-	
-    sec = (end_time - start_time);
-    if(!silent)
-      printf("Search kernel executed on %.2f s\n",sec);
-  
-    cudaFree(d_resultados);
-    free(h_resultados);
-    THREAD_DONE[THREAD_SEARCH] = TRUE;
-    return;
+    //cudaHostGetDevicePointer(&d_vertexes,h_vertexes,0);
+    cudaMemcpyAsync(d_vertexes,h_vertexes,loaded*seqSize_an*sizeof(short int),cudaMemcpyHostToDevice,stream);
+    checkCudaError();
+    while(tamanho_da_fila(toStore) > LOADER_QUEUE_MAX_SIZE);
   }
+  end_time = getRealTimeC();
+	
+  sec = (end_time - start_time);
+  if(!silent)
+    printf("Search kernel executed on %.2f s\n",sec);
+  
+  cudaFree(d_resultados);
+  free(h_resultados);
+  THREAD_DONE[THREAD_SEARCH] = TRUE;
+  return;
+}
 
 
-  void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu,Socket *gui_socket)
-  {
+void cudaIteracoes(const int bloco1, const int bloco2, const int seqSize_an,const int seqSize_bu,Socket *gui_socket)
+{
 	
 	
-    Buffer buffer;
-    int blocoV = seqSize_bu - bloco1 - bloco2;
-    int i;
-    int buffer_load;
-    Fila *toStore;
-    double sec;
-    double start_time,end_time;
+  Buffer buffer;
+  int blocoV = seqSize_bu - bloco1 - bloco2;
+  int i;
+  int buffer_load;
+  Fila *toStore;
+  double sec;
+  double start_time,end_time;
 	
-    prepare_buffer_cuda();
-    //Inicializa buffer
+  prepare_buffer_cuda();
+  //Inicializa buffer
 
-    buffer_load = 0;
-    toStore = criar_fila("toStore");
-    cudaMalloc((void**)&data,buffer_size*sizeof(char*));	
+  buffer_load = 0;
+  toStore = criar_fila("toStore");
+  cudaMalloc((void**)&data,buffer_size*sizeof(char*));	
 	
-    THREAD_DONE[THREAD_SEARCH] = FALSE;
-    THREAD_DONE[THREAD_QUEUE] = FALSE;
-    THREAD_DONE[THREAD_DATABASE] = FALSE;
+  THREAD_DONE[THREAD_SEARCH] = FALSE;
+  THREAD_DONE[THREAD_QUEUE] = FALSE;
+  THREAD_DONE[THREAD_DATABASE] = FALSE;
   
 		
-    start_time = getRealTimeC();
+  start_time = getRealTimeC();
 #pragma omp parallel num_threads(OMP_NTHREADS) shared(buffer) shared(buffer_load) shared(toStore)
-    {		
+  {		
 #pragma omp sections
+    {
+#pragma omp section
       {
+	search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV);
+      }
 #pragma omp section
-	{
-	  search_manager(&buffer_load,toStore,seqSize_an,seqSize_bu,bloco1,bloco2,blocoV);
-	}
+      {
+	queue_manager(toStore,&THREAD_DONE[THREAD_SEARCH]);
+	THREAD_DONE[THREAD_QUEUE] = TRUE;
+      }
 #pragma omp section
-	{
-	  queue_manager(toStore,&THREAD_DONE[THREAD_SEARCH]);
-	  THREAD_DONE[THREAD_QUEUE] = TRUE;
-	}
-#pragma omp section
-	{
-	  report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsenso,&fasenso,&readCount_CUDA,&THREAD_DONE[THREAD_QUEUE]);
-	  THREAD_DONE[THREAD_DATABASE] = TRUE;
-	}
+      {
+	report_manager(gui_socket,toStore,&processadas,gui_run,verbose,silent,&fsenso,&fasenso,&readCount_CUDA,&THREAD_DONE[THREAD_QUEUE]);
+	THREAD_DONE[THREAD_DATABASE] = TRUE;
       }
     }
-    end_time = getRealTimeC();
-    if(!silent){
-      sec = (end_time - start_time);
-      printf("Search executed on %.2f s\n",sec);
-    }
-	
-	
-    //printf("Iterações executadas: %d.\n",iter);
-    cudaDeviceReset();
-    if(d_vertexes != NULL)
-      cudaFree(d_vertexes);
-    if(d_candidates != NULL)
-      cudaFree(d_candidates);
-    cudaFree(data);
-    return;
   }
-
-  void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set,Socket *gui_socket){
-    float tempo;
-    int seqSize_an;//Tamanho das sequencias analisadas
-    verbose = set.verbose;
-    silent = set.silent;
-    debug = set.debug;
-    central_cut = set.cut_central;
-    gui_run = set.gui_run;
-    dist_regiao_5l = set.dist_regiao_5l;
-    tam_regiao_5l = set.tam_regiao_5l;
-	
-    if(dist_regiao_5l && tam_regiao_5l)
-      regiao_5l = TRUE;
-    else
-      regiao_5l = FALSE;
-    if(!silent || gui_run)
-      printf("CUDA mode.\n");
-    printString("CUDA mode.\n",NULL);
-	
-    printf("Buffer size: %d\n",buffer_size);
-    printStringInt("Buffer size: ",buffer_size);
-	
-    seqSize_an = get_setup();
-	
-    //Inicializa
-    setup_for_cuda(c);	
-
-    printSet(seqSize_an);
-    printString("Starting hunt...\n",NULL);
-	
-    cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu,gui_socket);
-    cudaThreadExit();
-  
-    printString("Hunt done...\n",NULL);
-  
-    return;
+  end_time = getRealTimeC();
+  if(!silent){
+    sec = (end_time - start_time);
+    printf("Search executed on %.2f s\n",sec);
   }
+	
+	
+  //printf("Iterações executadas: %d.\n",iter);
+  cudaDeviceReset();
+  if(d_vertexes != NULL)
+    cudaFree(d_vertexes);
+  if(d_candidates != NULL)
+    cudaFree(d_candidates);
+  cudaFree(data);
+  return;
+}
+
+void auxCUDA(char *c,const int bloco1, const int bloco2,const int seqSize_bu,Params set,Socket *gui_socket){
+  float tempo;
+  int seqSize_an;//Tamanho das sequencias analisadas
+  verbose = set.verbose;
+  silent = set.silent;
+  debug = set.debug;
+  central_cut = set.cut_central;
+  gui_run = set.gui_run;
+  dist_regiao_5l = set.dist_regiao_5l;
+  tam_regiao_5l = set.tam_regiao_5l;
+	
+  if(dist_regiao_5l && tam_regiao_5l)
+    regiao_5l = TRUE;
+  else
+    regiao_5l = FALSE;
+  if(!silent || gui_run)
+    printf("CUDA mode.\n");
+  printString("CUDA mode.\n",NULL);
+	
+  printf("Buffer size: %d\n",buffer_size);
+  printStringInt("Buffer size: ",buffer_size);
+	
+  seqSize_an = get_setup();
+	
+  //Inicializa
+  setup_for_cuda(c);	
+
+  printSet(seqSize_an);
+  printString("Starting hunt...\n",NULL);
+	
+  cudaIteracoes(bloco1,bloco2,seqSize_an,seqSize_bu,gui_socket);
+  cudaThreadExit();
+  
+  printString("Hunt done...\n",NULL);
+  
+  return;
+}

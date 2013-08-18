@@ -233,9 +233,9 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
       //Copia sequências senso e antisenso encontradas
       switch(resultados[i]){
       case SENSO:
+	central = (char*)malloc((blocoV+1)*sizeof(char));	
 	gap = search_gaps[i];
 	if(central_cut && (gap + blocoV < strlen(buf.seq[i])) ){
-	  central = (char*)malloc((blocoV+1)*sizeof(char));	
 	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  //printf("%s\n",buf.seq[i]+gap-bloco1);
 	  central[blocoV] = '\0';
@@ -261,10 +261,10 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	enfileirar(toStore,hold_event);
 	break;
       case ANTISENSO:
-    	gap = search_gaps[i];
+	central = (char*)malloc((seqSize_an+1)*sizeof(char));
+	gap = search_gaps[i];
 	if(central_cut && (gap + blocoV < strlen(buf.seq[i])) ){
-	  central = (char*)malloc((blocoV+1)*sizeof(char));
-	  strncpy(central,buf.seq[i]+gap,blocoV);
+    	  strncpy(central,buf.seq[i]+gap,blocoV);
 	  central[blocoV] = '\0';
 	}				
 	full_seq = NULL;
@@ -282,19 +282,18 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
 	}
 
 	fasensos++;
-          central_antisenso = get_antisenso(central);
-          cincol_antisenso = get_antisenso(cincol);
-          hold_event = criar_elemento_fila_event(full_seq,central_antisenso,cincol_antisenso,ANTISENSO);
-          enfileirar(toStore,hold_event);
-    if(central != NULL)
-            free(central);
-          if(cincol != NULL)
-            free(cincol);
-          if(full_seq != NULL)
-            free(full_seq);
-          break;
-        }
+	central_antisenso = get_antisenso(central);
+	cincol_antisenso = get_antisenso(cincol);
+	hold_event = criar_elemento_fila_event(full_seq,central_antisenso,cincol_antisenso,ANTISENSO);
+	enfileirar(toStore,hold_event);
+	if(central != NULL)
+	  free(central);
+	if(cincol != NULL)
+	  free(cincol);
+	;
+	break;
       }
+    }
 	    
     // Aguarda o buffer estar cheio novamente
     buf.load = 0;
