@@ -286,10 +286,12 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
           cincol_antisenso = get_antisenso(cincol);
           hold_event = criar_elemento_fila_event(full_seq,central_antisenso,cincol_antisenso,ANTISENSO);
           enfileirar(toStore,hold_event);
-    /*if(central != NULL)
+    if(central != NULL)
             free(central);
           if(cincol != NULL)
-            free(cincol);*/
+            free(cincol);
+          if(full_seq != NULL)
+            free(full_seq);
           break;
         }
       }
@@ -313,6 +315,7 @@ void nc_search_manager(int bloco1,int bloco2,int blocos,const int seqSize_an,Fil
     printf("Search kernel executed on %.2f s\n",sec);
   free(resultados);
   free(search_gaps);
+  free(candidates);
   THREAD_DONE[THREAD_SEARCH] = TRUE;
   return;
   //////////////////////////////////////////

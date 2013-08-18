@@ -155,12 +155,12 @@ void queue_manager(Fila *toStore,int *THREAD_SEARCH_DONE){
 
 			adicionar_db(full_seq,central,cincoL,hold->tipo);
 			sent_to_db++;
-	/*		if(full_seq != NULL)
+			if(full_seq != NULL)
 				free(full_seq);
 			if(central != NULL)
 			  free(central);
 			if(cincoL != NULL)
-			 free(cincoL);*/
+			 free(cincoL);
 			free(hold);
 		  }
 	  }else{
