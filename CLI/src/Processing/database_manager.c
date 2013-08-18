@@ -18,7 +18,7 @@
 #include "../Headers/log.h"
 #include "../Headers/fila.h"
 
-#define MAX_PER_TMP_FILE 5000000
+#define TRANSACTION_SIZE 5000000
 
 int data_added;
 char *db_filename;
@@ -74,7 +74,7 @@ void destroy_db_manager(){
 
 void adicionar_db(char *full_seq,char *central,char *cincol,int tipo){
 	
-	if(data_added > MAX_PER_TMP_FILE){
+	if(data_added > TRANSACTION_SIZE){
 		db_commit_transaction();
 		db_start_transaction();
 		data_added = 0;

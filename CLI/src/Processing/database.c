@@ -48,7 +48,6 @@ void db_commit_transaction(){
   sqlite3_exec(db, "COMMIT TRANSACTION", 0, 0, &sErrMsg);
   if(sqlite3_memory_used() > MAX_DB_MEM_USE){
     printf("Cleaning database...\n");
-    sqlite3_exec(db,"vacuum", NULL,NULL,&sErrMsg);
   }
   return;
 }
